@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mutual Exclusion - Interactive Demo</title>
+    <style>
+        :root {
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --p1-color: #3b82f6;
+            --p2-color: #8b5cf6;
+            --critical-color: #f59e0b;
+            --safe-color: #10b981;
+            --danger-color: #ef4444;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            color: #4a5568;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        /* Scenario Tabs */
+        .scenario-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-tab {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .scenario-tab:hover {
+            border-color: #94a3b8;
+        }
+
+        .scenario-tab.active {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+
+        .scenario-tab .icon {
+            font-size: 1.5rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .scenario-tab .label {
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #475569;
+        }
+
+        /* Animation Area */
+        .animation-area {
+            position: relative;
+            height: 300px;
+            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Critical Section */
+        .critical-section {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            transition: all 0.5s ease;
+            z-index: 1;
+        }
+
+        .critical-section .icon {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .critical-section .label {
+            font-size: 0.8rem;
+        }
+
+        .critical-section.safe {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: 3px solid #047857;
+        }
+
+        .critical-section.unsafe {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: 3px solid #b91c1c;
+            animation: dangerPulse 0.5s infinite;
+        }
+
+        @keyframes dangerPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.8); }
+        }
+
+        /* Process Nodes */
+        .process {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            transition: all 0.5s ease;
+            z-index: 2;
+        }
+
+        .process .icon {
+            font-size: 1.5rem;
+            margin-bottom: 3px;
+        }
+
+        .process .label {
+            font-size: 0.75rem;
+        }
+
+        .process-p1 {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            left: 15%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .process-p2 {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            right: 15%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .process.waiting {
+            animation: waitingBounce 1s infinite;
+        }
+
+        @keyframes waitingBounce {
+            0%, 100% { transform: translateY(-50%); }
+            50% { transform: translateY(-60%); }
+        }
+
+        .process.in-critical {
+            transform: translateY(-50%) scale(1.15);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Lock/ Mutex */
+        .lock-indicator {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 3;
+            transition: all 0.3s ease;
+        }
+
+        .lock-indicator.unlocked {
+            background: #fef3c7;
+            color: #92400e;
+            border: 2px solid #f59e0b;
+        }
+
+        .lock-indicator.locked {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+
+        /* Data Counter */
+        .data-display {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 1rem;
+            z-index: 3;
+        }
+
+        .data-display .value {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .data-display.corrupted .value {
+            color: #ef4444;
+        }
+
+        /* Step Controls */
+        .step-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .step-controls button {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .btn-prev {
+            background-color: #64748b;
+            color: white;
+        }
+
+        .btn-prev:hover:not(:disabled) {
+            background-color: #475569;
+        }
+
+        .btn-next {
+            background-color: #4f46e5;
+            color: white;
+        }
+
+        .btn-next:hover:not(:disabled) {
+            background-color: #4338ca;
+        }
+
+        .btn-play {
+            background-color: #059669;
+            color: white;
+        }
+
+        .btn-play:hover:not(:disabled) {
+            background-color: #047857;
+        }
+
+        .btn-reset {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .btn-reset:hover:not(:disabled) {
+            background-color: #b91c1c;
+        }
+
+        .step-controls button:disabled {
+            background-color: #cbd5e0;
+            color: #64748b;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Status */
+        .status-panel {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .status-text {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #374151;
+            min-height: 40px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* State Description */
+        .state-description {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            border-left: 4px solid #64748b;
+        }
+
+        .state-description h4 {
+            margin: 0 0 5px 0;
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        .state-description p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        /* Comparison */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .comparison-item {
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .comparison-item.safe {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+        }
+
+        .comparison-item.unsafe {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+        }
+
+        .comparison-item h5 {
+            margin: 0 0 5px 0;
+            font-size: 0.85rem;
+        }
+
+        .comparison-item.safe h5 { color: #166534; }
+        .comparison-item.unsafe h5 { color: #991b1b; }
+
+        .comparison-item p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Legend */
+        .legend {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mutual Exclusion</h1>
+    <p class="subtitle">Visual demonstration of why mutual exclusion is needed for shared resources</p>
+
+    <div class="main-container">
+        <!-- Left Panel: Animation -->
+        <div class="panel">
+            <h3>Shared Resource Access</h3>
+            
+            <div class="scenario-tabs">
+                <div class="scenario-tab active" onclick="setScenario('file')">
+                    <span class="icon">📄</span>
+                    <span class="label">Shared File</span>
+                </div>
+                <div class="scenario-tab" onclick="setScenario('printer')">
+                    <span class="icon">🖨️</span>
+                    <span class="label">Printer</span>
+                </div>
+                <div class="scenario-tab" onclick="setScenario('counter')">
+                    <span class="icon">🔢</span>
+                    <span class="label">Counter</span>
+                </div>
+            </div>
+
+            <div class="animation-area" id="animationArea">
+                <div class="lock-indicator unlocked" id="lockIndicator">🔓 Lock: FREE</div>
+                
+                <div class="critical-section safe" id="criticalSection">
+                    <span class="icon" id="resourceIcon">📄</span>
+                    <span class="label" id="resourceLabel">Shared File</span>
+                </div>
+
+                <div class="process process-p1" id="process-p1">
+                    <span class="icon">🧑‍💻</span>
+                    <span class="label">P1</span>
+                </div>
+
+                <div class="process process-p2" id="process-p2">
+                    <span class="icon">🧑‍🔬</span>
+                    <span class="label">P2</span>
+                </div>
+
+                <div class="data-display" id="dataDisplay">
+                    Data: <span class="value" id="dataValue">0</span>
+                </div>
+            </div>
+
+            <div class="comparison">
+                <div class="comparison-item safe">
+                    <h5>✅ WITH Mutual Exclusion</h5>
+                    <p>Only one process accesses resource at a time. Data stays consistent.</p>
+                </div>
+                <div class="comparison-item unsafe">
+                    <h5>❌ WITHOUT Mutual Exclusion</h5>
+                    <p>Both processes access simultaneously. Data gets corrupted!</p>
+                </div>
+            </div>
+
+            <div class="legend">
+                <strong>Key Concept:</strong> Mutual exclusion ensures only ONE process can be in the critical section at a time, preventing race conditions and data corruption.
+            </div>
+
+            <div class="status-panel">
+                <div class="status-text" id="statusText">Select a scenario and click "Next" to start...</div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Controls & Description -->
+        <div class="panel">
+            <h3>Step-by-Step Animation</h3>
+
+            <div class="step-indicator">
+                <span id="stepLabel">Step 0 of 8</span>
+                <span id="modeLabel">Mode: WITH Lock</span>
+            </div>
+
+            <div class="step-controls">
+                <button class="btn-prev" id="btnPrev" onclick="prevStep()">◀ Prev</button>
+                <button class="btn-next" id="btnNext" onclick="nextStep()">Next ▶</button>
+                <button class="btn-play" id="btnPlay" onclick="togglePlay()">▶ Play</button>
+                <button class="btn-reset" id="btnReset" onclick="resetDemo()">Reset</button>
+            </div>
+
+            <div style="margin: 10px 0;">
+                <label for="demoMode" style="font-size: 0.85rem; font-weight: bold; color: #475569;">Demo Mode:</label>
+                <select id="demoMode" onchange="changeMode()" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e0; margin-top: 5px;" aria-label="Select demo mode">
+                    <option value="with-lock">WITH Mutual Exclusion (Safe)</option>
+                    <option value="without-lock">WITHOUT Mutual Exclusion (Unsafe)</option>
+                </select>
+            </div>
+
+            <div class="state-description" id="stateDescription">
+                <h4>Ready to start</h4>
+                <p>Click "Next" to see how mutual exclusion protects shared resources from concurrent access.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScenario = 'file';
+        let currentMode = 'with-lock';
+        let currentStep = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        let dataValue = 0;
+        let lockHeld = false;
+
+        const scenarios = {
+            file: { icon: '📄', label: 'Shared File', resource: 'file' },
+            printer: { icon: '🖨️', label: 'Printer', resource: 'printer' },
+            counter: { icon: '🔢', label: 'Counter', resource: 'counter' }
+        };
+
+        const steps = {
+            'with-lock': [
+                {
+                    step: 0,
+                    p1Pos: 'left', p2Pos: 'right',
+                    p1State: 'idle', p2State: 'idle',
+                    lockState: 'unlocked',
+                    dataValue: 0,
+                    status: "Click 'Next' to begin the demonstration.",
+                    description: {
+                        title: "Initial State",
+                        text: "Two processes (P1 and P2) need to access a shared resource. The lock is free (unlocked)."
+                    }
+                },
+                {
+                    step: 1,
+                    p1Pos: 'left', p2Pos: 'right',
+                    p1State: 'waiting', p2State: 'idle',
+                    lockState: 'unlocked',
+                    dataValue: 0,
+                    status: "Step 1: P1 wants to access the shared resource. It requests the lock.",
+                    description: {
+                        title: "P1 Requests Lock",
+                        text: "P1 signals its intention to enter the critical section by requesting the lock."
+                    }
+                },
+                {
+                    step: 2,
+                    p1Pos: 'center', p2Pos: 'right',
+                    p1State: 'in-critical', p2State: 'idle',
+                    lockState: 'locked',
+                    dataValue: 5,
+                    status: "Step 2: P1 acquires the lock and enters the critical section. Lock is now held.",
+                    description: {
+                        title: "P1 Enters Critical Section",
+                        text: "P1 acquires the lock and enters the critical section. It can now safely access the shared resource. The lock prevents others from entering."
+                    }
+                },
+                {
+                    step: 3,
+                    p1Pos: 'center', p2Pos: 'right',
+                    p1State: 'in-critical', p2State: 'waiting',
+                    lockState: 'locked',
+                    dataValue: 5,
+                    status: "Step 3: P2 also wants to access the resource. It requests the lock but must WAIT.",
+                    description: {
+                        title: "P2 Waits for Lock",
+                        text: "P2 requests the lock but finds it already held by P1. P2 must wait (block) until P1 releases the lock. This is MUTUAL EXCLUSION in action!"
+                    }
+                },
+                {
+                    step: 4,
+                    p1Pos: 'center', p2Pos: 'right',
+                    p1State: 'in-critical', p2State: 'waiting',
+                    lockState: 'locked',
+                    dataValue: 15,
+                    status: "Step 4: P1 modifies the shared data (0 + 10 = 10, then + 5 = 15). Data is consistent.",
+                    description: {
+                        title: "P1 Modifies Data",
+                        text: "Since P1 has exclusive access, it can safely read, modify, and write the data without interference. The data remains consistent."
+                    }
+                },
+                {
+                    step: 5,
+                    p1Pos: 'left', p2Pos: 'right',
+                    p1State: 'idle', p2State: 'waiting',
+                    lockState: 'unlocked',
+                    dataValue: 15,
+                    status: "Step 5: P1 finishes and releases the lock. P2 can now acquire it.",
+                    description: {
+                        title: "P1 Releases Lock",
+                        text: "P1 exits the critical section and releases the lock. The lock is now free again."
+                    }
+                },
+                {
+                    step: 6,
+                    p1Pos: 'left', p2Pos: 'center',
+                    p1State: 'idle', p2State: 'in-critical',
+                    lockState: 'locked',
+                    dataValue: 15,
+                    status: "Step 6: P2 acquires the lock and enters the critical section.",
+                    description: {
+                        title: "P2 Enters Critical Section",
+                        text: "P2 acquires the lock and enters the critical section. Now P2 has exclusive access to the shared resource."
+                    }
+                },
+                {
+                    step: 7,
+                    p1Pos: 'left', p2Pos: 'right',
+                    p1State: 'idle', p2State: 'idle',
+                    lockState: 'unlocked',
+                    dataValue: 25,
+                    status: "Step 7: P2 finishes and releases the lock. Final data value: 25. Data is consistent!",
+                    description: {
+                        title: "Complete - Data Consistent!",
+                        text: "Both processes completed their operations. Because of mutual exclusion, the data is consistent and correct (15 + 10 = 25)."
+                    }
+                }
+            ],
+            'without-lock': [
+                {
+                    step: 0,
+                    p1Pos: 'left', p2Pos: 'right',
+                    p1State: 'idle', p2State: 'idle',
+                    lockState: 'unlocked',
+                    dataValue: 0,
+                    status: "Click 'Next' to see what happens WITHOUT mutual exclusion...",
+                    description: {
+                        title: "Initial State (No Lock)",
+                        text: "Two processes need to access a shared resource. There is NO lock - no mutual exclusion!"
+                    }
+                },
+                {
+                    step: 1,
+                    p1Pos: 'left', p2Pos: 'right',
+                    p1State: 'waiting', p2State: 'waiting',
+                    lockState: 'unlocked',
+                    dataValue: 0,
+                    status: "Step 1: Both P1 and P2 want to access the resource at the same time!",
+                    description: {
+                        title: "Both Processes Request Access",
+                        text: "Without a lock, both processes try to access the shared resource simultaneously. This is where problems begin..."
+                    }
+                },
+                {
+                    step: 2,
+                    p1Pos: 'center', p2Pos: 'center',
+                    p1State: 'in-critical', p2State: 'in-critical',
+                    lockState: 'unlocked',
+                    dataValue: 0,
+                    status: "Step 2: BOTH enter the critical section! NO MUTUAL EXCLUSION!",
+                    description: {
+                        title: "⚠️ Both in Critical Section!",
+                        text: "Without mutual exclusion, BOTH processes enter the critical section at the same time! This violates the fundamental rule of safe concurrent access."
+                    }
+                },
+                {
+                    step: 3,
+                    p1Pos: 'center', p2Pos: 'center',
+                    p1State: 'in-critical', p2State: 'in-critical',
+                    lockState: 'unlocked',
+                    dataValue: 5,
+                    status: "Step 3: P1 reads data (0), calculates 0+10=10. P2 reads data (0), calculates 0+5=5.",
+                    description: {
+                        title: "Race Condition Begins",
+                        text: "Both processes read the SAME initial value (0). P1 calculates 0+10=10. P2 calculates 0+5=5. They're both working with stale data!"
+                    }
+                },
+                {
+                    step: 4,
+                    p1Pos: 'center', p2Pos: 'center',
+                    p1State: 'in-critical', p2State: 'in-critical',
+                    lockState: 'unlocked',
+                    dataValue: 10,
+                    status: "Step 4: P1 writes 10. But P2 still has old value (5) and will overwrite!",
+                    description: {
+                        title: "P1 Writes, P2 Overwrites",
+                        text: "P1 writes its result (10) to the shared data. But P2 doesn't see this update - it still has the old value and is about to overwrite!"
+                    }
+                },
+                {
+                    step: 5,
+                    p1Pos: 'center', p2Pos: 'center',
+                    p1State: 'in-critical', p2State: 'in-critical',
+                    lockState: 'unlocked',
+                    dataValue: 5,
+                    status: "Step 5: P2 writes 5, OVERWRITING P1's work! DATA CORRUPTED!",
+                    description: {
+                        title: "❌ DATA CORRUPTION!",
+                        text: "P2 writes its result (5), completely overwriting P1's work! The final value is 5 instead of the correct value 15. This is a RACE CONDITION!"
+                    }
+                },
+                {
+                    step: 6,
+                    p1Pos: 'left', p2Pos: 'right',
+                    p1State: 'idle', p2State: 'idle',
+                    lockState: 'unlocked',
+                    dataValue: 5,
+                    status: "Step 6: Both exit. Final value: 5 (WRONG! Should be 15). Data is CORRUPTED!",
+                    description: {
+                        title: "❌ Data Corrupted!",
+                        text: "Both processes exit. The final value is 5, but it should be 15 (0+10+5). Without mutual exclusion, the data is corrupted due to the race condition."
+                    }
+                },
+                {
+                    step: 7,
+                    p1Pos: 'left', p2Pos: 'right',
+                    p1State: 'idle', p2State: 'idle',
+                    lockState: 'unlocked',
+                    dataValue: 5,
+                    status: "This is why MUTUAL EXCLUSION is essential for safe concurrent programming!",
+                    description: {
+                        title: "Lesson: Need Mutual Exclusion!",
+                        text: "Without mutual exclusion, concurrent access to shared resources leads to race conditions and data corruption. Always use locks, mutexes, or semaphores to protect critical sections!"
+                    }
+                }
+            ]
+        };
+
+        function setScenario(scenario) {
+            currentScenario = scenario;
+            document.querySelectorAll('.scenario-tab').forEach(tab => tab.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            const s = scenarios[scenario];
+            document.getElementById('resourceIcon').textContent = s.icon;
+            document.getElementById('resourceLabel').textContent = s.label;
+            
+            resetDemo();
+        }
+
+        function changeMode() {
+            currentMode = document.getElementById('demoMode').value;
+            document.getElementById('modeLabel').textContent = 
+                currentMode === 'with-lock' ? 'Mode: WITH Lock' : 'Mode: WITHOUT Lock';
+            resetDemo();
+        }
+
+        function updateAnimation() {
+            const step = steps[currentMode][currentStep];
+            
+            // Update process positions
+            const p1 = document.getElementById('process-p1');
+            const p2 = document.getElementById('process-p2');
+            
+            p1.className = 'process process-p1';
+            p2.className = 'process process-p2';
+            
+            if (step.p1Pos === 'center') {
+                p1.style.left = '50%';
+                p1.style.transform = 'translate(-50%, -50%)';
+            } else {
+                p1.style.left = '15%';
+                p1.style.transform = 'translateY(-50%)';
+            }
+            
+            if (step.p2Pos === 'center') {
+                p2.style.right = '50%';
+                p2.style.left = 'auto';
+                p2.style.transform = 'translate(50%, -50%)';
+            } else {
+                p2.style.right = '15%';
+                p2.style.left = 'auto';
+                p2.style.transform = 'translateY(-50%)';
+            }
+            
+            // Update process states
+            if (step.p1State === 'waiting') p1.classList.add('waiting');
+            if (step.p1State === 'in-critical') p1.classList.add('in-critical');
+            if (step.p2State === 'waiting') p2.classList.add('waiting');
+            if (step.p2State === 'in-critical') p2.classList.add('in-critical');
+            
+            // Update lock indicator
+            const lockIndicator = document.getElementById('lockIndicator');
+            if (step.lockState === 'locked') {
+                lockIndicator.className = 'lock-indicator locked';
+                lockIndicator.textContent = '🔒 Lock: HELD';
+            } else {
+                lockIndicator.className = 'lock-indicator unlocked';
+                lockIndicator.textContent = '🔓 Lock: FREE';
+            }
+            
+            // Update critical section
+            const criticalSection = document.getElementById('criticalSection');
+            if (currentMode === 'without-lock' && step.p1State === 'in-critical' && step.p2State === 'in-critical') {
+                criticalSection.className = 'critical-section unsafe';
+            } else {
+                criticalSection.className = 'critical-section safe';
+            }
+            
+            // Update data value
+            const dataValue = document.getElementById('dataValue');
+            const dataDisplay = document.getElementById('dataDisplay');
+            dataValue.textContent = step.dataValue;
+            
+            if (currentMode === 'without-lock' && currentStep >= 5) {
+                dataDisplay.classList.add('corrupted');
+            } else {
+                dataDisplay.classList.remove('corrupted');
+            }
+        }
+
+        function updateDescription() {
+            const step = steps[currentMode][currentStep];
+            const desc = document.getElementById('stateDescription');
+            desc.innerHTML = `
+                <h4>${step.description.title}</h4>
+                <p>${step.description.text}</p>
+            `;
+        }
+
+        function updateUI() {
+            const step = steps[currentMode][currentStep];
+            
+            // Update step label
+            document.getElementById('stepLabel').textContent = `Step ${step.step} of ${steps[currentMode].length - 1}`;
+            
+            // Update buttons
+            document.getElementById('btnPrev').disabled = currentStep === 0;
+            document.getElementById('btnNext').disabled = currentStep === steps[currentMode].length - 1;
+            
+            // Update status
+            document.getElementById('statusText').textContent = step.status;
+            
+            // Update animation
+            updateAnimation();
+            updateDescription();
+        }
+
+        function nextStep() {
+            if (currentStep < steps[currentMode].length - 1) {
+                currentStep++;
+                updateUI();
+            }
+            if (currentStep === steps[currentMode].length - 1) {
+                stopPlay();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        }
+
+        function resetDemo() {
+            stopPlay();
+            currentStep = 0;
+            updateUI();
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                stopPlay();
+            } else {
+                startPlay();
+            }
+        }
+
+        function startPlay() {
+            if (currentStep === steps[currentMode].length - 1) {
+                currentStep = 0;
+                updateUI();
+            }
+            isPlaying = true;
+            document.getElementById('btnPlay').textContent = '⏸ Pause';
+            playInterval = setInterval(() => {
+                if (currentStep < steps[currentMode].length - 1) {
+                    nextStep();
+                } else {
+                    stopPlay();
+                }
+            }, 2000);
+        }
+
+        function stopPlay() {
+            isPlaying = false;
+            document.getElementById('btnPlay').textContent = '▶ Play';
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>

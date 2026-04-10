@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Deadlock - Interactive Demo</title>
+    <style>
+        :root {
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --p1-color: #3b82f6;
+            --p2-color: #8b5cf6;
+            --r1-color: #f59e0b;
+            --r2-color: #10b981;
+            --border-color: #e5e7eb;
+            --deadlock-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Prevention Section */
+        .prevention-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+        }
+
+        .prevention-section h4 {
+            margin: 0 0 10px 0;
+            color: #166534;
+            font-size: 1rem;
+        }
+
+        .prevention-section p {
+            margin: 0 0 10px 0;
+            color: #065f46;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .prevention-strategies {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .strategy-item {
+            background: #ecfdf5;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            border-left: 3px solid #10b981;
+        }
+
+        .strategy-item h5 {
+            margin: 0 0 3px 0;
+            color: #065f46;
+        }
+
+        .strategy-item p {
+            margin: 0;
+            color: #0f766e;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            color: #4a5568;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        /* Resource Allocation Graph */
+        .rag-container {
+            position: relative;
+            height: 350px;
+            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Process Nodes */
+        .process-node {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            transition: all 0.5s ease;
+            z-index: 2;
+        }
+
+        .process-node .icon {
+            font-size: 1.8rem;
+            margin-bottom: 4px;
+        }
+
+        .process-node .label {
+            font-size: 0.8rem;
+        }
+
+        .process-p1 {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            top: 40%;
+            left: 15%;
+            transform: translate(-50%, -50%);
+        }
+
+        .process-p2 {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            top: 40%;
+            right: 15%;
+            transform: translate(50%, -50%);
+        }
+
+        .process-node.deadlocked {
+            animation: deadlockPulse 1s infinite;
+            border: 3px solid var(--deadlock-color);
+        }
+
+        @keyframes deadlockPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.8); }
+        }
+
+        /* Resource Nodes */
+        .resource-node {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            transition: all 0.5s ease;
+            z-index: 2;
+        }
+
+        .resource-node .icon {
+            font-size: 1.5rem;
+            margin-bottom: 2px;
+        }
+
+        .resource-node .label {
+            font-size: 0.7rem;
+        }
+
+        .resource-r1 {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .resource-r2 {
+            background: linear-gradient(135deg, #10b981, #059669);
+            top: 70%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .resource-node.allocated {
+            animation: allocatedPulse 1.5s infinite;
+        }
+
+        @keyframes allocatedPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        .resource-r2.allocated {
+            animation: allocatedPulse2 1.5s infinite;
+        }
+
+        @keyframes allocatedPulse2 {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        /* Resource Instances (dots inside resource) */
+        .resource-instances {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .instance-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .instance-dot.allocated {
+            background: #ef4444;
+            box-shadow: 0 0 5px #ef4444;
+        }
+
+        .instance-dot.available {
+            background: #4ade80;
+        }
+
+        /* SVG for arrows */
+        .arrow-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .rag-arrow {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            marker-end: url(#arrowMarker);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+
+        .rag-arrow.visible {
+            opacity: 1;
+        }
+
+        .rag-arrow.request {
+            stroke: #ef4444;
+            stroke-dasharray: 8, 4;
+        }
+
+        .rag-arrow.assignment {
+            stroke: #10b981;
+        }
+
+        .rag-arrow.deadlock {
+            stroke: #ef4444;
+            stroke-width: 4;
+            animation: deadlockArrow 1s infinite;
+        }
+
+        @keyframes deadlockArrow {
+            0%, 100% { stroke-opacity: 0.6; }
+            50% { stroke-opacity: 1; }
+        }
+
+        /* Step Controls */
+        .step-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .step-controls button {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .btn-prev {
+            background-color: #64748b;
+            color: white;
+        }
+
+        .btn-prev:hover:not(:disabled) {
+            background-color: #475569;
+        }
+
+        .btn-next {
+            background-color: #4f46e5;
+            color: white;
+        }
+
+        .btn-next:hover:not(:disabled) {
+            background-color: #4338ca;
+        }
+
+        .btn-play {
+            background-color: #059669;
+            color: white;
+        }
+
+        .btn-play:hover:not(:disabled) {
+            background-color: #047857;
+        }
+
+        .btn-reset {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .btn-reset:hover:not(:disabled) {
+            background-color: #b91c1c;
+        }
+
+        .step-controls button:disabled {
+            background-color: #cbd5e0;
+            color: #64748b;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Status */
+        .status-panel {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .status-text {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #374151;
+            min-height: 40px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* State Description */
+        .state-description {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            border-left: 4px solid #64748b;
+        }
+
+        .state-description h4 {
+            margin: 0 0 5px 0;
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        .state-description p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        /* Deadlock Conditions */
+        .conditions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .condition-item {
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            border-left: 3px solid #cbd5e0;
+            transition: all 0.3s ease;
+        }
+
+        .condition-item.met {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .condition-item h5 {
+            margin: 0 0 3px 0;
+            color: #475569;
+        }
+
+        .condition-item p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.7rem;
+        }
+
+        /* Legend */
+        .legend {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+
+        .legend-line {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .legend-line.request {
+            background: #ef4444;
+            border: none;
+            background: repeating-linear-gradient(
+                90deg,
+                #ef4444,
+                #ef4444 5px,
+                transparent 5px,
+                transparent 8px
+            );
+        }
+
+        .legend-line.assignment {
+            background: #10b981;
+        }
+
+        /* Warning Banner */
+        .warning-banner {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .warning-banner.visible {
+            display: block;
+            animation: warningFlash 0.5s infinite;
+        }
+
+        @keyframes warningFlash {
+            0%, 100% { background: #fef2f2; }
+            50% { background: #fecaca; }
+        }
+
+        .warning-banner h4 {
+            margin: 0;
+            color: #dc2626;
+            font-size: 1rem;
+        }
+
+        .warning-banner p {
+            margin: 5px 0 0 0;
+            color: #991b1b;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Deadlock in Operating Systems</h1>
+    <p class="subtitle">Interactive demonstration of how deadlock occurs with the classic dining philosophers scenario</p>
+
+    <div class="main-container">
+        <!-- Left Panel: Resource Allocation Graph -->
+        <div class="panel">
+            <h3>Resource Allocation Graph (RAG)</h3>
+            
+            <div class="rag-container" id="ragContainer">
+                <svg class="arrow-overlay" id="arrowOverlay" viewBox="0 0 600 350" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <marker id="arrowMarker" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="currentColor"/>
+                        </marker>
+                    </defs>
+                    
+                    <!-- P1 → R1 (Request): P1 wants Scanner -->
+                    <!-- From P1 right edge to R1 left edge -->
+                    <path class="rag-arrow request" id="arrow-p1-r1" d="M130,130 Q200,80 265,75"/>
+                    
+                    <!-- R1 → P2 (Assignment): Scanner assigned to P2 -->
+                    <!-- From R1 right edge to P2 left edge -->
+                    <path class="rag-arrow assignment" id="arrow-r1-p2" d="M335,75 Q420,90 470,130"/>
+                    
+                    <!-- P2 → R2 (Request): P2 wants Printer -->
+                    <!-- From P2 bottom-left to R2 right edge -->
+                    <path class="rag-arrow request" id="arrow-p2-r2" d="M470,180 Q440,230 335,240"/>
+                    
+                    <!-- R2 → P1 (Assignment): Printer assigned to P1 -->
+                    <!-- From R2 left edge to P1 bottom-right -->
+                    <path class="rag-arrow assignment" id="arrow-r2-p1" d="M265,250 Q200,220 130,180"/>
+                </svg>
+
+                <!-- Process P1 -->
+                <div class="process-node process-p1" id="process-p1">
+                    <span class="icon">🧑‍💻</span>
+                    <span class="label">P1</span>
+                </div>
+
+                <!-- Process P2 -->
+                <div class="process-node process-p2" id="process-p2">
+                    <span class="icon">🧑‍🔬</span>
+                    <span class="label">P2</span>
+                </div>
+
+                <!-- Resource R1 (Scanner) -->
+                <div class="resource-node resource-r1" id="resource-r1">
+                    <span class="icon">📠</span>
+                    <span class="label">Scanner</span>
+                    <div class="resource-instances">
+                        <div class="instance-dot allocated" id="r1-dot1"></div>
+                    </div>
+                </div>
+
+                <!-- Resource R2 (Printer) -->
+                <div class="resource-node resource-r2" id="resource-r2">
+                    <span class="icon">🖨️</span>
+                    <span class="label">Printer</span>
+                    <div class="resource-instances">
+                        <div class="instance-dot allocated" id="r2-dot1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-banner" id="warningBanner">
+                <h4>⚠️ DEADLOCK DETECTED!</h4>
+                <p>P1 holds Printer, needs Scanner | P2 holds Scanner, needs Printer</p>
+            </div>
+
+            <div class="legend">
+                <strong>Graph Legend:</strong>
+                <div class="legend-item">
+                    <div class="legend-line request"></div>
+                    <span>Request Edge (process wants resource)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line assignment"></div>
+                    <span>Assignment Edge (resource allocated to process)</span>
+                </div>
+            </div>
+
+            <div class="status-panel">
+                <div class="status-text" id="statusText">Click "Next" to start the deadlock demonstration...</div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Controls & Conditions -->
+        <div class="panel">
+            <h3>Deadlock Conditions</h3>
+
+            <div class="step-indicator">
+                <span id="stepLabel">Step 0 of 6</span>
+            </div>
+
+            <div class="step-controls">
+                <button class="btn-prev" id="btnPrev" onclick="prevStep()">◀ Prev</button>
+                <button class="btn-next" id="btnNext" onclick="nextStep()">Next ▶</button>
+                <button class="btn-play" id="btnPlay" onclick="togglePlay()">▶ Play</button>
+                <button class="btn-reset" id="btnReset" onclick="resetDemo()">Reset</button>
+            </div>
+
+            <div class="conditions-grid">
+                <div class="condition-item" id="cond-mutual">
+                    <h5>1. Mutual Exclusion</h5>
+                    <p>Resources cannot be shared</p>
+                </div>
+                <div class="condition-item" id="cond-hold">
+                    <h5>2. Hold and Wait</h5>
+                    <p>Process holds resource while waiting for another</p>
+                </div>
+                <div class="condition-item" id="cond-preempt">
+                    <h5>3. No Preemption</h5>
+                    <p>Resources cannot be forcibly taken</p>
+                </div>
+                <div class="condition-item" id="cond-circular">
+                    <h5>4. Circular Wait</h5>
+                    <p>Chain of processes waiting on each other</p>
+                </div>
+            </div>
+
+            <div class="state-description" id="stateDescription">
+                <h4>Ready to start</h4>
+                <p>Click "Next" to see how deadlock occurs when two processes compete for shared resources.</p>
+            </div>
+
+            <!-- Deadlock Prevention Section -->
+            <div class="prevention-section">
+                <h4>🛡️ How to Prevent This Deadlock</h4>
+                <p>The deadlock occurred because P1 and P2 requested resources in <strong>opposite order</strong>. Here's how to prevent it:</p>
+                
+                <div class="prevention-strategies">
+                    <div class="strategy-item">
+                        <h5>1. Resource Ordering</h5>
+                        <p>Always request resources in the same order (e.g., Scanner first, then Printer). This breaks the circular wait condition.</p>
+                    </div>
+                    
+                    <div class="strategy-item">
+                        <h5>2. Preemption</h5>
+                        <p>Allow the OS to forcibly take resources from processes. If P1 is waiting, P2's Scanner could be preempted.</p>
+                    </div>
+                    
+                    <div class="strategy-item">
+                        <h5>3. Request All at Once</h5>
+                        <p>Require processes to request all needed resources atomically. If one isn't available, none are allocated.</p>
+                    </div>
+                    
+                    <div class="strategy-item">
+                        <h5>4. Banker's Algorithm</h5>
+                        <p>Use deadlock avoidance by checking if allocation would lead to an unsafe state before granting resources.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Steps defining the deadlock scenario
+        const steps = [
+            {
+                step: 0,
+                arrows: [],
+                r1Allocated: false,
+                r2Allocated: false,
+                p1Deadlocked: false,
+                p2Deadlocked: false,
+                showWarning: false,
+                conditions: { mutual: false, hold: false, preempt: false, circular: false },
+                status: "Click 'Next' to begin the deadlock demonstration.",
+                description: {
+                    title: "Initial State",
+                    text: "Two processes (P1 and P2) need both the Scanner and Printer to complete their tasks. Resources are currently available."
+                }
+            },
+            {
+                step: 1,
+                arrows: ["arrow-r1-p2"],
+                r1Allocated: true,
+                r2Allocated: false,
+                p1Deadlocked: false,
+                p2Deadlocked: false,
+                showWarning: false,
+                conditions: { mutual: true, hold: false, preempt: false, circular: false },
+                status: "Step 1: P2 requests and acquires the Scanner. R1 is now allocated to P2.",
+                description: {
+                    title: "P2 Acquires Scanner",
+                    text: "Process P2 requests the Scanner resource and it's granted. The assignment edge (R1→P2) is created. P2 now holds the Scanner."
+                }
+            },
+            {
+                step: 2,
+                arrows: ["arrow-r1-p2", "arrow-r2-p1"],
+                r1Allocated: true,
+                r2Allocated: true,
+                p1Deadlocked: false,
+                p2Deadlocked: false,
+                showWarning: false,
+                conditions: { mutual: true, hold: false, preempt: false, circular: false },
+                status: "Step 2: P1 requests and acquires the Printer. R2 is now allocated to P1.",
+                description: {
+                    title: "P1 Acquires Printer",
+                    text: "Process P1 requests the Printer resource and it's granted. The assignment edge (R2→P1) is created. P1 now holds the Printer."
+                }
+            },
+            {
+                step: 3,
+                arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1"],
+                r1Allocated: true,
+                r2Allocated: true,
+                p1Deadlocked: false,
+                p2Deadlocked: false,
+                showWarning: false,
+                conditions: { mutual: true, hold: true, preempt: true, circular: false },
+                status: "Step 3: P1 requests the Scanner (held by P2). P1 is now waiting.",
+                description: {
+                    title: "P1 Requests Scanner",
+                    text: "P1 needs the Scanner to proceed, but it's held by P2. P1 blocks and waits. The request edge (P1→R1) is created. Hold and Wait condition is now met."
+                }
+            },
+            {
+                step: 4,
+                arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1", "arrow-p2-r2"],
+                r1Allocated: true,
+                r2Allocated: true,
+                p1Deadlocked: true,
+                p2Deadlocked: true,
+                showWarning: true,
+                conditions: { mutual: true, hold: true, preempt: true, circular: true },
+                status: "Step 4: P2 requests the Printer (held by P1). DEADLOCK! Circular wait formed.",
+                description: {
+                    title: "⚠️ DEADLOCK OCCURRED!",
+                    text: "P2 needs the Printer, but it's held by P1. Now: P1 holds Printer, waits for Scanner. P2 holds Scanner, waits for Printer. All 4 deadlock conditions are met!"
+                }
+            },
+            {
+                step: 5,
+                arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1", "arrow-p2-r2"],
+                r1Allocated: true,
+                r2Allocated: true,
+                p1Deadlocked: true,
+                p2Deadlocked: true,
+                showWarning: true,
+                conditions: { mutual: true, hold: true, preempt: true, circular: true },
+                status: "Step 5: Deadlock persists. Neither process can proceed without external intervention.",
+                description: {
+                    title: "Deadlock Persists",
+                    text: "Both processes are stuck indefinitely. To recover: 1) Terminate one process, 2) Preempt resources, or 3) Use deadlock avoidance (like Banker's Algorithm)."
+                }
+            }
+        ];
+
+        let currentStep = 0;
+        let isPlaying = false;
+        let playInterval = null;
+
+        function updateRAG() {
+            const step = steps[currentStep];
+            
+            // Reset all arrows
+            document.querySelectorAll('.rag-arrow').forEach(arrow => {
+                arrow.classList.remove('visible', 'deadlock');
+            });
+            
+            // Show active arrows
+            step.arrows.forEach(arrowId => {
+                const arrow = document.getElementById(arrowId);
+                arrow.classList.add('visible');
+                
+                // Highlight deadlock arrows
+                if (step.p1Deadlocked && step.p2Deadlocked) {
+                    if (arrowId.includes('p1') || arrowId.includes('p2')) {
+                        arrow.classList.add('deadlock');
+                    }
+                }
+            });
+            
+            // Update resource allocation state
+            const r1 = document.getElementById('resource-r1');
+            const r2 = document.getElementById('resource-r2');
+            const r1dot = document.getElementById('r1-dot1');
+            const r2dot = document.getElementById('r2-dot1');
+            
+            if (step.r1Allocated) {
+                r1.classList.add('allocated');
+                r1dot.classList.add('allocated');
+                r1dot.classList.remove('available');
+            } else {
+                r1.classList.remove('allocated');
+                r1dot.classList.remove('allocated');
+                r1dot.classList.add('available');
+            }
+            
+            if (step.r2Allocated) {
+                r2.classList.add('allocated');
+                r2dot.classList.add('allocated');
+                r2dot.classList.remove('available');
+            } else {
+                r2.classList.remove('allocated');
+                r2dot.classList.remove('allocated');
+                r2dot.classList.add('available');
+            }
+            
+            // Update process deadlock state
+            const p1 = document.getElementById('process-p1');
+            const p2 = document.getElementById('process-p2');
+            
+            if (step.p1Deadlocked) {
+                p1.classList.add('deadlocked');
+            } else {
+                p1.classList.remove('deadlocked');
+            }
+            
+            if (step.p2Deadlocked) {
+                p2.classList.add('deadlocked');
+            } else {
+                p2.classList.remove('deadlocked');
+            }
+            
+            // Show/hide warning
+            const warning = document.getElementById('warningBanner');
+            if (step.showWarning) {
+                warning.classList.add('visible');
+            } else {
+                warning.classList.remove('visible');
+            }
+        }
+
+        function updateConditions() {
+            const step = steps[currentStep];
+            
+            ['mutual', 'hold', 'preempt', 'circular'].forEach(cond => {
+                const el = document.getElementById(`cond-${cond}`);
+                if (step.conditions[cond]) {
+                    el.classList.add('met');
+                } else {
+                    el.classList.remove('met');
+                }
+            });
+        }
+
+        function updateDescription() {
+            const step = steps[currentStep];
+            const desc = document.getElementById('stateDescription');
+            desc.innerHTML = `
+                <h4>${step.description.title}</h4>
+                <p>${step.description.text}</p>
+            `;
+        }
+
+        function updateUI() {
+            const step = steps[currentStep];
+            
+            // Update step label
+            document.getElementById('stepLabel').textContent = `Step ${step.step} of ${steps.length - 1}`;
+            
+            // Update buttons
+            document.getElementById('btnPrev').disabled = currentStep === 0;
+            document.getElementById('btnNext').disabled = currentStep === steps.length - 1;
+            
+            // Update status
+            document.getElementById('statusText').textContent = step.status;
+            
+            // Update all visual elements
+            updateRAG();
+            updateConditions();
+            updateDescription();
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+            if (currentStep === steps.length - 1) {
+                stopPlay();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        }
+
+        function resetDemo() {
+            stopPlay();
+            currentStep = 0;
+            updateUI();
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                stopPlay();
+            } else {
+                startPlay();
+            }
+        }
+
+        function startPlay() {
+            if (currentStep === steps.length - 1) {
+                currentStep = 0;
+                updateUI();
+            }
+            isPlaying = true;
+            document.getElementById('btnPlay').textContent = '⏸ Pause';
+            playInterval = setInterval(() => {
+                if (currentStep < steps.length - 1) {
+                    nextStep();
+                } else {
+                    stopPlay();
+                }
+            }, 2500);
+        }
+
+        function stopPlay() {
+            isPlaying = false;
+            document.getElementById('btnPlay').textContent = '▶ Play';
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
