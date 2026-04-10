@@ -41,6 +41,42 @@
             font-size: 1rem;
         }
 
+        /* Demo Tabs */
+        .demo-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .demo-tab {
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .demo-tab:hover {
+            border-color: #4f46e5;
+            background: #f0f4ff;
+        }
+
+        .demo-tab.active {
+            border-color: #4f46e5;
+            background: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .demo-tab .icon {
+            margin-right: 6px;
+        }
+
         .main-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -299,6 +335,30 @@
             50% { stroke-opacity: 1; }
         }
 
+        /* Blocked/Denied Request Arrow */
+        .rag-arrow.blocked {
+            stroke: #f97316;
+            stroke-dasharray: 12, 4;
+            stroke-width: 3;
+            opacity: 0.5;
+        }
+
+        .rag-arrow.blocked.visible {
+            opacity: 0.7;
+            animation: blockedArrow 0.8s infinite;
+        }
+
+        @keyframes blockedArrow {
+            0%, 100% { stroke-opacity: 0.5; }
+            50% { stroke-opacity: 0.8; }
+        }
+
+        /* Safe State Indicator */
+        .rag-arrow.safe {
+            stroke: #22c55e;
+            stroke-width: 3;
+        }
+
         /* Step Controls */
         .step-controls {
             display: flex;
@@ -381,9 +441,45 @@
         .step-indicator {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
             font-size: 0.8rem;
             color: #666;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.safe {
+            background: #dbeafe;
+            color: #0369a1;
+            border: 1px solid #0284c7;
+        }
+
+        .status-badge.unsafe {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #dc2626;
+        }
+
+        .status-badge.blocked {
+            background: #fed7aa;
+            color: #9a3412;
+            border: 1px solid #ea580c;
+        }
+
+        .status-badge.normal {
+            background: #f3f4f6;
+            color: #666;
+            border: 1px solid #d1d5db;
         }
 
         /* State Description */
@@ -638,6 +734,7 @@
 
             <div class="step-indicator">
                 <span id="stepLabel">Step 0 of 6</span>
+                <span class="status-badge normal" id="statusBadge"></span>
             </div>
 
             <div class="step-controls">
@@ -710,6 +807,7 @@
             {
                 step: 0,
                 arrows: [],
+                arrowClasses: {},
                 r1Allocated: false,
                 r2Allocated: false,
                 p1Deadlocked: false,
@@ -725,6 +823,7 @@
             {
                 step: 1,
                 arrows: ["arrow-r1-p2"],
+                arrowClasses: { "arrow-r1-p2": "assignment" },
                 r1Allocated: true,
                 r2Allocated: false,
                 p1Deadlocked: false,
@@ -740,6 +839,7 @@
             {
                 step: 2,
                 arrows: ["arrow-r1-p2", "arrow-r2-p1"],
+                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: false,
@@ -755,6 +855,7 @@
             {
                 step: 3,
                 arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1"],
+                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment", "arrow-p1-r1": "request" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: false,
@@ -770,6 +871,7 @@
             {
                 step: 4,
                 arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1", "arrow-p2-r2"],
+                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment", "arrow-p1-r1": "request", "arrow-p2-r2": "request" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: true,
@@ -785,6 +887,7 @@
             {
                 step: 5,
                 arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1", "arrow-p2-r2"],
+                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment", "arrow-p1-r1": "request", "arrow-p2-r2": "request" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: true,
@@ -804,6 +907,7 @@
             {
                 step: 0,
                 arrows: [],
+                arrowClasses: {},
                 r1Allocated: false,
                 r2Allocated: false,
                 p1Deadlocked: false,
@@ -813,142 +917,135 @@
                 status: "Click 'Next' to begin the prevention demonstration.",
                 description: {
                     title: "Initial State (Prevention)",
-                    text: "Both processes will request resources in the SAME order: Scanner first, then Printer. This prevents circular wait."
+                    text: "Both processes will request resources in the SAME order: Scanner first, then Printer. This prevents circular wait by eliminating the circular wait condition."
                 }
             },
             {
                 step: 1,
-                arrows: ["arrow-p1-r1", "arrow-p2-r1"],
+                arrows: ["arrow-p1-r1"],
+                arrowClasses: { "arrow-p1-r1": "request" },
                 r1Allocated: false,
                 r2Allocated: false,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 1: Both P1 and P2 request Scanner (same order). P1 gets it first, P2 waits.",
+                status: "Step 1: P1 requests Scanner (resource 1st in order). P1 gets it.",
                 description: {
-                    title: "Both Request Scanner",
-                    text: "Both processes request Scanner in the same order. P1 acquires it, P2 waits. No circular wait possible!"
+                    title: "P1 Requests Scanner First",
+                    text: "P1 requests Scanner first (following the ordering protocol). P1 acquires it since it's available. The system enforces that all processes request resources in the same predefined order."
                 }
             },
             {
                 step: 2,
-                arrows: ["arrow-r1-p1", "arrow-p2-r1"],
+                arrows: ["arrow-r1-p1"],
+                arrowClasses: { "arrow-r1-p1": "assignment" },
                 r1Allocated: true,
                 r2Allocated: false,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 2: P1 holds Scanner, P2 waits. P1 will release Scanner before requesting Printer.",
+                conditions: { mutual: true, hold: false, preempt: false, circular: false },
+                status: "Step 2: P1 holds Scanner. P2 tries to request Scanner but must wait.",
                 description: {
-                    title: "P1 Holds Scanner",
-                    text: "P1 has Scanner, P2 waits. P1 will complete with Scanner first, then request Printer. No hold-and-wait for multiple resources!"
+                    title: "P2 Waits for Scanner",
+                    text: "P2 also requests Scanner (in same order) but P1 holds it. P2 must wait. Critical: P2 doesn't request Printer yet - it only waits for Scanner. This prevents hold-and-wait!"
                 }
             },
             {
                 step: 3,
-                arrows: ["arrow-r1-p1", "arrow-p1-r2", "arrow-p2-r1"],
+                arrows: ["arrow-r1-p1", "arrow-p1-r2"],
+                arrowClasses: { "arrow-r1-p1": "assignment", "arrow-p1-r2": "request" },
                 r1Allocated: true,
                 r2Allocated: false,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 3: P1 requests Printer while holding Scanner. P1 gets Printer.",
+                status: "Step 3: P1 now requests Printer (2nd resource). P1 gets Printer.",
                 description: {
-                    title: "P1 Requests Printer",
-                    text: "P1 requests Printer and gets it. P1 now has both resources and can complete its work."
+                    title: "P1 Acquires Printer",
+                    text: "While holding Scanner, P1 requests Printer (next in order) and gets it. P1 now has both resources. P2 still waits only for Scanner - it doesn't hold anything."
                 }
             },
             {
                 step: 4,
-                arrows: ["arrow-r1-p1", "arrow-r2-p1", "arrow-p2-r1"],
+                arrows: ["arrow-r1-p1", "arrow-r2-p1"],
+                arrowClasses: { "arrow-r1-p1": "assignment", "arrow-r2-p1": "assignment" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 4: P1 holds both resources. P2 still waits for Scanner.",
+                status: "Step 4: P1 has both resources. No circular wait can form!",
                 description: {
-                    title: "P1 Has Both Resources",
-                    text: "P1 has both Scanner and Printer. P2 waits patiently. No deadlock because P2 isn't holding anything while waiting."
+                    title: "No Circular Wait Possible",
+                    text: "P1 has both Scanner and Printer. P2 waits only for Scanner, not Printer. Even though P2 will eventually need Printer, P1 always requests in order (Scanner before Printer), preventing any circular dependency."
                 }
             },
             {
                 step: 5,
-                arrows: ["arrow-r2-p1", "arrow-p2-r1"],
+                arrows: ["arrow-r2-p1"],
+                arrowClasses: { "arrow-r2-p1": "assignment" },
                 r1Allocated: false,
                 r2Allocated: true,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 5: P1 releases Scanner and completes. P2 can now acquire Scanner.",
+                status: "Step 5: P1 completes and releases Scanner. P2 can now acquire it.",
                 description: {
-                    title: "P1 Releases Scanner",
-                    text: "P1 completes its work and releases Scanner. P2 can now acquire the Scanner it was waiting for."
+                    title: "P1 Completes - Releases Scanner",
+                    text: "P1 finishes its work and releases Scanner. P2 has been waiting and can now acquire Scanner. P1 still holds Printer temporarily but will release it soon."
                 }
             },
             {
                 step: 6,
                 arrows: ["arrow-r1-p2", "arrow-r2-p1"],
+                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 6: P2 acquires Scanner. P1 still has Printer but will release it.",
+                status: "Step 6: P2 acquires Scanner. P1 releases Printer.",
                 description: {
-                    title: "P2 Acquires Scanner",
-                    text: "P2 now has Scanner. P1 still has Printer but will release it after completing its work."
+                    title: "P2 Gets Scanner - P1 Releases Printer",
+                    text: "P2 acquires the Scanner it was waiting for. P1 then releases Printer since it's done. Now P2 has Scanner and can request Printer next."
                 }
             },
             {
                 step: 7,
-                arrows: ["arrow-r1-p2"],
+                arrows: ["arrow-r1-p2", "arrow-p2-r2"],
+                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-p2-r2": "request" },
                 r1Allocated: true,
                 r2Allocated: false,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 7: P1 releases Printer and completes. P2 can now request Printer.",
+                status: "Step 7: P2 requests Printer (2nd in order). Printer is available, so P2 gets it.",
                 description: {
-                    title: "P1 Releases Printer",
-                    text: "P1 releases Printer and finishes. P2 can now request Printer to complete its work."
+                    title: "P2 Acquires Printer",
+                    text: "P2 now requests Printer (the second resource in order) and gets it since P1 released it. P2 has both resources and can complete."
                 }
             },
             {
                 step: 8,
-                arrows: ["arrow-r1-p2", "arrow-p2-r2"],
-                r1Allocated: true,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 8: P2 requests Printer. P2 gets Printer and can complete.",
-                description: {
-                    title: "P2 Requests Printer",
-                    text: "P2 requests Printer and gets it. P2 now has both resources and can complete its work."
-                }
-            },
-            {
-                step: 9,
                 arrows: ["arrow-r1-p2", "arrow-r2-p2"],
+                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p2": "assignment" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 9: P2 holds both resources and completes successfully. No deadlock!",
+                status: "Step 8: P2 holds both resources and completes successfully. No deadlock!",
                 description: {
-                    title: "✅ No Deadlock - Both Complete!",
-                    text: "Both processes completed successfully! Resource ordering prevented deadlock by eliminating circular wait."
+                    title: "✅ No Deadlock - Both Processes Complete!",
+                    text: "Success! By enforcing resource ordering (all processes request Scanner before Printer), we eliminated circular wait and prevented deadlock. Both processes completed successfully!"
                 }
             }
         ];
@@ -958,6 +1055,7 @@
             {
                 step: 0,
                 arrows: [],
+                arrowClasses: {},
                 r1Allocated: false,
                 r2Allocated: false,
                 p1Deadlocked: false,
@@ -966,98 +1064,104 @@
                 conditions: { mutual: false, hold: false, preempt: false, circular: false },
                 status: "Click 'Next' to begin the avoidance demonstration.",
                 description: {
-                    title: "Initial State (Avoidance)",
-                    text: "Banker's Algorithm checks if resource allocation would lead to an unsafe state before granting resources."
+                    title: "Initial State (Avoidance with Banker's Algorithm)",
+                    text: "The OS uses Banker's Algorithm to check if resource allocation would lead to an unsafe state. Safe allocations are granted, unsafe ones are denied."
                 }
             },
             {
                 step: 1,
                 arrows: ["arrow-r1-p2"],
+                arrowClasses: { "arrow-r1-p2": "assignment safe" },
                 r1Allocated: true,
                 r2Allocated: false,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 1: P2 requests Scanner. Banker's Algorithm checks safety - OK. R1 allocated to P2.",
+                status: "Step 1: P2 requests Scanner. Banker's Algorithm checks: SAFE ✓ Allocation granted.",
                 description: {
-                    title: "P2 Acquires Scanner (Safe)",
-                    text: "P2 requests Scanner. Banker's Algorithm simulates allocation and finds a safe sequence exists. Allocation granted."
+                    title: "P2 Acquires Scanner (Safe State)",
+                    text: "P2 requests Scanner. Banker's Algorithm simulates the allocation and finds P2 can complete with its maximum resources without waiting for more. This is a SAFE state. Request is GRANTED."
                 }
             },
             {
                 step: 2,
                 arrows: ["arrow-r1-p2", "arrow-r2-p1"],
+                arrowClasses: { "arrow-r1-p2": "assignment safe", "arrow-r2-p1": "assignment safe" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 2: P1 requests Printer. Banker's Algorithm checks safety - OK. R2 allocated to P1.",
+                status: "Step 2: P1 requests Printer. Banker's Algorithm checks: SAFE ✓ Allocation granted.",
                 description: {
-                    title: "P1 Acquires Printer (Safe)",
-                    text: "P1 requests Printer. Banker's Algorithm finds P2 can complete with current resources, then P1 can complete. Safe allocation."
+                    title: "P1 Acquires Printer (Safe State)",
+                    text: "P1 requests Printer. Banker's Algorithm confirms a safe sequence exists: P2 can still complete (has Scanner), then P1 can complete (has Printer). This is SAFE. Request is GRANTED."
                 }
             },
             {
                 step: 3,
                 arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1"],
+                arrowClasses: { "arrow-r1-p2": "assignment safe", "arrow-r2-p1": "assignment safe", "arrow-p1-r1": "blocked" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 3: P1 requests Scanner (held by P2). Banker's Algorithm checks safety - UNSAFE!",
+                status: "Step 3: P1 requests Scanner. Banker's Algorithm checks: UNSAFE ✗ Request DENIED to prevent deadlock!",
                 description: {
-                    title: "P1 Requests Scanner (Unsafe)",
-                    text: "P1 requests Scanner. Banker's Algorithm simulates allocation and finds no safe sequence. Request denied to prevent deadlock."
+                    title: "P1 Requests Scanner (Unsafe - Request DENIED)",
+                    text: "P1 requests Scanner (held by P2). Banker's Algorithm simulates this allocation and discovers an UNSAFE state: if granted, neither process could guarantee completion (circular dependency would form). Request is DENIED! P1 must wait."
                 }
             },
             {
                 step: 4,
                 arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1"],
+                arrowClasses: { "arrow-r1-p2": "assignment safe", "arrow-r2-p1": "assignment safe", "arrow-p1-r1": "blocked" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 4: P1 waits. P2 completes its work and releases Scanner.",
+                status: "Step 4: P1's request was denied. P2 continues and completes its work. P2 releases Scanner.",
                 description: {
-                    title: "P2 Completes and Releases Scanner",
-                    text: "Since P1's request was denied, P2 continues and completes its work, then releases the Scanner resource."
+                    title: "P2 Completes - P1 Continues Waiting",
+                    text: "Since P1's request was denied (blocked), P2 continues execution with Scanner and Printer (no competition). P2 completes its work and releases both resources."
                 }
             },
             {
                 step: 5,
-                arrows: ["arrow-r2-p1", "arrow-p1-r1"],
+                arrows: ["arrow-p1-r1"],
+                arrowClasses: { "arrow-p1-r1": "request" },
                 r1Allocated: false,
-                r2Allocated: true,
+                r2Allocated: false,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 5: Scanner becomes available. P1 can now safely request Scanner.",
+                status: "Step 5: P2 released all resources. Now P1 can safely request Scanner again.",
                 description: {
-                    title: "P1 Safely Acquires Scanner",
-                    text: "Scanner is now available. P1 requests it and Banker's Algorithm confirms it's safe. P1 gets Scanner and can complete."
+                    title: "Resources Available - P1 Can Now Request Scanner",
+                    text: "P2 has released Scanner and Printer. Now P1's previously UNSAFE request becomes SAFE. P1 can request Scanner again and receive it without risk of deadlock."
                 }
             },
             {
                 step: 6,
-                arrows: ["arrow-r2-p1", "arrow-r1-p1"],
+                arrows: ["arrow-r1-p1", "arrow-r2-p1"],
+                arrowClasses: { "arrow-r1-p1": "assignment safe", "arrow-r2-p1": "assignment safe" },
                 r1Allocated: true,
                 r2Allocated: true,
                 p1Deadlocked: false,
                 p2Deadlocked: false,
                 showWarning: false,
                 conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 6: P1 holds both resources and completes successfully. No deadlock!",
+                status: "Step 6: P1 acquires both Scanner and Printer. P1 completes successfully.",
                 description: {
-                    title: "✅ No Deadlock - Both Complete!",
-                    text: "Both processes completed successfully! Banker's Algorithm prevented deadlock by denying unsafe requests."
+                    title: "✅ No Deadlock - Both Processes Complete!",
+                    text: "Success! Banker's Algorithm prevented deadlock by denying an unsafe request (P1 requesting Scanner). Both processes eventually completed. By checking for unsafe states BEFORE allocating, we avoided deadlock entirely!"
                 }
             }
         ];
@@ -1082,18 +1186,33 @@
             
             // Reset all arrows
             document.querySelectorAll('.rag-arrow').forEach(arrow => {
-                arrow.classList.remove('visible', 'deadlock');
+                arrow.classList.remove('visible', 'deadlock', 'blocked', 'safe', 'request', 'assignment');
             });
             
-            // Show active arrows
+            // Show active arrows with their classes
             step.arrows.forEach(arrowId => {
                 const arrow = document.getElementById(arrowId);
                 arrow.classList.add('visible');
                 
-                // Highlight deadlock arrows
+                // Apply specific classes if specified (can be space-separated)
+                if (step.arrowClasses && step.arrowClasses[arrowId]) {
+                    const classes = step.arrowClasses[arrowId].split(' ');
+                    classes.forEach(cls => arrow.classList.add(cls));
+                } else {
+                    // Default: determine class from arrow ID
+                    if (arrowId.includes('p') && arrowId.includes('r')) {
+                        arrow.classList.add('request');
+                    } else {
+                        arrow.classList.add('assignment');
+                    }
+                }
+                
+                // Highlight deadlock arrows (only if not blocked)
                 if (step.p1Deadlocked && step.p2Deadlocked) {
-                    if (arrowId.includes('p1') || arrowId.includes('p2')) {
-                        arrow.classList.add('deadlock');
+                    if ((arrowId.includes('p1') || arrowId.includes('p2')) && arrowId.includes('r')) {
+                        if (!arrow.classList.contains('blocked')) {
+                            arrow.classList.add('deadlock');
+                        }
                     }
                 }
             });
@@ -1197,6 +1316,35 @@
             
             // Update step label
             document.getElementById('stepLabel').textContent = `Step ${step.step} of ${getCurrentSteps().length - 1}`;
+            
+            // Update status badge
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'status-badge normal';
+            badge.textContent = '';
+            
+            if (currentDemo === 'avoidance') {
+                if (step.step === 3) {
+                    badge.className = 'status-badge unsafe';
+                    badge.textContent = '⚠️ Unsafe - Denied';
+                } else if (step.arrows && step.arrowClasses) {
+                    let hasBlocked = Object.values(step.arrowClasses).some(cls => cls.includes('blocked'));
+                    let hasSafe = Object.values(step.arrowClasses).some(cls => cls.includes('safe'));
+                    
+                    if (hasBlocked) {
+                        badge.className = 'status-badge blocked';
+                        badge.textContent = '🔒 Blocked';
+                    } else if (hasSafe) {
+                        badge.className = 'status-badge safe';
+                        badge.textContent = '✓ Safe';
+                    }
+                }
+            } else if (currentDemo === 'prevention') {
+                badge.className = 'status-badge safe';
+                badge.textContent = '✓ Safe';
+            } else if (step.showWarning) {
+                badge.className = 'status-badge unsafe';
+                badge.textContent = '⚠️ Deadlock!';
+            }
             
             // Update buttons
             document.getElementById('btnPrev').disabled = currentStep === 0;
