@@ -1,1422 +1,467 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OS Deadlock - Interactive Demo</title>
-    <style>
-        :root {
-            --bg-color: #f5f7fa;
-            --card-bg: #ffffff;
-            --text-color: #333;
-            --p1-color: #3b82f6;
-            --p2-color: #8b5cf6;
-            --r1-color: #f59e0b;
-            --r2-color: #10b981;
-            --border-color: #e5e7eb;
-            --deadlock-color: #ef4444;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 {
-            color: #2d3748;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 25px;
-            font-size: 1rem;
-        }
-
-        /* Demo Tabs */
-        .demo-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .demo-tab {
-            padding: 10px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            color: #666;
-        }
-
-        .demo-tab:hover {
-            border-color: #4f46e5;
-            background: #f0f4ff;
-        }
-
-        .demo-tab.active {
-            border-color: #4f46e5;
-            background: #4f46e5;
-            color: white;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        }
-
-        .demo-tab .icon {
-            margin-right: 6px;
-        }
-
-        .main-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            max-width: 1200px;
-            width: 100%;
-        }
-
-        @media (max-width: 900px) {
-            .main-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Prevention Section */
-        .prevention-section {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f0fdf4;
-            border: 2px solid #10b981;
-            border-radius: 8px;
-        }
-
-        .prevention-section h4 {
-            margin: 0 0 10px 0;
-            color: #166534;
-            font-size: 1rem;
-        }
-
-        .prevention-section p {
-            margin: 0 0 10px 0;
-            color: #065f46;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-
-        .prevention-strategies {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .strategy-item {
-            background: #ecfdf5;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            border-left: 3px solid #10b981;
-        }
-
-        .strategy-item h5 {
-            margin: 0 0 3px 0;
-            color: #065f46;
-        }
-
-        .strategy-item p {
-            margin: 0;
-            color: #0f766e;
-        }
-
-        .panel {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .panel h3 {
-            margin-top: 0;
-            color: #4a5568;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-
-        /* Resource Allocation Graph */
-        .rag-container {
-            position: relative;
-            height: 350px;
-            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        /* Process Nodes */
-        .process-node {
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: white;
-            transition: all 0.5s ease;
-            z-index: 2;
-        }
-
-        .process-node .icon {
-            font-size: 1.8rem;
-            margin-bottom: 4px;
-        }
-
-        .process-node .label {
-            font-size: 0.8rem;
-        }
-
-        .process-p1 {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            top: 40%;
-            left: 15%;
-            transform: translate(-50%, -50%);
-        }
-
-        .process-p2 {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            top: 40%;
-            right: 15%;
-            transform: translate(50%, -50%);
-        }
-
-        .process-node.deadlocked {
-            animation: deadlockPulse 1s infinite;
-            border: 3px solid var(--deadlock-color);
-        }
-
-        @keyframes deadlockPulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.8); }
-        }
-
-        /* Resource Nodes */
-        .resource-node {
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: white;
-            transition: all 0.5s ease;
-            z-index: 2;
-        }
-
-        .resource-node .icon {
-            font-size: 1.5rem;
-            margin-bottom: 2px;
-        }
-
-        .resource-node .label {
-            font-size: 0.7rem;
-        }
-
-        .resource-r1 {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            top: 20%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .resource-r2 {
-            background: linear-gradient(135deg, #10b981, #059669);
-            top: 70%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .resource-node.allocated {
-            animation: allocatedPulse 1.5s infinite;
-        }
-
-        @keyframes allocatedPulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
-        }
-
-        .resource-r2.allocated {
-            animation: allocatedPulse2 1.5s infinite;
-        }
-
-        @keyframes allocatedPulse2 {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.1); }
-        }
-
-        /* Resource Instances (dots inside resource) */
-        .resource-instances {
-            display: flex;
-            gap: 4px;
-            margin-top: 4px;
-        }
-
-        .instance-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.5);
-            transition: all 0.3s ease;
-        }
-
-        .instance-dot.allocated {
-            background: #ef4444;
-            box-shadow: 0 0 5px #ef4444;
-        }
-
-        .instance-dot.available {
-            background: #4ade80;
-        }
-
-        /* SVG for arrows */
-        .arrow-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .rag-arrow {
-            fill: none;
-            stroke-width: 3;
-            stroke-linecap: round;
-            marker-end: url(#arrowMarker);
-            transition: all 0.5s ease;
-            opacity: 0;
-        }
-
-        .rag-arrow.visible {
-            opacity: 1;
-        }
-
-        .rag-arrow.request {
-            stroke: #ef4444;
-            stroke-dasharray: 8, 4;
-        }
-
-        .rag-arrow.assignment {
-            stroke: #10b981;
-        }
-
-        .rag-arrow.deadlock {
-            stroke: #ef4444;
-            stroke-width: 4;
-            animation: deadlockArrow 1s infinite;
-        }
-
-        @keyframes deadlockArrow {
-            0%, 100% { stroke-opacity: 0.6; }
-            50% { stroke-opacity: 1; }
-        }
-
-        /* Blocked/Denied Request Arrow */
-        .rag-arrow.blocked {
-            stroke: #f97316;
-            stroke-dasharray: 12, 4;
-            stroke-width: 3;
-            opacity: 0.5;
-        }
-
-        .rag-arrow.blocked.visible {
-            opacity: 0.7;
-            animation: blockedArrow 0.8s infinite;
-        }
-
-        @keyframes blockedArrow {
-            0%, 100% { stroke-opacity: 0.5; }
-            50% { stroke-opacity: 0.8; }
-        }
-
-        /* Safe State Indicator */
-        .rag-arrow.safe {
-            stroke: #22c55e;
-            stroke-width: 3;
-        }
-
-        /* Step Controls */
-        .step-controls {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .step-controls button {
-            flex: 1;
-            min-width: 80px;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: bold;
-        }
-
-        .btn-prev {
-            background-color: #64748b;
-            color: white;
-        }
-
-        .btn-prev:hover:not(:disabled) {
-            background-color: #475569;
-        }
-
-        .btn-next {
-            background-color: #4f46e5;
-            color: white;
-        }
-
-        .btn-next:hover:not(:disabled) {
-            background-color: #4338ca;
-        }
-
-        .btn-play {
-            background-color: #059669;
-            color: white;
-        }
-
-        .btn-play:hover:not(:disabled) {
-            background-color: #047857;
-        }
-
-        .btn-reset {
-            background-color: #dc2626;
-            color: white;
-        }
-
-        .btn-reset:hover:not(:disabled) {
-            background-color: #b91c1c;
-        }
-
-        .step-controls button:disabled {
-            background-color: #cbd5e0;
-            color: #64748b;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        /* Status */
-        .status-panel {
-            margin-top: 15px;
-            padding: 12px;
-            background-color: #f8fafc;
-            border-radius: 8px;
-            border-left: 4px solid #4f46e5;
-        }
-
-        .status-text {
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            color: #374151;
-            min-height: 40px;
-        }
-
-        .step-indicator {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 0.8rem;
-            color: #666;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status-badge.safe {
-            background: #dbeafe;
-            color: #0369a1;
-            border: 1px solid #0284c7;
-        }
-
-        .status-badge.unsafe {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #dc2626;
-        }
-
-        .status-badge.blocked {
-            background: #fed7aa;
-            color: #9a3412;
-            border: 1px solid #ea580c;
-        }
-
-        .status-badge.normal {
-            background: #f3f4f6;
-            color: #666;
-            border: 1px solid #d1d5db;
-        }
-
-        /* State Description */
-        .state-description {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 10px;
-            border-left: 4px solid #64748b;
-        }
-
-        .state-description h4 {
-            margin: 0 0 5px 0;
-            color: #4a5568;
-            font-size: 0.9rem;
-        }
-
-        .state-description p {
-            margin: 0;
-            font-size: 0.8rem;
-            color: #64748b;
-            line-height: 1.4;
-        }
-
-        /* Deadlock Conditions */
-        .conditions-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .condition-item {
-            background: #f1f5f9;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            border-left: 3px solid #cbd5e0;
-            transition: all 0.3s ease;
-        }
-
-        .condition-item.met {
-            border-left-color: #ef4444;
-            background: #fef2f2;
-        }
-
-        .condition-item h5 {
-            margin: 0 0 3px 0;
-            color: #475569;
-        }
-
-        .condition-item p {
-            margin: 0;
-            color: #64748b;
-            font-size: 0.7rem;
-        }
-
-        /* Legend */
-        .legend {
-            margin-top: 15px;
-            padding: 10px;
-            background: #f1f5f9;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 4px 0;
-        }
-
-        .legend-line {
-            width: 20px;
-            height: 3px;
-            border-radius: 2px;
-        }
-
-        .legend-line.request {
-            background: #ef4444;
-            border: none;
-            background: repeating-linear-gradient(
-                90deg,
-                #ef4444,
-                #ef4444 5px,
-                transparent 5px,
-                transparent 8px
-            );
-        }
-
-        .legend-line.assignment {
-            background: #10b981;
-        }
-
-        /* Warning Banner */
-        .warning-banner {
-            background: #fef2f2;
-            border: 2px solid #ef4444;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 10px;
-            text-align: center;
-            display: none;
-        }
-
-        .warning-banner.visible {
-            display: block;
-            animation: warningFlash 0.5s infinite;
-        }
-
-        @keyframes warningFlash {
-            0%, 100% { background: #fef2f2; }
-            50% { background: #fecaca; }
-        }
-
-        .warning-banner h4 {
-            margin: 0;
-            color: #dc2626;
-            font-size: 1rem;
-        }
-
-        .warning-banner p {
-            margin: 5px 0 0 0;
-            color: #991b1b;
-            font-size: 0.8rem;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deadlock Visualizer - Interactive Teaching Tool</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:#0a0e27;color:#e0e0e0;
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;
+}
+.header{
+  text-align:center;padding:14px 16px 8px;
+  background:linear-gradient(135deg,#0a0e27,#1a1e47);
+  border-bottom:2px solid #2a2e57;flex-shrink:0;
+}
+.header h1{
+  font-size:clamp(1.1rem,3.5vw,1.8rem);
+  background:linear-gradient(90deg,#60a5fa,#a78bfa,#f472b6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:4px;
+}
+.header p{color:#8888aa;font-size:clamp(0.7rem,2vw,0.88rem)}
+.mode-selector{
+  display:flex;justify-content:center;gap:8px;
+  padding:10px 12px;background:#0d1130;
+  border-bottom:1px solid #2a2e57;flex-shrink:0;flex-wrap:wrap;
+}
+.mode-btn{
+  padding:8px 16px;border:2px solid #3a3e67;border-radius:30px;
+  background:transparent;color:#aaa;font-size:clamp(0.72rem,2vw,0.88rem);
+  cursor:pointer;transition:all .3s;font-weight:600;white-space:nowrap;
+}
+.mode-btn:hover{border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.08)}
+.mode-btn.active{border-color:#60a5fa;background:rgba(96,165,250,.15);color:#60a5fa;box-shadow:0 0 20px rgba(96,165,250,.15)}
+.mode-btn.active.prevention{border-color:#34d399;background:rgba(52,211,153,.15);color:#34d399;box-shadow:0 0 20px rgba(52,211,153,.15)}
+.mode-btn.active.avoidance{border-color:#fbbf24;background:rgba(251,191,36,.15);color:#fbbf24;box-shadow:0 0 20px rgba(251,191,36,.15)}
+.main-container{
+  display:flex;flex:1;overflow:hidden;
+  max-width:1400px;width:100%;margin:0 auto;
+  padding:12px;gap:12px;
+}
+.viz-panel{flex:1;min-width:0;display:flex;flex-direction:column}
+.info-panel{
+  width:340px;flex-shrink:0;display:flex;flex-direction:column;
+  gap:10px;overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:thin;scrollbar-color:#2a2e57 transparent;
+}
+.info-panel::-webkit-scrollbar{width:5px}
+.info-panel::-webkit-scrollbar-thumb{background:#2a2e57;border-radius:4px}
+.svg-wrap{
+  position:relative;flex:1;min-height:0;
+  background:linear-gradient(145deg,#0d1130,#111540);
+  border:1px solid #2a2e57;border-radius:14px;overflow:hidden;
+}
+.svg-wrap svg{display:block;width:100%;height:100%}
+.controls{
+  display:flex;justify-content:center;align-items:center;gap:10px;
+  padding:10px 12px;background:#0d1130;border-radius:10px;
+  border:1px solid #2a2e57;margin-top:10px;flex-shrink:0;
+}
+.ctrl-btn{
+  width:42px;height:42px;border-radius:50%;border:2px solid #3a3e67;
+  background:rgba(255,255,255,.03);color:#ccc;font-size:1.1rem;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;
+}
+.ctrl-btn:hover:not(:disabled){border-color:#60a5fa;color:#60a5fa;background:rgba(96,165,250,.1);transform:scale(1.05)}
+.ctrl-btn:disabled{opacity:.3;cursor:not-allowed}
+.ctrl-btn.primary{width:50px;height:50px;border-color:#60a5fa;color:#60a5fa;font-size:1.3rem}
+.step-indicator{font-size:.85rem;color:#8888aa;min-width:72px;text-align:center;font-weight:600}
+.kbd-hint{text-align:center;margin-top:6px;font-size:.7rem;color:#444;flex-shrink:0;line-height:1.6}
+.kbd{display:inline-block;padding:1px 6px;background:#1a1e47;border:1px solid #3a3e67;border-radius:3px;font-family:monospace;font-size:.7rem;color:#777}
+.card{background:linear-gradient(145deg,#0d1130,#111540);border:1px solid #2a2e57;border-radius:10px;padding:12px}
+.card h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.8px;color:#60a5fa;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.card h3 .icon{font-size:1rem}
+.step-description{font-size:clamp(0.82rem,2.2vw,0.92rem);line-height:1.55;color:#ccc;min-height:40px}
+.hl{color:#60a5fa;font-weight:600}
+.hl-r{color:#f87171;font-weight:600}
+.hl-g{color:#34d399;font-weight:600}
+.hl-y{color:#fbbf24;font-weight:600}
+.resource-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.resource-table th{text-align:left;padding:5px 6px;color:#8888aa;border-bottom:1px solid #2a2e57;font-weight:600}
+.resource-table td{padding:5px 6px;border-bottom:1px solid rgba(42,46,87,.4)}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.status-dot.free{background:#34d399}.status-dot.held{background:#f87171}.status-dot.waiting{background:#fbbf24}
+.conditions-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.condition-item{padding:5px 7px;background:rgba(42,46,87,.3);border-radius:5px;font-size:.72rem;border-left:3px solid #3a3e67;transition:all .3s;line-height:1.35}
+.condition-item.active{border-left-color:#f87171;background:rgba(248,113,113,.1);color:#f87171}
+.condition-item.broken{border-left-color:#34d399;background:rgba(52,211,153,.08);color:#34d399;text-decoration:line-through}
+.condition-item .cond-name{font-weight:700;display:block;font-size:.73rem}
+.log-container{max-height:180px;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:#2a2e57 transparent}
+.log-container::-webkit-scrollbar{width:4px}
+.log-container::-webkit-scrollbar-thumb{background:#2a2e57;border-radius:3px}
+.log-entry{padding:5px 0;border-bottom:1px solid rgba(42,46,87,.3);font-size:.78rem;color:#777;display:flex;gap:6px}
+.log-entry.active{color:#ddd;font-weight:500}
+.log-step{color:#60a5fa;font-weight:700;min-width:18px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.74rem}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-line{width:22px;height:3px;border-radius:2px}
+.overlay-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:10px 28px;border-radius:8px;font-size:clamp(1rem,3vw,1.3rem);font-weight:800;letter-spacing:2px;opacity:0;transition:opacity .5s;pointer-events:none;z-index:10;text-transform:uppercase}
+.deadlock-banner{background:rgba(220,38,38,.92);color:#fff;box-shadow:0 0 40px rgba(220,38,38,.5)}
+.success-banner{background:rgba(5,150,105,.92);color:#fff;box-shadow:0 0 40px rgba(5,150,105,.5)}
+.overlay-banner.visible{opacity:1}
+@keyframes pulseRed{0%,100%{filter:drop-shadow(0 0 4px rgba(248,113,113,.3))}50%{filter:drop-shadow(0 0 16px rgba(248,113,113,.8))}}
+@keyframes pulseGreen{0%,100%{filter:drop-shadow(0 0 4px rgba(52,211,153,.3))}50%{filter:drop-shadow(0 0 14px rgba(52,211,153,.7))}}
+@keyframes dashMove{to{stroke-dashoffset:-20}}
+.arrow-animated{animation:dashMove .8s linear infinite}
+.deadlock-pulse{animation:pulseRed 1.4s ease-in-out infinite}
+.success-pulse{animation:pulseGreen 1.4s ease-in-out infinite}
+@media(max-width:960px){
+  .main-container{flex-direction:column;overflow-y:auto;padding:8px}
+  .info-panel{width:100%;overflow:visible;flex-shrink:0}
+  .svg-wrap{min-height:280px;flex:none;aspect-ratio:5/4}
+  .kbd-hint{display:none}
+}
+@media(max-width:480px){
+  .mode-btn{padding:6px 12px;font-size:.72rem}
+  .controls{gap:6px;padding:8px}
+  .ctrl-btn{width:38px;height:38px;font-size:1rem}
+  .ctrl-btn.primary{width:44px;height:44px;font-size:1.1rem}
+  .step-indicator{font-size:.78rem;min-width:62px}
+  .svg-wrap{aspect-ratio:5/4.5}
+  .card{padding:10px}
+  .conditions-grid{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
-    <h1>Deadlock in Operating Systems</h1>
-    <p class="subtitle">Interactive demonstration of how deadlock occurs and how to prevent/avoid it</p>
-
-    <!-- Demo Mode Selector -->
-    <div class="demo-tabs">
-        <div class="demo-tab active" onclick="switchDemo('deadlock')">
-            <span class="icon">⚠️</span> Deadlock Scenario
-        </div>
-        <div class="demo-tab" onclick="switchDemo('prevention')">
-            <span class="icon">🛡️</span> Prevention Demo
-        </div>
-        <div class="demo-tab" onclick="switchDemo('avoidance')">
-            <span class="icon">🎯</span> Avoidance Demo
-        </div>
+<div class="header">
+  <h1>⚙️ Deadlock Visualizer</h1>
+  <p>Interactive step-by-step: deadlock, prevention &amp; avoidance</p>
+</div>
+<div class="mode-selector">
+  <button class="mode-btn active" data-mode="deadlock" onclick="switchMode('deadlock')">💀 Deadlock</button>
+  <button class="mode-btn" data-mode="prevention" onclick="switchMode('prevention')">🛡️ Prevention</button>
+  <button class="mode-btn" data-mode="avoidance" onclick="switchMode('avoidance')">🔮 Avoidance</button>
+</div>
+<div class="main-container">
+  <div class="viz-panel">
+    <div class="svg-wrap" id="svgWrap">
+      <svg id="mainSvg" viewBox="0 0 460 380" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ahBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#60a5fa"/></marker>
+          <marker id="ahRed" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f87171"/></marker>
+          <marker id="ahYellow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#fbbf24"/></marker>
+          <marker id="ahGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#34d399"/></marker>
+          <linearGradient id="gP1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3b82f6" stop-opacity=".25"/><stop offset="100%" stop-color="#6366f1" stop-opacity=".08"/></linearGradient>
+          <linearGradient id="gP2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8b5cf6" stop-opacity=".25"/><stop offset="100%" stop-color="#a855f7" stop-opacity=".08"/></linearGradient>
+          <linearGradient id="gR1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f59e0b" stop-opacity=".25"/><stop offset="100%" stop-color="#f97316" stop-opacity=".08"/></linearGradient>
+          <linearGradient id="gR2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#10b981" stop-opacity=".25"/><stop offset="100%" stop-color="#14b8a6" stop-opacity=".08"/></linearGradient>
+          <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0L0 0 0 30" fill="none" stroke="#1a1e47" stroke-width=".4"/></pattern>
+        </defs>
+        <rect width="460" height="380" fill="url(#grid)" opacity=".4"/>
+        <g id="gArrows"></g><g id="gEntities"></g><g id="gLabels"></g>
+      </svg>
+      <div class="overlay-banner deadlock-banner" id="deadlockBanner">⚠ DEADLOCK</div>
+      <div class="overlay-banner success-banner" id="successBanner">✓ COMPLETED</div>
     </div>
-
-    <div class="main-container">
-        <!-- Left Panel: Resource Allocation Graph -->
-        <div class="panel">
-            <h3>Resource Allocation Graph (RAG)</h3>
-            
-            <div class="rag-container" id="ragContainer">
-                <svg class="arrow-overlay" id="arrowOverlay" viewBox="0 0 600 350" preserveAspectRatio="xMidYMid meet">
-                    <defs>
-                        <marker id="arrowMarker" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                            <polygon points="0 0, 10 3.5, 0 7" fill="currentColor"/>
-                        </marker>
-                    </defs>
-                    
-                    <!-- P1 → R1 (Request): P1 wants Scanner -->
-                    <!-- From P1 right edge to R1 left edge -->
-                    <path class="rag-arrow request" id="arrow-p1-r1" d="M130,130 Q200,80 265,75"/>
-                    
-                    <!-- R1 → P2 (Assignment): Scanner assigned to P2 -->
-                    <!-- From R1 right edge to P2 left edge -->
-                    <path class="rag-arrow assignment" id="arrow-r1-p2" d="M335,75 Q420,90 470,130"/>
-                    
-                    <!-- P2 → R2 (Request): P2 wants Printer -->
-                    <!-- From P2 bottom-left to R2 right edge -->
-                    <path class="rag-arrow request" id="arrow-p2-r2" d="M470,180 Q440,230 335,240"/>
-                    
-                    <!-- R2 → P1 (Assignment): Printer assigned to P1 -->
-                    <!-- From R2 left edge to P1 bottom-right -->
-                    <path class="rag-arrow assignment" id="arrow-r2-p1" d="M265,250 Q200,220 130,180"/>
-                    
-                    <!-- Additional arrows for Prevention and Avoidance demos -->
-                    
-                    <!-- R1 → P1 (Assignment): Scanner assigned to P1 -->
-                    <!-- From R1 left edge to P1 right edge -->
-                    <path class="rag-arrow assignment" id="arrow-r1-p1" d="M265,75 Q200,100 130,130"/>
-                    
-                    <!-- P2 → R1 (Request): P2 wants Scanner -->
-                    <!-- From P2 left edge to R1 right edge -->
-                    <path class="rag-arrow request" id="arrow-p2-r1" d="M470,130 Q400,90 335,75"/>
-                    
-                    <!-- P1 → R2 (Request): P1 wants Printer -->
-                    <!-- From P1 bottom-right to R2 top-left -->
-                    <path class="rag-arrow request" id="arrow-p1-r2" d="M130,180 Q200,220 265,250"/>
-                    
-                    <!-- R2 → P2 (Assignment): Printer assigned to P2 -->
-                    <!-- From R2 right edge to P2 bottom-left -->
-                    <path class="rag-arrow assignment" id="arrow-r2-p2" d="M335,250 Q400,210 470,180"/>
-                </svg>
-
-                <!-- Process P1 -->
-                <div class="process-node process-p1" id="process-p1">
-                    <span class="icon">🧑‍💻</span>
-                    <span class="label">P1</span>
-                </div>
-
-                <!-- Process P2 -->
-                <div class="process-node process-p2" id="process-p2">
-                    <span class="icon">🧑‍🔬</span>
-                    <span class="label">P2</span>
-                </div>
-
-                <!-- Resource R1 (Scanner) -->
-                <div class="resource-node resource-r1" id="resource-r1">
-                    <span class="icon">📠</span>
-                    <span class="label">Scanner</span>
-                    <div class="resource-instances">
-                        <div class="instance-dot allocated" id="r1-dot1"></div>
-                    </div>
-                </div>
-
-                <!-- Resource R2 (Printer) -->
-                <div class="resource-node resource-r2" id="resource-r2">
-                    <span class="icon">🖨️</span>
-                    <span class="label">Printer</span>
-                    <div class="resource-instances">
-                        <div class="instance-dot allocated" id="r2-dot1"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="warning-banner" id="warningBanner">
-                <h4>⚠️ DEADLOCK DETECTED!</h4>
-                <p>P1 holds Printer, needs Scanner | P2 holds Scanner, needs Printer</p>
-            </div>
-
-            <div class="legend">
-                <strong>Graph Legend:</strong>
-                <div class="legend-item">
-                    <div class="legend-line request"></div>
-                    <span>Request Edge (process wants resource)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-line assignment"></div>
-                    <span>Assignment Edge (resource allocated to process)</span>
-                </div>
-            </div>
-
-            <div class="status-panel">
-                <div class="status-text" id="statusText">Click "Next" to start the deadlock demonstration...</div>
-            </div>
-        </div>
-
-        <!-- Right Panel: Controls & Conditions -->
-        <div class="panel">
-            <h3>Deadlock Conditions</h3>
-
-            <div class="step-indicator">
-                <span id="stepLabel">Step 0 of 6</span>
-                <span class="status-badge normal" id="statusBadge"></span>
-            </div>
-
-            <div class="step-controls">
-                <button class="btn-prev" id="btnPrev" onclick="prevStep()">◀ Prev</button>
-                <button class="btn-next" id="btnNext" onclick="nextStep()">Next ▶</button>
-                <button class="btn-play" id="btnPlay" onclick="togglePlay()">▶ Play</button>
-                <button class="btn-reset" id="btnReset" onclick="resetDemo()">Reset</button>
-            </div>
-
-            <div class="conditions-grid">
-                <div class="condition-item" id="cond-mutual">
-                    <h5>1. Mutual Exclusion</h5>
-                    <p>Resources cannot be shared</p>
-                </div>
-                <div class="condition-item" id="cond-hold">
-                    <h5>2. Hold and Wait</h5>
-                    <p>Process holds resource while waiting for another</p>
-                </div>
-                <div class="condition-item" id="cond-preempt">
-                    <h5>3. No Preemption</h5>
-                    <p>Resources cannot be forcibly taken</p>
-                </div>
-                <div class="condition-item" id="cond-circular">
-                    <h5>4. Circular Wait</h5>
-                    <p>Chain of processes waiting on each other</p>
-                </div>
-            </div>
-
-            <div class="state-description" id="stateDescription">
-                <h4>Ready to start</h4>
-                <p>Click "Next" to see how deadlock occurs when two processes compete for shared resources.</p>
-            </div>
-
-            <!-- Deadlock Prevention Section -->
-            <div class="prevention-section">
-                <h4>🛡️ How to Prevent This Deadlock</h4>
-                <p>The deadlock occurred because P1 and P2 requested resources in <strong>opposite order</strong>. Here's how to prevent it:</p>
-                
-                <div class="prevention-strategies">
-                    <div class="strategy-item">
-                        <h5>1. Resource Ordering</h5>
-                        <p>Always request resources in the same order (e.g., Scanner first, then Printer). This breaks the circular wait condition.</p>
-                    </div>
-                    
-                    <div class="strategy-item">
-                        <h5>2. Preemption</h5>
-                        <p>Allow the OS to forcibly take resources from processes. If P1 is waiting, P2's Scanner could be preempted.</p>
-                    </div>
-                    
-                    <div class="strategy-item">
-                        <h5>3. Request All at Once</h5>
-                        <p>Require processes to request all needed resources atomically. If one isn't available, none are allocated.</p>
-                    </div>
-                    
-                    <div class="strategy-item">
-                        <h5>4. Banker's Algorithm</h5>
-                        <p>Use deadlock avoidance by checking if allocation would lead to an unsafe state before granting resources.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="controls">
+      <button class="ctrl-btn" id="btnReset" onclick="resetScenario()" title="Reset (R)">⟲</button>
+      <button class="ctrl-btn" id="btnPrev" onclick="prevStep()" title="Previous (←)">◀</button>
+      <span class="step-indicator" id="stepInd">Step 0/0</span>
+      <button class="ctrl-btn primary" id="btnNext" onclick="nextStep()" title="Next (→ / Space)">▶</button>
+      <button class="ctrl-btn" id="btnEnd" onclick="goToEnd()" title="End">⏭</button>
     </div>
+    <div class="kbd-hint">
+      <span class="kbd">←</span> Prev <span class="kbd">→</span><span class="kbd">Space</span> Next
+      <span class="kbd">R</span> Reset <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span> Modes
+      · Click diagram to advance
+    </div>
+  </div>
+  <div class="info-panel">
+    <div class="card"><h3><span class="icon">📖</span> Current Step</h3><div class="step-description" id="stepDesc">Press <span class="hl">▶</span> or <span class="hl">→</span> to begin.</div></div>
+    <div class="card"><h3><span class="icon">📊</span> Resource Allocation</h3><table class="resource-table"><thead><tr><th>Entity</th><th>Holds</th><th>Wants</th><th>Status</th></tr></thead><tbody id="tBody"></tbody></table></div>
+    <div class="card"><h3><span class="icon">🔒</span> Coffman Conditions</h3><div class="conditions-grid" id="coffman">
+      <div class="condition-item" id="c-mutex"><span class="cond-name">1. Mutual Exclusion</span>One process per resource</div>
+      <div class="condition-item" id="c-hold"><span class="cond-name">2. Hold &amp; Wait</span>Hold one, wait for another</div>
+      <div class="condition-item" id="c-nopre"><span class="cond-name">3. No Preemption</span>Can't forcibly take resources</div>
+      <div class="condition-item" id="c-circ"><span class="cond-name">4. Circular Wait</span>Circular dependency chain</div>
+    </div></div>
+    <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:100px"><h3><span class="icon">📝</span> Event Log</h3><div class="log-container" id="logBox"></div></div>
+    <div class="card"><h3><span class="icon">🔑</span> Legend</h3><div class="legend">
+      <div class="legend-item"><div class="legend-line" style="background:#60a5fa"></div>Holds</div>
+      <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#f87171 0 5px,transparent 5px 9px)"></div>Waits</div>
+      <div class="legend-item"><div class="legend-line" style="background:#34d399"></div>Granted</div>
+      <div class="legend-item"><div class="legend-line" style="background:#fbbf24"></div>Denied</div>
+    </div></div>
+  </div>
+</div>
+<script>
+const POS={
+  P1:{x:110,y:115,r:48,shape:'circle'},
+  P2:{x:350,y:265,r:48,shape:'circle'},
+  R1:{x:350,y:115,hw:52,hh:34,shape:'rect'},
+  R2:{x:110,y:265,hw:52,hh:34,shape:'rect'}
+};
 
-    <script>
-        // Current demo mode
-        let currentDemo = 'deadlock';
+function borderPt(key,tx,ty){
+  const e=POS[key],dx=tx-e.x,dy=ty-e.y,a=Math.atan2(dy,dx);
+  if(e.shape==='circle') return{x:e.x+Math.cos(a)*e.r,y:e.y+Math.sin(a)*e.r};
+  const hw=e.hw,hh=e.hh,tanA=Math.abs(dy/(dx||1e-9));
+  let bx,by;
+  if(tanA<=hh/hw){bx=hw*Math.sign(dx);by=bx*dy/(dx||1e-9)}
+  else{by=hh*Math.sign(dy);bx=by*dx/(dy||1e-9)}
+  return{x:e.x+bx,y:e.y+by};
+}
 
-        // Steps defining the deadlock scenario
-        const deadlockSteps = [
-            {
-                step: 0,
-                arrows: [],
-                arrowClasses: {},
-                r1Allocated: false,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: false, hold: false, preempt: false, circular: false },
-                status: "Click 'Next' to begin the deadlock demonstration.",
-                description: {
-                    title: "Initial State",
-                    text: "Two processes (P1 and P2) need both the Scanner and Printer to complete their tasks. Resources are currently available."
-                }
-            },
-            {
-                step: 1,
-                arrows: ["arrow-r1-p2"],
-                arrowClasses: { "arrow-r1-p2": "assignment" },
-                r1Allocated: true,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 1: P2 requests and acquires the Scanner. R1 is now allocated to P2.",
-                description: {
-                    title: "P2 Acquires Scanner",
-                    text: "Process P2 requests the Scanner resource and it's granted. The assignment edge (R1→P2) is created. P2 now holds the Scanner."
-                }
-            },
-            {
-                step: 2,
-                arrows: ["arrow-r1-p2", "arrow-r2-p1"],
-                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 2: P1 requests and acquires the Printer. R2 is now allocated to P1.",
-                description: {
-                    title: "P1 Acquires Printer",
-                    text: "Process P1 requests the Printer resource and it's granted. The assignment edge (R2→P1) is created. P1 now holds the Printer."
-                }
-            },
-            {
-                step: 3,
-                arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1"],
-                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment", "arrow-p1-r1": "request" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: true, circular: false },
-                status: "Step 3: P1 requests the Scanner (held by P2). P1 is now waiting.",
-                description: {
-                    title: "P1 Requests Scanner",
-                    text: "P1 needs the Scanner to proceed, but it's held by P2. P1 blocks and waits. The request edge (P1→R1) is created. Hold and Wait condition is now met."
-                }
-            },
-            {
-                step: 4,
-                arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1", "arrow-p2-r2"],
-                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment", "arrow-p1-r1": "request", "arrow-p2-r2": "request" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: true,
-                p2Deadlocked: true,
-                showWarning: true,
-                conditions: { mutual: true, hold: true, preempt: true, circular: true },
-                status: "Step 4: P2 requests the Printer (held by P1). DEADLOCK! Circular wait formed.",
-                description: {
-                    title: "⚠️ DEADLOCK OCCURRED!",
-                    text: "P2 needs the Printer, but it's held by P1. Now: P1 holds Printer, waits for Scanner. P2 holds Scanner, waits for Printer. All 4 deadlock conditions are met!"
-                }
-            },
-            {
-                step: 5,
-                arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1", "arrow-p2-r2"],
-                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment", "arrow-p1-r1": "request", "arrow-p2-r2": "request" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: true,
-                p2Deadlocked: true,
-                showWarning: true,
-                conditions: { mutual: true, hold: true, preempt: true, circular: true },
-                status: "Step 5: Deadlock persists. Neither process can proceed without external intervention.",
-                description: {
-                    title: "Deadlock Persists",
-                    text: "Both processes are stuck indefinitely. To recover: 1) Terminate one process, 2) Preempt resources, or 3) Use deadlock avoidance (like Banker's Algorithm)."
-                }
-            }
-        ];
+function curveSide(from,to){
+  const sides={'P1-R2':1,'P2-R1':1,'R1-P1':1,'R2-P2':1,'R1-P2':-1,'R2-P1':-1,'P1-R1':-1,'P2-R2':-1};
+  return sides[from+'-'+to]||1;
+}
 
-        // Steps defining the prevention scenario (resource ordering)
-        const preventionSteps = [
-            {
-                step: 0,
-                arrows: [],
-                arrowClasses: {},
-                r1Allocated: false,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: false, hold: false, preempt: false, circular: false },
-                status: "Click 'Next' to begin the prevention demonstration.",
-                description: {
-                    title: "Initial State (Prevention)",
-                    text: "Both processes will request resources in the SAME order: Scanner first, then Printer. This prevents circular wait by eliminating the circular wait condition."
-                }
-            },
-            {
-                step: 1,
-                arrows: ["arrow-p1-r1"],
-                arrowClasses: { "arrow-p1-r1": "request" },
-                r1Allocated: false,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 1: P1 requests Scanner (resource 1st in order). P1 gets it.",
-                description: {
-                    title: "P1 Requests Scanner First",
-                    text: "P1 requests Scanner first (following the ordering protocol). P1 acquires it since it's available. The system enforces that all processes request resources in the same predefined order."
-                }
-            },
-            {
-                step: 2,
-                arrows: ["arrow-r1-p1"],
-                arrowClasses: { "arrow-r1-p1": "assignment" },
-                r1Allocated: true,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 2: P1 holds Scanner. P2 tries to request Scanner but must wait.",
-                description: {
-                    title: "P2 Waits for Scanner",
-                    text: "P2 also requests Scanner (in same order) but P1 holds it. P2 must wait. Critical: P2 doesn't request Printer yet - it only waits for Scanner. This prevents hold-and-wait!"
-                }
-            },
-            {
-                step: 3,
-                arrows: ["arrow-r1-p1", "arrow-p1-r2"],
-                arrowClasses: { "arrow-r1-p1": "assignment", "arrow-p1-r2": "request" },
-                r1Allocated: true,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 3: P1 now requests Printer (2nd resource). P1 gets Printer.",
-                description: {
-                    title: "P1 Acquires Printer",
-                    text: "While holding Scanner, P1 requests Printer (next in order) and gets it. P1 now has both resources. P2 still waits only for Scanner - it doesn't hold anything."
-                }
-            },
-            {
-                step: 4,
-                arrows: ["arrow-r1-p1", "arrow-r2-p1"],
-                arrowClasses: { "arrow-r1-p1": "assignment", "arrow-r2-p1": "assignment" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 4: P1 has both resources. No circular wait can form!",
-                description: {
-                    title: "No Circular Wait Possible",
-                    text: "P1 has both Scanner and Printer. P2 waits only for Scanner, not Printer. Even though P2 will eventually need Printer, P1 always requests in order (Scanner before Printer), preventing any circular dependency."
-                }
-            },
-            {
-                step: 5,
-                arrows: ["arrow-r2-p1"],
-                arrowClasses: { "arrow-r2-p1": "assignment" },
-                r1Allocated: false,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 5: P1 completes and releases Scanner. P2 can now acquire it.",
-                description: {
-                    title: "P1 Completes - Releases Scanner",
-                    text: "P1 finishes its work and releases Scanner. P2 has been waiting and can now acquire Scanner. P1 still holds Printer temporarily but will release it soon."
-                }
-            },
-            {
-                step: 6,
-                arrows: ["arrow-r1-p2", "arrow-r2-p1"],
-                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p1": "assignment" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 6: P2 acquires Scanner. P1 releases Printer.",
-                description: {
-                    title: "P2 Gets Scanner - P1 Releases Printer",
-                    text: "P2 acquires the Scanner it was waiting for. P1 then releases Printer since it's done. Now P2 has Scanner and can request Printer next."
-                }
-            },
-            {
-                step: 7,
-                arrows: ["arrow-r1-p2", "arrow-p2-r2"],
-                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-p2-r2": "request" },
-                r1Allocated: true,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 7: P2 requests Printer (2nd in order). Printer is available, so P2 gets it.",
-                description: {
-                    title: "P2 Acquires Printer",
-                    text: "P2 now requests Printer (the second resource in order) and gets it since P1 released it. P2 has both resources and can complete."
-                }
-            },
-            {
-                step: 8,
-                arrows: ["arrow-r1-p2", "arrow-r2-p2"],
-                arrowClasses: { "arrow-r1-p2": "assignment", "arrow-r2-p2": "assignment" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 8: P2 holds both resources and completes successfully. No deadlock!",
-                description: {
-                    title: "✅ No Deadlock - Both Processes Complete!",
-                    text: "Success! By enforcing resource ordering (all processes request Scanner before Printer), we eliminated circular wait and prevented deadlock. Both processes completed successfully!"
-                }
-            }
-        ];
+function arrowPath(fk,tk,side){
+  const f=POS[fk],t=POS[tk];
+  const dx=t.x-f.x,dy=t.y-f.y,dist=Math.hypot(dx,dy);
+  const px=-dy/dist,py=dx/dist;
+  const bulge=Math.min(dist*.22,36)*side;
+  const mx=(f.x+t.x)/2+px*bulge,my=(f.y+t.y)/2+py*bulge;
+  const s=borderPt(fk,mx,my),e=borderPt(tk,mx,my);
+  return{path:`M${s.x.toFixed(1)},${s.y.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${e.x.toFixed(1)},${e.y.toFixed(1)}`,mx,my,sx:s.x,sy:s.y,ex:e.x,ey:e.y};
+}
 
-        // Steps defining the avoidance scenario (Banker's Algorithm)
-        const avoidanceSteps = [
-            {
-                step: 0,
-                arrows: [],
-                arrowClasses: {},
-                r1Allocated: false,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: false, hold: false, preempt: false, circular: false },
-                status: "Click 'Next' to begin the avoidance demonstration.",
-                description: {
-                    title: "Initial State (Avoidance with Banker's Algorithm)",
-                    text: "The OS uses Banker's Algorithm to check if resource allocation would lead to an unsafe state. Safe allocations are granted, unsafe ones are denied."
-                }
-            },
-            {
-                step: 1,
-                arrows: ["arrow-r1-p2"],
-                arrowClasses: { "arrow-r1-p2": "assignment safe" },
-                r1Allocated: true,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 1: P2 requests Scanner. Banker's Algorithm checks: SAFE ✓ Allocation granted.",
-                description: {
-                    title: "P2 Acquires Scanner (Safe State)",
-                    text: "P2 requests Scanner. Banker's Algorithm simulates the allocation and finds P2 can complete with its maximum resources without waiting for more. This is a SAFE state. Request is GRANTED."
-                }
-            },
-            {
-                step: 2,
-                arrows: ["arrow-r1-p2", "arrow-r2-p1"],
-                arrowClasses: { "arrow-r1-p2": "assignment safe", "arrow-r2-p1": "assignment safe" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: false, preempt: false, circular: false },
-                status: "Step 2: P1 requests Printer. Banker's Algorithm checks: SAFE ✓ Allocation granted.",
-                description: {
-                    title: "P1 Acquires Printer (Safe State)",
-                    text: "P1 requests Printer. Banker's Algorithm confirms a safe sequence exists: P2 can still complete (has Scanner), then P1 can complete (has Printer). This is SAFE. Request is GRANTED."
-                }
-            },
-            {
-                step: 3,
-                arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1"],
-                arrowClasses: { "arrow-r1-p2": "assignment safe", "arrow-r2-p1": "assignment safe", "arrow-p1-r1": "blocked" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 3: P1 requests Scanner. Banker's Algorithm checks: UNSAFE ✗ Request DENIED to prevent deadlock!",
-                description: {
-                    title: "P1 Requests Scanner (Unsafe - Request DENIED)",
-                    text: "P1 requests Scanner (held by P2). Banker's Algorithm simulates this allocation and discovers an UNSAFE state: if granted, neither process could guarantee completion (circular dependency would form). Request is DENIED! P1 must wait."
-                }
-            },
-            {
-                step: 4,
-                arrows: ["arrow-r1-p2", "arrow-r2-p1", "arrow-p1-r1"],
-                arrowClasses: { "arrow-r1-p2": "assignment safe", "arrow-r2-p1": "assignment safe", "arrow-p1-r1": "blocked" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 4: P1's request was denied. P2 continues and completes its work. P2 releases Scanner.",
-                description: {
-                    title: "P2 Completes - P1 Continues Waiting",
-                    text: "Since P1's request was denied (blocked), P2 continues execution with Scanner and Printer (no competition). P2 completes its work and releases both resources."
-                }
-            },
-            {
-                step: 5,
-                arrows: ["arrow-p1-r1"],
-                arrowClasses: { "arrow-p1-r1": "request" },
-                r1Allocated: false,
-                r2Allocated: false,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 5: P2 released all resources. Now P1 can safely request Scanner again.",
-                description: {
-                    title: "Resources Available - P1 Can Now Request Scanner",
-                    text: "P2 has released Scanner and Printer. Now P1's previously UNSAFE request becomes SAFE. P1 can request Scanner again and receive it without risk of deadlock."
-                }
-            },
-            {
-                step: 6,
-                arrows: ["arrow-r1-p1", "arrow-r2-p1"],
-                arrowClasses: { "arrow-r1-p1": "assignment safe", "arrow-r2-p1": "assignment safe" },
-                r1Allocated: true,
-                r2Allocated: true,
-                p1Deadlocked: false,
-                p2Deadlocked: false,
-                showWarning: false,
-                conditions: { mutual: true, hold: true, preempt: false, circular: false },
-                status: "Step 6: P1 acquires both Scanner and Printer. P1 completes successfully.",
-                description: {
-                    title: "✅ No Deadlock - Both Processes Complete!",
-                    text: "Success! Banker's Algorithm prevented deadlock by denying an unsafe request (P1 requesting Scanner). Both processes eventually completed. By checking for unsafe states BEFORE allocating, we avoided deadlock entirely!"
-                }
-            }
-        ];
+const S={
+deadlock:{title:"Deadlock Scenario",steps:[
+{desc:'Initial state: <span class="hl">Process A</span> and <span class="hl">Process B</span> are ready. <span class="hl">Resource 1</span> (Printer) and <span class="hl">Resource 2</span> (Scanner) are both free.',
+  holds:{P1:[],P2:[]},wants:{P1:null,P2:null},arrows:[],
+  sP1:'Idle',sP2:'Idle',sR1:'Free',sR2:'Free',coff:[],dead:false,ok:false,
+  log:'System initialized. All resources free.'},
+{desc:'<span class="hl">Process A</span> requests and <span class="hl-g">acquires Resource 1</span> (Printer). Exclusively locked.<br><br>☑ <em>Mutual Exclusion</em> in effect.',
+  holds:{P1:['R1'],P2:[]},wants:{P1:null,P2:null},
+  arrows:[{from:'R1',to:'P1',type:'hold'}],
+  sP1:'Running',sP2:'Idle',sR1:'Held by A',sR2:'Free',coff:['mutex'],dead:false,ok:false,
+  log:'Process A acquires Resource 1 (Printer).'},
+{desc:'<span class="hl">Process B</span> requests and <span class="hl-g">acquires Resource 2</span> (Scanner). Each process now holds one resource.',
+  holds:{P1:['R1'],P2:['R2']},wants:{P1:null,P2:null},
+  arrows:[{from:'R1',to:'P1',type:'hold'},{from:'R2',to:'P2',type:'hold'}],
+  sP1:'Running',sP2:'Running',sR1:'Held by A',sR2:'Held by B',coff:['mutex'],dead:false,ok:false,
+  log:'Process B acquires Resource 2 (Scanner).'},
+{desc:'<span class="hl">Process A</span> needs <span class="hl-r">Resource 2</span> (Scanner) — held by B. A <em>holds</em> R1 while <em>waiting</em> for R2.<br><br>☑ <em>Hold &amp; Wait</em> in effect.',
+  holds:{P1:['R1'],P2:['R2']},wants:{P1:'R2',P2:null},
+  arrows:[{from:'R1',to:'P1',type:'hold'},{from:'R2',to:'P2',type:'hold'},{from:'P1',to:'R2',type:'wait',anim:true}],
+  sP1:'Blocked',sP2:'Running',sR1:'Held by A',sR2:'Held by B',coff:['mutex','hold'],dead:false,ok:false,
+  log:'Process A requests Resource 2 → BLOCKED.'},
+{desc:'<span class="hl">Process B</span> needs <span class="hl-r">Resource 1</span> (Printer) — held by A! Both hold and wait.<br><br>☑ <em>No Preemption</em> — can\'t forcibly take resources.',
+  holds:{P1:['R1'],P2:['R2']},wants:{P1:'R2',P2:'R1'},
+  arrows:[{from:'R1',to:'P1',type:'hold'},{from:'R2',to:'P2',type:'hold'},{from:'P1',to:'R2',type:'wait',anim:true},{from:'P2',to:'R1',type:'wait',anim:true}],
+  sP1:'Blocked',sP2:'Blocked',sR1:'Held by A',sR2:'Held by B',coff:['mutex','hold','nopre'],dead:false,ok:false,
+  log:'Process B requests Resource 1 → BLOCKED.'},
+{desc:'<span class="hl-r">💀 DEADLOCK!</span><br><br>A→R2→B→R1→A. All four Coffman conditions met:<br>①Mutual Exclusion ②Hold &amp; Wait ③No Preemption ④<strong>Circular Wait</strong><br><br>System is <em>permanently stuck</em>.',
+  holds:{P1:['R1'],P2:['R2']},wants:{P1:'R2',P2:'R1'},
+  arrows:[{from:'R1',to:'P1',type:'hold'},{from:'R2',to:'P2',type:'hold'},{from:'P1',to:'R2',type:'wait',anim:true},{from:'P2',to:'R1',type:'wait',anim:true}],
+  sP1:'DEADLOCKED',sP2:'DEADLOCKED',sR1:'Locked (A)',sR2:'Locked (B)',coff:['mutex','hold','nopre','circ'],dead:true,ok:false,
+  log:'💀 DEADLOCK — Circular wait!'}
+]},
+prevention:{title:"Prevention: Resource Ordering",steps:[
+{desc:'<span class="hl-g">Prevention rule</span>: All processes must request in order — <strong>R1 first, then R2</strong>. This <em>breaks circular wait</em> by design.',
+  holds:{P1:[],P2:[]},wants:{P1:null,P2:null},arrows:[],
+  sP1:'Idle',sP2:'Idle',sR1:'Free',sR2:'Free',coff:[],coffBrk:['circ'],dead:false,ok:false,
+  log:'Prevention: ordered acquisition (R1→R2).'},
+{desc:'<span class="hl">Process A</span> requests <span class="hl-g">R1</span> first (following order). Granted!',
+  holds:{P1:['R1'],P2:[]},wants:{P1:null,P2:null},
+  arrows:[{from:'R1',to:'P1',type:'hold'}],
+  sP1:'Running',sP2:'Idle',sR1:'Held by A',sR2:'Free',coff:['mutex'],coffBrk:['circ'],dead:false,ok:false,
+  log:'A acquires R1 (order: R1 first). ✓'},
+{desc:'<span class="hl">Process B</span> must also request <span class="hl-y">R1 first</span> (order rule!). R1 held by A → <strong>B waits</strong>.<br><br>B holds <em>nothing</em> — no Hold &amp; Wait!',
+  holds:{P1:['R1'],P2:[]},wants:{P1:null,P2:'R1'},
+  arrows:[{from:'R1',to:'P1',type:'hold'},{from:'P2',to:'R1',type:'wait',anim:true}],
+  sP1:'Running',sP2:'Waiting',sR1:'Held by A',sR2:'Free',coff:['mutex'],coffBrk:['circ'],dead:false,ok:false,
+  log:'B requests R1 → waits. No circular wait possible.'},
+{desc:'<span class="hl">Process A</span> requests <span class="hl-g">R2</span>. Free → Granted! A holds both.',
+  holds:{P1:['R1','R2'],P2:[]},wants:{P1:null,P2:'R1'},
+  arrows:[{from:'R1',to:'P1',type:'hold'},{from:'R2',to:'P1',type:'hold'},{from:'P2',to:'R1',type:'wait',anim:true}],
+  sP1:'Running',sP2:'Waiting',sR1:'Held by A',sR2:'Held by A',coff:['mutex'],coffBrk:['circ'],dead:false,ok:false,
+  log:'A acquires R2. Holds both resources.'},
+{desc:'<span class="hl">Process A</span> finishes, <span class="hl-g">releases both</span>. R1 given to waiting B.',
+  holds:{P1:[],P2:['R1']},wants:{P1:null,P2:null},
+  arrows:[{from:'R1',to:'P2',type:'hold'}],
+  sP1:'Done ✓',sP2:'Running',sR1:'Held by B',sR2:'Free',coff:[],coffBrk:['circ'],dead:false,ok:false,
+  log:'A releases all. B gets R1.'},
+{desc:'<span class="hl">Process B</span> requests and <span class="hl-g">gets R2</span> (order: R1→R2). B holds both.',
+  holds:{P1:[],P2:['R1','R2']},wants:{P1:null,P2:null},
+  arrows:[{from:'R1',to:'P2',type:'hold'},{from:'R2',to:'P2',type:'hold'}],
+  sP1:'Done ✓',sP2:'Running',sR1:'Held by B',sR2:'Held by B',coff:[],coffBrk:['circ'],dead:false,ok:false,
+  log:'B acquires R2. Holds both resources.'},
+{desc:'<span class="hl-g">✅ Both completed!</span><br><br>Ordered acquisition made <em>circular wait impossible</em>. Trade-off: reduced concurrency.',
+  holds:{P1:[],P2:[]},wants:{P1:null,P2:null},arrows:[],
+  sP1:'Done ✓',sP2:'Done ✓',sR1:'Free',sR2:'Free',coff:[],coffBrk:['circ'],dead:false,ok:true,
+  log:'✅ Both done. Deadlock prevented!'}
+]},
+avoidance:{title:"Avoidance: Banker's Algorithm",steps:[
+{desc:'<span class="hl-y">Banker\'s Algorithm</span> active. Before granting any request, OS checks: "Does this keep the system in a <strong>safe state</strong>?"<br><br>A needs: R1→R2. B needs: R2→R1.',
+  holds:{P1:[],P2:[]},wants:{P1:null,P2:null},arrows:[],
+  sP1:'Idle',sP2:'Idle',sR1:'Free',sR2:'Free',coff:[],dead:false,ok:false,banker:'safe',
+  log:"Banker's algorithm monitoring safe states."},
+{desc:'<span class="hl">Process A</span> requests R1.<br><span class="hl-y">Safety check</span>: A gets R1 → B can still get R2 (free) then R1 later.<br><span class="hl-g">SAFE → Granted!</span>',
+  holds:{P1:['R1'],P2:[]},wants:{P1:null,P2:null},
+  arrows:[{from:'R1',to:'P1',type:'hold'}],
+  sP1:'Running',sP2:'Idle',sR1:'Held by A',sR2:'Free',coff:['mutex'],dead:false,ok:false,banker:'safe',
+  log:"Banker: A→R1. ✅ Safe. Granted."},
+{desc:'<span class="hl">Process B</span> requests R2.<br><span class="hl-y">Safety check</span>: If B gets R2 → A needs R2 (held by B), B needs R1 (held by A). <em>Neither can finish!</em><br><span class="hl-r">UNSAFE → Denied!</span> B must wait.',
+  holds:{P1:['R1'],P2:[]},wants:{P1:null,P2:'R2'},
+  arrows:[{from:'R1',to:'P1',type:'hold'},{from:'P2',to:'R2',type:'denied',anim:true}],
+  sP1:'Running',sP2:'Denied (wait)',sR1:'Held by A',sR2:'Free (guarded)',coff:['mutex'],dead:false,ok:false,banker:'unsafe',
+  log:"Banker: B→R2. ⚠️ Unsafe! Denied."},
+{desc:'<span class="hl">Process A</span> requests R2. Free.<br><span class="hl-y">Safety check</span>: A gets both → finishes → B gets all.<br><span class="hl-g">SAFE → Granted!</span>',
+  holds:{P1:['R1','R2'],P2:[]},wants:{P1:null,P2:'R2'},
+  arrows:[{from:'R1',to:'P1',type:'hold'},{from:'R2',to:'P1',type:'hold'}],
+  sP1:'Running',sP2:'Waiting',sR1:'Held by A',sR2:'Held by A',coff:['mutex'],dead:false,ok:false,banker:'safe',
+  log:"Banker: A→R2. ✅ Safe. Granted."},
+{desc:'<span class="hl">Process A</span> finishes, <span class="hl-g">releases both</span>. B\'s request for R2 now granted.',
+  holds:{P1:[],P2:['R2']},wants:{P1:null,P2:null},
+  arrows:[{from:'R2',to:'P2',type:'hold'}],
+  sP1:'Done ✓',sP2:'Running',sR1:'Free',sR2:'Held by B',coff:[],dead:false,ok:false,banker:'safe',
+  log:"A done, releases all. B gets R2."},
+{desc:'<span class="hl">Process B</span> requests R1. Free!<br><span class="hl-y">Safety check</span>: B has both, can finish.<br><span class="hl-g">SAFE → Granted!</span>',
+  holds:{P1:[],P2:['R2','R1']},wants:{P1:null,P2:null},
+  arrows:[{from:'R1',to:'P2',type:'hold'},{from:'R2',to:'P2',type:'hold'}],
+  sP1:'Done ✓',sP2:'Running',sR1:'Held by B',sR2:'Held by B',coff:[],dead:false,ok:false,banker:'safe',
+  log:"Banker: B→R1. ✅ Safe. Granted."},
+{desc:'<span class="hl-g">✅ Both completed!</span><br><br>Banker\'s Algorithm avoided deadlock by <strong>denying one unsafe request</strong> (step 3). More flexible than prevention but needs advance knowledge of max needs.',
+  holds:{P1:[],P2:[]},wants:{P1:null,P2:null},arrows:[],
+  sP1:'Done ✓',sP2:'Done ✓',sR1:'Free',sR2:'Free',coff:[],dead:false,ok:true,banker:'safe',
+  log:"✅ Both done. Deadlock avoided!"}
+]}};
 
-        let currentStep = 0;
-        let isPlaying = false;
-        let playInterval = null;
+let mode='deadlock',step=0;
+const ns='http://www.w3.org/2000/svg';
+function el(tag,attrs,par){const e=document.createElementNS(ns,tag);for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);if(par)par.appendChild(e);return e}
+function txt(x,y,str,fill,sz,attrs,par){const t=el('text',{x,y,'text-anchor':'middle','dominant-baseline':'middle',fill,'font-size':sz,'font-family':"'Segoe UI',system-ui,sans-serif",...(attrs||{})},par);t.textContent=str;return t}
 
-        function getCurrentSteps() {
-            switch(currentDemo) {
-                case 'prevention':
-                    return preventionSteps;
-                case 'avoidance':
-                    return avoidanceSteps;
-                default:
-                    return deadlockSteps;
-            }
-        }
+function render(){
+  const st=S[mode].steps[step];
+  const gA=document.getElementById('gArrows'),gE=document.getElementById('gEntities'),gL=document.getElementById('gLabels');
+  gA.innerHTML='';gE.innerHTML='';gL.innerHTML='';
 
-        function updateRAG() {
-            const step = getCurrentSteps()[currentStep];
-            
-            // Reset all arrows
-            document.querySelectorAll('.rag-arrow').forEach(arrow => {
-                arrow.classList.remove('visible', 'deadlock', 'blocked', 'safe', 'request', 'assignment');
-            });
-            
-            // Show active arrows with their classes
-            step.arrows.forEach(arrowId => {
-                const arrow = document.getElementById(arrowId);
-                arrow.classList.add('visible');
-                
-                // Apply specific classes if specified (can be space-separated)
-                if (step.arrowClasses && step.arrowClasses[arrowId]) {
-                    const classes = step.arrowClasses[arrowId].split(' ');
-                    classes.forEach(cls => arrow.classList.add(cls));
-                } else {
-                    // Default: determine class from arrow ID
-                    if (arrowId.includes('p') && arrowId.includes('r')) {
-                        arrow.classList.add('request');
-                    } else {
-                        arrow.classList.add('assignment');
-                    }
-                }
-                
-                // Highlight deadlock arrows (only if not blocked)
-                if (step.p1Deadlocked && step.p2Deadlocked) {
-                    if ((arrowId.includes('p1') || arrowId.includes('p2')) && arrowId.includes('r')) {
-                        if (!arrow.classList.contains('blocked')) {
-                            arrow.classList.add('deadlock');
-                        }
-                    }
-                }
-            });
-            
-            // Update resource allocation state
-            const r1 = document.getElementById('resource-r1');
-            const r2 = document.getElementById('resource-r2');
-            const r1dot = document.getElementById('r1-dot1');
-            const r2dot = document.getElementById('r2-dot1');
-            
-            if (step.r1Allocated) {
-                r1.classList.add('allocated');
-                r1dot.classList.add('allocated');
-                r1dot.classList.remove('available');
-            } else {
-                r1.classList.remove('allocated');
-                r1dot.classList.remove('allocated');
-                r1dot.classList.add('available');
-            }
-            
-            if (step.r2Allocated) {
-                r2.classList.add('allocated');
-                r2dot.classList.add('allocated');
-                r2dot.classList.remove('available');
-            } else {
-                r2.classList.remove('allocated');
-                r2dot.classList.remove('allocated');
-                r2dot.classList.add('available');
-            }
-            
-            // Update process deadlock state
-            const p1 = document.getElementById('process-p1');
-            const p2 = document.getElementById('process-p2');
-            
-            if (step.p1Deadlocked) {
-                p1.classList.add('deadlocked');
-            } else {
-                p1.classList.remove('deadlocked');
-            }
-            
-            if (step.p2Deadlocked) {
-                p2.classList.add('deadlocked');
-            } else {
-                p2.classList.remove('deadlocked');
-            }
-            
-            // Show/hide warning
-            const warning = document.getElementById('warningBanner');
-            if (step.showWarning) {
-                warning.classList.add('visible');
-            } else {
-                warning.classList.remove('visible');
-            }
-        }
+  st.arrows.forEach(a=>{
+    const side=curveSide(a.from,a.to);
+    const ap=arrowPath(a.from,a.to,side);
+    const col={hold:'#60a5fa',wait:'#f87171',denied:'#fbbf24',release:'#34d399'}[a.type];
+    const mk={hold:'url(#ahBlue)',wait:'url(#ahRed)',denied:'url(#ahYellow)',release:'url(#ahGreen)'}[a.type];
+    const da={hold:'none',wait:'8 5',denied:'5 7',release:'none'}[a.type];
+    const p=el('path',{d:ap.path,fill:'none',stroke:col,'stroke-width':'2.8','stroke-dasharray':da,'marker-end':mk,opacity:'.85'},gA);
+    if(a.anim)p.classList.add('arrow-animated');
+    const t=0.45;
+    const lx=(1-t)*(1-t)*ap.sx+2*(1-t)*t*ap.mx+t*t*ap.ex;
+    const ly=(1-t)*(1-t)*ap.sy+2*(1-t)*t*ap.my+t*t*ap.ey;
+    const tdx=2*(1-t)*(ap.mx-ap.sx)+2*t*(ap.ex-ap.mx);
+    const tdy=2*(1-t)*(ap.my-ap.sy)+2*t*(ap.ey-ap.my);
+    const tlen=Math.hypot(tdx,tdy)||1;
+    const off=14*side;
+    txt(lx+(-tdy/tlen)*off,ly+(tdx/tlen)*off,
+      {hold:'holds',wait:'waits',denied:'DENIED',release:'freed'}[a.type],
+      col,'11px',{'font-weight':a.type==='denied'?'700':'600',opacity:'.8'},gL);
+  });
 
-        function updateConditions() {
-            const step = getCurrentSteps()[currentStep];
-            
-            ['mutual', 'hold', 'preempt', 'circular'].forEach(cond => {
-                const el = document.getElementById(`cond-${cond}`);
-                if (step.conditions[cond]) {
-                    el.classList.add('met');
-                } else {
-                    el.classList.remove('met');
-                }
-            });
-        }
+  for(const[key,pos]of Object.entries(POS)){
+    const isP=key.startsWith('P');
+    const isDead=st.dead&&isP;
+    const isOk=st.ok&&isP;
+    const isHeld=st.holds.P1.includes(key)||st.holds.P2.includes(key);
+    if(isP){
+      const c=el('circle',{cx:pos.x,cy:pos.y,r:pos.r,
+        fill:key==='P1'?'url(#gP1)':'url(#gP2)',
+        stroke:isDead?'#f87171':isOk?'#34d399':key==='P1'?'#3b82f6':'#8b5cf6',
+        'stroke-width':'2.5'},gE);
+      if(isDead)c.classList.add('deadlock-pulse');
+      if(isOk)c.classList.add('success-pulse');
+      txt(pos.x,pos.y-14,key==='P1'?'Process A':'Process B','#fff','14px',{'font-weight':'700'},gE);
+      txt(pos.x,pos.y+14,key==='P1'?'🖥️':'💻','#fff','20px',{},gE);
+    } else {
+      el('rect',{x:pos.x-pos.hw,y:pos.y-pos.hh,width:pos.hw*2,height:pos.hh*2,rx:'12',
+        fill:key==='R1'?'url(#gR1)':'url(#gR2)',
+        stroke:st.dead&&isHeld?'#f87171':key==='R1'?'#f59e0b':'#10b981',
+        'stroke-width':'2.5'},gE);
+      txt(pos.x,pos.y-10,key==='R1'?'Resource 1':'Resource 2','#fff','13px',{'font-weight':'700'},gE);
+      txt(pos.x,pos.y+12,key==='R1'?'🖨️ Printer':'📠 Scanner','#ccc','11px',{},gE);
+      el('circle',{cx:pos.x+pos.hw-7,cy:pos.y-pos.hh+7,r:'5.5',fill:isHeld?'#f87171':'#34d399'},gE);
+    }
+  }
 
-        function updateDescription() {
-            const step = getCurrentSteps()[currentStep];
-            const desc = document.getElementById('stateDescription');
-            desc.innerHTML = `
-                <h4>${step.description.title}</h4>
-                <p>${step.description.text}</p>
-            `;
-        }
+  if(st.dead){
+    el('rect',{x:'148',y:'176',width:'164',height:'34',rx:'8',fill:'rgba(248,113,113,.1)',stroke:'#f87171','stroke-width':'1',opacity:'.8'},gL);
+    txt(230,188,'A → R2 → B → R1 → A','#f87171','12px',{'font-weight':'700',opacity:'.9'},gL);
+    txt(230,202,'Circular Wait','#f87171','9.5px',{opacity:'.6'},gL);
+  }
 
-        function switchDemo(demo) {
-            currentDemo = demo;
-            
-            // Update tab styles
-            document.querySelectorAll('.demo-tab').forEach(tab => tab.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            
-            // Update panel title based on demo
-            const panelTitle = document.querySelector('.panel h3');
-            if (demo === 'prevention') {
-                panelTitle.textContent = 'Resource Ordering Prevention (Safe)';
-            } else if (demo === 'avoidance') {
-                panelTitle.textContent = 'Banker\'s Algorithm Avoidance';
-            } else {
-                panelTitle.textContent = 'Resource Allocation Graph (RAG)';
-            }
-            
-            // Reset and update
-            resetDemo();
-        }
+  if(st.banker){
+    const safe=st.banker==='safe';
+    el('rect',{x:'163',y:'340',width:'134',height:'28',rx:'14',
+      fill:safe?'rgba(52,211,153,.12)':'rgba(251,191,36,.12)',
+      stroke:safe?'#34d399':'#fbbf24','stroke-width':'1.5'},gE);
+    txt(230,354,safe?'✅ SAFE STATE':'⚠️ UNSAFE',safe?'#34d399':'#fbbf24','11px',{'font-weight':'700'},gE);
+  }
 
-        function updateUI() {
-            const step = getCurrentSteps()[currentStep];
-            
-            // Update step label
-            document.getElementById('stepLabel').textContent = `Step ${step.step} of ${getCurrentSteps().length - 1}`;
-            
-            // Update status badge
-            const badge = document.getElementById('statusBadge');
-            badge.className = 'status-badge normal';
-            badge.textContent = '';
-            
-            if (currentDemo === 'avoidance') {
-                if (step.step === 3) {
-                    badge.className = 'status-badge unsafe';
-                    badge.textContent = '⚠️ Unsafe - Denied';
-                } else if (step.arrows && step.arrowClasses) {
-                    let hasBlocked = Object.values(step.arrowClasses).some(cls => cls.includes('blocked'));
-                    let hasSafe = Object.values(step.arrowClasses).some(cls => cls.includes('safe'));
-                    
-                    if (hasBlocked) {
-                        badge.className = 'status-badge blocked';
-                        badge.textContent = '🔒 Blocked';
-                    } else if (hasSafe) {
-                        badge.className = 'status-badge safe';
-                        badge.textContent = '✓ Safe';
-                    }
-                }
-            } else if (currentDemo === 'prevention') {
-                badge.className = 'status-badge safe';
-                badge.textContent = '✓ Safe';
-            } else if (step.showWarning) {
-                badge.className = 'status-badge unsafe';
-                badge.textContent = '⚠️ Deadlock!';
-            }
-            
-            // Update buttons
-            document.getElementById('btnPrev').disabled = currentStep === 0;
-            document.getElementById('btnNext').disabled = currentStep === getCurrentSteps().length - 1;
-            
-            // Update status
-            document.getElementById('statusText').textContent = step.status;
-            
-            // Update all visual elements
-            updateRAG();
-            updateConditions();
-            updateDescription();
-        }
+  txt(230,16,S[mode].title,'#555','10px',{'font-weight':'600'},gL);
 
-        function nextStep() {
-            if (currentStep < getCurrentSteps().length - 1) {
-                currentStep++;
-                updateUI();
-            }
-            if (currentStep === getCurrentSteps().length - 1) {
-                stopPlay();
-            }
-        }
+  document.getElementById('stepDesc').innerHTML=st.desc;
+  document.getElementById('deadlockBanner').classList.toggle('visible',st.dead);
+  document.getElementById('successBanner').classList.toggle('visible',st.ok);
+  const total=S[mode].steps.length-1;
+  document.getElementById('stepInd').textContent=`Step ${step} / ${total}`;
+  document.getElementById('btnPrev').disabled=step<=0;
+  document.getElementById('btnNext').disabled=step>=total;
+  document.getElementById('btnEnd').disabled=step>=total;
 
-        function prevStep() {
-            if (currentStep > 0) {
-                currentStep--;
-                updateUI();
-            }
-        }
+  const rn=k=>({R1:'R1 🖨️',R2:'R2 📠'}[k]||k);
+  const hp1=st.holds.P1.map(rn).join(', ')||'—';
+  const hp2=st.holds.P2.map(rn).join(', ')||'—';
+  const wp1=st.wants.P1?rn(st.wants.P1):'—';
+  const wp2=st.wants.P2?rn(st.wants.P2):'—';
+  const sc=s=>s.match(/DEAD|Lock/i)?'held':s.match(/Block|Wait|Denied/i)?'waiting':'free';
+  document.getElementById('tBody').innerHTML=
+    `<tr><td>Process A</td><td>${hp1}</td><td>${wp1}</td><td><span class="status-dot ${sc(st.sP1)}"></span>${st.sP1}</td></tr>
+     <tr><td>Process B</td><td>${hp2}</td><td>${wp2}</td><td><span class="status-dot ${sc(st.sP2)}"></span>${st.sP2}</td></tr>
+     <tr><td>Resource 1</td><td colspan="2">${st.sR1}</td><td><span class="status-dot ${st.sR1.match(/Held|Lock/)?'held':'free'}"></span>${st.sR1.match(/Free|guard/)?'Avail':'In Use'}</td></tr>
+     <tr><td>Resource 2</td><td colspan="2">${st.sR2}</td><td><span class="status-dot ${st.sR2.match(/Held|Lock/)?'held':'free'}"></span>${st.sR2.match(/Free|guard/)?'Avail':'In Use'}</td></tr>`;
 
-        function resetDemo() {
-            stopPlay();
-            currentStep = 0;
-            updateUI();
-        }
+  const cm={mutex:'c-mutex',hold:'c-hold',nopre:'c-nopre',circ:'c-circ'};
+  for(const[k,id]of Object.entries(cm)){
+    const e=document.getElementById(id);e.classList.remove('active','broken');
+    if(st.coff?.includes(k))e.classList.add('active');
+    if(st.coffBrk?.includes(k))e.classList.add('broken');
+  }
 
-        function togglePlay() {
-            if (isPlaying) {
-                stopPlay();
-            } else {
-                startPlay();
-            }
-        }
+  const lc=document.getElementById('logBox');lc.innerHTML='';
+  for(let i=0;i<=step;i++){
+    const d=document.createElement('div');
+    d.className='log-entry'+(i===step?' active':'');
+    d.innerHTML=`<span class="log-step">${i}</span><span>${S[mode].steps[i].log}</span>`;
+    lc.appendChild(d);
+  }
+  lc.scrollTop=lc.scrollHeight;
+}
 
-        function startPlay() {
-            if (currentStep === getCurrentSteps().length - 1) {
-                currentStep = 0;
-                updateUI();
-            }
-            isPlaying = true;
-            document.getElementById('btnPlay').textContent = '⏸ Pause';
-            playInterval = setInterval(() => {
-                if (currentStep < getCurrentSteps().length - 1) {
-                    nextStep();
-                } else {
-                    stopPlay();
-                }
-            }, 2500);
-        }
+function nextStep(){if(step<S[mode].steps.length-1){step++;render()}}
+function prevStep(){if(step>0){step--;render()}}
+function goToEnd(){step=S[mode].steps.length-1;render()}
+function resetScenario(){step=0;render()}
+function switchMode(m){
+  mode=m;step=0;
+  document.querySelectorAll('.mode-btn').forEach(b=>{
+    b.classList.remove('active','prevention','avoidance');
+    if(b.dataset.mode===m){b.classList.add('active');if(m==='prevention')b.classList.add('prevention');if(m==='avoidance')b.classList.add('avoidance')}
+  });render();
+}
 
-        function stopPlay() {
-            isPlaying = false;
-            document.getElementById('btnPlay').textContent = '▶ Play';
-            if (playInterval) {
-                clearInterval(playInterval);
-                playInterval = null;
-            }
-        }
-
-        // Initialize
-        updateUI();
-    </script>
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextStep()}
+  else if(e.key==='ArrowLeft'){e.preventDefault();prevStep()}
+  else if(e.key==='r'||e.key==='R')resetScenario();
+  else if(e.key==='End'){e.preventDefault();goToEnd()}
+  else if(e.key==='Home'){e.preventDefault();resetScenario()}
+  else if(e.key==='1')switchMode('deadlock');
+  else if(e.key==='2')switchMode('prevention');
+  else if(e.key==='3')switchMode('avoidance');
+});
+document.getElementById('svgWrap').addEventListener('click',e=>{if(!e.target.closest('button'))nextStep()});
+let touchX=0;
+document.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-touchX;if(Math.abs(dx)>50){dx<0?nextStep():prevStep()}},{passive:true});
+render();
+</script>
 </body>
 </html>
