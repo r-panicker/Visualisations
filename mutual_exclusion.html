@@ -327,8 +327,7 @@ function drawArrow(gA,from,to,color,marker,dash,anim,bulge){
 }
 
 // === CODE TEMPLATES ===
-// Each line has: id, html content
-// Highlighting classes: active-a, active-b, error-line, done-line, blocked-line
+// Removed extra spacing by ensuring no empty strings or breaks are in the arrays
 const CODE={
 no_mutex:{
   A:[
@@ -563,15 +562,16 @@ function renderCode(st){
   const hlAMap={};st.hlA.forEach(h=>hlAMap[h.line]=h.cls);
   const hlBMap={};st.hlB.forEach(h=>hlBMap[h.line]=h.cls);
 
+  // Changed .join('\n') to .join('') to remove the one-line spacing provided by the newline/CSS white-space interaction
   document.getElementById('codeA').innerHTML=codeA.map((line,i)=>{
     const cls=hlAMap[i]||'';
     return `<span class="code-line ${cls}">${line.html}</span>`;
-  }).join('\n');
+  }).join('');
 
   document.getElementById('codeB').innerHTML=codeB.map((line,i)=>{
     const cls=hlBMap[i]||'';
     return `<span class="code-line ${cls}">${line.html}</span>`;
-  }).join('\n');
+  }).join('');
 }
 
 // === RENDER SVG ===
