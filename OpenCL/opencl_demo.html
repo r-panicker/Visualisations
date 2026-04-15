@@ -7,139 +7,62 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0f1117; --bg-card: #1a1d27; --bg-code: #141620;
-  --text: #e8eaf0; --text-dim: #8b90a0; --border: #2a2d3a;
-  --blue: #4a9eff; --green: #34d399; --amber: #f59e0b;
-  --purple: #a78bfa; --red: #f87171; --cyan: #22d3ee;
-  --pink: #f472b6;
+  --bg:#0f1117;--bg-card:#1a1d27;--bg-code:#141620;
+  --text:#e8eaf0;--text-dim:#8b90a0;--border:#2a2d3a;
+  --blue:#4a9eff;--green:#34d399;--amber:#f59e0b;
+  --purple:#a78bfa;--red:#f87171;--cyan:#22d3ee;--pink:#f472b6;
 }
-*, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
-button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-.app { min-height: 100vh; padding: 20px 24px; max-width: 1100px; margin: 0 auto; }
-@media (max-width: 767px) { .app { padding: 10px 6px; } }
-
-/* Header */
-.header { text-align: center; margin-bottom: 16px; }
-.header h1 { font-size: 26px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.5px; }
-.header h1 .hl { color: var(--blue); }
-.header p { color: var(--text-dim); font-size: 13px; margin: 0; }
-@media (max-width: 767px) { .header h1 { font-size: 20px; } .header p { font-size: 12px; } }
-
-/* Tabs */
-.tab-bar { display: flex; justify-content: center; gap: 2px; margin-bottom: 16px; overflow-x: auto; padding: 0 4px; }
-.tab-btn {
-  background: transparent; border: none; border-bottom: 3px solid transparent;
-  color: var(--text-dim); padding: 10px 16px; cursor: pointer;
-  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
-  border-radius: 8px 8px 0 0; transition: all .15s; white-space: nowrap; min-height: 44px;
-}
-.tab-btn.active { background: rgba(74,158,255,0.13); border-bottom-color: var(--blue); color: var(--blue); font-weight: 700; }
-@media (max-width: 767px) { .tab-btn { padding: 10px 10px; font-size: 11px; } }
-
-/* Layout */
-.content-row { display: flex; gap: 16px; align-items: flex-start; }
-@media (max-width: 767px) { .content-row { display: block; } }
-.viz-panel { flex: 1; min-width: 0; }
-@media (max-width: 767px) { .viz-panel { margin-top: 10px; } }
-
-/* Code panel */
-.code-panel {
-  background: var(--bg-code); border-radius: 10px; border: 1px solid var(--border);
-  overflow: hidden; font-family: 'JetBrains Mono', monospace; width: 320px; min-width: 260px; flex-shrink: 0;
-}
-@media (max-width: 767px) { .code-panel { width: 100%; min-width: 0; } }
-.code-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 14px; border-bottom: 1px solid var(--border); background: var(--bg-card);
-}
-.code-title { color: var(--text-dim); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; font-family: 'DM Sans', sans-serif; }
-.code-toggle { background: none; border: none; color: var(--blue); cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 4px 8px; display: none; }
-@media (max-width: 767px) { .code-toggle { display: inline-block; } }
-.code-body { padding: 8px 0; overflow-x: auto; max-height: 340px; overflow-y: auto; }
-.code-line {
-  display: flex; padding: 1px 14px 1px 0; border-left: 3px solid transparent; transition: background .2s, border-color .2s;
-}
-.code-line.hl { background: rgba(74,158,255,0.09); border-left-color: var(--blue); }
-.code-num { color: var(--text-dim); width: 32px; text-align: right; margin-right: 10px; font-size: 12px; line-height: 20px; user-select: none; flex-shrink: 0; }
-.code-text { font-size: 12px; line-height: 20px; color: var(--text); white-space: pre; }
-
-/* Desc box */
-.desc-box {
-  background: var(--bg-card); border-radius: 8px; padding: 10px 14px; margin-top: 8px;
-  color: var(--text); font-size: 13px; line-height: 1.6; min-height: 44px; border: 1px solid var(--border);
-}
-
-/* Step controls */
-.step-controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 0; }
-.step-btn {
-  background: var(--blue); color: #fff; border: none; border-radius: 8px;
-  padding: 10px 20px; cursor: pointer; font-family: 'DM Sans', sans-serif;
-  font-size: 14px; font-weight: 600; min-width: 44px; min-height: 44px; transition: background .15s, opacity .15s;
-}
-.step-btn:disabled { background: var(--border); color: var(--text-dim); opacity: 0.5; cursor: default; }
-.step-label { color: var(--text-dim); font-size: 13px; min-width: 80px; text-align: center; }
-
-/* Device toggles */
-.device-btns { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
-.device-btn {
-  background: var(--bg-card); border: 2px solid var(--border); color: var(--text-dim);
-  border-radius: 8px; padding: 8px 16px; cursor: pointer; font-family: 'DM Sans', sans-serif;
-  font-size: 13px; font-weight: 600; min-height: 44px; transition: all .15s;
-}
-
-/* Slider row */
-.slider-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
-.slider-row label { color: var(--text-dim); font-size: 13px; }
-.slider-row input[type=range] { width: 120px; accent-color: var(--blue); }
-.slider-val { font-size: 14px; font-weight: 600; min-width: 50px; }
-
-/* Grid */
-.nd-grid { display: inline-grid; gap: 2px; padding: 4px; }
-.nd-cell {
-  border-radius: 4px; display: flex; align-items: center; justify-content: center;
-  font-size: 8px; color: var(--text-dim); transition: background .2s, border .2s;
-  font-family: 'JetBrains Mono', monospace; border: 1px solid var(--border); background: var(--bg-card);
-}
-.nd-cell.clickable { cursor: pointer; }
-.nd-cell.selected { border: 2px solid var(--blue) !important; }
-.id-display {
-  background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
-  padding: 8px 14px; margin-top: 8px; font-family: 'JetBrains Mono', monospace;
-  font-size: 12px; color: var(--text); display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
-}
-
-/* Memory model */
-.mem-diagram { display: flex; flex-direction: column; gap: 6px; }
-.mem-region {
-  border-radius: 10px; padding: 10px 14px; border: 2px solid; transition: all .3s;
-  position: relative;
-}
-.mem-region.dim { opacity: 0.25; }
-.mem-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.mem-sub { font-size: 11px; color: var(--text-dim); }
-.mem-inner { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-.mem-block {
-  background: rgba(255,255,255,0.06); border-radius: 6px; padding: 6px 10px;
-  font-size: 11px; border: 1px solid rgba(255,255,255,0.1); font-family: 'JetBrains Mono', monospace;
-}
-
-/* Comparison grid */
-.cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-@media (max-width: 767px) { .cmp-grid { grid-template-columns: 1fr; } }
-
-/* Tab panel visibility */
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-/* Hide on mobile class */
-@media (max-width: 767px) {
-  .hide-mobile { display: none !important; }
-}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.app{min-height:100vh;padding:20px 24px;max-width:1100px;margin:0 auto}
+@media(max-width:767px){.app{padding:10px 6px}}
+.header{text-align:center;margin-bottom:16px}
+.header h1{font-size:26px;font-weight:700;margin:0 0 4px;letter-spacing:-0.5px}
+.header .hl{color:var(--blue)}
+.header p{color:var(--text-dim);font-size:13px;margin:0}
+@media(max-width:767px){.header h1{font-size:20px}.header p{font-size:12px}}
+.tab-bar{display:flex;justify-content:center;gap:2px;margin-bottom:16px;overflow-x:auto;padding:0 4px}
+.tab-btn{background:transparent;border:none;border-bottom:3px solid transparent;color:var(--text-dim);padding:10px 16px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border-radius:8px 8px 0 0;transition:all .15s;white-space:nowrap;min-height:44px}
+.tab-btn.active{background:rgba(74,158,255,0.13);border-bottom-color:var(--blue);color:var(--blue);font-weight:700}
+@media(max-width:767px){.tab-btn{padding:10px 10px;font-size:11px}}
+.content-row{display:flex;gap:16px;align-items:flex-start}
+@media(max-width:767px){.content-row{display:block}}
+.viz-panel{flex:1;min-width:0}
+@media(max-width:767px){.viz-panel{margin-top:10px}}
+.code-panel{background:var(--bg-code);border-radius:10px;border:1px solid var(--border);overflow:hidden;font-family:'JetBrains Mono',monospace;width:320px;min-width:260px;flex-shrink:0}
+@media(max-width:767px){.code-panel{width:100%;min-width:0}}
+.code-header{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg-card)}
+.code-title{color:var(--text-dim);font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;font-family:'DM Sans',sans-serif}
+.code-toggle{background:none;border:none;color:var(--blue);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;padding:4px 8px;display:none}
+@media(max-width:767px){.code-toggle{display:inline-block}}
+.code-body{padding:8px 0;overflow-x:auto;max-height:340px;overflow-y:auto}
+.code-line{display:flex;padding:1px 14px 1px 0;border-left:3px solid transparent;transition:background .2s,border-color .2s}
+.code-line.hl{background:rgba(74,158,255,0.09);border-left-color:var(--blue)}
+.code-num{color:var(--text-dim);width:32px;text-align:right;margin-right:10px;font-size:12px;line-height:20px;user-select:none;flex-shrink:0}
+.code-text{font-size:12px;line-height:20px;color:var(--text);white-space:pre}
+.desc-box{background:var(--bg-card);border-radius:8px;padding:10px 14px;margin-top:8px;color:var(--text);font-size:13px;line-height:1.6;min-height:44px;border:1px solid var(--border)}
+.step-controls{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 0}
+.step-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;min-width:44px;min-height:44px;transition:background .15s,opacity .15s}
+.step-btn:disabled{background:var(--border);color:var(--text-dim);opacity:0.5;cursor:default}
+.step-label{color:var(--text-dim);font-size:13px;min-width:80px;text-align:center}
+.device-btns{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.device-btn{background:var(--bg-card);border:2px solid var(--border);color:var(--text-dim);border-radius:8px;padding:8px 16px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;min-height:44px;transition:all .15s}
+.slider-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+.slider-row label{color:var(--text-dim);font-size:13px}
+.slider-row input[type=range]{width:120px}
+.slider-val{font-size:14px;font-weight:600;min-width:50px}
+.nd-grid{display:inline-grid;gap:2px;padding:4px}
+.nd-cell{border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text-dim);transition:background .2s,border .2s;font-family:'JetBrains Mono',monospace;border:1px solid var(--border);background:var(--bg-card)}
+.nd-cell.clickable{cursor:pointer}
+.nd-cell.selected{border:2px solid var(--blue)!important}
+.id-display{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:767px){.cmp-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+<div class="app">
   <div class="header">
     <h1>OpenCL <span class="hl">Interactive</span> Demo</h1>
     <p>From FPGA to portable parallel computing · ← → to step · 1-5 to switch tabs</p>
@@ -147,508 +70,178 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   <div class="tab-bar" id="tabBar"></div>
   <div id="tabContent"></div>
 </div>
-
 <script>
-// ============================================================
-// STATE
-// ============================================================
-const S = {
-  tab: 0,
-  steps: [0, 0, 0, 0, 0],
-  device: 0,
-  wgIdx: 1,
-  selCell: null,
-  cus: 4,
-  codeCollapsed: false,
-  mobile: window.innerWidth < 768,
+const S={tab:0,steps:[0,0,0,0,0],device:0,wgIdx:1,selCell:null,cus:4,codeCollapsed:false,mobile:window.innerWidth<768};
+const C={blue:'#4a9eff',green:'#34d399',amber:'#f59e0b',purple:'#a78bfa',red:'#f87171',cyan:'#22d3ee',pink:'#f472b6'};
+const WG_OPTIONS=[[2,2],[4,2],[4,4],[8,4]];
+const DEVICES=[
+  {label:'GPU',icon:'⊞',desc:'Massively parallel cores',color:C.green,pe:'CUDA Core / Stream Proc.'},
+  {label:'FPGA',icon:'◈',desc:'Reconfigurable fabric (like Kria!)',color:C.amber,pe:'Datapath / Pipeline Stage'},
+  {label:'CPU',icon:'▣',desc:'Multi-core processor',color:C.purple,pe:'ALU / SIMD Lane'},
+];
+const CODE={
+  platform:['cl_platform_id platform;','clGetPlatformIDs(1, &platform, NULL);','cl_device_id device;','clGetDeviceIDs(platform,','    CL_DEVICE_TYPE_GPU, 1, &device, NULL);','cl_context ctx = clCreateContext(','    NULL, 1, &device, NULL, NULL, NULL);'],
+  kernel:['__kernel void vec_add(','    __global const float* A,','    __global const float* B,','    __global float* C) {','  int i = get_global_id(0);','  C[i] = A[i] + B[i];','}'],
+  memory:['__kernel void vec_add(','    __global const float* A,','    __global const float* B,','    __global float* C,','    __local float* scratch) {','  int gid = get_global_id(0);','  int lid = get_local_id(0);','  scratch[lid] = A[gid];','  barrier(CLK_LOCAL_MEM_FENCE);','  C[gid] = scratch[lid] + B[gid];','}'],
+  host:['cl_mem bufA = clCreateBuffer(ctx,','    CL_MEM_READ_ONLY, size, NULL, NULL);','cl_mem bufB = clCreateBuffer(ctx,','    CL_MEM_READ_ONLY, size, NULL, NULL);','cl_mem bufC = clCreateBuffer(ctx,','    CL_MEM_WRITE_ONLY, size, NULL, NULL);','clEnqueueWriteBuffer(queue, bufA,','    CL_TRUE, 0, size, hostA, 0, NULL, NULL);','clEnqueueWriteBuffer(queue, bufB,','    CL_TRUE, 0, size, hostB, 0, NULL, NULL);','clEnqueueNDRangeKernel(queue, kernel,','    1, NULL, &glob, &loc, 0, NULL, NULL);','clEnqueueReadBuffer(queue, bufC,','    CL_TRUE, 0, size, hostC, 0, NULL, NULL);'],
+  hls:['void vec_add(float A[N],','    float B[N], float C[N]) {','  #pragma HLS INTERFACE m_axi port=A','  #pragma HLS INTERFACE m_axi port=B','  #pragma HLS INTERFACE m_axi port=C','  for (int i = 0; i < N; i++) {','    #pragma HLS PIPELINE II=1','    C[i] = A[i] + B[i];','  }','}'],
 };
-
-// ============================================================
-// CONSTANTS
-// ============================================================
-const C = {
-  blue: '#4a9eff', green: '#34d399', amber: '#f59e0b',
-  purple: '#a78bfa', red: '#f87171', cyan: '#22d3ee', pink: '#f472b6',
-};
-const WG_OPTIONS = [[2,2],[4,2],[4,4],[8,4]];
-const DEVICES = [
-  { label: 'GPU', icon: '⊞', desc: 'Massively parallel cores', color: C.green },
-  { label: 'FPGA', icon: '◈', desc: 'Reconfigurable fabric (like Kria!)', color: C.amber },
-  { label: 'CPU', icon: '▣', desc: 'Multi-core processor', color: C.purple },
+const TABS=[{label:'Platform',short:'Plat',icon:'◉'},{label:'Memory',short:'Mem',icon:'▦'},{label:'NDRange',short:'NDR',icon:'⊞'},{label:'Timeline',short:'Time',icon:'▶'},{label:'Comparison',short:'Cmp',icon:'⇄'}];
+const PLATFORM_STEPS=[
+  {desc:'OpenCL defines a <b>Platform Model</b> — a host CPU connected to compute devices via a bus (PCIe for GPU, AXI for FPGA).',hl:[0,1],showCU:false,showPE:false,hlPE:false},
+  {desc:'The host queries devices using <code>clGetDeviceIDs</code>. Like scanning for your Kria board, but device-agnostic.',hl:[2,3,4],showCU:false,showPE:false,hlPE:false},
+  {desc:'A <b>Context</b> groups devices so they can share memory objects and command queues.',hl:[5,6],showCU:false,showPE:false,hlPE:false},
+  {desc:'Each device contains <b>Compute Units</b> (CUs). On GPU: streaming multiprocessors. On Kria: your replicated processing pipelines.',hl:[],showCU:true,showPE:false,hlPE:false},
+  {desc:'Each CU contains <b>Processing Elements</b> (PEs) — the smallest execution units. They run your kernel code.',hl:[],showCU:true,showPE:true,hlPE:false},
+  {desc:'<b>What is a PE?</b> On GPU: a CUDA core. On FPGA: one synthesized datapath instance. On CPU: an ALU or SIMD lane. Each PE executes one work-item.',hl:[],showCU:true,showPE:true,hlPE:true},
+  {desc:'Key idea: the <b>same code</b> targets GPU, FPGA, or CPU. Toggle the device type above — the hierarchy stays the same. <b>Portability.</b>',hl:[],showCU:true,showPE:true,hlPE:false},
 ];
-
-const CODE = {
-  platform: [
-    'cl_platform_id platform;',
-    'clGetPlatformIDs(1, &platform, NULL);',
-    'cl_device_id device;',
-    'clGetDeviceIDs(platform,',
-    '    CL_DEVICE_TYPE_GPU, 1, &device, NULL);',
-    'cl_context ctx = clCreateContext(',
-    '    NULL, 1, &device, NULL, NULL, NULL);',
-  ],
-  kernel: [
-    '__kernel void vec_add(',
-    '    __global const float* A,',
-    '    __global const float* B,',
-    '    __global float* C) {',
-    '  int i = get_global_id(0);',
-    '  C[i] = A[i] + B[i];',
-    '}',
-  ],
-  memory: [
-    '__kernel void vec_add(',
-    '    __global const float* A,',
-    '    __global const float* B,',
-    '    __global float* C,',
-    '    __local float* scratch) {',
-    '  int gid = get_global_id(0);',
-    '  int lid = get_local_id(0);',
-    '  scratch[lid] = A[gid];',
-    '  barrier(CLK_LOCAL_MEM_FENCE);',
-    '  C[gid] = scratch[lid] + B[gid];',
-    '}',
-  ],
-  host: [
-    'cl_mem bufA = clCreateBuffer(ctx,',
-    '    CL_MEM_READ_ONLY, size, NULL, NULL);',
-    'cl_mem bufB = clCreateBuffer(ctx,',
-    '    CL_MEM_READ_ONLY, size, NULL, NULL);',
-    'cl_mem bufC = clCreateBuffer(ctx,',
-    '    CL_MEM_WRITE_ONLY, size, NULL, NULL);',
-    'clEnqueueWriteBuffer(queue, bufA,',
-    '    CL_TRUE, 0, size, hostA, 0, NULL, NULL);',
-    'clEnqueueWriteBuffer(queue, bufB,',
-    '    CL_TRUE, 0, size, hostB, 0, NULL, NULL);',
-    'clEnqueueNDRangeKernel(queue, kernel,',
-    '    1, NULL, &glob, &loc, 0, NULL, NULL);',
-    'clEnqueueReadBuffer(queue, bufC,',
-    '    CL_TRUE, 0, size, hostC, 0, NULL, NULL);',
-  ],
-  hls: [
-    'void vec_add(float A[N],',
-    '    float B[N], float C[N]) {',
-    '  #pragma HLS INTERFACE m_axi port=A',
-    '  #pragma HLS INTERFACE m_axi port=B',
-    '  #pragma HLS INTERFACE m_axi port=C',
-    '  for (int i = 0; i < N; i++) {',
-    '    #pragma HLS PIPELINE II=1',
-    '    C[i] = A[i] + B[i];',
-    '  }',
-    '}',
-  ],
-};
-
-// ============================================================
-// TAB DEFINITIONS
-// ============================================================
-const TABS = [
-  { label: 'Platform', short: 'Plat', icon: '◉' },
-  { label: 'Memory', short: 'Mem', icon: '▦' },
-  { label: 'NDRange', short: 'NDR', icon: '⊞' },
-  { label: 'Timeline', short: 'Time', icon: '▶' },
-  { label: 'Comparison', short: 'Cmp', icon: '⇄' },
+const MEM_STEPS=[
+  {desc:'OpenCL defines a <b>Memory Model</b> with four device memory regions plus host memory. On your FPGA, you managed BRAM vs DDR manually — OpenCL standardizes these layers.',hl:[],show:0},
+  {desc:'<b>Host Memory</b> — CPU RAM where your application data lives. On Kria: PS-side DDR. Data must be explicitly transferred to the device.',hl:[],show:1},
+  {desc:'<b>Global Memory</b> — device-side RAM accessible by <i>all</i> work-items. Largest but slowest. On FPGA: PL DDR via AXI. On GPU: VRAM.',hl:[0,1,2,3],show:2},
+  {desc:'<b>Constant Memory</b> — read-only cached global memory. On FPGA: ROM or constant LUTs in BRAM. Optimized for broadcast reads.',hl:[1,2],show:3},
+  {desc:'<b>Local Memory</b> — shared scratchpad within a work-group, very fast. On GPU: shared memory. On FPGA: BRAM per CU.',hl:[4,7,8],show:4},
+  {desc:'<b>Private Memory</b> — per work-item registers. On FPGA: flip-flops. Fastest, smallest.',hl:[5,6,9,10],show:5},
+  {desc:'Data flows: Host → Global → Local → Private, then results flow back. On FPGA you wire DMA + AXI + BRAM manually.',hl:[],show:6},
 ];
-
-// ---- Platform steps ----
-const PLATFORM_STEPS = [
-  { desc: 'OpenCL defines a <b>Platform Model</b> — a host CPU connected to one or more compute devices via a bus (PCIe for GPU, AXI for FPGA).', hl: [0,1] },
-  { desc: 'The host queries available devices using <code>clGetDeviceIDs</code>. This is like scanning for your Kria board, but device-agnostic.', hl: [2,3,4] },
-  { desc: 'A <b>Context</b> groups devices so they can share memory objects and command queues.', hl: [5,6] },
-  { desc: 'Each device contains <b>Compute Units</b> (CUs). On a GPU these are streaming multiprocessors; on Kria they are your replicated processing pipelines.', hl: [] },
-  { desc: 'Each CU contains <b>Processing Elements</b> (PEs) — the individual ALUs. On your FPGA, these map to the datapath inside each pipeline stage.', hl: [] },
-  { desc: 'Key idea: the <b>same code</b> targets GPU, FPGA, or CPU. Toggle the device type above — the hierarchy stays the same. This is portability.', hl: [] },
+const ND_STEPS=[
+  {desc:'This is the <b>NDRange</b> — the global work-space. Each cell is one <b>work-item</b>.',showGroups:false,hlGroup:-1,hlCell:false},
+  {desc:'The runtime divides work into <b>work-groups</b>. Each group runs on one Compute Unit.',showGroups:true,hlGroup:-1,hlCell:false},
+  {desc:'Each work-group is a unit of scheduling. The colored regions show distinct groups.',showGroups:true,hlGroup:0,hlCell:false},
+  {desc:'Inside a work-group, each work-item has a <b>local ID</b>. Click any cell to see its IDs.',showGroups:true,hlGroup:0,hlCell:true},
+  {desc:'<code>get_global_id(0)</code> gives the column; <code>get_local_id</code> gives position within the group.',showGroups:true,hlGroup:-1,hlCell:true},
 ];
-
-// ---- Memory steps ----
-const MEM_STEPS = [
-  { desc: 'OpenCL defines a <b>Memory Model</b> with four regions, each with different scope and speed. On your FPGA, you managed BRAM vs DDR manually — OpenCL names these abstraction layers.', hl: [], regions: ['host'] },
-  { desc: '<b>Global Memory</b> — accessible by all work-items on the device. Largest but slowest. On FPGA: DDR (via AXI). On GPU: VRAM.', hl: [0,1,2,3], regions: ['host','global'] },
-  { desc: '<b>Constant Memory</b> — a read-only subset of global memory, often cached. On FPGA this maps to ROM or constant lookup tables you\'ve synthesized.', hl: [1,2], regions: ['host','global','constant'] },
-  { desc: '<b>Local Memory</b> — shared within a work-group, very fast. On GPU: shared memory / scratchpad. On FPGA: BRAM allocated per compute unit.', hl: [4,7,8], regions: ['host','global','constant','local'] },
-  { desc: '<b>Private Memory</b> — per work-item registers. On FPGA these are flip-flops in each pipeline instance. Fastest, smallest.', hl: [5,6,9,10], regions: ['host','global','constant','local','private'] },
-  { desc: 'Data flows: Host → Global (clEnqueueWriteBuffer) → Local (kernel copies) → Private (registers). Results flow back. On FPGA you wire this via DMA + AXI + BRAM.', hl: [], regions: ['host','global','constant','local','private'] },
+const TL_PHASES=[{label:'clCreateBuffer',color:C.purple},{label:'clEnqueueWriteBuffer',color:C.amber},{label:'clEnqueueNDRangeKernel',color:C.green},{label:'clEnqueueReadBuffer',color:C.cyan}];
+const TL_STEPS=[
+  {phase:-1,desc:'The host orchestrates execution through a <b>command queue</b>. The diagram shows the host-device relationship.'},
+  {phase:0,desc:'Allocate memory buffers on the device — analogous to BRAM or DDR interfaces on FPGA.'},
+  {phase:1,desc:'Transfer input data from host to device. Data blocks move across the bus — like DMA writes on Kria.'},
+  {phase:2,desc:'Launch the kernel! Work-groups execute on CUs in parallel. Adjust the slider to see more CUs = faster.'},
+  {phase:3,desc:'Read results back from device to host — the DMA read-back step.'},
+  {phase:4,desc:'Done! allocate → write → execute → read. On FPGA you wired each step; OpenCL automates it.'},
 ];
-
-// ---- NDRange steps ----
-const ND_STEPS = [
-  { desc: 'This is the <b>NDRange</b> — the global work-space. Each cell is one <b>work-item</b> (one parallel invocation of your kernel).', hl: [0,1,2,3], showGroups: false, hlGroup: -1, hlCell: false },
-  { desc: 'The runtime divides work into <b>work-groups</b>. Each group runs on one Compute Unit — like replicating a processing pipeline on your FPGA.', hl: [0,1,2,3], showGroups: true, hlGroup: -1, hlCell: false },
-  { desc: 'Each work-group is a unit of scheduling. The colored regions show distinct work-groups.', hl: [0,1,2,3], showGroups: true, hlGroup: 0, hlCell: false },
-  { desc: 'Inside a work-group, each work-item has a <b>local ID</b>. Click any cell to see its IDs.', hl: [4], showGroups: true, hlGroup: 0, hlCell: true },
-  { desc: '<code>get_global_id(0)</code> gives the column; <code>get_local_id</code> gives position within the group. On FPGA you\'d wire this addressing manually.', hl: [4,5], showGroups: true, hlGroup: -1, hlCell: true },
+const CMP_STEPS=[
+  {desc:'<b>Define the computation:</b> OpenCL kernel function vs HLS C function.',oclHl:[0,1,2,3,4,5,6],hlsHl:[0,1,7,8,9]},
+  {desc:'<b>Interface declaration:</b> OpenCL uses <code>__global</code> pointers; HLS uses <code>#pragma</code> for AXI.',oclHl:[1,2,3],hlsHl:[2,3,4]},
+  {desc:'<b>Parallelism:</b> OpenCL launches work-items via <code>get_global_id</code>; HLS pipelines a loop.',oclHl:[4,5],hlsHl:[5,6,7]},
+  {desc:'<b>Deployment:</b> OpenCL compiles at runtime. HLS synthesizes a bitstream for one FPGA.',oclHl:[],hlsHl:[]},
+  {desc:'<b>Trade-off:</b> OpenCL = portable. FPGA/HLS = fine-grained control over timing, resources, I/O.',oclHl:[],hlsHl:[]},
 ];
+const MAX_STEPS=[PLATFORM_STEPS.length-1,MEM_STEPS.length-1,ND_STEPS.length-1,TL_STEPS.length-1,CMP_STEPS.length-1];
 
-// ---- Timeline steps ----
-const TL_PHASES = [
-  { label: 'clCreateBuffer', color: C.purple, lines: [0,1,2,3,4,5] },
-  { label: 'clEnqueueWriteBuffer', color: C.amber, lines: [6,7,8,9] },
-  { label: 'clEnqueueNDRangeKernel', color: C.green, lines: [10,11] },
-  { label: 'clEnqueueReadBuffer', color: C.cyan, lines: [12,13] },
-];
-const TL_STEPS = [
-  { phase: -1, desc: 'The host orchestrates execution through a <b>command queue</b>. Let\'s step through each phase.' },
-  { phase: 0, desc: 'Allocate memory buffers on the device — analogous to instantiating BRAM or DDR interfaces on FPGA.' },
-  { phase: 1, desc: 'Transfer input data from host to device memory — like DMA writes in your Kria designs.' },
-  { phase: 2, desc: 'Launch the kernel! Compute Units execute work-groups in parallel. Adjust the slider to see how more CUs speed things up.' },
-  { phase: 3, desc: 'Read results back from device to host — the DMA read-back step.' },
-  { phase: 4, desc: 'Done! The entire pipeline: allocate → write → execute → read. On FPGA you wired this manually; OpenCL automates it.' },
-];
+function hlC(l){let h=l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');h=h.replace(/(#pragma\s+HLS\s+\w+)/g,`<span style="color:${C.amber}">$1</span>`);h=h.replace(/\b(__kernel|__global|__local|__constant|void|float|int|const|for|NULL|CL_\w+)\b/g,`<span style="color:${C.purple}">$1</span>`);h=h.replace(/\b(clGet\w+|clCreate\w+|clEnqueue\w+|get_global_id|get_local_id|get_group_id|barrier|CLK_LOCAL_MEM_FENCE)\b/g,`<span style="color:${C.blue}">$1</span>`);h=h.replace(/\b(\d+)\b/g,`<span style="color:${C.green}">$1</span>`);return h;}
+function codePanel(lines,hlRows,title,id){const col=S.mobile&&S.codeCollapsed;return`<div class="code-panel" id="${id}"><div class="code-header"><span class="code-title">${title}</span><button class="code-toggle" onclick="S.codeCollapsed=!S.codeCollapsed;render()">${col?'Show ▼':'Hide ▲'}</button></div>${col?'':`<div class="code-body">${lines.map((l,i)=>`<div class="code-line${hlRows.includes(i)?' hl':''}"><span class="code-num">${i+1}</span><span class="code-text">${hlC(l)}</span></div>`).join('')}</div>`}</div>`;}
+function stepCtrl(){const s=S.steps[S.tab],m=MAX_STEPS[S.tab];return`<div class="step-controls"><button class="step-btn" ${s===0?'disabled':''} onclick="prev()">← Prev</button><span class="step-label">Step ${s+1} / ${m+1}</span><button class="step-btn" ${s===m?'disabled':''} onclick="next()">Next →</button></div>`;}
+function desc(h){return`<div class="desc-box">${h}</div>`;}
+function svgDefs(){return`<defs>${[['arrBlue',C.blue],['arrGreen',C.green],['arrAmber',C.amber],['arrPurple',C.purple],['arrCyan',C.cyan],['arrPink',C.pink]].map(([id,c])=>`<marker id="${id}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="${c}"/></marker>`).join('')}<filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/></filter></defs>`;}
 
-// ---- Comparison steps ----
-const CMP_STEPS = [
-  { desc: '<b>Define the computation:</b> OpenCL kernel function vs HLS C function. Both describe what each parallel unit does.', oclHl: [0,1,2,3,4,5,6], hlsHl: [0,1,7,8,9] },
-  { desc: '<b>Interface declaration:</b> OpenCL uses <code>__global</code> pointers; HLS uses <code>#pragma</code> to specify AXI interfaces.', oclHl: [1,2,3], hlsHl: [2,3,4] },
-  { desc: '<b>Parallelism:</b> OpenCL launches thousands of work-items via <code>get_global_id</code>; HLS pipelines a loop with <code>#pragma PIPELINE</code>.', oclHl: [4,5], hlsHl: [5,6,7] },
-  { desc: '<b>Deployment:</b> OpenCL compiles at runtime for any device. HLS goes through synthesis → place &amp; route → bitstream for one specific FPGA.', oclHl: [], hlsHl: [] },
-  { desc: '<b>Key trade-off:</b> OpenCL is portable and easier to program. FPGA/HLS gives fine-grained control over timing, resources, and I/O.', oclHl: [], hlsHl: [] },
-];
-
-const MAX_STEPS = [PLATFORM_STEPS.length-1, MEM_STEPS.length-1, ND_STEPS.length-1, TL_STEPS.length-1, CMP_STEPS.length-1];
-
-// ============================================================
-// SYNTAX HIGHLIGHTING
-// ============================================================
-function hlC(line) {
-  let h = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  h = h.replace(/(#pragma\s+HLS\s+\w+)/g, `<span style="color:${C.amber}">$1</span>`);
-  h = h.replace(/\b(__kernel|__global|__local|__constant|void|float|int|const|for|NULL|CL_\w+)\b/g, `<span style="color:${C.purple}">$1</span>`);
-  h = h.replace(/\b(clGet\w+|clCreate\w+|clEnqueue\w+|get_global_id|get_local_id|get_group_id|barrier|CLK_LOCAL_MEM_FENCE)\b/g, `<span style="color:${C.blue}">$1</span>`);
-  h = h.replace(/\b(\d+)\b/g, `<span style="color:${C.green}">$1</span>`);
-  return h;
-}
-
-// ============================================================
-// RENDER HELPERS
-// ============================================================
-function renderCodePanel(lines, hlRows, title, id) {
-  const collapsed = S.mobile && S.codeCollapsed;
-  return `
-    <div class="code-panel" id="${id}">
-      <div class="code-header">
-        <span class="code-title">${title}</span>
-        <button class="code-toggle" onclick="S.codeCollapsed=!S.codeCollapsed;render()">${collapsed ? 'Show ▼' : 'Hide ▲'}</button>
-      </div>
-      ${collapsed ? '' : `<div class="code-body">${lines.map((l,i) => `
-        <div class="code-line${hlRows.includes(i) ? ' hl' : ''}">
-          <span class="code-num">${i+1}</span>
-          <span class="code-text">${hlC(l)}</span>
-        </div>`).join('')}
-      </div>`}
-    </div>`;
-}
-
-function renderStepControls() {
-  const step = S.steps[S.tab];
-  const max = MAX_STEPS[S.tab];
-  return `
-    <div class="step-controls">
-      <button class="step-btn" ${step===0?'disabled':''} onclick="prevStep()" aria-label="Previous step">← Prev</button>
-      <span class="step-label">Step ${step+1} / ${max+1}</span>
-      <button class="step-btn" ${step===max?'disabled':''} onclick="nextStep()" aria-label="Next step">Next →</button>
-    </div>`;
-}
-
-function renderDesc(html) {
-  return `<div class="desc-box">${html}</div>`;
-}
-
-// SVG arrow helpers
-function svgDefs() {
-  return `<defs>
-    <marker id="arrBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="${C.blue}"/></marker>
-    <marker id="arrAmber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="${C.amber}"/></marker>
-    <marker id="arrGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="${C.green}"/></marker>
-    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/></filter>
-  </defs>`;
-}
-
-function qArrow(x1,y1,x2,y2,color,marker,curve) {
-  const mx=(x1+x2)/2, my=(y1+y2)/2, dx=x2-x1, dy=y2-y1;
-  const len=Math.sqrt(dx*dx+dy*dy), nx=-dy/len, ny=dx/len;
-  const off=Math.min(40,len*0.25)*(curve||1);
-  const cx=mx+nx*off, cy=my+ny*off;
-  return `<path d="M${x1},${y1} Q${cx},${cy} ${x2},${y2}" stroke="${color}" stroke-width="2" fill="none" marker-end="url(#${marker})"/>`;
-}
-
-// ============================================================
-// TAB RENDERERS
-// ============================================================
-
-// ---- TAB 0: Platform ----
-function renderPlatform() {
-  const step = S.steps[0];
-  const s = PLATFORM_STEPS[step];
-  const d = DEVICES[S.device];
-  const m = S.mobile;
-  const vw = m ? 360 : 560, vh = m ? 260 : 240;
-  const devBtns = DEVICES.map((dv,i) => `<button class="device-btn" style="${S.device===i ? `background:${dv.color}15;border-color:${dv.color};color:${dv.color}` : ''}" onclick="S.device=${i};render()">${dv.icon} ${dv.label}</button>`).join('');
-
-  // CU/PE boxes inside device
-  let cuBoxes = '';
-  if (step >= 3) {
-    for (let r=0;r<2;r++) for (let c=0;c<2;c++) {
-      const bx=vw-190+c*82, by=72+r*56;
-      let pes = '';
-      for (let p=0;p<3;p++) pes += `<rect x="${bx+8+p*22}" y="${by+26}" width="16" height="12" rx="3" fill="${d.color}44" stroke="${d.color}" stroke-width="0.5"/>`;
-      cuBoxes += `<g style="opacity:${step>=3?1:0};transition:opacity .3s">
-        <rect x="${bx}" y="${by}" width="74" height="46" rx="6" fill="var(--bg-code)" stroke="var(--border)" stroke-width="1"/>
-        <text x="${bx+37}" y="${by+18}" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="'DM Sans',sans-serif">CU ${r*2+c}</text>
-        ${pes}
-      </g>`;
+// ---- Platform ----
+function renderPlatform(){
+  const step=S.steps[0],s=PLATFORM_STEPS[step],d=DEVICES[S.device],m=S.mobile;
+  const vw=m?360:580,vh=m?300:280,devX=vw-220,devW=200,devH=vh-40;
+  const devBtns=DEVICES.map((dv,i)=>`<button class="device-btn" style="${S.device===i?`background:${dv.color}15;border-color:${dv.color};color:${dv.color}`:''}" onclick="S.device=${i};render()">${dv.icon} ${dv.label}</button>`).join('');
+  let cuSvg='';
+  if(s.showCU){for(let r=0;r<2;r++)for(let c=0;c<2;c++){const bx=devX+10+c*95,by=66+r*72,cuW=86,cuH=62;
+    cuSvg+=`<rect x="${bx}" y="${by}" width="${cuW}" height="${cuH}" rx="6" fill="var(--bg-code)" stroke="var(--border)" stroke-width="1.5"/><text x="${bx+cuW/2}" y="${by+14}" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-weight="600" font-family="'DM Sans',sans-serif">CU ${r*2+c}</text>`;
+    for(let p=0;p<3;p++){const px=bx+8+p*26,py=by+22,isHL=s.hlPE&&p===0&&r===0&&c===0;
+      if(s.showPE){cuSvg+=`<rect x="${px}" y="${py}" width="22" height="30" rx="4" fill="${isHL?d.color+'44':d.color+'22'}" stroke="${isHL?d.color:d.color+'88'}" stroke-width="${isHL?2:1}"/><text x="${px+11}" y="${py+14}" text-anchor="middle" fill="${isHL?d.color:'var(--text-dim)'}" font-size="7" font-weight="600" font-family="'DM Sans',sans-serif">PE</text><text x="${px+11}" y="${py+24}" text-anchor="middle" fill="${isHL?d.color:'var(--text-dim)'}" font-size="6" font-family="'JetBrains Mono',monospace">${p}</text>`;}
+      else{cuSvg+=`<rect x="${px}" y="${py}" width="22" height="30" rx="4" fill="${d.color}15" stroke="${d.color}44" stroke-width="0.5"/>`;}
     }
-  }
-
-  const svg = `<svg viewBox="0 0 ${vw} ${vh}" style="width:100%;max-width:${vw}px">
-    ${svgDefs()}
-    <rect x="20" y="40" width="130" height="80" rx="10" fill="var(--bg-card)" stroke="${C.purple}" stroke-width="2" filter="url(#shadow)"/>
-    <text x="85" y="68" text-anchor="middle" fill="${C.purple}" font-size="13" font-weight="700" font-family="'DM Sans',sans-serif">HOST (CPU)</text>
-    <text x="85" y="86" text-anchor="middle" fill="var(--text-dim)" font-size="10" font-family="'DM Sans',sans-serif">Your application</text>
-    <text x="85" y="102" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="'JetBrains Mono',monospace">cmd queue</text>
-    <rect x="${vw-200}" y="20" width="180" height="${vh-40}" rx="10" fill="var(--bg-card)" stroke="${d.color}" stroke-width="2" filter="url(#shadow)" style="transition:stroke .3s"/>
-    <text x="${vw-110}" y="46" text-anchor="middle" fill="${d.color}" font-size="13" font-weight="700" font-family="'DM Sans',sans-serif" style="transition:fill .3s">${d.icon} DEVICE (${d.label})</text>
-    <text x="${vw-110}" y="62" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="'DM Sans',sans-serif">${d.desc}</text>
-    ${cuBoxes}
-    ${qArrow(150, 80, vw-200, vh/2, C.blue, 'arrBlue', 0.5)}
-    <text x="${(150+vw-200)/2}" y="${vh/2-20}" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="'DM Sans',sans-serif">PCIe / AXI</text>
-  </svg>`;
-
-  return `
-    <div class="content-row">
-      ${renderCodePanel(CODE.platform, s.hl, 'Host Setup', 'codePlatform')}
-      <div class="viz-panel">
-        <div class="device-btns">${devBtns}</div>
-        ${svg}
-        ${renderDesc(s.desc)}
-        ${renderStepControls()}
-      </div>
-    </div>`;
+  }}
+  let peCallout='';
+  if(s.hlPE){peCallout=`<line x1="${devX+40}" y1="${66+52+4}" x2="${devX+40}" y2="${vh-28}" stroke="${d.color}" stroke-width="1" stroke-dasharray="3 2"/><rect x="${devX-10}" y="${vh-28}" width="${devW+20}" height="22" rx="4" fill="${d.color}18" stroke="${d.color}" stroke-width="1"/><text x="${devX+devW/2}" y="${vh-13}" text-anchor="middle" fill="${d.color}" font-size="9" font-weight="600" font-family="'DM Sans',sans-serif">PE = ${d.pe}</text>`;}
+  return`<div class="content-row">${codePanel(CODE.platform,s.hl,'Host Setup','cp')}<div class="viz-panel"><div class="device-btns">${devBtns}</div><svg viewBox="0 0 ${vw} ${vh}" style="width:100%;max-width:${vw}px">${svgDefs()}<rect x="20" y="50" width="130" height="80" rx="10" fill="var(--bg-card)" stroke="${C.purple}" stroke-width="2" filter="url(#shadow)"/><text x="85" y="78" text-anchor="middle" fill="${C.purple}" font-size="13" font-weight="700" font-family="'DM Sans',sans-serif">HOST (CPU)</text><text x="85" y="96" text-anchor="middle" fill="var(--text-dim)" font-size="10" font-family="'DM Sans',sans-serif">Your application</text><text x="85" y="112" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="'JetBrains Mono',monospace">cmd queue</text><line x1="150" y1="90" x2="${devX}" y2="90" stroke="${C.blue}" stroke-width="2" marker-end="url(#arrBlue)" ${s.showCU?'':'stroke-dasharray="6 3"'}/><text x="${(150+devX)/2}" y="82" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="'DM Sans',sans-serif">PCIe / AXI</text><rect x="${devX}" y="20" width="${devW}" height="${devH}" rx="10" fill="var(--bg-card)" stroke="${d.color}" stroke-width="2" filter="url(#shadow)"/><text x="${devX+devW/2}" y="42" text-anchor="middle" fill="${d.color}" font-size="12" font-weight="700" font-family="'DM Sans',sans-serif">${d.icon} DEVICE (${d.label})</text><text x="${devX+devW/2}" y="56" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="'DM Sans',sans-serif">${d.desc}</text>${cuSvg}${peCallout}</svg>${desc(s.desc)}${stepCtrl()}</div></div>`;
 }
 
-// ---- TAB 1: Memory Model ----
-function renderMemory() {
-  const step = S.steps[1];
-  const s = MEM_STEPS[step];
-  const active = s.regions;
-
-  const regions = [
-    { id: 'host', label: 'Host Memory', color: C.purple, sub: 'CPU RAM — your application data', blocks: ['hostA[]','hostB[]','hostC[]'], fpga: 'PS DDR on Kria' },
-    { id: 'global', label: 'Global Memory', color: C.green, sub: 'Device RAM — accessible by all work-items', blocks: ['bufA','bufB','bufC'], fpga: 'PL DDR via AXI' },
-    { id: 'constant', label: 'Constant Memory', color: C.cyan, sub: 'Read-only cached global memory', blocks: ['lookup_table','coefficients'], fpga: 'ROM / LUT in BRAM' },
-    { id: 'local', label: 'Local Memory', color: C.amber, sub: 'Shared within a work-group — fast scratchpad', blocks: ['scratch[WG_SIZE]'], fpga: 'BRAM per CU' },
-    { id: 'private', label: 'Private Memory', color: C.pink, sub: 'Per work-item registers', blocks: ['gid','lid','temp'], fpga: 'Flip-flops / registers' },
-  ];
-
-  const regionHtml = regions.map(r => {
-    const isActive = active.includes(r.id);
-    return `<div class="mem-region ${isActive ? '' : 'dim'}" style="border-color:${r.color};background:${r.color}0a">
-      <div class="mem-label" style="color:${r.color}">${r.label}</div>
-      <div class="mem-sub">${r.sub}</div>
-      <div style="font-size:10px;color:var(--text-dim);margin-top:2px">FPGA equiv: <span style="color:${r.color}">${r.fpga}</span></div>
-      <div class="mem-inner">${r.blocks.map(b => `<div class="mem-block">${b}</div>`).join('')}</div>
-    </div>`;
-  }).join('');
-
-  // Arrows SVG showing data flow
-  let flowSvg = '';
-  if (step >= 5) {
-    const w = S.mobile ? 300 : 460;
-    flowSvg = `<svg viewBox="0 0 ${w} 50" style="width:100%;max-width:${w}px;margin:8px auto;display:block">
-      ${svgDefs()}
-      <text x="10" y="20" fill="${C.purple}" font-size="10" font-family="'DM Sans',sans-serif" font-weight="600">Host</text>
-      <text x="${w*0.25}" y="20" fill="${C.green}" font-size="10" font-family="'DM Sans',sans-serif" font-weight="600">Global</text>
-      <text x="${w*0.5}" y="20" fill="${C.amber}" font-size="10" font-family="'DM Sans',sans-serif" font-weight="600">Local</text>
-      <text x="${w*0.75}" y="20" fill="${C.pink}" font-size="10" font-family="'DM Sans',sans-serif" font-weight="600">Private</text>
-      <line x1="40" y1="30" x2="${w*0.25}" y2="30" stroke="${C.green}" stroke-width="2" marker-end="url(#arrGreen)"/>
-      <line x1="${w*0.3+10}" y1="30" x2="${w*0.5}" y2="30" stroke="${C.amber}" stroke-width="2" marker-end="url(#arrAmber)"/>
-      <line x1="${w*0.55+10}" y1="30" x2="${w*0.75}" y2="30" stroke="${C.blue}" stroke-width="2" marker-end="url(#arrBlue)"/>
-      <text x="${w*0.5}" y="46" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="'DM Sans',sans-serif">Data flows: Host → Global → Local → Private</text>
-    </svg>`;
-  }
-
-  return `
-    <div class="content-row">
-      ${renderCodePanel(CODE.memory, s.hl, 'Memory Kernel', 'codeMem')}
-      <div class="viz-panel">
-        <div class="mem-diagram">${regionHtml}</div>
-        ${flowSvg}
-        ${renderDesc(s.desc)}
-        ${renderStepControls()}
-      </div>
-    </div>`;
+// ---- Memory (SVG) ----
+function renderMemory(){
+  const step=S.steps[1],s=MEM_STEPS[step],show=s.show,m=S.mobile;
+  const vw=m?370:600,vh=m?340:310;
+  const hX=10,hY=10,hW=m?100:130,hH=vh-20;
+  const dX=hX+hW+(m?30:60),dY=10,dW=vw-dX-10,dH=vh-20;
+  const gX=dX+8,gY=dY+30,gW=dW-16,gH=dH-38;
+  const cX=gX+6,cY=gY+24,cW=m?70:100,cH=gH-30;
+  const cuX=cX+cW+8,cuY=gY+24,cuW=gW-cW-20,cuH=gH-30;
+  const lX=cuX+6,lY=cuY+22,lW=cuW-12,lH=36;
+  const pX=lX+6,pY=lY+lH+6,pW=m?30:40,pH=cuH-lH-34;
+  const aM=hX+hW+(m?15:30);
+  function rb(x,y,w,h,col,lbl,sub,vis,dash){return`<g style="opacity:${vis?1:0.12};transition:opacity .4s"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${col}0c" stroke="${col}" stroke-width="${vis?2:1}" ${dash?'stroke-dasharray="5 3"':''}/><text x="${x+6}" y="${y+14}" fill="${col}" font-size="${m?8:10}" font-weight="700" font-family="'DM Sans',sans-serif">${lbl}</text>${sub?`<text x="${x+6}" y="${y+24}" fill="var(--text-dim)" font-size="${m?7:8}" font-family="'DM Sans',sans-serif">${sub}</text>`:''}</g>`;}
+  let svg=svgDefs();
+  // Host
+  svg+=rb(hX,hY,hW,hH,C.purple,'HOST MEMORY','CPU RAM',show>=1,false);
+  if(show>=1){['hostA[]','hostB[]','hostC[]'].forEach((b,i)=>{svg+=`<rect x="${hX+10}" y="${hY+34+i*28}" width="${hW-20}" height="22" rx="4" fill="${C.purple}18" stroke="${C.purple}55" stroke-width="1"/><text x="${hX+hW/2}" y="${hY+49+i*28}" text-anchor="middle" fill="${C.purple}" font-size="9" font-family="'JetBrains Mono',monospace">${b}</text>`;});svg+=`<text x="${hX+hW/2}" y="${hH-4}" text-anchor="middle" fill="var(--text-dim)" font-size="7" font-family="'DM Sans',sans-serif">FPGA: PS DDR</text>`;}
+  // Device
+  svg+=`<rect x="${dX}" y="${dY}" width="${dW}" height="${dH}" rx="10" fill="var(--bg-card)" stroke="${C.green}" stroke-width="${show>=2?2:1}" style="opacity:${show>=2?1:0.15}"/><text x="${dX+dW/2}" y="${dY+16}" text-anchor="middle" fill="${C.green}" font-size="${m?9:11}" font-weight="700" font-family="'DM Sans',sans-serif" style="opacity:${show>=2?1:0.15}">DEVICE</text>`;
+  // Global
+  svg+=rb(gX,gY,gW,gH,C.green,'GLOBAL MEMORY',m?'All work-items':'Accessible by all work-items',show>=2,false);
+  if(show>=2){svg+=`<text x="${gX+6}" y="${gH+gY-6}" fill="var(--text-dim)" font-size="7" font-family="'DM Sans',sans-serif">FPGA: PL DDR via AXI</text>`;['bufA','bufB','bufC'].forEach((b,i)=>{svg+=`<rect x="${gX+gW-10-(3-i)*32}" y="${gH+gY-20}" width="28" height="14" rx="3" fill="${C.green}22" stroke="${C.green}55" stroke-width="1"/>`;});}
+  // Constant
+  svg+=rb(cX,cY,cW,cH,C.cyan,'CONSTANT','Read-only cached',show>=3,true);
+  if(show>=3){svg+=`<rect x="${cX+6}" y="${cY+30}" width="${cW-12}" height="14" rx="3" fill="${C.cyan}18" stroke="${C.cyan}44" stroke-width="1"/><text x="${cX+cW/2}" y="${cY+41}" text-anchor="middle" fill="${C.cyan}" font-size="7" font-family="'JetBrains Mono',monospace">coefficients</text><text x="${cX+cW/2}" y="${cH+cY-6}" text-anchor="middle" fill="var(--text-dim)" font-size="6" font-family="'DM Sans',sans-serif">FPGA: ROM/LUT</text>`;}
+  // CU + Local
+  svg+=rb(cuX,cuY,cuW,cuH,'#2a2d3a',m?'CU 0':'COMPUTE UNIT 0',null,show>=4,false);
+  svg+=rb(lX,lY,lW,lH,C.amber,'LOCAL MEMORY','Work-group shared',show>=4,false);
+  if(show>=4){svg+=`<rect x="${lX+lW-60}" y="${lY+6}" width="54" height="14" rx="3" fill="${C.amber}18" stroke="${C.amber}44" stroke-width="1"/><text x="${lX+lW-33}" y="${lY+17}" text-anchor="middle" fill="${C.amber}" font-size="7" font-family="'JetBrains Mono',monospace">scratch[]</text><text x="${lX+6}" y="${lY+lH-4}" fill="var(--text-dim)" font-size="6" font-family="'DM Sans',sans-serif">FPGA: BRAM</text>`;}
+  // Private
+  if(show>=5){for(let i=0;i<3;i++){const px=pX+i*(pW+4);svg+=`<rect x="${px}" y="${pY}" width="${pW}" height="${pH}" rx="4" fill="${C.pink}0c" stroke="${C.pink}" stroke-width="1.5"/><text x="${px+pW/2}" y="${pY+10}" text-anchor="middle" fill="${C.pink}" font-size="6" font-weight="700" font-family="'DM Sans',sans-serif">PRIVATE</text><text x="${px+pW/2}" y="${pY+20}" text-anchor="middle" fill="var(--text-dim)" font-size="6" font-family="'JetBrains Mono',monospace">WI ${i}</text><text x="${px+pW/2}" y="${pY+pH-3}" text-anchor="middle" fill="var(--text-dim)" font-size="5" font-family="'DM Sans',sans-serif">${m?'FFs':'Registers'}</text>`;}}
+  // Arrows
+  if(show>=6){svg+=`<line x1="${hX+hW}" y1="${hY+50}" x2="${gX}" y2="${gY+20}" stroke="${C.purple}" stroke-width="2" marker-end="url(#arrPurple)"/><text x="${aM}" y="${hY+38}" text-anchor="middle" fill="${C.purple}" font-size="7" font-weight="600" font-family="'DM Sans',sans-serif">WriteBuffer</text><path d="M${gX+gW/2},${gY+gH-22} L${lX+lW/2},${lY}" stroke="${C.amber}" stroke-width="1.5" marker-end="url(#arrAmber)" stroke-dasharray="4 2"/><text x="${cuX+cuW/2}" y="${cuY+14}" text-anchor="middle" fill="${C.amber}" font-size="6" font-family="'DM Sans',sans-serif">kernel copies</text><path d="M${lX+lW/2},${lY+lH} L${pX+pW/2},${pY}" stroke="${C.pink}" stroke-width="1.5" marker-end="url(#arrPink)" stroke-dasharray="4 2"/><line x1="${gX}" y1="${gY+gH-10}" x2="${hX+hW}" y2="${hH-10}" stroke="${C.cyan}" stroke-width="2" marker-end="url(#arrCyan)"/><text x="${aM}" y="${hH+2}" text-anchor="middle" fill="${C.cyan}" font-size="7" font-weight="600" font-family="'DM Sans',sans-serif">ReadBuffer</text>`;}
+  return`<div class="content-row">${codePanel(CODE.memory,s.hl,'Memory Kernel','cm')}<div class="viz-panel"><svg viewBox="0 0 ${vw} ${vh}" style="width:100%;max-width:${vw}px">${svg}</svg>${desc(s.desc)}${stepCtrl()}</div></div>`;
 }
 
-// ---- TAB 2: NDRange ----
-function renderNDRange() {
-  const step = S.steps[2];
-  const sd = ND_STEPS[step];
-  const m = S.mobile;
-  const cols = m ? 8 : 16, rows = m ? 4 : 8;
-  const wgW = WG_OPTIONS[S.wgIdx][0], wgH = WG_OPTIONS[S.wgIdx][1];
-  const cellSize = m ? 34 : 30;
-  const wgColors = ['#4a9eff33','#34d39933','#f59e0b33','#a78bfa33','#f8717133','#22d3ee33'];
-  const wgBorders = [C.blue, C.green, C.amber, C.purple, C.red, C.cyan];
-
-  let cells = '';
-  for (let y=0;y<rows;y++) for (let x=0;x<cols;x++) {
-    const gx=Math.floor(x/wgW), gy=Math.floor(y/wgH);
-    const groupsPerRow=Math.ceil(cols/wgW);
-    const gi=gy*groupsPerRow+gx;
-    const ci=wgColors[gi%wgColors.length];
-    const cb=wgBorders[gi%wgBorders.length];
-    const isSel=S.selCell&&S.selCell.x===x&&S.selCell.y===y;
-    const isHlGroup=sd.hlGroup>=0&&gi===sd.hlGroup;
-    const showBg=sd.showGroups;
-    const clickable=sd.hlCell||sd.showGroups;
-    cells += `<div class="nd-cell${clickable?' clickable':''}${isSel?' selected':''}"
-      style="width:${cellSize}px;height:${cellSize}px;
-      background:${showBg?ci:'var(--bg-card)'};
-      ${isHlGroup?`border:2px solid ${cb};`:''}
-      opacity:${1}"
-      onclick="${clickable?`selectCell(${x},${y})`:''}">${cellSize>=30?`${x},${y}`:''}</div>`;
-  }
-
-  let idDisplay = '';
-  if (S.selCell && sd.showGroups) {
-    const {x,y} = S.selCell;
-    idDisplay = `<div class="id-display">
-      <span>global_id: <b style="color:${C.blue}">(${x}, ${y})</b></span>
-      <span>local_id: <b style="color:${C.green}">(${x%wgW}, ${y%wgH})</b></span>
-      <span>group_id: <b style="color:${C.amber}">(${Math.floor(x/wgW)}, ${Math.floor(y/wgH)})</b></span>
-    </div>`;
-  }
-
-  const ndHls = [[0,1,2,3],[0,1,2,3],[0,1,2,3],[4],[4,5]];
-
-  return `
-    <div class="content-row">
-      ${renderCodePanel(CODE.kernel, ndHls[step]||[], 'Kernel', 'codeND')}
-      <div class="viz-panel">
-        <div class="slider-row">
-          <label>Work-group size:</label>
-          <input type="range" min="0" max="${WG_OPTIONS.length-1}" value="${S.wgIdx}" oninput="S.wgIdx=+this.value;S.selCell=null;render()" style="accent-color:${C.blue}">
-          <span class="slider-val" style="color:${C.blue}">${wgW}×${wgH}</span>
-        </div>
-        <div style="overflow-x:auto;display:flex;justify-content:center">
-          <div class="nd-grid" style="grid-template-columns:repeat(${cols},${cellSize}px)">${cells}</div>
-        </div>
-        ${idDisplay}
-        ${renderDesc(sd.desc)}
-        ${renderStepControls()}
-      </div>
-    </div>`;
+// ---- NDRange ----
+function renderNDRange(){
+  const step=S.steps[2],sd=ND_STEPS[step],m=S.mobile;
+  const cols=m?8:16,rows=m?4:8,wgW=WG_OPTIONS[S.wgIdx][0],wgH=WG_OPTIONS[S.wgIdx][1],cs=m?34:30;
+  const wgC=['#4a9eff33','#34d39933','#f59e0b33','#a78bfa33','#f8717133','#22d3ee33'];
+  const wgB=[C.blue,C.green,C.amber,C.purple,C.red,C.cyan];
+  const ndHls=[[0,1,2,3],[0,1,2,3],[0,1,2,3],[4],[4,5]];
+  let cells='';
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const gx=Math.floor(x/wgW),gy=Math.floor(y/wgH),gi=gy*Math.ceil(cols/wgW)+gx;const isSel=S.selCell&&S.selCell.x===x&&S.selCell.y===y;const isHl=sd.hlGroup>=0&&gi===sd.hlGroup;const ok=sd.hlCell||sd.showGroups;cells+=`<div class="nd-cell${ok?' clickable':''}${isSel?' selected':''}" style="width:${cs}px;height:${cs}px;background:${sd.showGroups?wgC[gi%wgC.length]:'var(--bg-card)'};${isHl?`border:2px solid ${wgB[gi%wgB.length]}`:''}" onclick="${ok?`selectCell(${x},${y})`:''}">${cs>=30?`${x},${y}`:''}</div>`;}
+  let idD='';
+  if(S.selCell&&sd.showGroups){const{x,y}=S.selCell;idD=`<div class="id-display"><span>global_id: <b style="color:${C.blue}">(${x}, ${y})</b></span><span>local_id: <b style="color:${C.green}">(${x%wgW}, ${y%wgH})</b></span><span>group_id: <b style="color:${C.amber}">(${Math.floor(x/wgW)}, ${Math.floor(y/wgH)})</b></span></div>`;}
+  return`<div class="content-row">${codePanel(CODE.kernel,ndHls[step]||[],'Kernel','cn')}<div class="viz-panel"><div class="slider-row"><label>Work-group size:</label><input type="range" min="0" max="${WG_OPTIONS.length-1}" value="${S.wgIdx}" oninput="S.wgIdx=+this.value;S.selCell=null;render()" style="accent-color:${C.blue}"><span class="slider-val" style="color:${C.blue}">${wgW}×${wgH}</span></div><div style="overflow-x:auto;display:flex;justify-content:center"><div class="nd-grid" style="grid-template-columns:repeat(${cols},${cs}px)">${cells}</div></div>${idD}${desc(sd.desc)}${stepCtrl()}</div></div>`;
 }
 
-// ---- TAB 3: Timeline ----
-function renderTimeline() {
-  const step = S.steps[3];
-  const s = TL_STEPS[step];
-  const cus = S.cus;
-  const m = S.mobile;
-  const barH = m ? 22 : 26, barGap = 4;
-  const leftMargin = m ? 95 : 185;
-  const totalW = m ? 350 : 540;
-  const barMaxW = totalW - leftMargin - 20;
-
-  let bars = '';
-  let yOffset = 0;
-  for (let i=0;i<TL_PHASES.length;i++) {
-    const ph = TL_PHASES[i];
-    const active = s.phase >= i;
-    const current = s.phase === i;
-    const y = 10 + i * (barH + barGap) + yOffset;
-
-    if (i === 2 && s.phase >= 2) {
-      // Multi-CU bars
-      const smallH = barH * 0.6;
-      const barW = active ? barMaxW / (cus<=2?1:Math.log2(cus)+1) * (cus<=2?0.8:1) : 0;
-      bars += `<text x="${leftMargin-8}" y="${y+smallH/2+4}" text-anchor="end" fill="${current?ph.color:'var(--text-dim)'}" font-size="${m?9:11}" font-family="'JetBrains Mono',monospace" font-weight="${current?700:400}">${ph.label}</text>`;
-      for (let c=0;c<cus;c++) {
-        bars += `<rect x="${leftMargin}" y="${y+c*(smallH+2)}" width="${barW}" height="${smallH}" rx="4"
-          fill="${ph.color}${current?'bb':'55'}" ${current?`stroke="${ph.color}" stroke-width="1"`:''} style="transition:width .4s ease-out"/>`;
-      }
-      if (current) bars += `<text x="${leftMargin+4}" y="${y+cus*(smallH+2)+12}" fill="var(--text-dim)" font-size="9" font-family="'DM Sans',sans-serif">${cus} CU${cus>1?'s':''} in parallel</text>`;
-      yOffset += (cus-1) * (smallH+2);
-    } else {
-      const bw = active ? barMaxW * (i===2?0.6:i===0?0.3:0.5) : 0;
-      const ay = y;
-      bars += `<text x="${leftMargin-8}" y="${ay+barH/2+4}" text-anchor="end" fill="${current?ph.color:'var(--text-dim)'}" font-size="${m?9:11}" font-family="'JetBrains Mono',monospace" font-weight="${current?700:400}">${ph.label}</text>`;
-      bars += `<rect x="${leftMargin}" y="${ay}" width="${bw}" height="${barH}" rx="4"
-        fill="${ph.color}${current?'bb':'55'}" ${current?`stroke="${ph.color}" stroke-width="1"`:''} style="transition:width .4s ease-out"/>`;
-    }
-  }
-
-  const svgH = barH*5 + barGap*6 + 30 + (s.phase>=2?(cus-1)*(barH*0.6+2):0);
-  const tlHls = { [-1]:[], 0:[0,1,2,3,4,5], 1:[6,7,8,9], 2:[10,11], 3:[12,13], 4:Array.from({length:14},(_,i)=>i) };
-
-  return `
-    <div class="content-row">
-      ${renderCodePanel(CODE.host, tlHls[s.phase]||[], 'Host Code', 'codeTL')}
-      <div class="viz-panel">
-        <div class="slider-row">
-          <label>Compute Units:</label>
-          <input type="range" min="1" max="8" value="${cus}" oninput="S.cus=+this.value;render()" style="accent-color:${C.green}">
-          <span class="slider-val" style="color:${C.green}">${cus}</span>
-        </div>
-        <div style="overflow-x:auto">
-          <svg viewBox="0 0 ${totalW} ${svgH}" style="width:100%;max-width:${totalW}px">${bars}</svg>
-        </div>
-        ${renderDesc(s.desc)}
-        ${renderStepControls()}
-      </div>
-    </div>`;
+// ---- Timeline ----
+function renderTimeline(){
+  const step=S.steps[3],s=TL_STEPS[step],cus=S.cus,m=S.mobile;
+  const fw=m?340:520,fh=90,hBW=m?80:110,dBW=m?120:170,hBX=10,dBX=fw-dBW-10;
+  const barH=m?20:24,barGap=3,lm=m?95:185,tw=m?340:520,bmw=tw-lm-20;
+  // Data flow SVG
+  let flowSvg=svgDefs();
+  flowSvg+=`<rect x="${hBX}" y="10" width="${hBW}" height="${fh-20}" rx="8" fill="var(--bg-card)" stroke="${C.purple}" stroke-width="2"/><text x="${hBX+hBW/2}" y="32" text-anchor="middle" fill="${C.purple}" font-size="${m?9:11}" font-weight="700" font-family="'DM Sans',sans-serif">HOST</text><text x="${hBX+hBW/2}" y="46" text-anchor="middle" fill="var(--text-dim)" font-size="8" font-family="'JetBrains Mono',monospace">hostA hostB</text><text x="${hBX+hBW/2}" y="58" text-anchor="middle" fill="var(--text-dim)" font-size="8" font-family="'JetBrains Mono',monospace">hostC</text>`;
+  flowSvg+=`<rect x="${dBX}" y="10" width="${dBW}" height="${fh-20}" rx="8" fill="var(--bg-card)" stroke="${C.green}" stroke-width="2"/><text x="${dBX+dBW/2}" y="32" text-anchor="middle" fill="${C.green}" font-size="${m?9:11}" font-weight="700" font-family="'DM Sans',sans-serif">DEVICE</text><text x="${dBX+dBW/2}" y="46" text-anchor="middle" fill="var(--text-dim)" font-size="8" font-family="'JetBrains Mono',monospace">bufA bufB</text><text x="${dBX+dBW/2}" y="58" text-anchor="middle" fill="var(--text-dim)" font-size="8" font-family="'JetBrains Mono',monospace">bufC (output)</text>`;
+  flowSvg+=`<line x1="${hBX+hBW}" y1="45" x2="${dBX}" y2="45" stroke="var(--border)" stroke-width="3" stroke-linecap="round"/><text x="${(hBX+hBW+dBX)/2}" y="28" text-anchor="middle" fill="var(--text-dim)" font-size="7" font-family="'DM Sans',sans-serif">PCIe / AXI Bus</text>`;
+  if(s.phase===1)flowSvg+=`<line x1="${hBX+hBW+5}" y1="45" x2="${dBX-5}" y2="45" stroke="${C.amber}" stroke-width="2" marker-end="url(#arrAmber)"/>`;
+  if(s.phase===3)flowSvg+=`<line x1="${dBX-5}" y1="45" x2="${hBX+hBW+5}" y2="45" stroke="${C.cyan}" stroke-width="2" marker-end="url(#arrCyan)"/>`;
+  const blocks={[-1]:[],0:[],1:[{x:hBX+hBW+20,l:'A[]',c:C.amber},{x:(hBX+hBW+dBX)/2,l:'B[]',c:C.amber}],2:[{x:dBX+20,l:'⚡',c:C.green}],3:[{x:(hBX+hBW+dBX)/2+20,l:'C[]',c:C.cyan}],4:[]}[s.phase]||[];
+  blocks.forEach(b=>{flowSvg+=`<rect x="${b.x}" y="37" width="24" height="16" rx="4" fill="${b.c}44" stroke="${b.c}" stroke-width="1.5"><animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite"/></rect><text x="${b.x+12}" y="49" text-anchor="middle" fill="${b.c}" font-size="8" font-weight="700" font-family="'JetBrains Mono',monospace">${b.l}</text>`;});
+  if(s.phase===2)flowSvg+=`<rect x="${dBX+4}" y="${fh-22}" width="${dBW-8}" height="10" rx="3" fill="${C.green}33" stroke="${C.green}" stroke-width="1"><animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite"/></rect><text x="${dBX+dBW/2}" y="${fh-14}" text-anchor="middle" fill="${C.green}" font-size="7" font-weight="600" font-family="'DM Sans',sans-serif">Kernel executing...</text>`;
+  // Gantt
+  let gantt='',yo=0;
+  for(let i=0;i<4;i++){const ph=TL_PHASES[i],act=s.phase>=i,cur=s.phase===i,y=6+i*(barH+barGap)+yo;
+    if(i===2&&s.phase>=2){const sh=barH*0.55,bw=act?bmw/(cus<=2?1:Math.log2(cus)+1)*(cus<=2?0.8:1):0;gantt+=`<text x="${lm-8}" y="${y+sh/2+4}" text-anchor="end" fill="${cur?ph.color:'var(--text-dim)'}" font-size="${m?8:10}" font-family="'JetBrains Mono',monospace" font-weight="${cur?700:400}">${ph.label}</text>`;for(let c=0;c<cus;c++)gantt+=`<rect x="${lm}" y="${y+c*(sh+2)}" width="${bw}" height="${sh}" rx="3" fill="${ph.color}${cur?'bb':'55'}" ${cur?`stroke="${ph.color}" stroke-width="1"`:''} style="transition:width .4s"/>`;if(cur)gantt+=`<text x="${lm+4}" y="${y+cus*(sh+2)+10}" fill="var(--text-dim)" font-size="8" font-family="'DM Sans',sans-serif">${cus} CU${cus>1?'s':''} in parallel</text>`;yo+=(cus-1)*(sh+2);
+    }else{const bw=act?bmw*(i===0?0.3:0.5):0;gantt+=`<text x="${lm-8}" y="${y+barH/2+4}" text-anchor="end" fill="${cur?ph.color:'var(--text-dim)'}" font-size="${m?8:10}" font-family="'JetBrains Mono',monospace" font-weight="${cur?700:400}">${ph.label}</text><rect x="${lm}" y="${y}" width="${bw}" height="${barH}" rx="3" fill="${ph.color}${cur?'bb':'55'}" ${cur?`stroke="${ph.color}" stroke-width="1"`:''} style="transition:width .4s"/>`;}}
+  const tlHls={[-1]:[],0:[0,1,2,3,4,5],1:[6,7,8,9],2:[10,11],3:[12,13],4:Array.from({length:14},(_,i)=>i)};
+  const ganttH=barH*5+barGap*6+20+(s.phase>=2?(cus-1)*(barH*0.55+2):0);
+  return`<div class="content-row">${codePanel(CODE.host,tlHls[s.phase]||[],'Host Code','ct')}<div class="viz-panel"><div class="slider-row"><label>Compute Units:</label><input type="range" min="1" max="8" value="${cus}" oninput="S.cus=+this.value;render()" style="accent-color:${C.green}"><span class="slider-val" style="color:${C.green}">${cus}</span></div><svg viewBox="0 0 ${fw} ${fh}" style="width:100%;max-width:${fw}px;margin-bottom:6px">${flowSvg}</svg><div style="overflow-x:auto"><svg viewBox="0 0 ${tw} ${ganttH}" style="width:100%;max-width:${tw}px">${gantt}</svg></div>${desc(s.desc)}${stepCtrl()}</div></div>`;
 }
 
-// ---- TAB 4: Comparison ----
-function renderComparison() {
-  const step = S.steps[4];
-  const s = CMP_STEPS[step];
-  return `
-    <div class="cmp-grid">
-      ${renderCodePanel(CODE.kernel, s.oclHl, 'OpenCL Kernel', 'codeOCL')}
-      ${renderCodePanel(CODE.hls, s.hlsHl, 'HLS (FPGA)', 'codeHLS')}
-    </div>
-    ${renderDesc(s.desc)}
-    ${renderStepControls()}`;
+// ---- Comparison ----
+function renderComparison(){const step=S.steps[4],s=CMP_STEPS[step];return`<div class="cmp-grid">${codePanel(CODE.kernel,s.oclHl,'OpenCL Kernel','co1')}${codePanel(CODE.hls,s.hlsHl,'HLS (FPGA)','co2')}</div>${desc(s.desc)}${stepCtrl()}`;}
+
+function render(){
+  document.getElementById('tabBar').innerHTML=TABS.map((t,i)=>`<button class="tab-btn${S.tab===i?' active':''}" onclick="switchTab(${i})"><span style="margin-right:4px">${t.icon}</span>${S.mobile?t.short:t.label}</button>`).join('');
+  document.getElementById('tabContent').innerHTML=[renderPlatform,renderMemory,renderNDRange,renderTimeline,renderComparison][S.tab]();
 }
-
-// ============================================================
-// MAIN RENDER
-// ============================================================
-function render() {
-  // Tab bar
-  document.getElementById('tabBar').innerHTML = TABS.map((t,i) =>
-    `<button class="tab-btn${S.tab===i?' active':''}" onclick="switchTab(${i})">
-      <span style="margin-right:4px">${t.icon}</span>${S.mobile?t.short:t.label}
-    </button>`
-  ).join('');
-
-  // Content
-  const renderers = [renderPlatform, renderMemory, renderNDRange, renderTimeline, renderComparison];
-  document.getElementById('tabContent').innerHTML = renderers[S.tab]();
-}
-
-// ============================================================
-// ACTIONS
-// ============================================================
-function switchTab(i) { S.tab = i; render(); }
-function nextStep() { const m = MAX_STEPS[S.tab]; if (S.steps[S.tab] < m) { S.steps[S.tab]++; render(); } }
-function prevStep() { if (S.steps[S.tab] > 0) { S.steps[S.tab]--; render(); } }
-function selectCell(x, y) { S.selCell = {x, y}; render(); }
-
-// Keyboard
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft') { e.preventDefault(); prevStep(); }
-  else if (e.key === 'ArrowRight') { e.preventDefault(); nextStep(); }
-  else if (e.key === 'Home') { e.preventDefault(); S.steps[S.tab] = 0; render(); }
-  else if (e.key === 'End') { e.preventDefault(); S.steps[S.tab] = MAX_STEPS[S.tab]; render(); }
-  else if (e.key >= '1' && e.key <= '5') { switchTab(+e.key - 1); }
-});
-
-// Responsive
-window.addEventListener('resize', () => { S.mobile = window.innerWidth < 768; render(); });
-
-// Initial render
+function switchTab(i){S.tab=i;render();}
+function next(){if(S.steps[S.tab]<MAX_STEPS[S.tab]){S.steps[S.tab]++;render();}}
+function prev(){if(S.steps[S.tab]>0){S.steps[S.tab]--;render();}}
+function selectCell(x,y){S.selCell={x,y};render();}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){e.preventDefault();prev();}else if(e.key==='ArrowRight'){e.preventDefault();next();}else if(e.key==='Home'){e.preventDefault();S.steps[S.tab]=0;render();}else if(e.key==='End'){e.preventDefault();S.steps[S.tab]=MAX_STEPS[S.tab];render();}else if(e.key>='1'&&e.key<='5'){switchTab(+e.key-1);}});
+window.addEventListener('resize',()=>{S.mobile=window.innerWidth<768;render();});
 render();
 </script>
 </body>

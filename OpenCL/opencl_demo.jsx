@@ -12,74 +12,20 @@ const C = {
 };
 
 const CODE = {
-  platform: [
-    "cl_platform_id platform;",
-    "clGetPlatformIDs(1, &platform, NULL);",
-    "cl_device_id device;",
-    "clGetDeviceIDs(platform,",
-    "    CL_DEVICE_TYPE_GPU, 1, &device, NULL);",
-    "cl_context ctx = clCreateContext(",
-    "    NULL, 1, &device, NULL, NULL, NULL);",
-  ],
-  kernel: [
-    "__kernel void vec_add(",
-    "    __global const float* A,",
-    "    __global const float* B,",
-    "    __global float* C) {",
-    "  int i = get_global_id(0);",
-    "  C[i] = A[i] + B[i];",
-    "}",
-  ],
-  memory: [
-    "__kernel void vec_add(",
-    "    __global const float* A,",
-    "    __global const float* B,",
-    "    __global float* C,",
-    "    __local float* scratch) {",
-    "  int gid = get_global_id(0);",
-    "  int lid = get_local_id(0);",
-    "  scratch[lid] = A[gid];",
-    "  barrier(CLK_LOCAL_MEM_FENCE);",
-    "  C[gid] = scratch[lid] + B[gid];",
-    "}",
-  ],
-  host: [
-    "cl_mem bufA = clCreateBuffer(ctx,",
-    "    CL_MEM_READ_ONLY, size, NULL, NULL);",
-    "cl_mem bufB = clCreateBuffer(ctx,",
-    "    CL_MEM_READ_ONLY, size, NULL, NULL);",
-    "cl_mem bufC = clCreateBuffer(ctx,",
-    "    CL_MEM_WRITE_ONLY, size, NULL, NULL);",
-    "clEnqueueWriteBuffer(queue, bufA,",
-    "    CL_TRUE, 0, size, hostA, 0, NULL, NULL);",
-    "clEnqueueWriteBuffer(queue, bufB,",
-    "    CL_TRUE, 0, size, hostB, 0, NULL, NULL);",
-    "clEnqueueNDRangeKernel(queue, kernel,",
-    "    1, NULL, &glob, &loc, 0, NULL, NULL);",
-    "clEnqueueReadBuffer(queue, bufC,",
-    "    CL_TRUE, 0, size, hostC, 0, NULL, NULL);",
-  ],
-  hls: [
-    "void vec_add(float A[N],",
-    "    float B[N], float C[N]) {",
-    "  #pragma HLS INTERFACE m_axi port=A",
-    "  #pragma HLS INTERFACE m_axi port=B",
-    "  #pragma HLS INTERFACE m_axi port=C",
-    "  for (int i = 0; i < N; i++) {",
-    "    #pragma HLS PIPELINE II=1",
-    "    C[i] = A[i] + B[i];",
-    "  }",
-    "}",
-  ],
+  platform: ["cl_platform_id platform;","clGetPlatformIDs(1, &platform, NULL);","cl_device_id device;","clGetDeviceIDs(platform,","    CL_DEVICE_TYPE_GPU, 1, &device, NULL);","cl_context ctx = clCreateContext(","    NULL, 1, &device, NULL, NULL, NULL);"],
+  kernel: ["__kernel void vec_add(","    __global const float* A,","    __global const float* B,","    __global float* C) {","  int i = get_global_id(0);","  C[i] = A[i] + B[i];","}"],
+  memory: ["__kernel void vec_add(","    __global const float* A,","    __global const float* B,","    __global float* C,","    __local float* scratch) {","  int gid = get_global_id(0);","  int lid = get_local_id(0);","  scratch[lid] = A[gid];","  barrier(CLK_LOCAL_MEM_FENCE);","  C[gid] = scratch[lid] + B[gid];","}"],
+  host: ["cl_mem bufA = clCreateBuffer(ctx,","    CL_MEM_READ_ONLY, size, NULL, NULL);","cl_mem bufB = clCreateBuffer(ctx,","    CL_MEM_READ_ONLY, size, NULL, NULL);","cl_mem bufC = clCreateBuffer(ctx,","    CL_MEM_WRITE_ONLY, size, NULL, NULL);","clEnqueueWriteBuffer(queue, bufA,","    CL_TRUE, 0, size, hostA, 0, NULL, NULL);","clEnqueueWriteBuffer(queue, bufB,","    CL_TRUE, 0, size, hostB, 0, NULL, NULL);","clEnqueueNDRangeKernel(queue, kernel,","    1, NULL, &glob, &loc, 0, NULL, NULL);","clEnqueueReadBuffer(queue, bufC,","    CL_TRUE, 0, size, hostC, 0, NULL, NULL);"],
+  hls: ["void vec_add(float A[N],","    float B[N], float C[N]) {","  #pragma HLS INTERFACE m_axi port=A","  #pragma HLS INTERFACE m_axi port=B","  #pragma HLS INTERFACE m_axi port=C","  for (int i = 0; i < N; i++) {","    #pragma HLS PIPELINE II=1","    C[i] = A[i] + B[i];","  }","}"],
 };
 
 function highlightC(line) {
-  let html = line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  html = html.replace(/(#pragma\s+HLS\s+\w+)/g, `<span style="color:${C.amber}">$1</span>`);
-  html = html.replace(/\b(__kernel|__global|__local|__constant|void|float|int|const|for|NULL|CL_\w+)\b/g, `<span style="color:${C.purple}">$1</span>`);
-  html = html.replace(/\b(clGet\w+|clCreate\w+|clEnqueue\w+|get_global_id|get_local_id|get_group_id|barrier|CLK_LOCAL_MEM_FENCE)\b/g, `<span style="color:${C.blue}">$1</span>`);
-  html = html.replace(/\b(\d+)\b/g, `<span style="color:${C.green}">$1</span>`);
-  return html;
+  let h = line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  h = h.replace(/(#pragma\s+HLS\s+\w+)/g, `<span style="color:${C.amber}">$1</span>`);
+  h = h.replace(/\b(__kernel|__global|__local|__constant|void|float|int|const|for|NULL|CL_\w+)\b/g, `<span style="color:${C.purple}">$1</span>`);
+  h = h.replace(/\b(clGet\w+|clCreate\w+|clEnqueue\w+|get_global_id|get_local_id|get_group_id|barrier|CLK_LOCAL_MEM_FENCE)\b/g, `<span style="color:${C.blue}">$1</span>`);
+  h = h.replace(/\b(\d+)\b/g, `<span style="color:${C.green}">$1</span>`);
+  return h;
 }
 
 function CodePanel({ lines, highlightRows = [], title = "Code", mobile = false, collapsed = false, onToggle, fullWidth = false }) {
@@ -87,33 +33,29 @@ function CodePanel({ lines, highlightRows = [], title = "Code", mobile = false, 
     <div style={{
       background: C.bgCode, borderRadius: 10, border: `1px solid ${C.border}`,
       overflow: "hidden", fontFamily: "'JetBrains Mono', monospace",
-      ...(fullWidth || mobile ? { width: "100%" } : { width: 320, minWidth: 260, flexShrink: 0 })
+      ...(fullWidth || mobile ? { width: "100%" } : { width: 300, minWidth: 240, flexShrink: 0 })
     }}>
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "8px 14px", borderBottom: `1px solid ${C.border}`, background: C.bgCard
-      }}>
-        <span style={{ color: C.textDim, fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", letterSpacing: 1, textTransform: "uppercase" }}>{title}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 14px", borderBottom: `1px solid ${C.border}`, background: C.bgCard }}>
+        <span style={{ color: C.textDim, fontSize: 11, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", letterSpacing: 1, textTransform: "uppercase" }}>{title}</span>
         {mobile && onToggle && (
-          <button onClick={onToggle} style={{
-            background: "none", border: "none", color: C.blue, cursor: "pointer",
-            fontFamily: "'DM Sans',sans-serif", fontSize: 13, padding: "4px 8px"
-          }}>{collapsed ? "Show ▼" : "Hide ▲"}</button>
+          <button onClick={onToggle} style={{ background: "none", border: "none", color: C.blue, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, padding: "4px 8px" }}>
+            {collapsed ? "Show ▼" : "Hide ▲"}
+          </button>
         )}
       </div>
       {!collapsed && (
-        <div style={{ padding: "8px 0", overflowX: "auto", maxHeight: 340, overflowY: "auto" }}>
+        <div style={{ padding: "6px 0", overflowX: "auto", maxHeight: 300, overflowY: "auto" }}>
           {lines.map((l, i) => {
             const hl = highlightRows.includes(i);
             return (
               <div key={i} style={{
-                display: "flex", padding: "1px 14px 1px 0",
+                display: "flex", padding: "1px 10px 1px 0",
                 background: hl ? `${C.blue}18` : "transparent",
                 borderLeft: hl ? `3px solid ${C.blue}` : "3px solid transparent",
                 transition: "background .2s, border-color .2s"
               }}>
-                <span style={{ color: C.textDim, width: 32, textAlign: "right", marginRight: 10, fontSize: 12, lineHeight: "20px", userSelect: "none", flexShrink: 0 }}>{i + 1}</span>
-                <span style={{ fontSize: 12, lineHeight: "20px", color: C.text, whiteSpace: "pre" }} dangerouslySetInnerHTML={{ __html: highlightC(l) }} />
+                <span style={{ color: C.textDim, width: 28, textAlign: "right", marginRight: 8, fontSize: 11, lineHeight: "18px", userSelect: "none", flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ fontSize: 11, lineHeight: "18px", color: C.text, whiteSpace: "pre" }} dangerouslySetInnerHTML={{ __html: highlightC(l) }} />
               </div>
             );
           })}
@@ -126,70 +68,61 @@ function CodePanel({ lines, highlightRows = [], title = "Code", mobile = false, 
 function StepControls({ step, maxStep, onPrev, onNext }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, padding: "10px 0", fontFamily: "'DM Sans',sans-serif" }}>
-      <button onClick={onPrev} disabled={step === 0} style={btnStyle(step === 0)} aria-label="Previous step">← Prev</button>
+      <button onClick={onPrev} disabled={step === 0} style={btnStyle(step === 0)}>← Prev</button>
       <span style={{ color: C.textDim, fontSize: 13, minWidth: 80, textAlign: "center" }}>Step {step + 1} / {maxStep + 1}</span>
-      <button onClick={onNext} disabled={step === maxStep} style={btnStyle(step === maxStep)} aria-label="Next step">Next →</button>
+      <button onClick={onNext} disabled={step === maxStep} style={btnStyle(step === maxStep)}>Next →</button>
     </div>
   );
 }
-function btnStyle(disabled) {
-  return {
-    background: disabled ? C.border : C.blue, color: disabled ? C.textDim : "#fff",
-    border: "none", borderRadius: 8, padding: "10px 20px", cursor: disabled ? "default" : "pointer",
-    fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600, minWidth: 44, minHeight: 44,
-    opacity: disabled ? 0.5 : 1, transition: "background .15s, opacity .15s"
-  };
+function btnStyle(d) {
+  return { background: d ? C.border : C.blue, color: d ? C.textDim : "#fff", border: "none", borderRadius: 8, padding: "10px 20px", cursor: d ? "default" : "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600, minWidth: 44, minHeight: 44, opacity: d ? 0.5 : 1, transition: "background .15s, opacity .15s" };
 }
-
 function DescBox({ children }) {
-  return (
-    <div style={{
-      background: C.bgCard, borderRadius: 8, padding: "10px 14px", marginTop: 8,
-      color: C.text, fontSize: 13, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.6,
-      minHeight: 44, border: `1px solid ${C.border}`
-    }} dangerouslySetInnerHTML={typeof children === "string" ? { __html: children } : undefined}>
-      {typeof children !== "string" ? children : undefined}
-    </div>
-  );
-}
-
-function qArrow(x1, y1, x2, y2, color, markerId, curveDir = 1) {
-  const mx = (x1+x2)/2, my = (y1+y2)/2, dx = x2-x1, dy = y2-y1;
-  const len = Math.sqrt(dx*dx + dy*dy), nx = -dy/len, ny = dx/len;
-  const off = Math.min(40, len * 0.25) * curveDir;
-  return <path d={`M${x1},${y1} Q${mx+nx*off},${my+ny*off} ${x2},${y2}`} stroke={color} strokeWidth={2} fill="none" markerEnd={`url(#${markerId})`} />;
+  return (<div style={{ background: C.bgCard, borderRadius: 8, padding: "10px 14px", marginTop: 8, color: C.text, fontSize: 13, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.6, minHeight: 44, border: `1px solid ${C.border}` }} dangerouslySetInnerHTML={typeof children === "string" ? { __html: children } : undefined}>{typeof children !== "string" ? children : undefined}</div>);
 }
 function ArrowDefs() {
-  return (
-    <defs>
-      <marker id="arrBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill={C.blue}/></marker>
-      <marker id="arrGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill={C.green}/></marker>
-      <marker id="arrAmber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill={C.amber}/></marker>
-      <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/></filter>
-    </defs>
-  );
+  return (<defs>
+    {[["arrBlue",C.blue],["arrGreen",C.green],["arrAmber",C.amber],["arrPurple",C.purple],["arrCyan",C.cyan],["arrPink",C.pink]].map(([id,c]) => (
+      <marker key={id} id={id} markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill={c}/></marker>
+    ))}
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/></filter>
+  </defs>);
 }
 
 // ======================== TAB 0: Platform ========================
 const DEVICES = [
-  { label: "GPU", icon: "⊞", desc: "Massively parallel cores", color: C.green },
-  { label: "FPGA", icon: "◈", desc: "Reconfigurable fabric (like Kria!)", color: C.amber },
-  { label: "CPU", icon: "▣", desc: "Multi-core processor", color: C.purple },
+  { label: "GPU", icon: "⊞", desc: "Massively parallel cores", color: C.green, pe: "CUDA Core / Stream Proc." },
+  { label: "FPGA", icon: "◈", desc: "Reconfigurable fabric (Kria)", color: C.amber, pe: "Datapath / Pipeline Stage" },
+  { label: "CPU", icon: "▣", desc: "Multi-core processor", color: C.purple, pe: "ALU / SIMD Lane" },
 ];
 const PLATFORM_STEPS = [
-  { desc: "OpenCL defines a <b>Platform Model</b> — a host CPU connected to one or more compute devices via a bus (PCIe for GPU, AXI for FPGA).", hl: [0,1] },
-  { desc: "The host queries available devices using <code>clGetDeviceIDs</code>. This is like scanning for your Kria board, but device-agnostic.", hl: [2,3,4] },
-  { desc: "A <b>Context</b> groups devices so they can share memory objects and command queues.", hl: [5,6] },
-  { desc: "Each device contains <b>Compute Units</b> (CUs). On a GPU these are streaming multiprocessors; on Kria they are your replicated processing pipelines.", hl: [] },
-  { desc: "Each CU contains <b>Processing Elements</b> (PEs) — the individual ALUs. On FPGA, these map to the datapath inside each pipeline stage.", hl: [] },
-  { desc: "Key idea: the <b>same code</b> targets GPU, FPGA, or CPU. Toggle the device type above — the hierarchy stays the same. This is portability.", hl: [] },
+  { desc: "OpenCL defines a <b>Platform Model</b> — a host CPU connected to compute devices via a bus (PCIe for GPU, AXI for FPGA).", hl: [0,1], showCU: false, showPE: false, hlPE: false },
+  { desc: "The host queries devices using <code>clGetDeviceIDs</code>. Like scanning for your Kria board, but device-agnostic.", hl: [2,3,4], showCU: false, showPE: false, hlPE: false },
+  { desc: "A <b>Context</b> groups devices so they can share memory objects and command queues.", hl: [5,6], showCU: false, showPE: false, hlPE: false },
+  { desc: "Each device has <b>Compute Units</b> (CUs). On GPU: streaming multiprocessors. On Kria: your replicated pipelines.", hl: [], showCU: true, showPE: false, hlPE: false },
+  { desc: "Each CU has <b>Processing Elements</b> (PEs) — the smallest execution units that run your kernel code.", hl: [], showCU: true, showPE: true, hlPE: false },
+  { desc: "<b>What is a PE?</b> On GPU: a CUDA core. On FPGA: one synthesized datapath. On CPU: an ALU / SIMD lane. Each PE executes one work-item.", hl: [], showCU: true, showPE: true, hlPE: true },
+  { desc: "Key idea: the <b>same code</b> targets GPU, FPGA, or CPU. Toggle device type above — the hierarchy is identical. <b>Portability.</b>", hl: [], showCU: true, showPE: true, hlPE: false },
 ];
 
 function PlatformTab({ mobile, step, onStep, maxStep }) {
   const [device, setDevice] = useState(0);
   const d = DEVICES[device];
   const s = PLATFORM_STEPS[step];
-  const vw = mobile ? 360 : 560, vh = mobile ? 260 : 240;
+  // Mobile: stack vertically (host on top, device below). Desktop: side by side.
+  const vw = mobile ? 340 : 580;
+  const vh = mobile ? (s.showCU ? 380 : 200) : (s.hlPE ? 300 : 260);
+  // Host position
+  const hx = mobile ? 80 : 20, hy = mobile ? 10 : 60, hw = mobile ? 180 : 130, hh = mobile ? 60 : 80;
+  // Device position
+  const dx = mobile ? 30 : 340, dy = mobile ? (hh + 50) : 20;
+  const dw = mobile ? 280 : 220, dh = mobile ? (s.showCU ? 230 : 80) : (s.hlPE ? 250 : 220);
+  // Arrow: vertical on mobile, horizontal on desktop
+  const arrX1 = mobile ? hx + hw / 2 : hx + hw;
+  const arrY1 = mobile ? hy + hh : hy + hh / 2;
+  const arrX2 = mobile ? dx + dw / 2 : dx;
+  const arrY2 = mobile ? dy : dy + dh / 2;
+
   return (
     <div>
       <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 10, flexWrap: "wrap" }}>
@@ -203,29 +136,63 @@ function PlatformTab({ mobile, step, onStep, maxStep }) {
           }}>{dv.icon} {dv.label}</button>
         ))}
       </div>
-      <svg viewBox={`0 0 ${vw} ${vh}`} style={{ width: "100%", maxWidth: vw }}>
+      <svg viewBox={`0 0 ${vw} ${vh}`} style={{ width: "100%", maxWidth: vw, display: "block", margin: "0 auto" }}>
         <ArrowDefs />
-        <rect x={20} y={40} width={130} height={80} rx={10} fill={C.bgCard} stroke={C.purple} strokeWidth={2} filter="url(#shadow)" />
-        <text x={85} y={68} textAnchor="middle" fill={C.purple} fontSize={13} fontWeight="700" fontFamily="'DM Sans',sans-serif">HOST (CPU)</text>
-        <text x={85} y={86} textAnchor="middle" fill={C.textDim} fontSize={10} fontFamily="'DM Sans',sans-serif">Your application</text>
-        <text x={85} y={102} textAnchor="middle" fill={C.textDim} fontSize={9} fontFamily="'JetBrains Mono',monospace">cmd queue</text>
-        <rect x={vw-200} y={20} width={180} height={vh-40} rx={10} fill={C.bgCard} stroke={d.color} strokeWidth={2} filter="url(#shadow)" style={{ transition: "stroke .3s" }} />
-        <text x={vw-110} y={46} textAnchor="middle" fill={d.color} fontSize={13} fontWeight="700" fontFamily="'DM Sans',sans-serif" style={{ transition: "fill .3s" }}>{d.icon} DEVICE ({d.label})</text>
-        <text x={vw-110} y={62} textAnchor="middle" fill={C.textDim} fontSize={9} fontFamily="'DM Sans',sans-serif">{d.desc}</text>
-        {step >= 3 && [0,1].map(r => [0,1].map(c => {
-          const bx = vw-190+c*82, by = 72+r*56;
+        {/* Host */}
+        <rect x={hx} y={hy} width={hw} height={hh} rx={10} fill={C.bgCard} stroke={C.purple} strokeWidth={2} filter="url(#shadow)" />
+        <text x={hx+hw/2} y={hy + (mobile ? 22 : 28)} textAnchor="middle" fill={C.purple} fontSize={mobile ? 12 : 13} fontWeight="700" fontFamily="'DM Sans',sans-serif">HOST (CPU)</text>
+        <text x={hx+hw/2} y={hy + (mobile ? 38 : 46)} textAnchor="middle" fill={C.textDim} fontSize={mobile ? 9 : 10} fontFamily="'DM Sans',sans-serif">Your application</text>
+        {!mobile && <text x={hx+hw/2} y={hy+62} textAnchor="middle" fill={C.textDim} fontSize={9} fontFamily="'JetBrains Mono',monospace">cmd queue</text>}
+        {/* Arrow host→device */}
+        <line x1={arrX1} y1={arrY1} x2={arrX2} y2={arrY2} stroke={C.blue} strokeWidth={2} markerEnd="url(#arrBlue)" strokeDasharray={s.showCU ? "none" : "6 3"} />
+        <text x={(arrX1+arrX2)/2 + (mobile ? 30 : 0)} y={(arrY1+arrY2)/2 - 6} textAnchor="middle" fill={C.textDim} fontSize={8} fontFamily="'DM Sans',sans-serif">PCIe / AXI</text>
+        {/* Device */}
+        <rect x={dx} y={dy} width={dw} height={dh} rx={10} fill={C.bgCard} stroke={d.color} strokeWidth={2} filter="url(#shadow)" style={{ transition: "stroke .3s" }} />
+        <text x={dx+dw/2} y={dy+18} textAnchor="middle" fill={d.color} fontSize={mobile ? 11 : 12} fontWeight="700" fontFamily="'DM Sans',sans-serif">{d.icon} DEVICE ({d.label})</text>
+        <text x={dx+dw/2} y={dy+32} textAnchor="middle" fill={C.textDim} fontSize={8} fontFamily="'DM Sans',sans-serif">{d.desc}</text>
+        {/* CUs */}
+        {s.showCU && [0,1].map(r => [0,1].map(c => {
+          const cuW = mobile ? 120 : 95, cuH = 60;
+          const cuGapX = mobile ? 10 : 8, cuGapY = 8;
+          const bx = dx + 10 + c * (cuW + cuGapX);
+          const by = dy + 42 + r * (cuH + cuGapY);
           return (
-            <g key={`${r}${c}`} style={{ opacity: 1, transition: "opacity .3s" }}>
-              <rect x={bx} y={by} width={74} height={46} rx={6} fill={C.bgCode} stroke={C.border} strokeWidth={1} />
-              <text x={bx+37} y={by+18} textAnchor="middle" fill={C.textDim} fontSize={9} fontFamily="'DM Sans',sans-serif">CU {r*2+c}</text>
-              {[0,1,2].map(p => (
-                <rect key={p} x={bx+8+p*22} y={by+26} width={16} height={12} rx={3} fill={d.color+"44"} stroke={d.color} strokeWidth={0.5} />
-              ))}
+            <g key={`${r}${c}`}>
+              <rect x={bx} y={by} width={cuW} height={cuH} rx={6} fill={C.bgCode} stroke={C.border} strokeWidth={1.5} />
+              <text x={bx+cuW/2} y={by+14} textAnchor="middle" fill={C.textDim} fontSize={9} fontWeight="600" fontFamily="'DM Sans',sans-serif">CU {r*2+c}</text>
+              {s.showPE && [0,1,2].map(p => {
+                const peW = mobile ? 30 : 24, peH = mobile ? 32 : 30;
+                const peGap = mobile ? 6 : 4;
+                const peStartX = bx + (cuW - 3*peW - 2*peGap) / 2;
+                const px = peStartX + p * (peW + peGap), py = by + 20;
+                const isHL = s.hlPE && p === 0 && r === 0 && c === 0;
+                return (
+                  <g key={p}>
+                    <rect x={px} y={py} width={peW} height={peH} rx={4}
+                      fill={isHL ? d.color+"44" : d.color+"22"} stroke={isHL ? d.color : d.color+"88"} strokeWidth={isHL ? 2 : 1} />
+                    <text x={px+peW/2} y={py+14} textAnchor="middle" fill={isHL ? d.color : C.textDim} fontSize={8} fontWeight="600" fontFamily="'DM Sans',sans-serif">PE</text>
+                    <text x={px+peW/2} y={py+24} textAnchor="middle" fill={isHL ? d.color : C.textDim} fontSize={7} fontFamily="'JetBrains Mono',monospace">{p}</text>
+                  </g>
+                );
+              })}
+              {!s.showPE && [0,1,2].map(p => {
+                const peW = mobile ? 30 : 24, peGap = mobile ? 6 : 4;
+                const peStartX = bx + (cuW - 3*peW - 2*peGap) / 2;
+                return <rect key={p} x={peStartX+p*(peW+peGap)} y={by+20} width={peW} height={30} rx={4} fill={d.color+"15"} stroke={d.color+"44"} strokeWidth={0.5} />;
+              })}
             </g>
           );
         }))}
-        {qArrow(150, 80, vw-200, vh/2, C.blue, "arrBlue", 0.5)}
-        <text x={(150+vw-200)/2} y={vh/2-20} textAnchor="middle" fill={C.textDim} fontSize={9} fontFamily="'DM Sans',sans-serif">PCIe / AXI</text>
+        {/* PE callout */}
+        {s.hlPE && (() => {
+          const calloutY = dy + dh + 4;
+          return (
+            <g>
+              <rect x={dx} y={calloutY} width={dw} height={22} rx={4} fill={d.color+"18"} stroke={d.color} strokeWidth={1} />
+              <text x={dx+dw/2} y={calloutY+15} textAnchor="middle" fill={d.color} fontSize={9} fontWeight="600" fontFamily="'DM Sans',sans-serif">PE = {d.pe}</text>
+            </g>
+          );
+        })()}
       </svg>
       <DescBox>{s.desc}</DescBox>
       <StepControls step={step} maxStep={maxStep} onPrev={() => onStep(p => p-1)} onNext={() => onStep(p => p+1)} />
@@ -234,66 +201,132 @@ function PlatformTab({ mobile, step, onStep, maxStep }) {
 }
 
 // ======================== TAB 1: Memory ========================
-const MEM_REGIONS = [
-  { id: "host", label: "Host Memory", color: C.purple, sub: "CPU RAM — your application data", blocks: ["hostA[]","hostB[]","hostC[]"], fpga: "PS DDR on Kria" },
-  { id: "global", label: "Global Memory", color: C.green, sub: "Device RAM — accessible by all work-items", blocks: ["bufA","bufB","bufC"], fpga: "PL DDR via AXI" },
-  { id: "constant", label: "Constant Memory", color: C.cyan, sub: "Read-only cached global memory", blocks: ["lookup_table","coefficients"], fpga: "ROM / LUT in BRAM" },
-  { id: "local", label: "Local Memory", color: C.amber, sub: "Shared within a work-group — fast scratchpad", blocks: ["scratch[WG_SIZE]"], fpga: "BRAM per CU" },
-  { id: "private", label: "Private Memory", color: C.pink, sub: "Per work-item registers", blocks: ["gid","lid","temp"], fpga: "Flip-flops / registers" },
-];
 const MEM_STEPS = [
-  { desc: "OpenCL defines a <b>Memory Model</b> with four device regions plus host memory, each with different scope and speed. On your FPGA, you managed BRAM vs DDR manually — OpenCL names these layers.", hl: [], regions: ["host"] },
-  { desc: "<b>Global Memory</b> — accessible by all work-items. Largest but slowest. On FPGA: DDR via AXI. On GPU: VRAM.", hl: [0,1,2,3], regions: ["host","global"] },
-  { desc: "<b>Constant Memory</b> — read-only cached subset of global memory. On FPGA this maps to ROM or constant lookup tables.", hl: [1,2], regions: ["host","global","constant"] },
-  { desc: "<b>Local Memory</b> — shared within a work-group, very fast. On GPU: shared memory. On FPGA: BRAM allocated per compute unit.", hl: [4,7,8], regions: ["host","global","constant","local"] },
-  { desc: "<b>Private Memory</b> — per work-item registers. On FPGA these are flip-flops. Fastest, smallest.", hl: [5,6,9,10], regions: ["host","global","constant","local","private"] },
-  { desc: "Data flows: Host → Global (<code>clEnqueueWriteBuffer</code>) → Local (kernel copies) → Private (registers). Results flow back. On FPGA you wire this via DMA + AXI + BRAM.", hl: [], regions: ["host","global","constant","local","private"] },
+  { desc: "OpenCL defines a <b>Memory Model</b> with four device regions plus host memory. On your FPGA, you managed BRAM vs DDR manually — OpenCL standardizes these.", hl: [], show: 0 },
+  { desc: "<b>Host Memory</b> — CPU RAM where your application data lives. On Kria: PS-side DDR.", hl: [], show: 1 },
+  { desc: "<b>Global Memory</b> — device RAM accessible by <i>all</i> work-items. Largest but slowest. FPGA: PL DDR via AXI.", hl: [0,1,2,3], show: 2 },
+  { desc: "<b>Constant Memory</b> — read-only cached global memory. FPGA: ROM or constant LUTs.", hl: [1,2], show: 3 },
+  { desc: "<b>Local Memory</b> — shared scratchpad within a work-group, very fast. FPGA: BRAM per CU.", hl: [4,7,8], show: 4 },
+  { desc: "<b>Private Memory</b> — per work-item registers. FPGA: flip-flops. Fastest, smallest.", hl: [5,6,9,10], show: 5 },
+  { desc: "Data flows: Host → Global → Local → Private, then results return. On FPGA you'd wire DMA + AXI + BRAM manually.", hl: [], show: 6 },
 ];
 
 function MemoryTab({ mobile, step, onStep, maxStep }) {
   const s = MEM_STEPS[step];
+  const show = s.show;
+  // Use a taller viewBox with more generous spacing
+  const vw = mobile ? 340 : 620;
+  const vh = mobile ? 440 : 340;
+  // Host region (left on desktop, top on mobile)
+  const hX = 10, hY = 10;
+  const hW = mobile ? 100 : 140;
+  const hH = mobile ? 130 : vh - 20;
+  // Device region
+  const dX = mobile ? 120 : hW + 50;
+  const dY = mobile ? 10 : 10;
+  const dW = vw - dX - 10;
+  const dH = mobile ? 420 : vh - 20;
+  // Global inside device
+  const gX = dX + 8, gY = dY + 28, gW = dW - 16, gH = dH - 36;
+  // Constant inside global (left column)
+  const cX = gX + 6, cY = gY + 22;
+  const cW = mobile ? 80 : 110;
+  const cH = mobile ? 80 : gH - 50;
+  // CU inside global (right column)
+  const cuX = cX + cW + (mobile ? 8 : 12);
+  const cuY = gY + 22;
+  const cuW = gW - cW - (mobile ? 20 : 24);
+  const cuH = mobile ? gH - 30 : gH - 50;
+  // Local inside CU
+  const lX = cuX + 6, lY = cuY + 20;
+  const lW = cuW - 12;
+  const lH = mobile ? 44 : 42;
+  // Private inside CU (below local)
+  const pY = lY + lH + 10;
+  const pW = mobile ? 34 : 42;
+  const pH = mobile ? 60 : Math.min(cuH - lH - 46, 80);
+  const pGap = mobile ? 4 : 6;
+  const pStartX = lX + (lW - 3 * pW - 2 * pGap) / 2;
+  // Arrow midpoint
+  const arrMidX = mobile ? (hX + hW + dX) / 2 : hX + hW + 25;
+
+  function rBox(x, y, w, h, color, label, sub, vis, dash) {
+    return (
+      <g style={{ opacity: vis ? 1 : 0.12, transition: "opacity .4s" }}>
+        <rect x={x} y={y} width={w} height={h} rx={8} fill={color+"0c"} stroke={color} strokeWidth={vis ? 2 : 1} strokeDasharray={dash ? "5 3" : "none"} />
+        <text x={x+6} y={y+13} fill={color} fontSize={mobile ? 8 : 10} fontWeight="700" fontFamily="'DM Sans',sans-serif">{label}</text>
+        {sub && <text x={x+6} y={y+23} fill={C.textDim} fontSize={mobile ? 6 : 8} fontFamily="'DM Sans',sans-serif">{sub}</text>}
+      </g>
+    );
+  }
+
   return (
     <div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {MEM_REGIONS.map(r => (
-          <div key={r.id} style={{
-            borderRadius: 10, padding: "10px 14px", border: `2px solid ${r.color}`,
-            background: r.color + "0a", opacity: s.regions.includes(r.id) ? 1 : 0.2,
-            transition: "opacity .3s"
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: r.color, marginBottom: 2 }}>{r.label}</div>
-            <div style={{ fontSize: 11, color: C.textDim }}>{r.sub}</div>
-            <div style={{ fontSize: 10, color: C.textDim, marginTop: 2 }}>FPGA equiv: <span style={{ color: r.color }}>{r.fpga}</span></div>
-            <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-              {r.blocks.map(b => (
-                <div key={b} style={{
-                  background: "rgba(255,255,255,0.06)", borderRadius: 6, padding: "6px 10px",
-                  fontSize: 11, border: "1px solid rgba(255,255,255,0.1)", fontFamily: "'JetBrains Mono',monospace"
-                }}>{b}</div>
-              ))}
-            </div>
-          </div>
+      <svg viewBox={`0 0 ${vw} ${vh}`} style={{ width: "100%", maxWidth: vw, display: "block", margin: "0 auto" }}>
+        <ArrowDefs />
+        {/* Host */}
+        {rBox(hX, hY, hW, hH, C.purple, "HOST MEM", "CPU RAM", show >= 1, false)}
+        {show >= 1 && ["hostA[]","hostB[]","hostC[]"].map((b,i) => (
+          <g key={i}>
+            <rect x={hX+8} y={hY+30+i*26} width={hW-16} height={20} rx={4} fill={C.purple+"18"} stroke={C.purple+"55"} strokeWidth={1} />
+            <text x={hX+hW/2} y={hY+44+i*26} textAnchor="middle" fill={C.purple} fontSize={8} fontFamily="'JetBrains Mono',monospace">{b}</text>
+          </g>
         ))}
-      </div>
-      {step >= 5 && (() => {
-        const w = mobile ? 300 : 460;
-        const pts = [
-          { x: 10, label: "Host", color: C.purple },
-          { x: mobile ? 75 : 115, label: "Global", color: C.green },
-          { x: mobile ? 150 : 230, label: "Local", color: C.amber },
-          { x: mobile ? 225 : 345, label: "Private", color: C.pink },
-        ];
-        return (
-          <svg viewBox={`0 0 ${w} 50`} style={{ width: "100%", maxWidth: w, display: "block", margin: "8px auto" }}>
-            <ArrowDefs />
-            {pts.map((p, i) => <text key={i} x={p.x} y={20} fill={p.color} fontSize={10} fontFamily="'DM Sans',sans-serif" fontWeight="600">{p.label}</text>)}
-            <line x1={40} y1={30} x2={mobile?75:115} y2={30} stroke={C.green} strokeWidth={2} markerEnd="url(#arrGreen)" />
-            <line x1={mobile?110:155} y1={30} x2={mobile?150:230} y2={30} stroke={C.amber} strokeWidth={2} markerEnd="url(#arrAmber)" />
-            <line x1={mobile?185:270} y1={30} x2={mobile?225:345} y2={30} stroke={C.blue} strokeWidth={2} markerEnd="url(#arrBlue)" />
-            <text x={w/2} y={46} textAnchor="middle" fill={C.textDim} fontSize={9} fontFamily="'DM Sans',sans-serif">Data flows: Host → Global → Local → Private</text>
-          </svg>
-        );
-      })()}
+        {show >= 1 && <text x={hX+hW/2} y={hY+hH-6} textAnchor="middle" fill={C.textDim} fontSize={6} fontFamily="'DM Sans',sans-serif">FPGA: PS DDR</text>}
+
+        {/* Device container */}
+        <rect x={dX} y={dY} width={dW} height={dH} rx={10} fill={C.bgCard} stroke={C.green} strokeWidth={show>=2?2:1} style={{ opacity: show>=2?1:0.12, transition: "all .4s" }} />
+        <text x={dX+dW/2} y={dY+16} textAnchor="middle" fill={C.green} fontSize={mobile?9:11} fontWeight="700" fontFamily="'DM Sans',sans-serif" style={{ opacity: show>=2?1:0.12 }}>DEVICE</text>
+
+        {/* Global */}
+        {rBox(gX, gY, gW, gH, C.green, "GLOBAL MEMORY", mobile ? "All work-items" : "All work-items can access", show >= 2, false)}
+        {show >= 2 && <text x={gX+6} y={gY+gH-6} fill={C.textDim} fontSize={6} fontFamily="'DM Sans',sans-serif">FPGA: PL DDR via AXI</text>}
+
+        {/* Constant */}
+        {rBox(cX, cY, cW, cH, C.cyan, "CONSTANT", "Read-only", show >= 3, true)}
+        {show >= 3 && (
+          <g>
+            <rect x={cX+6} y={cY+30} width={cW-12} height={16} rx={3} fill={C.cyan+"18"} stroke={C.cyan+"44"} strokeWidth={1} />
+            <text x={cX+cW/2} y={cY+42} textAnchor="middle" fill={C.cyan} fontSize={7} fontFamily="'JetBrains Mono',monospace">coefficients</text>
+            <text x={cX+cW/2} y={cY+cH-6} textAnchor="middle" fill={C.textDim} fontSize={6} fontFamily="'DM Sans',sans-serif">FPGA: ROM/LUT</text>
+          </g>
+        )}
+
+        {/* CU */}
+        {rBox(cuX, cuY, cuW, cuH, C.border, "CU 0", null, show >= 4, false)}
+        {/* Local inside CU */}
+        {rBox(lX, lY, lW, lH, C.amber, "LOCAL MEM", "Work-group shared", show >= 4, false)}
+        {show >= 4 && (
+          <g>
+            <rect x={lX+lW-56} y={lY+6} width={50} height={14} rx={3} fill={C.amber+"18"} stroke={C.amber+"44"} strokeWidth={1} />
+            <text x={lX+lW-31} y={lY+17} textAnchor="middle" fill={C.amber} fontSize={7} fontFamily="'JetBrains Mono',monospace">scratch[]</text>
+            <text x={lX+6} y={lY+lH-4} fill={C.textDim} fontSize={6} fontFamily="'DM Sans',sans-serif">FPGA: BRAM</text>
+          </g>
+        )}
+        {/* Private */}
+        {show >= 5 && [0,1,2].map(i => {
+          const px = pStartX + i * (pW + pGap);
+          return (
+            <g key={i}>
+              <rect x={px} y={pY} width={pW} height={pH} rx={4} fill={C.pink+"0c"} stroke={C.pink} strokeWidth={1.5} />
+              <text x={px+pW/2} y={pY+12} textAnchor="middle" fill={C.pink} fontSize={7} fontWeight="700" fontFamily="'DM Sans',sans-serif">PRIVATE</text>
+              <text x={px+pW/2} y={pY+24} textAnchor="middle" fill={C.textDim} fontSize={7} fontFamily="'JetBrains Mono',monospace">WI {i}</text>
+              <text x={px+pW/2} y={pY+pH-4} textAnchor="middle" fill={C.textDim} fontSize={5} fontFamily="'DM Sans',sans-serif">{mobile?"FFs":"Registers"}</text>
+            </g>
+          );
+        })}
+        {/* Data flow arrows */}
+        {show >= 6 && (
+          <g>
+            <line x1={hX+hW} y1={hY+40} x2={gX} y2={gY+16} stroke={C.purple} strokeWidth={2} markerEnd="url(#arrPurple)" />
+            <text x={arrMidX} y={hY+30} textAnchor="middle" fill={C.purple} fontSize={7} fontWeight="600" fontFamily="'DM Sans',sans-serif">WriteBuffer</text>
+            <path d={`M${gX+gW*0.6},${gY+gH-20} L${lX+lW/2},${lY}`} stroke={C.amber} strokeWidth={1.5} markerEnd="url(#arrAmber)" strokeDasharray="4 2" />
+            <path d={`M${lX+lW/2},${lY+lH} L${pStartX+pW/2},${pY}`} stroke={C.pink} strokeWidth={1.5} markerEnd="url(#arrPink)" strokeDasharray="4 2" />
+            <line x1={gX} y1={gY+gH-8} x2={hX+hW} y2={hY+hH-10} stroke={C.cyan} strokeWidth={2} markerEnd="url(#arrCyan)" />
+            <text x={arrMidX} y={hY+hH} textAnchor="middle" fill={C.cyan} fontSize={7} fontWeight="600" fontFamily="'DM Sans',sans-serif">ReadBuffer</text>
+          </g>
+        )}
+      </svg>
       <DescBox>{s.desc}</DescBox>
       <StepControls step={step} maxStep={maxStep} onPrev={() => onStep(p => p-1)} onNext={() => onStep(p => p+1)} />
     </div>
@@ -305,9 +338,9 @@ const WG_OPTIONS = [[2,2],[4,2],[4,4],[8,4]];
 const ND_STEPS = [
   { desc: "This is the <b>NDRange</b> — the global work-space. Each cell is one <b>work-item</b>.", showGroups: false, hlGroup: -1, hlCell: false },
   { desc: "The runtime divides work into <b>work-groups</b>. Each group runs on one Compute Unit.", showGroups: true, hlGroup: -1, hlCell: false },
-  { desc: "Each work-group is a unit of scheduling. The colored regions show distinct groups.", showGroups: true, hlGroup: 0, hlCell: false },
+  { desc: "Colored regions show distinct work-groups — each is a unit of scheduling.", showGroups: true, hlGroup: 0, hlCell: false },
   { desc: "Inside a work-group, each work-item has a <b>local ID</b>. Click any cell to see its IDs.", showGroups: true, hlGroup: 0, hlCell: true },
-  { desc: "<code>get_global_id(0)</code> gives the column; <code>get_local_id</code> gives position within the group.", showGroups: true, hlGroup: -1, hlCell: true },
+  { desc: "<code>get_global_id(0)</code> = column; <code>get_local_id</code> = position within group.", showGroups: true, hlGroup: -1, hlCell: true },
 ];
 
 function NDRangeTab({ mobile, step, onStep, maxStep }) {
@@ -315,10 +348,9 @@ function NDRangeTab({ mobile, step, onStep, maxStep }) {
   const [selCell, setSelCell] = useState(null);
   const cols = mobile ? 8 : 16, rows = mobile ? 4 : 8;
   const wgW = WG_OPTIONS[wgIdx][0], wgH = WG_OPTIONS[wgIdx][1];
-  const cellSize = mobile ? 34 : 30;
+  const cellSize = mobile ? 36 : 30;
   const s = ND_STEPS[step];
   const getGI = (x, y) => Math.floor(y/wgH) * Math.ceil(cols/wgW) + Math.floor(x/wgW);
-
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 8, fontFamily: "'DM Sans',sans-serif", flexWrap: "wrap" }}>
@@ -328,33 +360,22 @@ function NDRangeTab({ mobile, step, onStep, maxStep }) {
       </div>
       <div style={{ overflowX: "auto", display: "flex", justifyContent: "center" }}>
         <div style={{ display: "inline-grid", gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`, gap: 2, padding: 4 }}>
-          {Array.from({ length: rows }, (_, y) =>
-            Array.from({ length: cols }, (_, x) => {
-              const gi = getGI(x, y);
-              const isSel = selCell && selCell.x === x && selCell.y === y;
-              const isHl = s.hlGroup >= 0 && gi === s.hlGroup;
-              const ok = s.hlCell || s.showGroups;
-              return (
-                <div key={`${x}-${y}`} onClick={() => ok && setSelCell({ x, y })}
-                  style={{
-                    width: cellSize, height: cellSize, borderRadius: 4,
-                    background: s.showGroups ? C.wg[gi%C.wg.length] : C.bgCard,
-                    border: isSel ? `2px solid ${C.blue}` : (isHl ? `2px solid ${C.wgBorder[gi%C.wgBorder.length]}` : `1px solid ${C.border}`),
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 8, color: C.textDim, cursor: ok ? "pointer" : "default",
-                    transition: "background .2s, border .2s", fontFamily: "'JetBrains Mono',monospace"
-                  }}>{cellSize >= 30 ? `${x},${y}` : ""}</div>
-              );
-            })
-          )}
+          {Array.from({ length: rows }, (_, y) => Array.from({ length: cols }, (_, x) => {
+            const gi = getGI(x, y), isSel = selCell?.x === x && selCell?.y === y;
+            const isHl = s.hlGroup >= 0 && gi === s.hlGroup, ok = s.hlCell || s.showGroups;
+            return (<div key={`${x}-${y}`} onClick={() => ok && setSelCell({ x, y })} style={{
+              width: cellSize, height: cellSize, borderRadius: 4,
+              background: s.showGroups ? C.wg[gi%C.wg.length] : C.bgCard,
+              border: isSel ? `2px solid ${C.blue}` : (isHl ? `2px solid ${C.wgBorder[gi%C.wgBorder.length]}` : `1px solid ${C.border}`),
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 8, color: C.textDim, cursor: ok ? "pointer" : "default",
+              transition: "background .2s, border .2s", fontFamily: "'JetBrains Mono',monospace"
+            }}>{cellSize >= 30 ? `${x},${y}` : ""}</div>);
+          }))}
         </div>
       </div>
       {selCell && s.showGroups && (
-        <div style={{
-          background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 8,
-          padding: "8px 14px", marginTop: 8, fontFamily: "'JetBrains Mono',monospace",
-          fontSize: 12, color: C.text, display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center"
-        }}>
+        <div style={{ background: C.bgCard, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 14px", marginTop: 8, fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: C.text, display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
           <span>global_id: <b style={{ color: C.blue }}>({selCell.x}, {selCell.y})</b></span>
           <span>local_id: <b style={{ color: C.green }}>({selCell.x%wgW}, {selCell.y%wgH})</b></span>
           <span>group_id: <b style={{ color: C.amber }}>({Math.floor(selCell.x/wgW)}, {Math.floor(selCell.y/wgH)})</b></span>
@@ -368,25 +389,32 @@ function NDRangeTab({ mobile, step, onStep, maxStep }) {
 
 // ======================== TAB 3: Timeline ========================
 const TL_PHASES = [
-  { label: "clCreateBuffer", color: C.purple },
-  { label: "clEnqueueWriteBuffer", color: C.amber },
-  { label: "clEnqueueNDRangeKernel", color: C.green },
-  { label: "clEnqueueReadBuffer", color: C.cyan },
+  { label: "CreateBuffer", fullLabel: "clCreateBuffer", color: C.purple },
+  { label: "WriteBuffer", fullLabel: "clEnqueueWriteBuffer", color: C.amber },
+  { label: "NDRangeKernel", fullLabel: "clEnqueueNDRangeKernel", color: C.green },
+  { label: "ReadBuffer", fullLabel: "clEnqueueReadBuffer", color: C.cyan },
 ];
 const TL_STEPS = [
-  { phase: -1, desc: "The host orchestrates execution through a <b>command queue</b>. Let's step through each phase." },
-  { phase: 0, desc: "Allocate memory buffers on the device — analogous to instantiating BRAM or DDR interfaces on FPGA." },
-  { phase: 1, desc: "Transfer input data from host to device — like DMA writes in your Kria designs." },
-  { phase: 2, desc: "Launch the kernel! Compute Units execute work-groups in parallel. Adjust the slider to see how more CUs speed things up." },
+  { phase: -1, desc: "The host orchestrates execution through a <b>command queue</b>. The diagram shows host ↔ device data flow." },
+  { phase: 0, desc: "Allocate memory buffers on the device — analogous to BRAM or DDR interfaces on FPGA." },
+  { phase: 1, desc: "Transfer input data from host to device. Data blocks move across the bus — like DMA writes on Kria." },
+  { phase: 2, desc: "Launch the kernel! Work-groups execute on CUs in parallel. More CUs = faster." },
   { phase: 3, desc: "Read results back from device to host — the DMA read-back step." },
-  { phase: 4, desc: "Done! The entire pipeline: allocate → write → execute → read. On FPGA you wired this manually; OpenCL automates it." },
+  { phase: 4, desc: "Done! allocate → write → execute → read. On FPGA you wired each step; OpenCL automates it." },
 ];
 
 function TimelineTab({ mobile, step, onStep, maxStep }) {
   const [cus, setCus] = useState(4);
-  const barH = mobile ? 22 : 26, barGap = 4;
-  const lm = mobile ? 95 : 185, tw = mobile ? 350 : 540, bmw = tw - lm - 20;
   const s = TL_STEPS[step];
+  const fw = mobile ? 320 : 500, fh = 80;
+  const hBW = mobile ? 70 : 100, dBW = mobile ? 100 : 150;
+  const hBX = 10, dBX = fw - dBW - 10;
+  // Gantt
+  const barH = mobile ? 18 : 22, barGap = 3;
+  const lm = mobile ? 90 : 170, tw = mobile ? 320 : 500, bmw = tw - lm - 10;
+
+  const blocks = { [-1]:[], 0:[], 1:[{x:hBX+hBW+16,l:"A[]",c:C.amber},{x:(hBX+hBW+dBX)/2+4,l:"B[]",c:C.amber}], 2:[{x:dBX+16,l:"⚡",c:C.green}], 3:[{x:(hBX+hBW+dBX)/2+4,l:"C[]",c:C.cyan}], 4:[] }[s.phase] || [];
+
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 8, fontFamily: "'DM Sans',sans-serif", flexWrap: "wrap" }}>
@@ -394,26 +422,58 @@ function TimelineTab({ mobile, step, onStep, maxStep }) {
         <input type="range" min={1} max={8} value={cus} onChange={e => setCus(+e.target.value)} style={{ width: 120, accentColor: C.green }} />
         <span style={{ color: C.green, fontSize: 14, fontWeight: 600, minWidth: 20 }}>{cus}</span>
       </div>
+      {/* Data flow diagram */}
+      <svg viewBox={`0 0 ${fw} ${fh}`} style={{ width: "100%", maxWidth: fw, display: "block", margin: "0 auto 6px" }}>
+        <ArrowDefs />
+        <rect x={hBX} y={8} width={hBW} height={fh-16} rx={8} fill={C.bgCard} stroke={C.purple} strokeWidth={2} />
+        <text x={hBX+hBW/2} y={26} textAnchor="middle" fill={C.purple} fontSize={mobile?9:10} fontWeight="700" fontFamily="'DM Sans',sans-serif">HOST</text>
+        <text x={hBX+hBW/2} y={40} textAnchor="middle" fill={C.textDim} fontSize={7} fontFamily="'JetBrains Mono',monospace">hostA,B,C</text>
+        <rect x={dBX} y={8} width={dBW} height={fh-16} rx={8} fill={C.bgCard} stroke={C.green} strokeWidth={2} />
+        <text x={dBX+dBW/2} y={26} textAnchor="middle" fill={C.green} fontSize={mobile?9:10} fontWeight="700" fontFamily="'DM Sans',sans-serif">DEVICE</text>
+        <text x={dBX+dBW/2} y={40} textAnchor="middle" fill={C.textDim} fontSize={7} fontFamily="'JetBrains Mono',monospace">bufA,B,C</text>
+        <line x1={hBX+hBW} y1={fh/2} x2={dBX} y2={fh/2} stroke={C.border} strokeWidth={3} strokeLinecap="round" />
+        <text x={(hBX+hBW+dBX)/2} y={18} textAnchor="middle" fill={C.textDim} fontSize={7} fontFamily="'DM Sans',sans-serif">PCIe / AXI Bus</text>
+        {s.phase===1 && <line x1={hBX+hBW+4} y1={fh/2} x2={dBX-4} y2={fh/2} stroke={C.amber} strokeWidth={2} markerEnd="url(#arrAmber)" />}
+        {s.phase===3 && <line x1={dBX-4} y1={fh/2} x2={hBX+hBW+4} y2={fh/2} stroke={C.cyan} strokeWidth={2} markerEnd="url(#arrCyan)" />}
+        {blocks.map((b,i) => (
+          <g key={i}>
+            <rect x={b.x} y={fh/2-8} width={22} height={16} rx={4} fill={b.c+"44"} stroke={b.c} strokeWidth={1.5}>
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite" />
+            </rect>
+            <text x={b.x+11} y={fh/2+4} textAnchor="middle" fill={b.c} fontSize={7} fontWeight="700" fontFamily="'JetBrains Mono',monospace">{b.l}</text>
+          </g>
+        ))}
+        {s.phase===2 && (
+          <g>
+            <rect x={dBX+4} y={fh-18} width={dBW-8} height={10} rx={3} fill={C.green+"33"} stroke={C.green} strokeWidth={1}>
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+            </rect>
+            <text x={dBX+dBW/2} y={fh-10} textAnchor="middle" fill={C.green} fontSize={6} fontWeight="600" fontFamily="'DM Sans',sans-serif">Kernel running</text>
+          </g>
+        )}
+      </svg>
+      {/* Gantt */}
       <div style={{ overflowX: "auto" }}>
-        <svg viewBox={`0 0 ${tw} ${barH*5+barGap*6+30+(s.phase>=2?(cus-1)*(barH*0.6+2):0)}`} style={{ width: "100%", maxWidth: tw }}>
+        <svg viewBox={`0 0 ${tw} ${barH*5+barGap*6+16+(s.phase>=2?(cus-1)*(barH*0.55+2):0)}`} style={{ width: "100%", maxWidth: tw, display: "block", margin: "0 auto" }}>
           {(() => {
             let els = [], yo = 0;
             for (let i = 0; i < 4; i++) {
               const ph = TL_PHASES[i], act = s.phase >= i, cur = s.phase === i;
-              const y = 10 + i*(barH+barGap) + yo;
+              const y = 4 + i*(barH+barGap) + yo;
+              const label = mobile ? ph.label : ph.fullLabel;
               if (i===2 && s.phase>=2) {
-                const sh = barH*0.6, bw = act ? bmw/(cus<=2?1:Math.log2(cus)+1)*(cus<=2?0.8:1) : 0;
+                const sh = barH*0.55, bw = act ? bmw/(cus<=2?1:Math.log2(cus)+1)*(cus<=2?0.8:1) : 0;
                 els.push(<g key={i}>
-                  <text x={lm-8} y={y+sh/2+4} textAnchor="end" fill={cur?ph.color:C.textDim} fontSize={mobile?9:11} fontFamily="'JetBrains Mono',monospace" fontWeight={cur?700:400}>{ph.label}</text>
-                  {Array.from({length:cus},(_,c) => <rect key={c} x={lm} y={y+c*(sh+2)} width={bw} height={sh} rx={4} fill={ph.color+(cur?"bb":"55")} stroke={cur?ph.color:"none"} strokeWidth={1} style={{transition:"width .4s ease-out"}}/>)}
-                  {cur && <text x={lm+4} y={y+cus*(sh+2)+12} fill={C.textDim} fontSize={9} fontFamily="'DM Sans',sans-serif">{cus} CU{cus>1?"s":""} in parallel</text>}
+                  <text x={lm-6} y={y+sh/2+4} textAnchor="end" fill={cur?ph.color:C.textDim} fontSize={mobile?7:10} fontFamily="'JetBrains Mono',monospace" fontWeight={cur?700:400}>{label}</text>
+                  {Array.from({length:cus},(_,c) => <rect key={c} x={lm} y={y+c*(sh+2)} width={bw} height={sh} rx={3} fill={ph.color+(cur?"bb":"55")} stroke={cur?ph.color:"none"} strokeWidth={1} style={{transition:"width .4s ease-out"}}/>)}
+                  {cur && <text x={lm+4} y={y+cus*(sh+2)+9} fill={C.textDim} fontSize={7} fontFamily="'DM Sans',sans-serif">{cus} CU{cus>1?"s":""} parallel</text>}
                 </g>);
                 yo += (cus-1)*(sh+2);
               } else {
                 const bw = act ? bmw*(i===0?0.3:0.5) : 0;
                 els.push(<g key={i}>
-                  <text x={lm-8} y={y+barH/2+4} textAnchor="end" fill={cur?ph.color:C.textDim} fontSize={mobile?9:11} fontFamily="'JetBrains Mono',monospace" fontWeight={cur?700:400}>{ph.label}</text>
-                  <rect x={lm} y={y} width={bw} height={barH} rx={4} fill={ph.color+(cur?"bb":"55")} stroke={cur?ph.color:"none"} strokeWidth={1} style={{transition:"width .4s ease-out"}}/>
+                  <text x={lm-6} y={y+barH/2+4} textAnchor="end" fill={cur?ph.color:C.textDim} fontSize={mobile?7:10} fontFamily="'JetBrains Mono',monospace" fontWeight={cur?700:400}>{label}</text>
+                  <rect x={lm} y={y} width={bw} height={barH} rx={3} fill={ph.color+(cur?"bb":"55")} stroke={cur?ph.color:"none"} strokeWidth={1} style={{transition:"width .4s ease-out"}}/>
                 </g>);
               }
             }
@@ -429,11 +489,11 @@ function TimelineTab({ mobile, step, onStep, maxStep }) {
 
 // ======================== TAB 4: Comparison ========================
 const CMP_STEPS = [
-  { desc: "<b>Define the computation:</b> OpenCL kernel function vs HLS C function.", oclHl: [0,1,2,3,4,5,6], hlsHl: [0,1,7,8,9] },
-  { desc: "<b>Interface declaration:</b> OpenCL uses <code>__global</code> pointers; HLS uses <code>#pragma</code> for AXI interfaces.", oclHl: [1,2,3], hlsHl: [2,3,4] },
+  { desc: "<b>Define the computation:</b> OpenCL kernel vs HLS C function.", oclHl: [0,1,2,3,4,5,6], hlsHl: [0,1,7,8,9] },
+  { desc: "<b>Interfaces:</b> OpenCL uses <code>__global</code> pointers; HLS uses <code>#pragma</code> for AXI.", oclHl: [1,2,3], hlsHl: [2,3,4] },
   { desc: "<b>Parallelism:</b> OpenCL launches work-items via <code>get_global_id</code>; HLS pipelines a loop.", oclHl: [4,5], hlsHl: [5,6,7] },
-  { desc: "<b>Deployment:</b> OpenCL compiles at runtime for any device. HLS synthesizes a bitstream for one FPGA.", oclHl: [], hlsHl: [] },
-  { desc: "<b>Key trade-off:</b> OpenCL = portable &amp; easier. FPGA/HLS = fine-grained control over timing, resources, I/O.", oclHl: [], hlsHl: [] },
+  { desc: "<b>Deployment:</b> OpenCL compiles at runtime. HLS synthesizes a bitstream for one FPGA.", oclHl: [], hlsHl: [] },
+  { desc: "<b>Trade-off:</b> OpenCL = portable. FPGA/HLS = fine-grained timing/resource/IO control.", oclHl: [], hlsHl: [] },
 ];
 
 function ComparisonTab({ mobile, step, onStep, maxStep }) {
@@ -491,15 +551,8 @@ export default function OpenCLDemo() {
   const getCodeInfo = () => {
     if (tab===0) return { lines: CODE.platform, title: "Host Setup", hl: PLATFORM_STEPS[currentStep]?.hl||[] };
     if (tab===1) return { lines: CODE.memory, title: "Memory Kernel", hl: MEM_STEPS[currentStep]?.hl||[] };
-    if (tab===2) {
-      const h=[[0,1,2,3],[0,1,2,3],[0,1,2,3],[4],[4,5]];
-      return { lines: CODE.kernel, title: "Kernel", hl: h[currentStep]||[] };
-    }
-    if (tab===3) {
-      const p=TL_STEPS[currentStep]?.phase??-1;
-      const m={[-1]:[],0:[0,1,2,3,4,5],1:[6,7,8,9],2:[10,11],3:[12,13],4:Array.from({length:14},(_,i)=>i)};
-      return { lines: CODE.host, title: "Host Code", hl: m[p]||[] };
-    }
+    if (tab===2) { const h=[[0,1,2,3],[0,1,2,3],[0,1,2,3],[4],[4,5]]; return { lines: CODE.kernel, title: "Kernel", hl: h[currentStep]||[] }; }
+    if (tab===3) { const p=TL_STEPS[currentStep]?.phase??-1; const m={[-1]:[],0:[0,1,2,3,4,5],1:[6,7,8,9],2:[10,11],3:[12,13],4:Array.from({length:14},(_,i)=>i)}; return { lines: CODE.host, title: "Host Code", hl: m[p]||[] }; }
     return null;
   };
   const codeInfo = getCodeInfo();
@@ -524,9 +577,7 @@ export default function OpenCLDemo() {
         <h1 style={{ fontSize: mobile?20:26, fontWeight: 700, margin: "0 0 4px", letterSpacing: -0.5 }}>
           OpenCL <span style={{ color: C.blue }}>Interactive</span> Demo
         </h1>
-        <p style={{ color: C.textDim, fontSize: mobile?12:13, margin: 0 }}>
-          From FPGA to portable parallel computing · ← → to step · 1-5 to switch tabs
-        </p>
+        <p style={{ color: C.textDim, fontSize: mobile?11:13, margin: 0 }}>From FPGA to portable parallel computing · ← → step · 1-5 tabs</p>
       </div>
       <div style={{ display: "flex", justifyContent: "center", gap: 2, marginBottom: mobile?10:16, overflowX: "auto", padding: "0 4px" }}>
         {TABS.map((t, i) => (
@@ -537,9 +588,7 @@ export default function OpenCLDemo() {
             cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
             fontSize: mobile?11:13, fontWeight: tab===i?700:500,
             borderRadius: "8px 8px 0 0", transition: "all .15s", whiteSpace: "nowrap", minHeight: 44
-          }}>
-            <span style={{ marginRight: 4 }}>{t.icon}</span>{mobile?t.short:t.label}
-          </button>
+          }}><span style={{ marginRight: 4 }}>{t.icon}</span>{mobile?t.short:t.label}</button>
         ))}
       </div>
       {tab===4 ? tabEl : (
