@@ -64,8 +64,8 @@
             border: 1px solid var(--border);
             overflow: hidden;
             font-family: 'JetBrains Mono', monospace;
-            width: 300px;
-            min-width: 240px;
+            width: 380px;
+            min-width: 280px;
             flex-shrink: 0;
         }
         .code-panel.fullwidth { width: 100%; }
@@ -85,7 +85,7 @@
             letter-spacing: 1px;
             text-transform: uppercase;
         }
-        .code-body { padding: 6px 0; overflow-x: auto; max-height: 300px; overflow-y: auto; }
+        .code-body { padding: 6px 0; overflow-x: auto; max-height: 420px; overflow-y: auto; }
         .code-line {
             display: flex;
             padding: 1px 10px 1px 0;
@@ -536,22 +536,32 @@
             const dY = mobile ? 10 : 10;
             const dW = vw - dX - 10;
             const dH = mobile ? 420 : vh - 20;
-            const gX = dX + 8, gY = dY + 28, gW = dW - 16, gH = dH - 36;
-            const cX = gX + 6, cY = gY + 22;
-            const cW = mobile ? 80 : 110;
-            const cH = mobile ? 80 : gH - 50;
-            const cuX = cX + cW + (mobile ? 8 : 12);
-            const cuY = gY + 22;
-            const cuW = gW - cW - (mobile ? 20 : 24);
-            const cuH = mobile ? gH - 30 : gH - 50;
+            const gX = dX + 8, gY = dY + 28, gW = dW - 16, gH = 80;
+            // Constant memory centered inside global memory
+            const cW = mobile ? 80 : 120;
+            const cH = mobile ? 50 : 40;
+            const cX = gX + (gW - cW) / 2;
+            const cY = gY + (gH - cH) / 2;
+            const cuY = gY + gH + 12;
+            const cuX = dX + 8;
+            const cuW = dW - 16;
+            const cuH = mobile ? 180 : 190;
             const lX = cuX + 6, lY = cuY + 20;
             const lW = cuW - 12;
             const lH = mobile ? 44 : 42;
-            const pY = lY + lH + 15;
+            
+            // PE positions inside CU for private memory
+            const peY = lY + lH + 12;
+            const peW = mobile ? 80 : 100;
+            const peH = mobile ? 70 : 80;
+            const peGap = mobile ? 8 : 12;
+            const peStartX = cuX + (cuW - 3 * peW - 2 * peGap) / 2;
+            
+            // Private memory inside each PE
             const pW = mobile ? 36 : 44;
-            const pH = mobile ? 55 : Math.min(cuH - lH - 50, 75);
-            const pGap = mobile ? 6 : 8;
-            const pStartX = lX + (lW - 3 * pW - 2 * pGap) / 2;
+            const pH = mobile ? 45 : 55;
+            const pGap = mobile ? 2 : 4;
+            
             const arrMidX = mobile ? (hX + hW + dX) / 2 : hX + hW + 25;
 
             let hostBlocks = '';
@@ -582,15 +592,28 @@
                 `;
             }
 
-            let privateBlocks = '';
-            if (show >=5) {
+            let peBlocks = '';
+            if (show >=4) {
                 for (let i = 0; i < 3; i++) {
-                    const px = pStartX + i * (pW + pGap);
-                    privateBlocks += `
-                        <rect x="${px}" y="${pY}" width="${pW}" height="${pH}" rx="4" fill="${C.pink}0c" stroke="${C.pink}" stroke-width="1.5" />
-                        <text x="${px+pW/2}" y="${pY+12}" text-anchor="middle" fill="${C.pink}" font-size="7" font-weight="700" font-family="'DM Sans',sans-serif">PRIVATE</text>
-                        <text x="${px+pW/2}" y="${pY+24}" text-anchor="middle" fill="${C.textDim}" font-size="7" font-family="'JetBrains Mono',monospace">WI ${i}</text>
-                        <text x="${px+pW/2}" y="${pY+pH-4}" text-anchor="middle" fill="${C.textDim}" font-size="5" font-family="'DM Sans',sans-serif">${mobile?"FFs":"Registers"}</text>
+                    const pex = peStartX + i * (peW + peGap);
+                    
+                    // Private memory inside this PE
+                    let privateInner = '';
+                    if (show >=5) {
+                        const px = pex + (peW - pW) / 2;
+                        const py = peY + 20;
+                        privateInner = `
+                            <rect x="${px}" y="${py}" width="${pW}" height="${pH}" rx="4" fill="${C.pink}0c" stroke="${C.pink}" stroke-width="1.5" />
+                            <text x="${px+pW/2}" y="${py+12}" text-anchor="middle" fill="${C.pink}" font-size="7" font-weight="700" font-family="'DM Sans',sans-serif">PRIVATE</text>
+                            <text x="${px+pW/2}" y="${py+24}" text-anchor="middle" fill="${C.textDim}" font-size="7" font-family="'JetBrains Mono',monospace">WI ${i}</text>
+                            <text x="${px+pW/2}" y="${py+pH-4}" text-anchor="middle" fill="${C.textDim}" font-size="5" font-family="'DM Sans',sans-serif">${mobile?"FFs":"Registers"}</text>
+                        `;
+                    }
+                    
+                    peBlocks += `
+                        <rect x="${pex}" y="${peY}" width="${peW}" height="${peH}" rx="6" fill="${C.bgCard}" stroke="${C.border}" stroke-width="1" />
+                        <text x="${pex+peW/2}" y="${peY+12}" text-anchor="middle" fill="${C.textDim}" font-size="7" font-weight="600" font-family="'DM Sans',sans-serif">PE ${i}</text>
+                        ${privateInner}
                     `;
                 }
             }
@@ -600,8 +623,6 @@
                 arrows = `
                     <line x1="${hX+hW}" y1="${hY+40}" x2="${gX}" y2="${gY+16}" stroke="${C.purple}" stroke-width="2" />
                     <text x="${arrMidX}" y="${hY+30}" text-anchor="middle" fill="${C.purple}" font-size="7" font-weight="600" font-family="'DM Sans',sans-serif">WriteBuffer</text>
-                    <path d="M${gX+gW*0.6},${gY+gH-20} L${lX+lW/2},${lY}" stroke="${C.amber}" stroke-width="1.5" stroke-dasharray="4 2" />
-                    <path d="M${lX+lW/2},${lY+lH} L${pStartX+pW/2},${pY}" stroke="${C.pink}" stroke-width="1.5" stroke-dasharray="4 2" />
                     <line x1="${gX}" y1="${gY+gH-8}" x2="${hX+hW}" y2="${hY+hH-10}" stroke="${C.cyan}" stroke-width="2" />
                     <text x="${arrMidX}" y="${hY+hH}" text-anchor="middle" fill="${C.cyan}" font-size="7" font-weight="600" font-family="'DM Sans',sans-serif">ReadBuffer</text>
                 `;
@@ -635,7 +656,7 @@
                     <text x="${lX+6}" y="${lY+13}" fill="${C.amber}" font-size="${mobile ? 8 : 10}" font-weight="700" font-family="'DM Sans',sans-serif">LOCAL MEM</text>
                     <text x="${lX+6}" y="${lY+23}" fill="${C.textDim}" font-size="${mobile ? 6 : 8}" font-family="'DM Sans',sans-serif">Work-group shared</text>
                     ${localInner}
-                    ${privateBlocks}
+                    ${peBlocks}
                     ${arrows}
                 </svg>
                 <div class="desc-box">${s.desc}</div>
@@ -726,11 +747,13 @@
 
             let blockEls = '';
             blocks.forEach(b => {
+                // Position blocks above the bus arrow
+                const blockY = fh/2 - 26;
                 blockEls += `
-                    <rect x="${b.x}" y="${fh/2-8}" width="22" height="16" rx="4" fill="${b.c}44" stroke="${b.c}" stroke-width="1.5">
+                    <rect x="${b.x}" y="${blockY}" width="22" height="16" rx="4" fill="${b.c}44" stroke="${b.c}" stroke-width="1.5">
                         <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite" />
                     </rect>
-                    <text x="${b.x+11}" y="${fh/2+4}" text-anchor="middle" fill="${b.c}" font-size="7" font-weight="700" font-family="'JetBrains Mono',monospace">${b.l}</text>
+                    <text x="${b.x+11}" y="${blockY + 12}" text-anchor="middle" fill="${b.c}" font-size="7" font-weight="700" font-family="'JetBrains Mono',monospace">${b.l}</text>
                 `;
             });
 
@@ -789,7 +812,7 @@
                     <text x="${dBX+dBW/2}" y="26" text-anchor="middle" fill="${C.green}" font-size="${mobile?9:10}" font-weight="700" font-family="'DM Sans',sans-serif">DEVICE</text>
                     <text x="${dBX+dBW/2}" y="40" text-anchor="middle" fill="${C.textDim}" font-size="7" font-family="'JetBrains Mono',monospace">bufA,B,C</text>
                     <line x1="${hBX+hBW}" y1="${fh/2}" x2="${dBX}" y2="${fh/2}" stroke="${C.border}" stroke-width="3" stroke-linecap="round" />
-                    <text x="${(hBX+hBW+dBX)/2}" y="18" text-anchor="middle" fill="${C.textDim}" font-size="7" font-family="'DM Sans',sans-serif">PCIe / AXI Bus</text>
+                    <text x="${(hBX+hBW+dBX)/2}" y="${fh/2 + 16}" text-anchor="middle" fill="${C.textDim}" font-size="7" font-family="'DM Sans',sans-serif">PCIe / AXI Bus</text>
                     ${s.phase===1 ? `<line x1="${hBX+hBW+4}" y1="${fh/2}" x2="${dBX-4}" y2="${fh/2}" stroke="${C.amber}" stroke-width="2" marker-end="url(#arrAmber)" />` : ''}
                     ${s.phase===3 ? `<line x1="${dBX-4}" y1="${fh/2}" x2="${hBX+hBW+4}" y2="${fh/2}" stroke="${C.cyan}" stroke-width="2" marker-end="url(#arrCyan)" />` : ''}
                     ${blockEls}
