@@ -110,13 +110,13 @@ function PlatformTab({ mobile, step, onStep, maxStep }) {
   const d = DEVICES[device];
   const s = PLATFORM_STEPS[step];
   // Mobile: stack vertically (host on top, device below). Desktop: side by side.
-  const vw = mobile ? 340 : 580;
-  const vh = mobile ? (s.showCU ? 380 : 200) : (s.hlPE ? 300 : 260);
+  const vw = mobile ? 360 : 620;
+  const vh = mobile ? (s.showCU ? 420 : 220) : (s.hlPE ? 320 : 280);
   // Host position
-  const hx = mobile ? 80 : 20, hy = mobile ? 10 : 60, hw = mobile ? 180 : 130, hh = mobile ? 60 : 80;
+  const hx = mobile ? 90 : 30, hy = mobile ? 20 : 70, hw = mobile ? 180 : 140, hh = mobile ? 70 : 90;
   // Device position
-  const dx = mobile ? 30 : 340, dy = mobile ? (hh + 50) : 20;
-  const dw = mobile ? 280 : 220, dh = mobile ? (s.showCU ? 230 : 80) : (s.hlPE ? 250 : 220);
+  const dx = mobile ? 40 : 360, dy = mobile ? (hh + 60) : 30;
+  const dw = mobile ? 280 : 230, dh = mobile ? (s.showCU ? 250 : 90) : (s.hlPE ? 260 : 230);
   // Arrow: vertical on mobile, horizontal on desktop
   const arrX1 = mobile ? hx + hw / 2 : hx + hw;
   const arrY1 = mobile ? hy + hh : hy + hh / 2;
@@ -242,10 +242,10 @@ function MemoryTab({ mobile, step, onStep, maxStep }) {
   const lW = cuW - 12;
   const lH = mobile ? 44 : 42;
   // Private inside CU (below local)
-  const pY = lY + lH + 10;
-  const pW = mobile ? 34 : 42;
-  const pH = mobile ? 60 : Math.min(cuH - lH - 46, 80);
-  const pGap = mobile ? 4 : 6;
+  const pY = lY + lH + 15;
+  const pW = mobile ? 36 : 44;
+  const pH = mobile ? 55 : Math.min(cuH - lH - 50, 75);
+  const pGap = mobile ? 6 : 8;
   const pStartX = lX + (lW - 3 * pW - 2 * pGap) / 2;
   // Arrow midpoint
   const arrMidX = mobile ? (hX + hW + dX) / 2 : hX + hW + 25;
@@ -348,7 +348,7 @@ function NDRangeTab({ mobile, step, onStep, maxStep }) {
   const [selCell, setSelCell] = useState(null);
   const cols = mobile ? 8 : 16, rows = mobile ? 4 : 8;
   const wgW = WG_OPTIONS[wgIdx][0], wgH = WG_OPTIONS[wgIdx][1];
-  const cellSize = mobile ? 36 : 30;
+  const cellSize = mobile ? 40 : 32;
   const s = ND_STEPS[step];
   const getGI = (x, y) => Math.floor(y/wgH) * Math.ceil(cols/wgW) + Math.floor(x/wgW);
   return (
@@ -535,6 +535,11 @@ export default function OpenCLDemo() {
     check(); window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Reset step to 0 when switching tabs
+  useEffect(() => {
+    setCurrentStep(0);
+  }, [tab]);
 
   useEffect(() => {
     const handler = (e) => {
