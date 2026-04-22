@@ -1,6 +1,47 @@
-# OpenCL Interactive Teaching Demo — Detailed Specification
+# OpenCL Interactive Demo — Reproducibility Spec
 
-## 1. Purpose & Audience
+## OpenCL Interactive Teaching Demo — Simple Specification
+
+### What
+Single-file interactive teaching tool (HTML or React JSX): 5 tabbed panels covering all 4 OpenCL models for students with FPGA background.
+
+### Tabs
+
+1. **Platform Model** — Host↔Device SVG diagram. Toggle device type (GPU/FPGA/CPU). Step-through reveals CUs and PEs. Code: `clGetPlatformIDs` snippet (7 lines).
+
+2. **Memory Model** — Five stacked cards (Host/Global/Constant/Local/Private). Each card shows scope, speed, FPGA equivalent, and example buffers. Step-through reveals regions one by one. Final step shows data-flow arrows. Code: kernel using `__local`, `barrier` (11 lines).
+
+3. **NDRange** — 2D grid of work-items (16×8 desktop, 8×4 mobile). Slider adjusts work-group size. Click cell → shows global/local/group IDs. 5 steps. Code: vector-add kernel (7 lines).
+
+4. **Timeline** — Horizontal Gantt: create buffer → write → execute → read. Slider for CU count (1–8) controls parallel work-group bars. 6 steps. Code: host API calls (14 lines).
+
+5. **Comparison** — Side-by-side: OpenCL kernel vs HLS code. 5 steps with synchronized highlights. No side code panel.
+
+### Interaction
+- Prev/Next buttons + ←/→ arrow keys. Home/End for first/last. 1–5 switch tabs.
+- Step indicator between buttons. Per-tab step state preserved.
+
+### Layout
+- Desktop (≥768px): code panel left (320px), SVG visualization right. Tab 5: two-column code.
+- Mobile (<768px): stacked, code panel collapsible. Grid shrinks. Tab labels abbreviated.
+- All buttons ≥44px touch target.
+
+### Visuals
+- Dark theme (#0f1117 bg). JetBrains Mono for code, DM Sans for labels. Google Fonts CDN.
+- SVG with viewBox. Rounded rects, drop shadows. Arrows via quadratic Bézier, endpoints on shape edges.
+- Memory regions: 5 distinct colors (purple/green/cyan/amber/pink).
+- Inline syntax highlighting: keywords=purple, functions=blue, pragmas=amber, numbers=green.
+- Step transitions: 200–400ms ease-out.
+
+### Constraints
+- HTML version: single file, vanilla JS, no build step.
+- JSX version: single file, React + hooks only, no external deps beyond Tailwind core.
+- No localStorage. All state in JS variables (HTML) or useState (React).
+
+
+## OpenCL Interactive Teaching Demo — Detailed Specification
+
+### 1. Purpose & Audience
 
 **Goal:** Single-page browser-based interactive teaching tool introducing all four OpenCL conceptual models to students with FPGA acceleration experience (Kria KV260 / Vivado HLS).
 
@@ -10,7 +51,7 @@
 
 ---
 
-## 2. The Four Models → Five Tabs
+### 2. The Four Models → Five Tabs
 
 OpenCL defines four conceptual models. The demo dedicates one tab to each, with the Execution Model split across two tabs for clarity:
 
@@ -24,9 +65,9 @@ OpenCL defines four conceptual models. The demo dedicates one tab to each, with 
 
 ---
 
-## 3. Tab Details
+### 3. Tab Details
 
-### Tab 1 — Platform Model
+#### Tab 1 — Platform Model
 
 - **Diagram:** Host (CPU) box on left, Device box on right, connected by a curved arrow labeled "PCIe / AXI".
 - **Device toggle:** Three buttons (GPU / FPGA / CPU). Switching changes the device box's color, icon, and description, but preserves the CU/PE structure — reinforcing portability.
@@ -39,7 +80,7 @@ OpenCL defines four conceptual models. The demo dedicates one tab to each, with 
   6. Portability summary
 - **Code panel:** 7-line host setup snippet (`clGetPlatformIDs` → `clCreateContext`).
 
-### Tab 2 — Memory Model (NEW)
+#### Tab 2 — Memory Model (NEW)
 
 - **Visualization:** Five stacked memory-region cards, each with:
   - Color-coded border and label (Host=purple, Global=green, Constant=cyan, Local=amber, Private=pink)
@@ -56,7 +97,7 @@ OpenCL defines four conceptual models. The demo dedicates one tab to each, with 
 - **Code panel:** 11-line kernel using `__local` memory, `barrier()`, and `get_local_id`.
 - **FPGA analogy at each step:** Students see exactly how each memory region maps to hardware they've already used.
 
-### Tab 3 — NDRange (Execution Model — Spatial)
+#### Tab 3 — NDRange (Execution Model — Spatial)
 
 - **Grid:** 2D array of work-item cells (16×8 desktop, 8×4 mobile).
 - **Work-group slider:** Adjusts partition size (2×2, 4×2, 4×4, 8×4). Grid re-colors live.
@@ -64,14 +105,14 @@ OpenCL defines four conceptual models. The demo dedicates one tab to each, with 
 - **5 steps:** Empty grid → partitioned → highlight one group → show local IDs → show ID calculation code.
 - **Code panel:** 7-line vector-add kernel, highlighting `get_global_id` line.
 
-### Tab 4 — Timeline (Execution Model — Temporal)
+#### Tab 4 — Timeline (Execution Model — Temporal)
 
 - **Gantt chart:** Four horizontal phases: `clCreateBuffer` → `clEnqueueWriteBuffer` → `clEnqueueNDRangeKernel` → `clEnqueueReadBuffer`.
 - **CU slider (1–8):** Controls how many concurrent work-group bars appear during the kernel execution phase. More CUs = shorter bars = faster execution.
 - **6 steps:** Intro → allocate → write → execute (multi-bar) → read → summary.
 - **Code panel:** 14-line host code, with the active API call highlighted per step.
 
-### Tab 5 — Comparison (Programming Model)
+#### Tab 5 — Comparison (Programming Model)
 
 - **Two-column code layout:** OpenCL kernel (left) vs HLS C function (right).
 - **5 steps:** Define computation → interface declaration → parallelism → deployment → trade-off summary.
@@ -80,9 +121,9 @@ OpenCL defines four conceptual models. The demo dedicates one tab to each, with 
 
 ---
 
-## 4. Interaction Model
+### 4. Interaction Model
 
-### Step Controls
+#### Step Controls
 - **Buttons:** "← Prev" / "Next →", 44px min touch targets, centered below visualization.
 - **Keyboard:**
   - `←` / `→` — step backward / forward
@@ -91,45 +132,45 @@ OpenCL defines four conceptual models. The demo dedicates one tab to each, with 
 - **Step indicator:** "Step 3 / 6" between buttons.
 - **Per-tab persistence:** Each tab's step state is preserved when switching tabs.
 
-### Sliders
+#### Sliders
 - NDRange: work-group size (discrete steps)
 - Timeline: compute unit count (1–8)
 - Native `<input type="range">` styled with `accent-color`.
 
-### Cell Interaction (NDRange tab)
+#### Cell Interaction (NDRange tab)
 - Desktop: click to select. Mobile: tap to select (no hover).
 - Detail panel appears below grid with calculated IDs.
 
 ---
 
-## 5. Visual Design
+### 5. Visual Design
 
-### Layout
+#### Layout
 - **Desktop (≥768px):** Two-column — code panel (320px, left) + visualization (flex-grow, right). Tab 5 is full-width two-column code.
 - **Mobile (<768px):** Single column — code panel (full-width, collapsible via Show/Hide toggle) above visualization.
 
-### Typography
+#### Typography
 - Code: `'JetBrains Mono', monospace` — 12px, line-height 20px. No blank lines.
 - Body: `'DM Sans', sans-serif` — 13px desktop, 12px mobile.
 - Loaded from Google Fonts CDN.
 
-### Color Palette
+#### Color Palette
 - Dark theme: `#0f1117` background, `#1a1d27` cards, `#141620` code.
 - Accents: blue (`#4a9eff`), green (`#34d399`), amber (`#f59e0b`), purple (`#a78bfa`), cyan (`#22d3ee`), pink (`#f472b6`), red (`#f87171`).
 - Memory regions each get a distinct accent color for clear identification.
 - Work-group colors: 6 translucent hues cycling across groups.
 
-### SVG
+#### SVG
 - All diagrams as inline SVG with `viewBox` for responsive scaling.
 - Arrows: endpoint on shape edge via quadratic Bézier (`Q`), single control point, no kinks. Arrowheads via `<marker>`.
 - Drop shadows via `<filter>` / `feDropShadow`.
 
-### Transitions
+#### Transitions
 - Step changes: 200–400ms ease-out on opacity, width, border.
 - Memory regions: opacity transition (0.2 → 1) as they appear.
 - Timeline bars: width transition over 400ms.
 
-### Syntax Highlighting (inline, no library)
+#### Syntax Highlighting (inline, no library)
 - Keywords (`__kernel`, `__global`, `void`, `const`, `CL_*`): purple
 - Functions (`clCreate*`, `get_global_id`, `barrier`): blue
 - Pragmas (`#pragma HLS`): amber
@@ -137,26 +178,26 @@ OpenCL defines four conceptual models. The demo dedicates one tab to each, with 
 
 ---
 
-## 6. Code Snippets
+### 6. Code Snippets
 
-### Platform host setup (7 lines)
+#### Platform host setup (7 lines)
 `clGetPlatformIDs` → `clGetDeviceIDs` → `clCreateContext`
 
-### Memory kernel (11 lines)
+#### Memory kernel (11 lines)
 Uses `__local float* scratch`, `get_local_id`, `barrier(CLK_LOCAL_MEM_FENCE)`
 
-### Vector-add kernel (7 lines)
+#### Vector-add kernel (7 lines)
 Standard `__kernel void vec_add` with `get_global_id`
 
-### Host execution code (14 lines)
+#### Host execution code (14 lines)
 `clCreateBuffer` × 3 → `clEnqueueWriteBuffer` × 2 → `clEnqueueNDRangeKernel` → `clEnqueueReadBuffer`
 
-### HLS equivalent (10 lines)
+#### HLS equivalent (10 lines)
 Pragma-annotated C function with `#pragma HLS INTERFACE m_axi` and `#pragma HLS PIPELINE`
 
 ---
 
-## 7. Responsive Behavior
+### 7. Responsive Behavior
 
 | Breakpoint | Layout | NDRange Grid | Code Panel |
 |---|---|---|---|
@@ -168,7 +209,7 @@ Pragma-annotated C function with `#pragma HLS INTERFACE m_axi` and `#pragma HLS 
 
 ---
 
-## 8. State Management
+### 8. State Management
 
 Single top-level component with:
 ```
@@ -183,7 +224,7 @@ Global `keydown` listener for arrow keys, Home/End, digit keys.
 
 ---
 
-## 9. Deliverables
+### 9. Deliverables
 
 | File | Format | Notes |
 |------|--------|-------|
