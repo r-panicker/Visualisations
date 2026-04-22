@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bit Reversal Visualizer</title>
 <style>
   :root {
@@ -33,7 +34,7 @@
 
   .bvz-wrap { padding: 0; }
   .bvz-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-  @media (min-width: 600px) { .bvz-grid { grid-template-columns: 1.15fr 1fr; } }
+  @media (min-width: 1000px) { .bvz-grid { grid-template-columns: 1fr 1.15fr; } }
   .bvz-card { background: var(--card-gradient); border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.1rem; }
   .bvz-section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-info); margin: 0 0 10px; font-weight: 700; }
   .bvz-input-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -111,8 +112,8 @@
   }
 
   /* ---- Mobile: bigger fonts/buttons, prevent wide Working-bits box ---- */
-  /* Below 600px, the grid already stacks to 1 column (Working bits above Code). */
-  @media (max-width: 600px) {
+  /* Below 1000px, the grid stacks to 1 column (Code above Working bits). */
+  @media (max-width: 1000px) {
     body { padding: 12px; }
     button { font-size: 15px; padding: 9px 16px; }
     input[type="text"] { font-size: 16px; padding: 9px 12px; }
@@ -131,13 +132,19 @@
     .bvz-code { font-size: 14px; }
     .bvz-op-label { font-size: 12px; }
     .bvz-shift-hint { font-size: 13px; }
+    /* Vertically compact the Code card on mobile — no extra space below the C code
+       so it stacks neatly with Working bits below it. */
+    .bvz-card-code { padding-bottom: 0.7rem; }
   }
 
   @media (max-width: 420px) {
-    .bvz-op-label { width: 62px; font-size: 11px; }
-    .bvz-bit { width: 26px; height: 32px; font-size: 14px; }
+    .bvz-op-label { width: 58px; font-size: 11px; }
+    .bvz-op-sym { width: 14px; font-size: 16px; }
+    .bvz-bit { width: 24px; height: 30px; font-size: 13px; border-radius: 5px; }
     .bvz-bits-inline { gap: 2px; }
-    .bvz-divider { margin-left: calc(62px + 8px + 18px + 8px); }
+    .bvz-divider { margin-left: calc(58px + 6px + 14px + 6px); }
+    .bvz-op-row { gap: 6px; }
+    .bvz-card { padding: 0.85rem 0.7rem; }
     /* Even shorter slider on very narrow screens */
     .bvz-controls .spd input[type="range"] { max-width: 110px; }
   }
@@ -162,6 +169,11 @@
   </div>
 
   <div class="bvz-grid">
+    <div class="bvz-card bvz-card-code">
+      <div class="bvz-section-label">Code</div>
+      <div class="bvz-code" id="bvz-code"></div>
+    </div>
+
     <div class="bvz-card">
       <div class="bvz-section-label">Working bits</div>
       <div class="bvz-stage-area" id="bvz-area"></div>
@@ -193,13 +205,8 @@
         <span><kbd>R</kbd> reset</span>
         <span><kbd>+</kbd> <kbd>−</kbd> speed</span>
       </div>
-    </div>
-
-    <div class="bvz-card">
-      <div class="bvz-section-label">Code</div>
-      <div class="bvz-code" id="bvz-code"></div>
-      <div style="font-size: 11px; color: var(--color-text-tertiary); margin-top: 10px; line-height: 1.55;">
-        <b style="color: var(--color-text-secondary); font-weight: 500;">Each stage = 4 micro-steps:</b><br>
+      <div style="font-size: 11px; color: var(--color-text-tertiary); margin-top: 22px; line-height: 1.55;">
+        <b style="color: var(--color-text-secondary); font-weight: 500;">Each stage (nibbles, crumbs, bits) = 4 micro-steps:</b><br>
         1. <b style="color: var(--color-text-secondary); font-weight: 500;">AND</b> with mask A — keeps the left half.<br>
         2. <b style="color: var(--color-text-secondary); font-weight: 500;">AND</b> with mask B — keeps the right half.<br>
         3. <b style="color: var(--color-text-secondary); font-weight: 500;">Shift</b> — bits slide to their new positions.<br>
