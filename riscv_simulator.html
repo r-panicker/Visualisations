@@ -13,19 +13,19 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 /* Header */
 .header { background: #181825; padding: 8px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #313244; }
 .header h1 { font-size: 16px; color: #cba6f7; font-weight: 600; }
-.header .subtitle { font-size: 11px; color: #6c7086; }
+.header .subtitle { font-size: 13px; color: #6c7086; }
 
 /* Main Layout */
 .main { display: flex; flex: 1; overflow: hidden; }
 .left-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.right-panel { width: 380px; display: flex; flex-direction: column; border-left: 1px solid #313244; min-width: 0; }
+.right-panel { width: 420px; display: flex; flex-direction: column; border-left: 1px solid #313244; min-width: 0; }
 
-/* Editor */
+/* Simulation Output */
 .editor-container { position: relative; flex: 1; overflow: hidden; }
 .editor-container textarea, .editor-container .highlight-layer {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   padding: 12px; font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 13px; line-height: 1.5; tab-size: 4; white-space: pre; overflow: auto;
+  font-size: 13px; line-height: 20px; tab-size: 4; white-space: pre; overflow: auto;
   border: none; outline: none; resize: none;
 }
 .editor-container textarea {
@@ -33,17 +33,18 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   z-index: 2;
 }
 .editor-container textarea::selection {
-  background: rgba(203, 166, 247, 0.3);
+  background: rgba(203, 166, 247, 0.45);
 }
 .editor-container .highlight-layer {
-  display: none;
+  display: block; overflow: hidden; pointer-events: none; z-index: 3;
+  color: #cdd6f4;
 }
 
 /* Toolbar */
 .toolbar { display: flex; gap: 6px; padding: 6px 12px; background: #181825; border-bottom: 1px solid #313244; flex-wrap: wrap; align-items: center; }
 .toolbar button {
-  background: #313244; color: #cdd6f4; border: none; padding: 5px 12px;
-  font-size: 12px; cursor: pointer; border-radius: 4px; font-family: inherit;
+  background: #313244; color: #cdd6f4; border: none; padding: 6px 12px;
+  font-size: 13px; cursor: pointer; border-radius: 4px; font-family: inherit;
   transition: background 0.15s;
 }
 .toolbar button:hover { background: #45475a; }
@@ -51,15 +52,21 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .toolbar button.primary:hover { background: #b4befe; }
 .toolbar button.danger { background: #f38ba8; color: #1e1e2e; }
 .toolbar button.danger:hover { background: #eba0ac; }
-.toolbar .sep { width: 1px; height: 24px; background: #313244; margin: 0 4px; }
-.toolbar .status { font-size: 11px; color: #a6adc8; margin-left: auto; }
+.toolbar .sep { width: 1px; height: 26px; background: #313244; margin: 0 4px; }
+.toolbar .status { font-size: 13px; color: #a6adc8; margin-left: 6px; }
+.toolbar .stats { font-size: 13px; color: #a6e3a1; margin-left: auto; white-space: nowrap; }
 .toolbar #fileLoader { display: none; }
+.toolbar label { font-size: 13px; color: #a6adc8; display: flex; align-items: center; gap: 5px; }
+.toolbar select, .toolbar input[type="text"] {
+  background: #313244; border: 1px solid #45475a; color: #cdd6f4;
+  padding: 4px 6px; font-size: 13px; font-family: inherit; border-radius: 4px;
+}
 
 /* Right Panel Tabs */
 .tab-bar { display: flex; background: #181825; border-bottom: 1px solid #313244; }
 .tab-bar button {
-  flex: 1; background: none; border: none; color: #6c7086; padding: 7px 0;
-  font-size: 12px; cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent;
+  flex: 1; background: none; border: none; color: #6c7086; padding: 8px 0;
+  font-size: 13px; cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent;
   transition: all 0.15s;
 }
 .tab-bar button:hover { color: #cdd6f4; }
@@ -69,9 +76,9 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .tab-content.active { display: block; }
 
 /* Register Table */
-.reg-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-.reg-table th { text-align: left; padding: 3px 6px; color: #6c7086; font-weight: 500; border-bottom: 1px solid #313244; position: sticky; top: 0; background: #1e1e2e; }
-.reg-table td { padding: 2px 6px; border-bottom: 1px solid #181825; }
+.reg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.reg-table th { text-align: left; padding: 5px 6px; color: #6c7086; font-weight: 600; border-bottom: 1px solid #313244; position: sticky; top: 0; background: #1e1e2e; }
+.reg-table td { padding: 3px 6px; border-bottom: 1px solid #181825; }
 .reg-table tr:hover td { background: #181825; }
 .reg-table .reg-name { color: #89b4fa; }
 .reg-table .reg-val { color: #a6e3a1; text-align: right; font-variant-numeric: tabular-nums; }
@@ -79,17 +86,17 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 
 /* Memory View */
 .mem-toolbar { display: flex; gap: 4px; margin-bottom: 6px; align-items: center; }
-.mem-toolbar input { background: #313244; border: 1px solid #45475a; color: #cdd6f4; padding: 3px 6px; font-size: 11px; font-family: inherit; width: 100px; border-radius: 3px; }
-.mem-toolbar button { background: #313244; border: none; color: #cdd6f4; padding: 3px 8px; font-size: 11px; cursor: pointer; border-radius: 3px; font-family: inherit; }
+.mem-toolbar input { background: #313244; border: 1px solid #45475a; color: #cdd6f4; padding: 4px 6px; font-size: 13px; font-family: inherit; width: 110px; border-radius: 3px; }
+.mem-toolbar button { background: #313244; border: none; color: #cdd6f4; padding: 4px 9px; font-size: 13px; cursor: pointer; border-radius: 3px; font-family: inherit; }
 .mem-toolbar button:hover { background: #45475a; }
-.mem-view { font-size: 11px; line-height: 1.6; }
+.mem-view { font-size: 13px; line-height: 1.6; }
 .mem-view .addr { color: #6c7086; }
 .mem-view .val { color: #f5c2e7; }
 .mem-view .ascii { color: #74c7ec; }
 .mem-view .changed { color: #f9e2af; font-weight: bold; }
 
 /* Console */
-.console { background: #11111b; padding: 6px 8px; font-size: 11px; border-top: 1px solid #313244; max-height: 120px; overflow: auto; min-height: 40px; }
+.console { background: #11111b; padding: 8px 10px; font-size: 13px; border-top: 1px solid #313244; max-height: 140px; overflow: auto; min-height: 40px; line-height: 1.5; }
 .console .error { color: #f38ba8; }
 .console .info { color: #89b4fa; }
 .console .success { color: #a6e3a1; }
@@ -97,8 +104,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 
 /* Line numbers */
 .editor-wrapper { position: relative; flex: 1; overflow: hidden; display: flex; }
-.line-numbers { background: #181825; color: #6c7086; padding: 12px 6px; text-align: right; font-size: 13px; line-height: 1.5; min-width: 40px; overflow: hidden; user-select: none; font-family: 'Consolas', 'Courier New', monospace; white-space: pre; }
-.code-area { position: relative; flex: 1; overflow: hidden; }
+.line-numbers { background: #181825; color: #6c7086; padding: 12px 6px; text-align: right; font-size: 13px; line-height: 20px; min-width: 40px; overflow: hidden; user-select: none; font-family: 'Consolas', 'Courier New', monospace; white-space: pre; }
+.code-area { position: relative; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 
 /* Syntax highlighting colors */
 .hl-comment { color: #6c7086; font-style: italic; }
@@ -110,6 +117,34 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .hl-string { color: #a6e3a1; }
 .hl-punctuation { color: #cdd6f4; }
 .hl-keyword { color: #cba6f7; }
+
+/* Execution line marker + breakpoints + settings */
+.exec-marker {
+  position: absolute; left: 0; right: 0; height: 20px; pointer-events: none;
+  background: rgba(137, 180, 250, 0.14); border-left: 3px solid #89b4fa; z-index: 1;
+  box-sizing: border-box;
+}
+.bp-line { color: #f38ba8; font-weight: 700; cursor: pointer; }
+.bp-line::after { content: '●'; color: #f38ba8; margin-left: 2px; }
+.line-numbers { cursor: default; }
+
+/* Settings / cycles panel */
+.settings-panel {
+  background: #181825; border: 1px solid #313244; border-radius: 6px;
+  padding: 12px 14px; margin: 8px 12px; display: none; font-size: 13px;
+}
+.settings-panel.open { display: block; }
+.settings-panel h3 { font-size: 14px; color: #cba6f7; margin-bottom: 8px; }
+.settings-panel .ctl-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+.settings-panel label { color: #a6adc8; flex: 1; }
+.settings-panel input[type="number"] {
+  background: #313244; border: 1px solid #45475a; color: #cdd6f4;
+  padding: 4px 6px; font-size: 13px; font-family: inherit; width: 70px; border-radius: 3px;
+}
+.settings-panel button { background: #313244; color: #cdd6f4; border: none; padding: 6px 12px; font-size: 13px; cursor: pointer; border-radius: 4px; font-family: inherit; margin-top: 8px; }
+.settings-panel button:hover { background: #45475a; }
+.settings-panel .hint { color: #6c7086; font-size: 12px; margin-top: 6px; }
+
 
 /* Responsive */
 @media (max-width: 800px) {
@@ -134,16 +169,37 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   <div class="toolbar">
     <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
     <button onclick="document.getElementById('fileLoader').click()">📂 Open</button>
-    <button class="primary" onclick="assembleAndRun()">▶ Assemble & Run</button>
-    <button onclick="stepOnce()">⏭ Step</button>
-    <button onclick="resetAll()"> Reset</button>
+    <button class="primary" onclick="assembleAndRun()">▶ Assemble &amp; Run</button>
+    <button onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
+    <button onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
+    <button onclick="resetAll()">⟲ Reset</button>
+    <button onclick="toggleSettings()" title="Configure cycles per instruction type">⚙</button>
     <span class="sep"></span>
-    <button onclick="loadExample('basic')">Basic</button>
-    <button onclick="loadExample('fib')">Fib</button>
-    <button onclick="loadExample('fact')">Factorial</button>
-    <button onclick="loadExample('loop')">Loop</button>
-    <button onclick="loadExample('io')">I/O Demo</button>
+    <label>Start addr: <input type="text" id="baseAddr" value="0x10000" size="8" onchange="applyBaseAddress()"></label>
+    <label>Example:
+      <select id="exampleSelect" onchange="loadExample(this.value)">
+        <option value="basic">Basic</option>
+        <option value="fib">Fibonacci</option>
+        <option value="fact">Factorial</option>
+        <option value="loop">Loop &amp; Array</option>
+        <option value="io">I/O &amp; M-Ext</option>
+      </select>
+    </label>
+    <span class="stats" id="statsBar">Cycles: 0 &nbsp;|&nbsp; Instr: 0</span>
     <span class="status" id="statusBar">Ready</span>
+  </div>
+  <div class="settings-panel" id="settingsPanel">
+    <h3>Cycles per instruction type</h3>
+    <div class="ctl-row"><label>Basic (addi, add, lui…)</label><input type="number" id="cycBasic" value="1" min="1"></div>
+    <div class="ctl-row"><label>Mul / Div (M-extension)</label><input type="number" id="cycMuldiv" value="2" min="1"></div>
+    <div class="ctl-row"><label>Load (lw, lb…)</label><input type="number" id="cycLoad" value="2" min="1"></div>
+    <div class="ctl-row"><label>Store (sw, sb…)</label><input type="number" id="cycStore" value="2" min="1"></div>
+    <div class="ctl-row"><label>Branch (beq, bne…)</label><input type="number" id="cycBranch" value="1" min="1"></div>
+    <div class="ctl-row"><label>Jump (jal, jalr)</label><input type="number" id="cycJump" value="1" min="1"></div>
+    <div class="ctl-row"><label>Floating point (F/D)</label><input type="number" id="cycFp" value="4" min="1"></div>
+    <div class="ctl-row"><label>System / ecall</label><input type="number" id="cycSystem" value="1" min="1"></div>
+    <button onclick="applyCycles()">Apply cycles</button>
+    <div class="hint">Keyboard: F5 Run · F8 Step · Shift+F8 Back · F9 Toggle breakpoint · Ctrl+Enter Run</div>
   </div>
   <div class="main">
     <div class="left-panel">
@@ -158,7 +214,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       </div>
       <div class="console" id="console"></div>
     </div>
-    <div class="right-panel">
+     <div class="right-panel">
       <div class="tab-bar">
         <button class="active" onclick="switchTab('registers',this)">Registers</button>
         <button onclick="switchTab('memory',this)">Memory</button>
@@ -172,20 +228,20 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       </div>
       <div class="tab-content" id="tab-memory">
         <div class="mem-toolbar">
-          <span style="color:#6c7086;font-size:11px;">Address:</span>
+          <span style="color:#6c7086;font-size:13px;">Address:</span>
           <input type="text" id="memAddr" value="0x10000" onchange="updateMemoryView()">
-          <span style="color:#6c7086;font-size:11px;">Rows:</span>
+          <span style="color:#6c7086;font-size:13px;">Rows:</span>
           <input type="number" id="memRows" value="16" min="1" max="64" style="width:50px;" onchange="updateMemoryView()">
           <button onclick="updateMemoryView()">&#x21bb;</button>
         </div>
         <div class="mem-view" id="memView"></div>
       </div>
       <div class="tab-content" id="tab-machine">
-        <div style="font-size:11px;margin-bottom:6px;color:#6c7086;">
+        <div style="font-size:13px;margin-bottom:6px;color:#6c7086;">
           <label><input type="checkbox" id="showHex" checked onchange="updateMachineCode()"> Show Hex</label>
           <label style="margin-left:8px;"><input type="checkbox" id="showBinary" onchange="updateMachineCode()"> Show Binary</label>
         </div>
-        <div id="machineCodeDisplay" style="font-size:11px;line-height:1.6;"></div>
+        <div id="machineCodeDisplay" style="font-size:13px;line-height:1.6;"></div>
       </div>
     </div>
   </div>
@@ -339,25 +395,25 @@ const PSEUDO_INSTRUCTIONS = {
   'negw':   ['subw %0, x0, %1'],
   'sext.w': ['addiw %0, %1, 0'],
   'seqz':   ['sltiu %0, %1, 1'],
-  'snez':   ['sltiu %0, x0, %(1)'],
+  'snez':   ['sltu %0, x0, %1'],
   'sltz':   ['slt %0, %1, x0'],
   'sgtz':   ['slt %0, x0, %1'],
-  'beqz':   ['beq %0, x0, %2'],
-  'bnez':   ['bne %0, x0, %2'],
-  'blez':   ['bge x0, %0, %2'],
-  'bgez':   ['bge %0, x0, %2'],
-  'bltz':   ['blt %0, x0, %2'],
-  'bgtz':   ['blt x0, %0, %2'],
+  'beqz':   ['beq %0, x0, %1'],
+  'bnez':   ['bne %0, x0, %1'],
+  'blez':   ['bge x0, %0, %1'],
+  'bgez':   ['bge %0, x0, %1'],
+  'bltz':   ['blt %0, x0, %1'],
+  'bgtz':   ['blt x0, %0, %1'],
   'bgt':    ['blt %1, %0, %2'],
   'ble':    ['bge %1, %0, %2'],
   'bgtu':   ['bltu %1, %0, %2'],
   'bleu':   ['bgeu %1, %0, %2'],
   'j':      ['jal x0, %0'],
-  'jal':    ['jal %0, %1'],
   'jr':     ['jalr x0, %0, 0'],
   'ret':    ['jalr x0, x1, 0'],
   'call':   ['auipc x6, %0', 'jalr x1, x6, %1'],
   'tail':   ['auipc x6, %0', 'jalr x0, x6, %1'],
+  'la':     [],
   'li':     function(rd, imm) {
     imm = Number(imm);
     if (imm >= -2048 && imm <= 2047) return [`addi ${rd}, x0, ${imm}`];
@@ -366,7 +422,7 @@ const PSEUDO_INSTRUCTIONS = {
     if (lower & 0x800) {
       upper = (upper + 1) & 0xFFFFF;
     }
-    const signExtended = (lower & 0x800) ? (lower | ~0x7FF) : lower;
+    const signExtended = (lower & 0x800) ? (lower - 0x1000) : lower;
     return [`lui ${rd}, ${upper}`, `addi ${rd}, ${rd}, ${signExtended}`];
   }
 };
@@ -395,16 +451,39 @@ let fregs = new Float32Array(32);
 let dregs = new Float64Array(32);
 let memory = new Uint8Array(4 * 1024 * 1024); // 4 MB memory
 let pc = 0x10000;
+// Configurable starting memory address (start of .text). .data is placed at base + DATA_OFFSET.
+let baseAddress = 0x10000;
+const DEFAULT_BASE = 0x10000;
+const DATA_OFFSET = 0x10000;
 let machineCode = []; // array of {address, bytes, instruction, line}
 let labels = {};
 let symbolTable = {};
 let assembled = false;
 let running = false;
 let stepMode = false;
-let breakpoints = new Set();
+let breakpoints = new Set();           // set of source line numbers (1-based)
+let currentExecLine = -1;              // source line currently being executed (for highlight)
 let lastChangedReg = -1;
 let lastChangedMem = [];
 let lastExecutedRd = -1; // Track which register was last written
+
+// Execution statistics
+let totalCycles = 0;
+let instructionCount = 0;
+
+// Cycles consumed per instruction category (configurable via the settings panel).
+let cycleConfig = {
+  basic: 1, muldiv: 2, load: 2, store: 2,
+  branch: 1, jump: 1, fp: 4, system: 1
+};
+
+// Step history for "back step". Each entry stores CPU state + memory writes for one executed instruction.
+let execHistory = [];       // stack of {pc, regs, fregs, dregs, writes, line}
+let historyCap = 5000;
+// Journal of memory writes performed during the current step (used to build undoable history).
+let stepWriteLog = [];
+let journalEnabled = false;
+
 
 // Memory-mapped I/O: For simulation, we use memory range 0x10000000-0x1000000F
 const MMIO_BASE = 0x10000000;
@@ -443,9 +522,19 @@ function parseFReg(s) {
 
 function parseImm(s) {
   s = s.trim().replace(/,/g,'');
-  if (s.startsWith('0x') || s.startsWith('0X')) return parseInt(s, 16);
-  if (s.startsWith('-0x') || s.startsWith('-0X')) return -parseInt(s.substring(1), 16);
-  return parseInt(s, 10);
+  if (s === '') return NaN;
+  const sign = (s[0] === '-') ? -1 : (s[0] === '+' ? 1 : 1);
+  const body = s.replace(/^[+-]/, '');
+  const low = body.toLowerCase();
+  const hexM = low.match(/^0x([0-9a-f]+)$/);
+  if (hexM) return sign * parseInt(hexM[1], 16);
+  if (/^\d+$/.test(body)) return sign * parseInt(body, 10);
+  // Symbolic constant (.equ) or label used as an immediate (case-insensitive)
+  if (symbolTable[body] !== undefined) return sign * symbolTable[body];
+  if (symbolTable[low] !== undefined) return sign * symbolTable[low];
+  if (labels[body] !== undefined) return sign * labels[body];
+  if (labels[low] !== undefined) return sign * labels[low];
+  return NaN;
 }
 
 function parseMemOp(s) {
@@ -471,225 +560,248 @@ function sext(value, bits) {
 // ============================================================
 // 4. ASSEMBLER
 // ============================================================
+function numToBytes(n) {
+  return [n & 0xFF, (n >> 8) & 0xFF, (n >> 16) & 0xFF, (n >> 24) & 0xFF];
+}
+function resolveAddrRef(s) {
+  if (labels[s] !== undefined) return labels[s];
+  const n = parseImm(s);
+  if (!isNaN(n)) return n;
+  throw new Error(`Unknown symbol '${s}'`);
+}
+function instructionSlots(mnemonic, args) {
+  if (INSTRUCTIONS[mnemonic]) return 1;
+  switch (mnemonic) {
+    case 'la': case 'call': case 'tail': return 2;
+    case 'li': {
+      const imm = parseImm(args[1]);
+      return (!isNaN(imm) && imm >= -2048 && imm <= 2047) ? 1 : 2;
+    }
+  }
+  if (PSEUDO_INSTRUCTIONS[mnemonic]) {
+    if (typeof PSEUDO_INSTRUCTIONS[mnemonic] === 'function') {
+      try { return PSEUDO_INSTRUCTIONS[mnemonic](...args).length; } catch (e) { return 1; }
+    }
+    return PSEUDO_INSTRUCTIONS[mnemonic].length;
+  }
+  return 0;
+}
+function expandPseudoLines(mnemonic, args) {
+  const p = PSEUDO_INSTRUCTIONS[mnemonic];
+  if (typeof p === 'function') return p(...args);
+  return p.map(t => t.replace(/%\d+/g, (m) => { const idx = parseInt(m.substring(1), 10); return args[idx] || ''; }));
+}
 
-function assemble(source) {
+
+function assemble(source, startAddr) {
+  const base = (startAddr !== undefined) ? startAddr : baseAddress;
   const lines = source.split('\n');
   const output = [];
   labels = {};
-  let address = 0x10000;
-  
-  // First pass: collect labels and compute addresses
+  symbolTable = {};
+
+  const splitLine = (line) => {
+    const idx = line.indexOf('#');
+    return { main: (idx >= 0 ? line.substring(0, idx) : line).trim(), comment: idx >= 0 ? line.substring(idx) : '' };
+  };
+  const parseArgs = (s) => {
+    const toks = s.trim().split(/\s+/);
+    return toks.slice(1).join(' ').split(',').map(t => t.trim()).filter(t => t);
+  };
+
+  // ---- Pre-pass: collect .equ constants (earlier constants usable in later ones) ----
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-    const commentIdx = line.indexOf('#');
-    if (commentIdx >= 0) line = line.substring(0, commentIdx);
-    line = line.trim();
-    if (!line) continue;
-    
-    if (line.endsWith(':')) {
-      const label = line.substring(0, line.length - 1);
-      labels[label] = address;
-      continue;
-    }
-    
-    const parts = line.split(/\s+/);
-    const mnemonic = parts[0].toLowerCase();
-    if (PSEUDO_INSTRUCTIONS[mnemonic]) continue;
-    if (INSTRUCTIONS[mnemonic]) {
-      address += 4;
-    } else if (mnemonic === '.word') {
-      address += 4;
-    } else if (mnemonic === '.byte') {
-      address += 1;
-    } else if (mnemonic === '.half') {
-      address += 2;
-    } else if (mnemonic === '.space') {
-      if (parts[1]) address += parseInt(parts[1], 10) || 0;
-    } else if (mnemonic === '.asciiz') {
-      const str = line.substring(line.indexOf(' ')).trim();
-      const strVal = parseStringLiteral(str);
-      address += strVal.length + 1;
-    } else if (mnemonic === '.asciz' || mnemonic === '.ascii') {
-      const str = line.substring(line.indexOf(' ')).trim();
-      const strVal = parseStringLiteral(str);
-      address += mnemonic === '.ascii' ? strVal.length : strVal.length + 1;
-    } else if (mnemonic === '.align') {
-      const align = parseInt(parts[1], 10);
-      if (align > 0) address = (address + (1 << align) - 1) & ~((1 << align) - 1);
+    const { main } = splitLine(lines[i]);
+    const m = main.match(/^\.equ\s+(\w+)\s*,\s*(.+)$/i);
+    if (m) {
+      const val = parseImm(m[2].trim());
+      if (!isNaN(val)) symbolTable[m[1]] = val;
     }
   }
 
-  // Second pass: expand pseudo-instructions and encode
-  address = 0x10000;
-  let expandedLines = [];
-  
+  // ---- Phase 1: assign addresses & collect labels ----
+  let textAddr = base, dataAddr = base + DATA_OFFSET, section = 'text';
+  const getAddr = () => section === 'text' ? textAddr : dataAddr;
+  const setAddr = (a) => { if (section === 'text') textAddr = a; else dataAddr = a; };
+  const bump = (n) => setAddr(getAddr() + n);
+
+  const sizeLine = (main) => {
+    const toks = main.split(/\s+/);
+    const mn = toks[0].toLowerCase();
+    switch (mn) {
+      case '.text': section = 'text'; break;
+      case '.data': section = 'data'; break;
+      case '.equ': break; // constants already collected in the pre-pass
+      case '.align': { const al = parseInt(toks[1], 10) || 0; if (al > 0) setAddr((getAddr() + ((1 << al) - 1)) & ~((1 << al) - 1)); break; }
+      case '.word': case '.half': case '.byte': {
+        const vals = toks.slice(1).join('').split(',').filter(Boolean);
+        bump((mn === '.byte' ? 1 : mn === '.half' ? 2 : 4) * vals.length);
+        break;
+      }
+      case '.dword': { const vals = toks.slice(1).join('').split(',').filter(Boolean); bump(8 * vals.length); break; }
+      case '.space': bump(parseInt(toks[1], 10) || 0); break;
+      case '.asciiz': case '.asciz': bump(parseStringLiteral(main.slice(main.indexOf(' ')).trim()).length + 1); break;
+      case '.ascii': bump(parseStringLiteral(main.slice(main.indexOf(' ')).trim()).length); break;
+      default:
+        if (INSTRUCTIONS[mn] || PSEUDO_INSTRUCTIONS[mn]) bump((instructionSlots(mn, parseArgs(main)) || 1) * 4);
+        else if (!mn.startsWith('.')) bump(4); // unknown mnemonic: keep labels roughly aligned
+    }
+  };
+
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-    const commentIdx = line.indexOf('#');
-    let comment = '';
-    if (commentIdx >= 0) {
-      comment = line.substring(commentIdx);
-      line = line.substring(0, commentIdx);
-    }
-    const origLine = line.trim();
-    if (!origLine) {
-      expandedLines.push({ text: '', line: i, comment: '' });
+    const { main } = splitLine(lines[i]);
+    if (!main) continue;
+    const first = main.split(/\s+/)[0];
+    if (first.endsWith(':')) {
+      labels[first.slice(0, -1)] = getAddr();
+      const rest = main.slice(first.length).trim();
+      if (rest) sizeLine(rest);
       continue;
     }
-    if (origLine.endsWith(':')) {
-      expandedLines.push({ text: origLine, line: i, comment: '' });
-      continue;
-    }
-    const parts = origLine.split(/\s+/);
-    const mnemonic = parts[0].toLowerCase();
-    const args = parts.slice(1).join(' ').split(',').map(s => s.trim()).filter(s => s);
-    
-    if (PSEUDO_INSTRUCTIONS[mnemonic]) {
-      let exp;
-      if (typeof PSEUDO_INSTRUCTIONS[mnemonic] === 'function') {
-        exp = PSEUDO_INSTRUCTIONS[mnemonic](...args);
+    sizeLine(main);
+  }
+
+  // ---- Phase 2: emit encoded bytes ----
+  textAddr = base; dataAddr = base + DATA_OFFSET; section = 'text';
+
+  const push = (item) => { output.push(item); };
+  const pushInstr = (mnMnemonic, args, address, lineNo, asmText) => {
+    const encoding = encodeInstruction(mnMnemonic, args, address);
+    if (encoding === null) throw new Error('Encoding failed');
+    push({ address, bytes: encoding, text: asmText, line: lineNo, asmLine: asmText });
+    bump(4);
+  };
+
+  const emitPseudo = (mn, args, address, lineNo, asmText) => {
+    if (mn === 'la' || mn === 'call' || mn === 'tail') {
+      // figure registers & second instruction depending on pseudo
+      let target, rdA, rdJ, rsJ, second;
+      if (mn === 'la') {
+        // la rd, symbol  =>  auipc rd, %pcrel_hi ; addi rd, rd, %pcrel_lo
+        const rd = parseReg(args[0]);
+        rdA = rd; rdJ = rd; rsJ = rd;
+        target = args[1];
+        second = 'addi';
       } else {
-        exp = PSEUDO_INSTRUCTIONS[mnemonic].map(t => {
-          let s = t;
-          s = s.replace(/%(\d+)/g, (m, idx) => args[parseInt(idx)] || '');
-          return s;
-        });
+        // call : auipc ra, hi ; jalr ra, lo(ra)
+        // tail : auipc t1(x6), hi ; jalr x0, lo(x6)
+        if (mn === 'call') { rdA = 1; rdJ = 1; rsJ = 1; }
+        else { rdA = 6; rdJ = 0; rsJ = 6; }
+        target = args[0];
+        second = 'jalr';
       }
-      if (exp) {
-        for (const e of exp) {
-          const ec = e.indexOf('#');
-          let etext = ec >= 0 ? e.substring(0, ec).trim() : e.trim();
-          if (etext) expandedLines.push({ text: etext, line: i, comment: '' });
+      const tgt = resolveAddrRef(target);
+      const hi = tgt - address;
+      const hi20 = Math.floor((hi + 0x800) / 4096) & 0xFFFFF;
+      const lo = hi - (hi20 << 12);
+      const ae = (hi20 << 12) | (rdA << 7) | 0b0010111;               // auipc rdA, hi
+      let be;
+      if (second === 'addi') {
+        be = ((lo & 0xFFF) << 20) | (rdA << 15) | (rdA << 7) | 0b0010011; // addi rdA, rdA, lo
+      } else {
+        be = ((lo & 0xFFF) << 20) | (rsJ << 15) | (rdJ << 7) | 0b1100111; // jalr rdJ, lo(rsJ)
+      }
+      push({ address, bytes: numToBytes(ae), text: asmText, line: lineNo, asmLine: asmText });
+      push({ address: address + 4, bytes: numToBytes(be), text: asmText, line: lineNo, asmLine: asmText });
+      bump(8);
+      return;
+    }
+    const lines2 = expandPseudoLines(mn, args);
+    for (let k = 0; k < lines2.length; k++) {
+      const e = lines2[k];
+      const eargs = parseArgs(e);
+      const emn = e.split(/\s+/)[0].toLowerCase();
+      pushInstr(emn, eargs, getAddr(), lineNo, asmText);
+    }
+  };
+
+  function emitOne(main, lineNo, asmText) {
+    const toks = main.split(/\s+/);
+    const mn = toks[0].toLowerCase();
+    const args = parseArgs(main);
+    try {
+      if (INSTRUCTIONS[mn]) {
+        pushInstr(mn, args, getAddr(), lineNo, asmText);
+      } else if (PSEUDO_INSTRUCTIONS[mn]) {
+        emitPseudo(mn, args, getAddr(), lineNo, asmText);
+      } else {
+        switch (mn) {
+          case '.text': section = 'text'; break;
+          case '.data': section = 'data'; break;
+          case '.equ': break; // constant, resolved at pre-pass time
+          case '.align': {
+            const al = parseInt(toks[1], 10) || 0;
+            if (al > 0) {
+              const na = (getAddr() + ((1 << al) - 1)) & ~((1 << al) - 1);
+              const pad = na - getAddr();
+              if (pad > 0) { push({ address: getAddr(), bytes: new Array(pad).fill(0), text: asmText, line: lineNo, asmLine: main }); bump(pad); }
+            }
+            break;
+          }
+          case '.word': case '.half': case '.byte': {
+            const vals = toks.slice(1).join('').split(',').filter(Boolean);
+            const bytesArr = [];
+            for (const v of vals) {
+              const val = parseImm(v);
+              if (isNaN(val)) throw new Error(`Bad numeric value '${v}' in ${mn}`);
+              const sz = mn === '.byte' ? 1 : mn === '.half' ? 2 : 4;
+              const usz = val >>> 0;
+              for (let b = 0; b < sz; b++) bytesArr.push((usz >> (b * 8)) & 0xFF);
+            }
+            if (bytesArr.length) { push({ address: getAddr(), bytes: bytesArr, text: asmText, line: lineNo, asmLine: main }); bump(bytesArr.length); }
+            break;
+          }
+          case '.dword': {
+            const vals = toks.slice(1).join('').split(',').filter(Boolean);
+            const bytesArr = [];
+            for (const v of vals) {
+              let usz = BigInt.asUintN(64, BigInt(v.replace(/_/g, '')));
+              for (let b = 0; b < 8; b++) bytesArr.push(Number((usz >> BigInt(b * 8)) & BigInt(0xff)));
+            }
+            push({ address: getAddr(), bytes: bytesArr, text: asmText, line: lineNo, asmLine: main }); bump(bytesArr.length);
+            break;
+          }
+          case '.space': {
+            const n = parseInt(toks[1], 10) || 0;
+            if (n > 0) { push({ address: getAddr(), bytes: new Array(n).fill(0), text: asmText, line: lineNo, asmLine: main }); bump(n); }
+            break;
+          }
+          case '.asciiz': case '.asciz': case '.ascii': {
+            const s = main.slice(main.indexOf(' ')).trim();
+            const strVal = parseStringLiteral(s);
+            const bytes = [];
+            for (let c = 0; c < strVal.length; c++) bytes.push(strVal.charCodeAt(c) & 0xFF);
+            if (mn !== '.ascii') bytes.push(0);
+            push({ address: getAddr(), bytes: bytes, text: asmText, line: lineNo, asmLine: main }); bump(bytes.length);
+            break;
+          }
+          default: {
+            push({ address: getAddr(), bytes: null, text: asmText, line: lineNo, error: `Unknown mnemonic or directive '${mn}'`, asmLine: main });
+            bump(4);
+          }
         }
       }
-    } else {
-      expandedLines.push({ text: origLine, line: i, comment });
+    } catch (e) {
+      push({ address: getAddr(), bytes: null, text: asmText, line: lineNo, error: e.message, asmLine: main });
+      bump(4);
     }
   }
 
-  // Third pass: encode instructions
-  for (let i = 0; i < expandedLines.length; i++) {
-    const { text, line, comment } = expandedLines[i];
-    if (!text || text.endsWith(':')) continue;
-    
-    const parts = text.split(/\s+/);
-    const mnemonic = parts[0].toLowerCase();
-    const args = parts.slice(1).join(' ').split(',').map(s => s.trim()).filter(s => s);
-    
-    if (INSTRUCTIONS[mnemonic]) {
-      const instr = INSTRUCTIONS[mnemonic];
-      try {
-        let encoding = encodeInstruction(mnemonic, args, address);
-        if (encoding !== null) {
-          output.push({
-            address,
-            bytes: encoding,
-            text: text + (comment ? ' ' + comment : ''),
-            line: line + 1,
-            asmLine: text
-          });
-          address += 4;
-        } else {
-          output.push({
-            address,
-            bytes: null,
-            text: text + (comment ? ' ' + comment : ''),
-            line: line + 1,
-            error: 'Encoding failed',
-            asmLine: text
-          });
-          address += 4;
-        }
-      } catch (e) {
-        output.push({
-          address,
-          bytes: null,
-          text: text + (comment ? ' ' + comment : ''),
-          line: line + 1,
-          error: e.message,
-          asmLine: text
-        });
-        address += 4;
-      }
-    } else if (mnemonic === '.word') {
-      const val = parseImm(text.substring(5));
-      if (!isNaN(val)) {
-        output.push({
-          address,
-          bytes: [val & 0xFF, (val >> 8) & 0xFF, (val >> 16) & 0xFF, (val >> 24) & 0xFF],
-          text: text + (comment ? ' ' + comment : ''),
-          line: line + 1,
-          asmLine: text
-        });
-        address += 4;
-      }
-    } else if (mnemonic === '.half') {
-      const val = parseImm(text.substring(5));
-      if (!isNaN(val)) {
-        output.push({
-          address,
-          bytes: [val & 0xFF, (val >> 8) & 0xFF],
-          text: text + (comment ? ' ' + comment : ''),
-          line: line + 1,
-          asmLine: text
-        });
-        address += 2;
-      }
-    } else if (mnemonic === '.byte') {
-      const val = parseImm(text.substring(5));
-      if (!isNaN(val)) {
-        output.push({
-          address,
-          bytes: [val & 0xFF],
-          text: text + (comment ? ' ' + comment : ''),
-          line: line + 1,
-          asmLine: text
-        });
-        address += 1;
-      }
-    } else if (mnemonic === '.space') {
-      const size = parseInt(args[0], 10) || 0;
-      output.push({
-        address,
-        bytes: new Array(size).fill(0),
-        text: text + (comment ? ' ' + comment : ''),
-        line: line + 1,
-        asmLine: text
-      });
-      address += size;
-    } else if (mnemonic === '.asciiz' || mnemonic === '.asciz' || mnemonic === '.ascii') {
-      const str = text.substring(text.indexOf(' ')).trim();
-      const strVal = parseStringLiteral(str);
-      const bytes = [];
-      for (let c = 0; c < strVal.length; c++) bytes.push(strVal.charCodeAt(c) & 0xFF);
-      if (mnemonic !== '.ascii') bytes.push(0);
-      output.push({
-        address,
-        bytes: bytes,
-        text: text + (comment ? ' ' + comment : ''),
-        line: line + 1,
-        asmLine: text
-      });
-      address += bytes.length;
-    } else if (mnemonic === '.align') {
-      const align = parseInt(args[0], 10);
-      if (align > 0) {
-        const newAddr = (address + (1 << align) - 1) & ~((1 << align) - 1);
-        const padding = new Array(newAddr - address).fill(0);
-        if (padding.length > 0) {
-          output.push({
-            address,
-            bytes: padding,
-            text: text + (comment ? ' ' + comment : ''),
-            line: line + 1,
-            asmLine: text
-          });
-        }
-        address = newAddr;
-      }
+  for (let i = 0; i < lines.length; i++) {
+    const { main, comment } = splitLine(lines[i]);
+    const lineNo = i + 1;
+    const asmText = main + (comment ? ' ' + comment : '');
+    if (!main) continue;
+    const first = main.split(/\s+/)[0];
+    if (first.endsWith(':')) {
+      const rest = main.slice(first.length).trim();
+      if (!rest) continue;
+      emitOne(rest, lineNo, asmText);
+      continue;
     }
+    emitOne(main, lineNo, asmText);
   }
-  
+
   return output;
 }
 
@@ -855,6 +967,7 @@ function encodeInstruction(mnemonic, args, address) {
       }
       
       if (rd < 0 || rs1 < 0) throw new Error(`Invalid register in ${mnemonic}`);
+      if (isNaN(imm)) throw new Error(`Invalid immediate '${args[2]}' in ${mnemonic}`);
       if (imm < -2048 || imm > 2047) throw new Error(`Immediate out of range: ${imm}`);
       
       const imm12 = imm & 0xFFF;
@@ -931,15 +1044,17 @@ function encodeInstruction(mnemonic, args, address) {
       let imm = args.length >= 2 ? parseImm(args[1]) : 0;
       
       if (rd < 0) throw new Error(`Invalid register in ${mnemonic}`);
+      if (isNaN(imm)) throw new Error(`Invalid immediate '${args[1]}' in ${mnemonic}`);
       
-      const uimm = (imm >> 12) & 0xFFFFF;
+      const uimm = imm & 0xFFFFF;   // LUI/AUIPC take a 20-bit immediate directly
       encoding = (uimm << 12) | (rd << 7) | instr.opcode;
       break;
     }
     
     case 'J': {
-      let rd = parseReg(args[0]);
-      let targetStr = args[1];
+      // 'jal <label>' is shorthand for 'jal ra, <label>'
+      let rd = args.length >= 2 ? parseReg(args[0]) : 1;
+      let targetStr = args.length >= 2 ? args[1] : args[0];
       let targetAddr;
       
       if (labels[targetStr] !== undefined) {
@@ -977,16 +1092,21 @@ function initializeState() {
   fregs = new Float32Array(32);
   dregs = new Float64Array(32);
   memory = new Uint8Array(4 * 1024 * 1024);
-  pc = 0x10000;
+  pc = baseAddress;
   lastChangedReg = -1;
   lastChangedMem = [];
   ioInputBuffer = '';
   ioOutputBuffer = '';
+  totalCycles = 0;
+  instructionCount = 0;
+  currentExecLine = -1;
   regs[2] = 0x7FFFFC;
 }
 
 function loadProgram(mc) {
   initializeState();
+  execHistory = [];
+  stepWriteLog = [];
   for (const item of mc) {
     if (item.bytes && !item.error) {
       const addr = item.address;
@@ -997,7 +1117,7 @@ function loadProgram(mc) {
       }
     }
   }
-  pc = 0x10000;
+  pc = baseAddress;
 }
 
 function readMem(addr, size) {
@@ -1022,6 +1142,12 @@ function writeMem(addr, val, size) {
   if (addr >= MMIO_BASE && addr < MMIO_BASE + 16) {
     handleMMIOWrite(addr, val, size);
     return;
+  }
+  // Journal old bytes for back-step (only during single-stepping execution)
+  if (journalEnabled) {
+    for (let i = 0; i < size; i++) {
+      stepWriteLog.push({ addr: addr + i, old: memory[addr + i] });
+    }
   }
   for (let i = 0; i < size; i++) {
     memory[addr + i] = (val >> (i * 8)) & 0xFF;
@@ -1502,11 +1628,12 @@ function syncScroll() {
 
 function updateLineNumbers() {
   const lines = editor.value.split('\n');
-  let nums = '';
+  let html = '';
   for (let i = 1; i <= lines.length; i++) {
-    nums += i + '\n';
+    const cls = breakpoints.has(i) ? 'bp-line' : '';
+    html += `<div class="${cls}" onclick="toggleBreakpoint(${i})" title="Click to toggle breakpoint">${i}</div>`;
   }
-  lineNumbers.textContent = nums;
+  lineNumbers.innerHTML = html;
 }
 
 function highlightSyntax() {
@@ -1614,7 +1741,8 @@ function updateRegisters() {
 function updateMemoryView() {
   const addrStr = document.getElementById('memAddr').value;
   const rows = parseInt(document.getElementById('memRows').value) || 16;
-  let addr = parseInt(addrStr, 16) || 0x10000;
+  let addr = parseInt(addrStr, 16);
+  if (isNaN(addr) || addr < 0) addr = baseAddress;
   addr = addr & ~0xF;
   
   let html = '';
@@ -1648,7 +1776,7 @@ function updateMachineCode() {
   const showHex = document.getElementById('showHex').checked;
   const showBinary = document.getElementById('showBinary').checked;
   
-  let html = '<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
   html += '<tr><th style="text-align:left;padding:2px 6px;">Addr</th><th style="text-align:left;padding:2px 6px;">Bytes</th><th style="text-align:left;padding:2px 6px;">Source</th></tr>';
   
   for (const item of machineCode) {
@@ -1689,135 +1817,127 @@ function switchTab(tab, btn) {
 
 function loadExample(name) {
   const examples = {
-    basic: `# Basic RISC-V Example
-# Calculate: sum = a + b + c
+    basic: `# Basic RISC-V — compute sum = a + b + c
 .text
 main:
-    # Load values into registers
-    addi  x1, x0, 10     # x1 = 10
-    addi  x2, x0, 20     # x2 = 20
-    addi  x3, x0, 30     # x3 = 30
-    
-    # Compute sum
-    add   x4, x1, x2     # x4 = x1 + x2
-    add   x5, x4, x3     # x5 = x4 + x3 (final sum)
-    
-    # Store result to memory
-    sw    x5, 0(x0)      # mem[0] = x5
-    
-    # Loop here
-loop:
-    j loop
+\tli\tx1, 10\t# a = 10
+\tli\tx2, 20\t# b = 20
+\tli\tx3, 30\t# c = 30
+\tadd\tx4, x1, x2
+\tadd\tx5, x4, x3\t# x5 = sum
+\tla\tx28, result
+\tsw\tx5, 0(x28)\t# result = sum
+\tli\ta7, 1\t# print_int
+\tmv\ta0, x5
+\tecall
+\tli\ta7, 10\t# exit
+\tecall
+.data
+result: .word 0
 `,
 
-    fib: `# Fibonacci Sequence
-# Calculate fib(10) = 55
+    fib: `# Fibonacci — compute fib(10) = 55
 .text
 main:
-    addi  x1, x0, 0      # x1 = fib(0) = 0
-    addi  x2, x0, 1      # x2 = fib(1) = 1
-    addi  x3, x0, 10     # x3 = n = 10
-    addi  x4, x0, 2      # x4 = counter = 2
-    
+\tli\tx1, 0\t# fib(0)
+\tli\tx2, 1\t# fib(1)
+\tli\tx3, 10\t# n = 10
+\tli\tx4, 2\t# counter
 loop:
-    bge   x4, x3, done   # if counter >= n, done
-    add   x5, x1, x2     # x5 = x1 + x2 (next fib)
-    addi  x1, x2, 0      # x1 = x2
-    addi  x2, x5, 0      # x2 = x5
-    addi  x4, x4, 1      # counter++
-    j     loop
-    
+\tbgt\tx4, x3, done
+\tadd\tx5, x1, x2\t# next fib
+\tmv\tx1, x2
+\tmv\tx2, x5
+\taddi\tx4, x4, 1
+\tj\tloop
 done:
-    sw    x2, 0(x0)      # store result
-    j     done
+\tla\tx28, result
+\tsw\tx2, 0(x28)
+\tli\ta7, 1
+\tmv\ta0, x2
+\tecall
+\tli\ta7, 10
+\tecall
+.data
+result: .word 0
 `,
 
-    fact: `# Factorial Calculation
-# Calculate factorial(5) = 120
+    fact: `# Factorial — compute 5! = 120
 .text
 main:
-    addi  x1, x0, 5      # x1 = n = 5
-    addi  x2, x0, 1      # x2 = result = 1
-    addi  x3, x0, 1      # x3 = counter = 1
-    
+\tli\tx1, 5\t# n
+\tli\tx2, 1\t# result
+\tli\tx3, 1\t# counter
 loop:
-    bgt   x3, x1, done   # if counter > n, done
-    mul   x2, x2, x3     # result *= counter
-    addi  x3, x3, 1      # counter++
-    j     loop
-    
+\tbgt\tx3, x1, done
+\tmul\tx2, x2, x3
+\taddi\tx3, x3, 1
+\tj\tloop
 done:
-    sw    x2, 0(x0)      # store result to mem[0]
-    j     done
+\tla\tx28, result
+\tsw\tx2, 0(x28)
+\tli\ta7, 1
+\tmv\ta0, x2
+\tecall
+\tli\ta7, 10
+\tecall
+.data
+result: .word 0
 `,
 
-    loop: `# Loop with Memory Access
-# Sum array elements
+    loop: `# Sum an array of 5 numbers using memory
 .text
 main:
-    # Initialize array in memory
-    addi  x1, x0, 10     # x1 = 10
-    addi  x2, x0, 20     # x2 = 20
-    addi  x3, x0, 30     # x3 = 30
-    addi  x4, x0, 40     # x4 = 40
-    addi  x5, x0, 50     # x5 = 50
-    
-    sw    x1, 0x100(x0)  # Store values
-    sw    x2, 0x104(x0)
-    sw    x3, 0x108(x0)
-    sw    x4, 0x10C(x0)
-    sw    x5, 0x110(x0)
-    
-    # Sum them
-    addi  x6, x0, 0      # sum = 0
-    addi  x7, x0, 5      # count = 5
-    addi  x8, x0, 0      # index = 0
-    
+\tla\tx28, arr\t# pointer to array
+\tli\tx1, 10
+\tli\tx2, 20
+\tli\tx3, 30
+\tli\tx4, 40
+\tli\tx5, 50
+\tsw\tx1, 0(x28)
+\tsw\tx2, 4(x28)
+\tsw\tx3, 8(x28)
+\tsw\tx4, 12(x28)
+\tsw\tx5, 16(x28)
+\tli\tx6, 0\t# sum
+\tli\tx7, 5\t# count
+\tli\tx8, 0\t# index
 sum_loop:
-    beq   x8, x7, finish # if index == count, done
-    lw    x9, 0x100(x8)  # load array[index]
-    add   x6, x6, x9     # sum += value
-    addi  x8, x8, 4      # index += 4
-    j     sum_loop
-    
+\tbeq\tx8, x7, finish
+\tlw\tx9, 0(x28)
+\tadd\tx6, x6, x9
+\taddi\tx28, x28, 4
+\taddi\tx8, x8, 1
+\tj\tsum_loop
 finish:
-    sw    x6, 0x200(x0)  # store sum
-    j     finish
+\tli\ta7, 1
+\tmv\ta0, x6
+\tecall
+\tli\ta7, 10
+\tecall
+.data
+arr: .word 0, 0, 0, 0, 0
 `,
 
-    io: `# I/O Demo with M Multiplication
-# Read from MMIO and multiply
+    io: `# M-extension arithmetic + ecall demo
 .text
 main:
-    addi  x1, x0, 7      # x1 = 7
-    addi  x2, x0, 8      # x2 = 8
-    
-    mul   x3, x1, x2     # x3 = 7 * 8 = 56
-    div   x4, x3, x2     # x4 = 56 / 8 = 7
-    rem   x5, x3, x1     # x5 = 56 % 7 = 0
-    
-    sw    x3, 0x300(x0)  # Store results
-    sw    x4, 0x304(x0)
-    sw    x5, 0x308(x0)
-    
-    # Test with compressed-style simple loop
-    addi  x6, x0, 10     # counter = 10
-count_loop:
-    addi  x6, x6, -1     # counter--
-    bne   x6, x0, count_loop
-    
-    sw    x6, 0x310(x0)  # counter should be 0
-    
-    # Floating point demo
-    addi  x10, x0, 0x40A0  # 5.0 in IEEE 754 single precision
-    addi  x11, x0, 0x4120  # 10.0
-    # Store and load as floats (simulated)
-    sw    x10, 0x400(x0)
-    sw    x11, 0x404(x0)
-    
-    j     end
-end:
-    j     end
+\tli\tx1, 7
+\tli\tx2, 8
+\tmul\tx3, x1, x2\t# 56
+\tdiv\tx4, x3, x2\t# 7
+\trem\tx5, x3, x1\t# 0
+\tla\tx28, results
+\tsw\tx3, 0(x28)
+\tsw\tx4, 4(x28)
+\tsw\tx5, 8(x28)
+\tli\ta7, 1\t# print_int
+\tmv\ta0, x3
+\tecall
+\tli\ta7, 10\t# exit
+\tecall
+.data
+results: .word 0, 0, 0
 `
   };
   
@@ -1831,22 +1951,102 @@ end:
 // 7. MAIN CONTROL
 // ============================================================
 
-function assembleAndRun() {
-  clearLog();
-  resetState();
-  
+function instrCycles(instr32) {
+  const opcode = instr32 & 0x7F;
+  const funct7 = (instr32 >>> 25) & 0x7F;
+  switch (opcode) {
+    case 0b0000011: return cycleConfig.load;                    // loads
+    case 0b0100011: case 0b0100111: return cycleConfig.store;   // stores
+    case 0b1100011: return cycleConfig.branch;                  // branches
+    case 0b1101111: case 0b1100111: return cycleConfig.jump;     // jumps
+    case 0b0110011: return funct7 === 0b0000001 ? cycleConfig.muldiv : cycleConfig.basic;
+    case 0b1010011: return cycleConfig.fp;                      // FP
+    case 0b0101111: return cycleConfig.load;                    // atomic ≈ load/store
+    case 0b1110011: return cycleConfig.system;                  // system / ecall
+    default: return cycleConfig.basic;
+  }
+}
+
+function updateStats() {
+  const el = document.getElementById('statsBar');
+  if (el) el.innerHTML = `Cycles: ${totalCycles} &nbsp;|&nbsp; Instr: ${instructionCount}`;
+}
+
+function hideExecMarker() {
+  const m = document.getElementById('execMarker');
+  if (m) m.style.display = 'none';
+}
+
+function toggleSettings() {
+  document.getElementById('settingsPanel').classList.toggle('open');
+}
+
+function applyBaseAddress() {
+  const el = document.getElementById('baseAddr');
+  let v = parseInt(el.value, 16);
+  if (isNaN(v) || v < 0) { v = DEFAULT_BASE; el.value = '0x' + DEFAULT_BASE.toString(16); }
+  baseAddress = v & ~3;
+  document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
+  resetAll();
+  setStatus('Start address set to 0x' + baseAddress.toString(16), 'success');
+}
+
+function applyCycles() {
+  cycleConfig.basic  = parseInt(document.getElementById('cycBasic').value, 10) || 1;
+  cycleConfig.muldiv = parseInt(document.getElementById('cycMuldiv').value, 10) || 1;
+  cycleConfig.load   = parseInt(document.getElementById('cycLoad').value, 10) || 1;
+  cycleConfig.store  = parseInt(document.getElementById('cycStore').value, 10) || 1;
+  cycleConfig.branch = parseInt(document.getElementById('cycBranch').value, 10) || 1;
+  cycleConfig.jump   = parseInt(document.getElementById('cycJump').value, 10) || 1;
+  cycleConfig.fp     = parseInt(document.getElementById('cycFp').value, 10) || 1;
+  cycleConfig.system = parseInt(document.getElementById('cycSystem').value, 10) || 1;
+  setStatus('Cycles per instruction type updated', 'success');
+}
+
+function sourceLineForPc(addr) {
+  for (const item of machineCode) {
+    if (!item.error && item.address === addr) return item.line;
+  }
+  return -1;
+}
+
+function highlightCurrentLine() {
+  const hl = document.getElementById('highlightLayer');
+  if (!hl) return;
+  let marker = document.getElementById('execMarker');
+  if (!marker) {
+    marker = document.createElement('div');
+    marker.id = 'execMarker';
+    marker.className = 'exec-marker';
+    hl.appendChild(marker);
+  }
+  if (currentExecLine < 1) { marker.style.display = 'none'; return; }
+  marker.style.display = 'block';
+  marker.style.top = ((currentExecLine - 1) * 20) + 'px';
+}
+
+function toggleBreakpoint(line) {
+  if (breakpoints.has(line)) breakpoints.delete(line);
+  else breakpoints.add(line);
+  updateLineNumbers();
+  updateEditor();
+}
+
+function editorCursorLine() {
+  return editor.value.substring(0, editor.selectionStart || 0).split('\n').length;
+}
+
+function prepareAssembly() {
   const source = editor.value;
   if (!source.trim()) {
     log('No assembly code to assemble.', 'error');
     setStatus('Error: No code', 'error');
-    return;
+    return null;
   }
-  
   try {
     log('Assembling...', 'info');
-    const mc = assemble(source);
+    const mc = assemble(source, baseAddress);
     machineCode = mc;
-    
     let hasError = false;
     for (const item of mc) {
       if (item.error) {
@@ -1854,125 +2054,144 @@ function assembleAndRun() {
         hasError = true;
       }
     }
-    
     if (hasError) {
-      setStatus('Assembly failed', 'error');
+      setStatus('Assembly failed — see errors below', 'error');
       updateMachineCode();
-      return;
+      return null;
     }
-    
-    log(`Assembly successful. ${mc.length} instructions.`, 'success');
-    setStatus('Running...');
-    
-    loadProgram(mc);
-    updateMachineCode();
-    
-    running = true;
-    let maxCycles = 10000;
-    let cycleCount = 0;
-    
-    while (running && cycleCount < maxCycles) {
-      const instr32 = fetchInstruction(pc);
-      if (instr32 === 0) {
-        pc += 4;
-        cycleCount++;
-        continue;
-      }
-      
-      try {
-        pc = decodeAndExecute(instr32, pc);
-      } catch (e) {
-        log(`Error at PC 0x${pc.toString(16)}: ${e.message}`, 'error');
-        running = false;
-        break;
-      }
-      
-      cycleCount++;
-      
-      lastChangedReg = lastExecutedRd;
-      
-      if (pc < 0x10000 || pc >= memory.length) {
-        log(`PC out of bounds: 0x${pc.toString(16)}`, 'error');
-        running = false;
-        break;
-      }
-    }
-    
-    if (cycleCount >= maxCycles) {
-      log('Max cycles reached. Program may have infinite loop.', 'warn');
-      setStatus('Stopped (max cycles)', 'warn');
-    } else {
-      log(`Program completed in ${cycleCount} cycles.`, 'success');
-      setStatus('Program finished', 'success');
-    }
-    
-    updateRegisters();
-    updateMemoryView();
-    assembled = true;
-    
+    return mc;
   } catch (e) {
     log(`Assembly error: ${e.message}`, 'error');
     setStatus('Error: ' + e.message, 'error');
+    return null;
   }
+}
+
+function executeOne() {
+  // Execute the instruction at PC, updating stats. Returns the source line executed.
+  const addr = pc;
+  const instr32 = fetchInstruction(addr);
+  const line = sourceLineForPc(addr);
+  if (instr32 === 0) { pc += 4; return line; }
+  totalCycles += instrCycles(instr32);
+  instructionCount++;
+  pc = decodeAndExecute(instr32, addr);
+  lastChangedReg = lastExecutedRd;
+  return line;
+}
+
+function assembleAndRun() {
+  clearLog();
+  const mc = prepareAssembly();
+  if (!mc) return;
+  const nInstr = mc.filter(i => !i.error).length;
+  log(`Assembly successful. ${nInstr} instructions.`, 'success');
+  loadProgram(mc);
+  updateMachineCode();
+  updateStats();
+
+  running = true;
+  let count = 0;
+  const maxCycles = 100000;
+  while (running && count < maxCycles) {
+    const execAddr = pc;
+    const line = sourceLineForPc(execAddr);
+    if (line >= 1) currentExecLine = line;
+    try {
+      executeOne();
+    } catch (e) {
+      log(`Error executing at PC 0x${execAddr.toString(16)}: ${e.message}`, 'error');
+      break;
+    }
+    count++;
+    if (line >= 1 && breakpoints.has(line)) {
+      log(`Breakpoint hit at line ${line}`, 'warn');
+      running = false;
+      break;
+    }
+    if (!running) break;                       // e.g. ecall exit
+    if (pc < baseAddress || pc >= memory.length) {
+      log(`PC out of bounds: 0x${pc.toString(16)}`, 'error');
+      break;
+    }
+  }
+  running = false;
+  assembled = true;
+  if (count >= maxCycles) {
+    log('Max cycles reached (possible infinite loop).', 'warn');
+    setStatus('Stopped (max cycles)', 'warn');
+  } else {
+    log(`Program completed after ${totalCycles} cycles, ${instructionCount} instructions.`, 'success');
+    setStatus('Program finished', 'success');
+  }
+  updateRegisters();
+  updateMemoryView();
+  updateStats();
+  highlightCurrentLine();
 }
 
 function stepOnce() {
   if (!assembled) {
     clearLog();
-    resetState();
-    
-    const source = editor.value;
-    if (!source.trim()) {
-      log('No code to step.', 'error');
-      return;
-    }
-    
-    try {
-      const mc = assemble(source);
-      machineCode = mc;
-      let hasError = false;
-      for (const item of mc) {
-        if (item.error) {
-          log(`Line ${item.line}: ${item.error}`, 'error');
-          hasError = true;
-        }
-      }
-      if (hasError) {
-        setStatus('Assembly failed', 'error');
-        updateMachineCode();
-        return;
-      }
-      loadProgram(mc);
-      updateMachineCode();
-      assembled = true;
-      log('Assembly loaded. Stepping...', 'info');
-    } catch (e) {
-      log(`Assembly error: ${e.message}`, 'error');
-      return;
-    }
+    const mc = prepareAssembly();
+    if (!mc) return;
+    loadProgram(mc);
+    updateMachineCode();
+    assembled = true;
+    log('Assembly loaded. Stepping...', 'info');
   }
-  
-  const instr32 = fetchInstruction(pc);
-  if (instr32 === 0) {
-    log(`PC 0x${pc.toString(16)}: NOP (skipping)`, 'info');
-    pc += 4;
-    updateRegisters();
-    updateMemoryView();
-    setStatus(`Step: PC = 0x${pc.toString(16)}`);
+
+  journalEnabled = true;
+  stepWriteLog = [];
+  const preRegs = Int32Array.from(regs);
+  const preFregs = Float32Array.from(fregs);
+  const preDregs = Float64Array.from(dregs);
+  const prePc = pc;
+  const cycBefore = totalCycles;
+  let line;
+  try {
+    line = executeOne();
+  } catch (e) {
+    log(`Error at PC 0x${prePc.toString(16)}: ${e.message}`, 'error');
+    journalEnabled = false;
+    updateRegisters(); updateMemoryView(); updateStats();
     return;
   }
-  
-  try {
-    const oldPc = pc;
-    pc = decodeAndExecute(instr32, pc);
-    lastChangedReg = lastExecutedRd;
-    log(`0x${oldPc.toString(16)}: executed (next: 0x${pc.toString(16)})`, 'info');
-    updateRegisters();
-    updateMemoryView();
-    setStatus(`Step: PC = 0x${pc.toString(16)}`);
-  } catch (e) {
-    log(`Error at PC 0x${pc.toString(16)}: ${e.message}`, 'error');
+  journalEnabled = false;
+  currentExecLine = line;
+  execHistory.push({
+    pc: prePc, regs: preRegs, fregs: preFregs, dregs: preDregs,
+    writes: stepWriteLog.slice(), cycles: totalCycles - cycBefore, instr: 1, line: line
+  });
+  if (execHistory.length > historyCap) execHistory.shift();
+  highlightCurrentLine();
+  updateRegisters(); updateMemoryView(); updateStats();
+  setStatus(`Step ${instructionCount}: PC = 0x${pc.toString(16)}`);
+  log(`0x${prePc.toString(16)}: executed (next: 0x${pc.toString(16)})`, 'info');
+}
+
+function stepBack() {
+  if (execHistory.length === 0) {
+    log('Nothing to step back to.', 'warn');
+    return;
   }
+  const st = execHistory.pop();
+  for (let i = st.writes.length - 1; i >= 0; i--) {
+    const w = st.writes[i];
+    memory[w.addr] = w.old;
+  }
+  regs.set(st.regs);
+  fregs.set(st.fregs);
+  dregs.set(st.dregs);
+  pc = st.pc;
+  currentExecLine = st.line;
+  totalCycles = Math.max(0, totalCycles - st.cycles);
+  instructionCount = Math.max(0, instructionCount - st.instr);
+  lastChangedReg = -1;
+  highlightCurrentLine();
+  updateRegisters(); updateMemoryView(); updateStats();
+  setStatus(`Back step: PC = 0x${pc.toString(16)}`);
+  log(`Back to 0x${st.pc.toString(16)}`, 'info');
 }
 
 function resetAll() {
@@ -1984,10 +2203,14 @@ function resetAll() {
 
 function resetState() {
   initializeState();
+  execHistory = [];
+  stepWriteLog = [];
   updateRegisters();
   updateMemoryView();
   machineCode = [];
   updateMachineCode();
+  updateStats();
+  hideExecMarker();
 }
 
 // ============================================================
@@ -2019,52 +2242,76 @@ function loadFile(event) {
 
 // Default example
 editor.value = `# RISC-V RV32GC Simulator
-# Write your code here and click "Assemble & Run"
+# Write your code here and click "Assemble & Run" (F5).
+# Use Tab to indent — it aligns to the natural tab stops.
 
 .text
 main:
-    # Simple addition
-    addi  x1, x0, 42     # x1 = 42
-    addi  x2, x0, 58     # x2 = 58
-    add   x3, x1, x2     # x3 = 100
-    sw    x3, 0(x0)      # Store to memory
-    
-    # Multiplication
-    addi  x4, x0, 7      
-    addi  x5, x0, 8      
-    mul   x6, x4, x5     # x6 = 56
-    
-    # Division
-    div   x7, x6, x4     # x7 = 8
-    
-    # Loop
-    addi  x8, x0, 5      # counter = 5
+\taddi\tx1, x0, 42\t# x1 = 42
+\taddi\tx2, x0, 58\t# x2 = 58
+\tadd\tx3, x1, x2\t# x3 = 100
+\tsw\tx3, 0(x0)\t# Store to memory
+
+\t# Multiplication
+\taddi\tx4, x0, 7
+\taddi\tx5, x0, 8
+\tmul\tx6, x4, x5\t# x6 = 56
+
+\t# Division
+\tdiv\tx7, x6, x4\t# x7 = 8
+
+\t# Loop
+\taddi\tx8, x0, 5\t# counter = 5
 loop:
-    addi  x8, x8, -1     # counter--
-    bne   x8, x0, loop   # if counter != 0, loop
-    
-    # Branching demo
-    addi  x9, x0, 100
-    addi  x10, x0, 100
-    beq   x9, x10, equal # branch if equal
-    addi  x11, x0, 0     # skipped
-    j     done
-    
+\taddi\tx8, x8, -1\t# counter--
+\tbne\tx8, x0, loop\t# if counter != 0, loop
+
+\t# Branching demo
+\taddi\tx9, x0, 100
+\taddi\tx10, x0, 100
+\tbeq\tx9, x10, equal\t# branch if equal
+\taddi\tx11, x0, 0\t# skipped
+\tj\tdone
+
 equal:
-    addi  x11, x0, 1     # x11 = 1 (equal flag)
-    
+\taddi\tx11, x0, 1\t# x11 = 1 (equal flag)
 done:
-    sw    x11, 4(x0)     # Store result
-    j     done           # Infinite loop to prevent crash
+\tsw\tx11, 4(x0)\t# Store result
+\tj\tdone\t# Infinite loop to prevent crash
 `;
 
 updateEditor();
 updateRegisters();
 updateMemoryView();
-setStatus('Ready. Assemble & Run or Step through code.');
+updateStats();
+setStatus('Ready. Assemble & Run (F5) or Step (F8). Click a line number to set a breakpoint.');
 log('RISC-V RV32GC Simulator loaded', 'success');
 log('Supports: RV32I, M, F, D, A extensions', 'info');
-log('Try the example code or load a preset!', 'info');
-</script>
-</body>
+log('F5 Run · F8 Step · Shift+F8 Back · F9 Breakpoint · Tab to indent', 'info');
+  </script>
+  <script>
+  // --- Keyboard shortcuts & Tab handling for the editor ---
+  document.addEventListener('keydown', (e) => {
+    if (e.target && e.target.id === 'asmEditor') {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        insertTab();
+        return;
+      }
+    }
+    if (e.key === 'F5') { e.preventDefault(); assembleAndRun(); }
+    else if (e.key === 'F8' && e.shiftKey) { e.preventDefault(); stepBack(); }
+    else if (e.key === 'F8') { e.preventDefault(); stepOnce(); }
+    else if (e.key === 'F9') { e.preventDefault(); toggleBreakpoint(editorCursorLine()); }
+    else if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); assembleAndRun(); }
+  });
+
+  function insertTab() {
+    const start = editor.selectionStart, end = editor.selectionEnd;
+    editor.value = editor.value.substring(0, start) + '\t' + editor.value.substring(end);
+    editor.selectionStart = editor.selectionEnd = start + 1;
+    updateEditor();
+  }
+  </script>
+  </body>
 </html>
