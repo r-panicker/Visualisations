@@ -29,7 +29,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   border: none; outline: none; resize: none;
 }
 .editor-container textarea {
-  color: #cdd6f4; background: #1e1e2e; caret-color: #cdd6f4;
+  color: transparent; -webkit-text-fill-color: transparent;
+  background: #1e1e2e; caret-color: #cdd6f4; text-shadow: none;
   z-index: 2;
 }
 .editor-container textarea::selection {
@@ -221,7 +222,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   <div class="toolbar">
     <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
     <button onclick="document.getElementById('fileLoader').click()">📂 Open</button>
-    <button class="primary" onclick="assembleAndRun()">▶ Assemble &amp; Run</button>
+    <button onclick="assembleOnly()" title="Assemble and reset state without running">⚙ Assemble</button>
+    <button class="primary" onclick="runProgram()" title="Run the currently assembled program from the start (F5)">▶ Run</button>
     <button onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
     <button onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
     <button onclick="resetAll()">⟲ Reset</button>
@@ -1712,6 +1714,23 @@ function syncScroll() {
   lineNumbers.scrollTop = editor.scrollTop;
 }
 
+function resetExecutionForSourceChange() {
+  initializeState();
+  execHistory = [];
+  stepWriteLog = [];
+  assembled = false;
+  running = false;
+  machineCode = [];
+  currentExecLine = -1;
+  lastExecutedRd = -1;
+  updateRegisters();
+  updateMemoryView();
+  updateMachineCode();
+  updateDisassembly();
+  updateStats();
+  hideExecMarker();
+}
+
 function updateLineNumbers() {
   const lines = editor.value.split('\n');
   let html = '';
@@ -1808,6 +1827,7 @@ function escapeHtml(s) {
 }
 
 function updateEditor() {
+  resetExecutionForSourceChange();
   updateLineNumbers();
   highlightSyntax();
   if (editor.value.trim()) {
@@ -1818,6 +1838,7 @@ function updateEditor() {
       updateDisassembly();
     } catch(e) {}
   }
+  syncScroll();
 }
 
 function updateRegisters() {
@@ -2152,6 +2173,8 @@ results: .word 0, 0, 0
   };
   
   editor.value = examples[name] || examples.basic;
+  editor.scrollTop = 0;
+  editor.scrollLeft = 0;
   updateEditor();
   clearLog();
   setStatus('Example loaded: ' + name);
@@ -2345,7 +2368,7 @@ function executeOne() {
   return line;
 }
 
-function assembleAndRun() {
+function assembleOnly() {
   clearLog();
   const mc = prepareAssembly();
   if (!mc) return;
@@ -2355,6 +2378,16 @@ function assembleAndRun() {
   updateMachineCode();
   updateDisassembly();
   updateStats();
+  highlightCurrentLine();
+  assembled = true;
+  setStatus(`Assembled ${nInstr} instructions. Ready to run.`, 'success');
+  return mc;
+}
+
+function runProgram() {
+  clearLog();
+  const mc = assembleOnly();
+  if (!mc) return;
 
   running = true;
   let count = 0;
@@ -2396,6 +2429,10 @@ function assembleAndRun() {
   highlightCurrentLine();
   updateMachineCode();
   updateDisassembly();
+}
+
+function assembleAndRun() {
+  runProgram();
 }
 
 function stepOnce() {
@@ -2495,6 +2532,8 @@ function loadFile(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     editor.value = e.target.result;
+    editor.scrollTop = 0;
+    editor.scrollLeft = 0;
     updateEditor();
     clearLog();
     log(`Loaded file: ${file.name}`, 'success');
@@ -2512,7 +2551,7 @@ function loadFile(event) {
 
 // Default example
 editor.value = `# RISC-V RV32GC Simulator
-# Write your code here and click "Assemble & Run" (F5).
+# Write your code here, click "Assemble", then "Run" (F5).
 # Use Tab to indent — it aligns to the natural tab stops.
 
 .text
@@ -2554,10 +2593,10 @@ updateEditor();
 updateRegisters();
 updateMemoryView();
 updateStats();
-setStatus('Ready. Assemble & Run (F5) or Step (F8). Click a line number to set a breakpoint.');
+setStatus('Ready. Assemble, Run (F5), or Step (F8). Click a line number to set a breakpoint.');
 log('RISC-V RV32GC Simulator loaded', 'success');
 log('Supports: RV32I, M, F, D, A extensions', 'info');
-log('F5 Run · F8 Step · Shift+F8 Back · F9 Breakpoint · Tab to indent', 'info');
+log('F5 Run · Ctrl+Enter Assemble · F8 Step · Shift+F8 Back · F9 Breakpoint · Tab to indent', 'info');
   </script>
   <script>
   // --- Keyboard shortcuts & Tab handling for the editor ---
@@ -2569,11 +2608,11 @@ log('F5 Run · F8 Step · Shift+F8 Back · F9 Breakpoint · Tab to indent', 'inf
         return;
       }
     }
-    if (e.key === 'F5') { e.preventDefault(); assembleAndRun(); }
+    if (e.key === 'F5') { e.preventDefault(); runProgram(); }
     else if (e.key === 'F8' && e.shiftKey) { e.preventDefault(); stepBack(); }
     else if (e.key === 'F8') { e.preventDefault(); stepOnce(); }
     else if (e.key === 'F9') { e.preventDefault(); toggleBreakpoint(editorCursorLine()); }
-    else if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); assembleAndRun(); }
+    else if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); assembleOnly(); }
   });
 
   function insertTab() {
