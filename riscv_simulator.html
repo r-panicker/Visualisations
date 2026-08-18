@@ -18,7 +18,12 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 /* Main Layout */
 .main { display: flex; flex: 1; overflow: hidden; }
 .left-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.right-panel { width: 420px; display: flex; flex-direction: column; border-left: 1px solid #313244; min-width: 0; }
+.splitter {
+  width: 6px; cursor: col-resize; flex: 0 0 6px;
+  background: #181825; border-left: 1px solid #313244;
+}
+.splitter:hover { background: #cba6f7; }
+.right-panel { width: 640px; display: flex; flex-direction: column; border-left: 1px solid #313244; min-width: 220px; flex-shrink: 0; }
 
 /* Simulation Output */
 .editor-container { position: relative; flex: 1; overflow: hidden; }
@@ -113,7 +118,9 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .code-list .native-expanded { color: #a6e3a1; }
 .code-list tr.current-native td { background: rgba(137, 180, 250, 0.20); }
 .code-list tr.error-row td { color: #f38ba8; }
-.disasm-hint { font-size: 12px; line-height: 1.4; color: #6c7086; margin-bottom: 6px; }
+.disasm-toolbar { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #6c7086; margin-bottom: 6px; flex-wrap: wrap; }
+.disasm-toolbar label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.disasm-hint { font-size: 12px; line-height: 1.4; color: #6c7086; }
 
 /* Console */
 .console { background: #11111b; padding: 8px 10px; font-size: 13px; border-top: 1px solid #313244; max-height: 140px; overflow: auto; min-height: 40px; line-height: 1.5; }
@@ -202,7 +209,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 /* Responsive */
 @media (max-width: 800px) {
   .main { flex-direction: column; }
-  .right-panel { width: 100%; border-left: none; border-top: 1px solid #313244; max-height: 300px; }
+  .splitter { display: none; }
+  .right-panel { width: 100%; max-height: 300px; border-left: none; border-top: 1px solid #313244; }
   .toolbar { font-size: 11px; }
 }
 
@@ -223,7 +231,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
     <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
     <button onclick="document.getElementById('fileLoader').click()">📂 Open</button>
     <button onclick="assembleOnly()" title="Assemble and reset state without running">⚙ Assemble</button>
-    <button class="primary" onclick="runProgram()" title="Run the currently assembled program from the start (F5)">▶ Run</button>
+    <button onclick="runProgram()" title="Run the currently assembled program from the start (F5)">▶ Run</button>
     <button onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
     <button onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
     <button onclick="resetAll()">⟲ Reset</button>
@@ -270,12 +278,12 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       </div>
       <div class="console" id="console"></div>
     </div>
+    <div class="splitter" id="mainSplitter" title="Drag to resize"></div>
      <div class="right-panel">
       <div class="tab-bar">
         <button class="active" onclick="switchTab('registers',this)">Registers</button>
         <button onclick="switchTab('memory',this)">Memory</button>
         <button onclick="switchTab('disassembly',this)">Disassembly</button>
-        <button onclick="switchTab('machine',this)">Machine</button>
       </div>
       <div class="tab-content active" id="tab-registers">
         <table class="reg-table" id="regTable">
@@ -302,17 +310,12 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
         <div class="mem-view" id="memView"></div>
       </div>
       <div class="tab-content" id="tab-disassembly">
-        <div class="disasm-hint">
-          Native instruction stream after pseudo-instruction expansion. The blue row is the instruction at the current PC.
+        <div class="disasm-toolbar">
+          <label><input type="checkbox" id="showHex" checked onchange="updateDisassembly()"> Show Hex</label>
+          <label><input type="checkbox" id="showBinary" onchange="updateDisassembly()"> Show Binary</label>
+          <span class="disasm-hint">Native stream after pseudo-instruction expansion. Blue row = instruction at current PC.</span>
         </div>
         <div id="disassemblyDisplay"></div>
-      </div>
-      <div class="tab-content" id="tab-machine">
-        <div style="font-size:13px;margin-bottom:6px;color:#6c7086;">
-          <label><input type="checkbox" id="showHex" checked onchange="updateMachineCode()"> Show Hex</label>
-          <label style="margin-left:8px;"><input type="checkbox" id="showBinary" onchange="updateMachineCode()"> Show Binary</label>
-        </div>
-        <div id="machineCodeDisplay" style="font-size:13px;line-height:1.6;"></div>
       </div>
     </div>
   </div>
@@ -1687,7 +1690,6 @@ const lineNumbers = document.getElementById('lineNumbers');
 const consoleEl = document.getElementById('console');
 const regBody = document.getElementById('regBody');
 const memView = document.getElementById('memView');
-const machineCodeDisplay = document.getElementById('machineCodeDisplay');
 const disassemblyDisplay = document.getElementById('disassemblyDisplay');
 const statusBar = document.getElementById('statusBar');
 
@@ -1729,6 +1731,36 @@ function resetExecutionForSourceChange() {
   updateDisassembly();
   updateStats();
   hideExecMarker();
+}
+
+function initSplitter() {
+  const splitter = document.getElementById('mainSplitter');
+  const rightPanel = document.querySelector('.right-panel');
+  if (!splitter || !rightPanel) return;
+  let dragging = false;
+  const clamp = (w) => Math.max(220, Math.min(w, (window.innerWidth || 1200) - 320));
+
+  splitter.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    splitter.setPointerCapture(e.pointerId);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+  splitter.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const mainRect = splitter.parentElement.getBoundingClientRect();
+    const width = mainRect.right - e.clientX;
+    rightPanel.style.width = clamp(width) + 'px';
+  });
+  const stop = () => {
+    if (!dragging) return;
+    dragging = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  };
+  splitter.addEventListener('pointerup', stop);
+  splitter.addEventListener('pointercancel', stop);
 }
 
 function updateLineNumbers() {
@@ -1983,14 +2015,23 @@ function memGo(region) {
 }
 
 function updateMachineCode() {
+  updateDisassembly();
+}
+
+function updateDisassembly() {
+  if (!disassemblyDisplay) return;
   const showHex = document.getElementById('showHex').checked;
   const showBinary = document.getElementById('showBinary').checked;
-  
+
   let html = '<table class="code-list">';
-  html += '<tr><th>Addr</th><th>Bytes</th><th>Source</th></tr>';
-  
+  html += '<tr><th>Addr</th><th>Machine code</th><th>Native instruction</th><th>Original source</th></tr>';
   for (const item of machineCode) {
-    if (!item.bytes) continue;
+    if (!item.bytes || item.error) continue;
+    const source = item.text || item.asmLine || '';
+    const native = item.native || source;
+    const expanded = !!item.isPseudo;
+    const rowClass = item.address === pc ? 'current-native' : '';
+
     let bytesStr = '';
     if (showHex) {
       bytesStr = Array.from(item.bytes).map(b => b.toString(16).padStart(2,'0')).join(' ');
@@ -2004,30 +2045,10 @@ function updateMachineCode() {
         bytesStr += Array.from(item.bytes).map(b => b.toString(2).padStart(8,'0')).join(' ');
       }
     }
-    
-    const rowClass = [item.error ? 'error-row' : '', item.address === pc ? 'current-native' : ''].filter(Boolean).join(' ');
+
     html += `<tr${rowClass ? ` class="${rowClass}"` : ''}>
       <td class="addr">0x${item.address.toString(16).padStart(8,'0')}</td>
       <td class="bytes">${escapeHtml(bytesStr)}</td>
-      <td class="source">${escapeHtml(item.text || item.asmLine || '')}</td>
-    </tr>`;
-  }
-  html += '</table>';
-  machineCodeDisplay.innerHTML = html;
-}
-
-function updateDisassembly() {
-  if (!disassemblyDisplay) return;
-  let html = '<table class="code-list">';
-  html += '<tr><th>Addr</th><th>Native instruction</th><th>Original source</th></tr>';
-  for (const item of machineCode) {
-    if (!item.bytes || item.error) continue;
-    const source = item.text || item.asmLine || '';
-    const native = item.native || source;
-    const expanded = !!item.isPseudo;
-    const rowClass = item.address === pc ? 'current-native' : '';
-    html += `<tr${rowClass ? ` class="${rowClass}"` : ''}>
-      <td class="addr">0x${item.address.toString(16).padStart(8,'0')}</td>
       <td class="native ${expanded ? 'native-expanded' : ''}">${escapeHtml(native)}</td>
       <td class="source ${expanded ? 'pseudo' : ''}">${escapeHtml(source)}</td>
     </tr>`;
@@ -2043,7 +2064,6 @@ function switchTab(tab, btn) {
   btn.classList.add('active');
   if (tab === 'memory') updateMemoryView();
   if (tab === 'disassembly') updateDisassembly();
-  if (tab === 'machine') updateMachineCode();
 }
 
 function loadExample(name) {
@@ -2286,6 +2306,20 @@ function applyBaseAddress() {
   baseAddress = v & ~3;
   document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
   resetAll();
+  // Reload the program into memory so the memory window reflects the new start address.
+  if (editor.value.trim()) {
+    try {
+      const mc = assemble(editor.value, baseAddress);
+      machineCode = mc;
+      loadProgram(mc);
+      updateMachineCode();
+      updateDisassembly();
+      updateMemoryView();
+      updateStats();
+      highlightFirstLine(mc);
+      assembled = true;
+    } catch (e) {}
+  }
   setStatus('Start address set to 0x' + baseAddress.toString(16), 'success');
 }
 
@@ -2368,6 +2402,18 @@ function executeOne() {
   return line;
 }
 
+function firstExecutableLine(mc) {
+  for (const item of mc) {
+    if (!item.error && item.bytes) return item.line;
+  }
+  return -1;
+}
+
+function highlightFirstLine(mc) {
+  currentExecLine = firstExecutableLine(mc);
+  highlightCurrentLine();
+}
+
 function assembleOnly() {
   clearLog();
   const mc = prepareAssembly();
@@ -2378,7 +2424,7 @@ function assembleOnly() {
   updateMachineCode();
   updateDisassembly();
   updateStats();
-  highlightCurrentLine();
+  highlightFirstLine(mc);
   assembled = true;
   setStatus(`Assembled ${nInstr} instructions. Ready to run.`, 'success');
   return mc;
@@ -2392,37 +2438,47 @@ function runProgram() {
   running = true;
   let count = 0;
   const maxCycles = 100000;
+  let stopReason = 'finished';
   while (running && count < maxCycles) {
     const execAddr = pc;
     const line = sourceLineForPc(execAddr);
-    if (line >= 1) currentExecLine = line;
+    // Highlight the instruction about to execute (debugger convention).
+    currentExecLine = (line >= 1) ? line : -1;
+
+    // Stop BEFORE executing the breakpoint instruction so the highlighted line
+    // is the one that will run next.
+    if (line >= 1 && breakpoints.has(line)) {
+      log(`Breakpoint hit at line ${line}`, 'warn');
+      stopReason = 'breakpoint';
+      running = false;
+      break;
+    }
+
     try {
       executeOne();
     } catch (e) {
       log(`Error executing at PC 0x${execAddr.toString(16)}: ${e.message}`, 'error');
+      stopReason = 'error';
       break;
     }
     count++;
-    if (line >= 1 && breakpoints.has(line)) {
-      log(`Breakpoint hit at line ${line}`, 'warn');
-      running = false;
-      break;
-    }
-    if (!running) break;                       // e.g. ecall exit
-    if (pc < baseAddress || pc >= memory.length) {
-      log(`PC out of bounds: 0x${pc.toString(16)}`, 'error');
-      break;
-    }
+
+    if (!running) { stopReason = 'exit'; break; }          // e.g. ecall exit
+    if (pc < baseAddress || pc >= memory.length) { stopReason = 'bounds'; break; }
   }
   running = false;
   assembled = true;
   if (count >= maxCycles) {
     log('Max cycles reached (possible infinite loop).', 'warn');
     setStatus('Stopped (max cycles)', 'warn');
-  } else {
+  } else if (stopReason === 'exit' || stopReason === 'bounds') {
+    // The program ended: there is no next instruction to highlight.
+    currentExecLine = -1;
     log(`Program completed after ${totalCycles} cycles, ${instructionCount} instructions.`, 'success');
     setStatus('Program finished', 'success');
   }
+  // For 'breakpoint', 'error', and max-cycles stops, currentExecLine already points
+  // at the next instruction to execute, so leave it as-is.
   updateRegisters();
   updateMemoryView();
   updateStats();
@@ -2443,6 +2499,7 @@ function stepOnce() {
     loadProgram(mc);
     updateMachineCode();
     updateDisassembly();
+    highlightFirstLine(mc);
     assembled = true;
     log('Assembly loaded. Stepping...', 'info');
   }
@@ -2464,7 +2521,9 @@ function stepOnce() {
     return;
   }
   journalEnabled = false;
-  currentExecLine = line;
+  // Debugger convention: highlight the instruction that is about to execute (the new PC),
+  // not the one that just ran.
+  currentExecLine = sourceLineForPc(pc);
   execHistory.push({
     pc: prePc, regs: preRegs, fregs: preFregs, dregs: preDregs,
     writes: stepWriteLog.slice(), cycles: totalCycles - cycBefore, instr: 1, line: line
@@ -2505,6 +2564,10 @@ function resetAll() {
   clearLog();
   assembled = false;
   setStatus('Reset');
+  // Highlight the first instruction that would be executed from the current editor content.
+  let mc = [];
+  try { if (editor.value.trim()) mc = assemble(editor.value); } catch (e) {}
+  highlightFirstLine(mc);
 }
 
 function resetState() {
@@ -2597,6 +2660,7 @@ setStatus('Ready. Assemble, Run (F5), or Step (F8). Click a line number to set a
 log('RISC-V RV32GC Simulator loaded', 'success');
 log('Supports: RV32I, M, F, D, A extensions', 'info');
 log('F5 Run · Ctrl+Enter Assemble · F8 Step · Shift+F8 Back · F9 Breakpoint · Tab to indent', 'info');
+initSplitter();
   </script>
   <script>
   // --- Keyboard shortcuts & Tab handling for the editor ---
