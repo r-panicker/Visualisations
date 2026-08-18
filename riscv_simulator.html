@@ -104,6 +104,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .mem-view span.val.changed { color: #ffe08f; font-weight: bold; }
 .mem-view span.val.editing { background: #f5c2e7; color: #1e1e2e; outline: 1px solid #cba6f7; }
 .mem-view span.ascii { color: #74c7ec; cursor: pointer; }
+.wordgap { display: inline-block; width: 20px; }
 .mem-legend { font-size: 11px; color: #6c7086; padding: 4px 8px; border-bottom: 1px solid #313244; }
 
 /* Machine / Disassembly views */
@@ -1865,8 +1866,12 @@ function highlightSyntax() {
   const lines = code.split('\n');
   let html = '';
   
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
+  // Normalize \r\n -> \n so pasted Windows content renders at correct width
+  const lineCount = lines.length;
+  
+  for (let i = 0; i < lineCount; i++) {
+    let line = lines[i].replace(/\r/g, '');
+    
     if (i > 0) html += '\n';
     
     const commentMatch = line.match(/^(.*?)(#.*)$/);
@@ -1904,6 +1909,15 @@ function highlightSyntax() {
     if (commentPart) {
       html += '<span class="hl-comment">' + escapeHtml(commentPart) + '</span>';
     }
+  }
+  
+  // Add trailing newline + invisible buffer so the highlight layer has the same scroll height as the textarea.
+  // When the textarea ends with '\n', lines[] has an extra empty string at the end.
+  // Without this, the last rendered line is one row too early causing cursor offset.
+  // The invisible span ensures the empty line has measurable height so the scrollbar syncs properly.
+  if (code.endsWith('\n')) {
+    html += '\n';
+    html += '<span style="display:inline-block;width:0;height:20px;overflow:hidden;"></span>';
   }
   
   highlightLayer.innerHTML = html;
@@ -1996,8 +2010,11 @@ function updateMemoryView() {
       const val = memory[offset];
       const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
       const cls = isChanged ? ' changed' : '';
-      hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-old="${val.toString(16).padStart(2,'0')}" onfocus="startMemByteEdit(this)" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Edit byte in-place: type 00-ff, Enter commits, Esc cancels">${val.toString(16).padStart(2,'0')}</span>`;
-      if (c === 7) hexVals += ' ';
+      // Insert wordgap after every 4th byte (between words)
+      if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
+      // Add a larger gap between the two halves
+      if (c === 7) hexVals += '<span class="wordgap" style="width:32px"></span>';
+      hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2,'0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2,'0')}</span>`;
       
       const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
       const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
@@ -2070,6 +2087,138 @@ function cancelMemByteEdit(el) {
   el.classList.remove('editing');
   el.blur();
 }
+
+// ---- Word-level editing (4 bytes at a time) ----
+
+function startMemWordEdit(event, wordStartAddr) {
+  event.preventDefault();
+  event.stopPropagation();
+  // Find the four bytes in this word (aligned to 4-byte boundary)
+  const alignedAddr = wordStartAddr & ~0x3;
+  // Collect the 4 byte spans
+  const spans = [];
+  for (let i = 0; i < 4; i++) {
+    const el = memView.querySelector(`[data-addr="${alignedAddr + i}"]`);
+    if (el) spans.push(el);
+  }
+  if (spans.length < 4) return;
+  
+  // Read current word value (little-endian)
+  let wordVal = 0;
+  for (let i = 0; i < 4; i++) {
+    wordVal |= (parseInt(spans[i].textContent || '00', 16) & 0xFF) << (i * 8);
+  }
+  const wordHex = (wordVal >>> 0).toString(16).padStart(8, '0');
+  
+  // Create overlay with input
+  let overlay = document.getElementById('memWordEditOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'memWordEditOverlay';
+    overlay.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e1e2e;border:2px solid #cba6f7;border-radius:8px;padding:16px 24px;z-index:10000;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
+    document.body.appendChild(overlay);
+  }
+  
+  overlay.innerHTML = `
+    <span style="color:#9aa3c4;font-size:12px;">Word at 0x${alignedAddr.toString(16).padStart(8,'0')} (${alignedAddr}..${alignedAddr + 3}):</span>
+    <input type="text" id="memWordEditInput" value="${wordHex}" style="background:#181825;color:#f5c2e7;border:1px solid #585b70;border-radius:4px;padding:6px 12px;font-size:16px;font-family:'Consolas',monospace;text-align:center;width:200px;outline:none;" spellcheck="false" autocomplete="off" autofocus>
+    <span style="color:#6c7086;font-size:10px;">Type hex (00000000-ffffffff) or decimal. Enter=commit, Esc=cancel</span>
+  `;
+  
+  const input = document.getElementById('memWordEditInput');
+  input.focus();
+  input.select();
+  
+  // Store context for commit
+  overlay._wordAddr = alignedAddr;
+  overlay._spans = spans;
+  
+  const handleKey = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitMemWordEdit(overlay);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelMemWordEdit(overlay);
+    }
+  };
+  const handleBlur = () => {
+    // Only cancel if input still exists (blur from clicking elsewhere)
+    const input2 = document.getElementById('memWordEditInput');
+    if (input2) cancelMemWordEdit(overlay);
+  };
+  
+  input.addEventListener('keydown', handleKey);
+  input.addEventListener('blur', handleBlur, { once: true });
+  
+  // Also handle clicks outside to cancel
+  const handleOutsideClick = (e) => {
+    if (!overlay.contains(e.target)) {
+      cancelMemWordEdit(overlay);
+      document.removeEventListener('mousedown', handleOutsideClick);
+    }
+  };
+  document.addEventListener('mousedown', handleOutsideClick);
+}
+
+function commitMemWordEdit(overlay) {
+  if (!overlay || !overlay._wordAddr) return;
+  const input = document.getElementById('memWordEditInput');
+  if (!input) return;
+  
+  const text = input.value.trim();
+  const normalized = text.replace(/^0x/i, '');
+  let val;
+  
+  // Support hex and decimal input
+  if (/^[0-9a-fA-F]+$/.test(normalized)) {
+    val = parseInt(normalized, 16);
+  } else if (/^\d+$/.test(text)) {
+    val = parseInt(text, 10);
+  } else {
+    setStatus('Invalid word value; use hex (00000000-ffffffff) or decimal', 'error');
+    return;
+  }
+  
+  if (isNaN(val) || val < 0 || val > 0xFFFFFFFF) {
+    setStatus('Word value out of range (0 to 0xFFFFFFFF)', 'error');
+    return;
+  }
+  
+  const addr = overlay._wordAddr;
+  const spans = overlay._spans;
+  
+  // Write little-endian bytes
+  for (let i = 0; i < 4; i++) {
+    const byteVal = (val >> (i * 8)) & 0xFF;
+    memory[addr + i] = byteVal;
+  }
+  
+  lastChangedMem = [{ addr, size: 4 }];
+  
+  // Update the individual byte spans visually
+  for (let i = 0; i < 4; i++) {
+    if (spans[i]) {
+      spans[i].textContent = byteVal.toString(16).padStart(2, '0');
+      spans[i].classList.add('changed');
+      spans[i].dataset.old = byteVal.toString(16).padStart(2, '0');
+    }
+  }
+  
+  cancelMemWordEdit(overlay);
+  updateMemoryView();
+  setStatus(`Word updated at 0x${addr.toString(16).padStart(8, '0')}: 0x${(val >>> 0).toString(16).padStart(8, '0')}`, 'success');
+}
+
+function cancelMemWordEdit(overlay) {
+  if (!overlay) return;
+  // Clear spans changed class
+  if (overlay._spans) {
+    overlay._spans.forEach(el => { if (el && el.classList) el.classList.remove('changed'); });
+  }
+  overlay.remove();
+}
+
 
 function focusMemByte(addr) {
   const el = memView.querySelector(`[data-addr="${addr}"]`);
