@@ -231,6 +231,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   <div class="toolbar">
     <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
     <button onclick="document.getElementById('fileLoader').click()">📂 Open</button>
+    <button onclick="saveFile()" title="Save the edited source code as a .asm file">💾 Save</button>
     <button onclick="assembleOnly()" title="Assemble and reset state without running">⚙ Assemble</button>
     <button onclick="runProgram()" title="Run the currently assembled program from the start (F5)">▶ Run</button>
     <button onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
@@ -2695,6 +2696,24 @@ function downloadMemFile() {
   setStatus('Dumped memory.mem', 'success');
 }
 
+function saveFile() {
+  const content = editor.value;
+  if (!content.trim()) { setStatus('Editor is empty — nothing to save', 'error'); return; }
+  // Try to derive a filename from the currently loaded file
+  const currentFile = document.getElementById('fileLoader').files?.[0]?.name || '';
+  const baseName = currentFile ? currentFile.replace(/\.(asm|s|txt)$/i, '') : 'program';
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = baseName + '.asm';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setStatus(`Saved ${baseName}.asm`, 'success');
+}
+
 function sourceLineForPc(addr) {
   for (const item of machineCode) {
     if (!item.error && item.address === addr) return item.line;
@@ -3049,6 +3068,7 @@ initSplitter();
     else if (e.key === 'F8') { e.preventDefault(); stepOnce(); }
     else if (e.key === 'F9') { e.preventDefault(); toggleBreakpoint(editorCursorLine()); }
     else if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); assembleOnly(); }
+    else if (e.key === 's' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveFile(); }
   });
 
   function insertTab() {
