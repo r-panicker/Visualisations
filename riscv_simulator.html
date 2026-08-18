@@ -112,10 +112,10 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .code-list { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
 .code-list th { text-align: left; padding: 2px 6px; color: #6c7086; font-weight: 600; border-bottom: 1px solid #313244; }
 .code-list td { padding: 1px 6px; vertical-align: top; border-bottom: 1px solid #181825; }
-.code-list .addr { color: #6c7086; white-space: nowrap; }
-.code-list .bytes { color: #f5c2e7; font-family: 'Consolas', 'Courier New', monospace; white-space: nowrap; }
-.code-list .source { color: #a6adc8; min-width: 30ch; }
-.code-list .native { color: #cdd6f4; min-width: 30ch; word-break: break-all; padding-right: 8px; }
+.code-list .addr { color: #6c7086; white-space: nowrap; min-width: 8ch; width: 8ch; }
+.code-list .bytes { color: #f5c2e7; font-family: 'Consolas', 'Courier New', monospace; word-break: break-all; overflow-wrap: break-word; min-width: 10ch; width: 12ch; }
+.code-list .native { color: #cdd6f4; word-break: break-all; overflow-wrap: break-word; min-width: 20ch; }
+.code-list .source { color: #a6adc8; word-break: break-all; overflow-wrap: break-word; min-width: 20ch; }
 .code-list .pseudo { color: #fab387; }
 .code-list .native-expanded { color: #a6e3a1; }
 .code-list tr.current-native td { background: rgba(137, 180, 250, 0.20); }
@@ -2341,7 +2341,13 @@ function updateDisassembly() {
 
     let bytesStr = '';
     if (showHex) {
-      bytesStr = Array.from(item.bytes).map(b => b.toString(16).padStart(2,'0')).join(' ');
+      const hexBytes = Array.from(item.bytes).map(b => b.toString(16).padStart(2,'0'));
+      // Group bytes in chunks of 4
+      for (let i = 0; i < hexBytes.length; i += 4) {
+        const chunk = hexBytes.slice(i, i + 4);
+        bytesStr += chunk.join(' ');
+        if (i + 4 < hexBytes.length) bytesStr += '<br>';
+      }
       if (showBinary) bytesStr += ' ';
     }
     if (showBinary) {
@@ -2349,13 +2355,18 @@ function updateDisassembly() {
         const val = ((item.bytes[3] << 24) | (item.bytes[2] << 16) | (item.bytes[1] << 8) | item.bytes[0]) >>> 0;
         bytesStr += val.toString(2).padStart(32,'0');
       } else {
-        bytesStr += Array.from(item.bytes).map(b => b.toString(2).padStart(8,'0')).join(' ');
+        // Group binary in chunks of 32 bits (4 bytes)
+        for (let i = 0; i < item.bytes.length; i += 4) {
+          if (i > 0) bytesStr += '<br>';
+          const chunk = item.bytes.slice(i, i + 4);
+          bytesStr += chunk.map(b => b.toString(2).padStart(8,'0')).join(' ');
+        }
       }
     }
 
     html += `<tr${rowClass ? ` class="${rowClass}"` : ''}>
       <td class="addr">0x${item.address.toString(16).padStart(8,'0')}</td>
-      <td class="bytes">${escapeHtml(bytesStr)}</td>
+      <td class="bytes">${bytesStr}</td>
       <td class="native ${expanded ? 'native-expanded' : ''}">${escapeHtml(native)}</td>
       <td class="source ${expanded ? 'pseudo' : ''}">${escapeHtml(source)}</td>
     </tr>`;
