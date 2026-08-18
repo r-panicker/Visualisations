@@ -7,193 +7,184 @@
 <style>
 /* General Reset & Layout */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; color: #cdd6f4; height: 100vh; overflow: hidden; }
+body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; color: #e9ebf8; height: 100vh; overflow: hidden; }
 .container { display: flex; flex-direction: column; height: 100vh; }
 
 /* Header */
-.header { background: #181825; padding: 8px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #313244; }
-.header h1 { font-size: 16px; color: #cba6f7; font-weight: 600; }
-.header .subtitle { font-size: 13px; color: #6c7086; }
+.header { background: #232536; padding: 8px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #3e4158; }
+.header h1 { font-size: 18px; color: #d2bbff; font-weight: 600; }
+.header .subtitle { font-size: 13px; color: #9aa3c4; }
 
 /* Main Layout */
 .main { display: flex; flex: 1; overflow: hidden; }
 .left-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.right-panel { width: 420px; display: flex; flex-direction: column; border-left: 1px solid #313244; min-width: 0; }
+.right-panel { width: 380px; display: flex; flex-direction: column; border-left: 1px solid #3e4158; min-width: 0; }
 
-/* Simulation Output */
+/* Editor */
 .editor-container { position: relative; flex: 1; overflow: hidden; }
 .editor-container textarea, .editor-container .highlight-layer {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   padding: 12px; font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 13px; line-height: 20px; tab-size: 4; white-space: pre; overflow: auto;
+  font-size: 13px; line-height: 1.5; tab-size: 4; white-space: pre; overflow: auto;
   border: none; outline: none; resize: none;
 }
 .editor-container textarea {
-  color: #cdd6f4; background: #1e1e2e; caret-color: #cdd6f4;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background: transparent;
+  caret-color: #ffe08f;
   z-index: 2;
+  text-shadow: none;
 }
 .editor-container textarea::selection {
-  background: rgba(203, 166, 247, 0.45);
+  background: rgba(157, 195, 255, 0.45);
 }
 .editor-container .highlight-layer {
-  display: block; overflow: hidden; pointer-events: none; z-index: 3;
-  color: #cdd6f4;
+  display: block;
+  z-index: 1;
+  color: #e9ebf8;
+  background: #1e1e2e;
+  pointer-events: none;
+  overflow: hidden;
+}
+.editor-container .highlight-layer::selection {
+  background: transparent;
 }
 
 /* Toolbar */
-.toolbar { display: flex; gap: 6px; padding: 6px 12px; background: #181825; border-bottom: 1px solid #313244; flex-wrap: wrap; align-items: center; }
+.toolbar { display: flex; gap: 6px; padding: 6px 12px; background: #232536; border-bottom: 1px solid #3e4158; flex-wrap: wrap; align-items: center; }
 .toolbar button {
-  background: #313244; color: #cdd6f4; border: none; padding: 6px 12px;
-  font-size: 13px; cursor: pointer; border-radius: 4px; font-family: inherit;
+  background: #3e4158; color: #e9ebf8; border: none; padding: 6px 12px;
+  font-size: 14px; cursor: pointer; border-radius: 4px; font-family: inherit;
   transition: background 0.15s;
 }
-.toolbar button:hover { background: #45475a; }
-.toolbar button.primary { background: #cba6f7; color: #1e1e2e; font-weight: 600; }
+.toolbar button:hover { background: #565c87; }
+.toolbar button.primary { background: #d2bbff; color: #1e1e2e; font-weight: 600; }
 .toolbar button.primary:hover { background: #b4befe; }
-.toolbar button.danger { background: #f38ba8; color: #1e1e2e; }
+.toolbar button.danger { background: #ff9ab0; color: #1e1e2e; }
 .toolbar button.danger:hover { background: #eba0ac; }
-.toolbar .sep { width: 1px; height: 26px; background: #313244; margin: 0 4px; }
-.toolbar .status { font-size: 13px; color: #a6adc8; margin-left: 6px; }
-.toolbar .stats { font-size: 13px; color: #a6e3a1; margin-left: auto; white-space: nowrap; }
+.toolbar .sep { width: 1px; height: 24px; background: #3e4158; margin: 0 4px; }
+.toolbar .status { font-size: 13px; color: #c4cae4; margin-left: auto; }
 .toolbar #fileLoader { display: none; }
-.toolbar label { font-size: 13px; color: #a6adc8; display: flex; align-items: center; gap: 5px; }
-.toolbar select, .toolbar input[type="text"] {
-  background: #313244; border: 1px solid #45475a; color: #cdd6f4;
-  padding: 4px 6px; font-size: 13px; font-family: inherit; border-radius: 4px;
-}
 
 /* Right Panel Tabs */
-.tab-bar { display: flex; background: #181825; border-bottom: 1px solid #313244; }
+.tab-bar { display: flex; background: #232536; border-bottom: 1px solid #3e4158; }
 .tab-bar button {
-  flex: 1; background: none; border: none; color: #6c7086; padding: 8px 0;
-  font-size: 13px; cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent;
+  flex: 1; background: none; border: none; color: #9aa3c4; padding: 8px 0;
+  font-size: 14px; cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent;
   transition: all 0.15s;
 }
-.tab-bar button:hover { color: #cdd6f4; }
-.tab-bar button.active { color: #cba6f7; border-bottom-color: #cba6f7; }
+.tab-bar button:hover { color: #e9ebf8; }
+.tab-bar button.active { color: #d2bbff; border-bottom-color: #d2bbff; }
 
 .tab-content { flex: 1; overflow: auto; display: none; padding: 8px; }
 .tab-content.active { display: block; }
 
 /* Register Table */
 .reg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.reg-table th { text-align: left; padding: 5px 6px; color: #6c7086; font-weight: 600; border-bottom: 1px solid #313244; position: sticky; top: 0; background: #1e1e2e; }
-.reg-table td { padding: 3px 6px; border-bottom: 1px solid #181825; }
-.reg-table tr:hover td { background: #181825; }
-.reg-table .reg-name { color: #89b4fa; }
-.reg-table .reg-val { color: #a6e3a1; text-align: right; font-variant-numeric: tabular-nums; }
-.reg-table .reg-changed { color: #f9e2af; }
+.reg-table th { text-align: left; padding: 4px 8px; color: #9aa3c4; font-weight: 500; border-bottom: 1px solid #3e4158; position: sticky; top: 0; background: #1e1e2e; }
+.reg-table td { padding: 3px 8px; border-bottom: 1px solid #232536; }
+.reg-table tr:hover td { background: #232536; }
+.reg-table .reg-name { color: #9dc3ff; }
+.reg-table .reg-val { color: #b6efb2; text-align: right; font-variant-numeric: tabular-nums; }
+.reg-table .reg-changed { color: #ffe08f; }
 
 /* Memory View */
 .mem-toolbar { display: flex; gap: 4px; margin-bottom: 6px; align-items: center; }
-.mem-toolbar input { background: #313244; border: 1px solid #45475a; color: #cdd6f4; padding: 4px 6px; font-size: 13px; font-family: inherit; width: 110px; border-radius: 3px; }
-.mem-toolbar button { background: #313244; border: none; color: #cdd6f4; padding: 4px 9px; font-size: 13px; cursor: pointer; border-radius: 3px; font-family: inherit; }
-.mem-toolbar button:hover { background: #45475a; }
-.mem-toolbar button.gear { background: #45475a; color: #f5c2e7; font-size: 15px; padding: 3px 10px; }
-.mem-toolbar button.gear:hover { background: #585b70; }
+.mem-toolbar input { background: #3e4158; border: 1px solid #565c87; color: #e9ebf8; padding: 4px 6px; font-size: 13px; font-family: inherit; width: 100px; border-radius: 3px; }
+.mem-toolbar button { background: #3e4158; border: none; color: #e9ebf8; padding: 4px 8px; font-size: 13px; cursor: pointer; border-radius: 3px; font-family: inherit; }
+.mem-toolbar button:hover { background: #565c87; }
 .mem-view { font-size: 13px; line-height: 1.6; }
-.mem-view .addr { color: #6c7086; }
-.mem-view span.val { color: #f5c2e7; cursor: default; }
-.mem-view span.val:hover { background: rgba(203, 166, 247, 0.2); border-radius: 2px; padding: 0 2px; }
-.mem-view span.val.changed { color: #ffe08f; font-weight: bold; }
-.mem-view span.ascii { color: #74c7ec; }
-.mem-legend { font-size: 11px; color: #6c7086; padding: 4px 8px; border-bottom: 1px solid #313244; }
+.mem-view .addr { color: #9aa3c4; }
+.mem-view .val { color: #f7c8e8; }
+.mem-view .ascii { color: #8fd4f6; }
+.mem-view .changed { color: #ffe08f; font-weight: bold; }
 
 /* Console */
-.console { background: #11111b; padding: 8px 10px; font-size: 13px; border-top: 1px solid #313244; max-height: 140px; overflow: auto; min-height: 40px; line-height: 1.5; }
-.console .error { color: #f38ba8; }
-.console .info { color: #89b4fa; }
-.console .success { color: #a6e3a1; }
-.console .warn { color: #f9e2af; }
+.console { background: #171826; padding: 6px 8px; font-size: 13px; border-top: 1px solid #3e4158; max-height: 120px; overflow: auto; min-height: 40px; }
+.console .error { color: #ff9ab0; }
+.console .info { color: #9dc3ff; }
+.console .success { color: #b6efb2; }
+.console .warn { color: #ffe08f; }
 
 /* Line numbers */
 .editor-wrapper { position: relative; flex: 1; overflow: hidden; display: flex; }
-.line-numbers { background: #181825; color: #6c7086; padding: 12px 6px; text-align: right; font-size: 13px; line-height: 20px; min-width: 40px; overflow: hidden; user-select: none; font-family: 'Consolas', 'Courier New', monospace; white-space: pre; }
-.line-numbers div { height: 20px; display: flex; align-items: center; justify-content: flex-end; }
+.line-numbers { background: #232536; color: #9aa3c4; padding: 12px 6px; text-align: right; font-size: 14px; line-height: 19.5px; min-width: 40px; overflow: hidden; user-select: none; font-family: 'Consolas', 'Courier New', monospace; white-space: pre; }
 .code-area { position: relative; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 
 /* Syntax highlighting colors */
-.hl-comment { color: #6c7086; font-style: italic; }
-.hl-directive { color: #f5c2e7; }
-.hl-label { color: #fab387; }
-.hl-instruction { color: #89b4fa; }
-.hl-register { color: #a6e3a1; }
-.hl-number { color: #f9e2af; }
-.hl-string { color: #a6e3a1; }
-.hl-punctuation { color: #cdd6f4; }
-.hl-keyword { color: #cba6f7; }
+.hl-comment { color: #9aa3c4; font-style: italic; }
+.hl-directive { color: #f7c8e8; }
+.hl-label { color: #fcc28f; }
+.hl-instruction { color: #9dc3ff; }
+.hl-register { color: #b6efb2; }
+.hl-number { color: #ffe08f; }
+.hl-string { color: #b6efb2; }
+.hl-punctuation { color: #e9ebf8; }
+.hl-keyword { color: #d2bbff; }
 
-/* Execution line marker + breakpoints + settings */
-.exec-marker {
-  position: absolute; left: 0; right: 0; height: 20px; pointer-events: none;
-  background: rgba(137, 180, 250, 0.14); border-left: 3px solid #89b4fa; z-index: 1;
-  box-sizing: border-box;
-  line-height: 20px;
-}
-.bp-line { color: #f38ba8; font-weight: 700; cursor: pointer; }
-.bp-line::after { content: '●'; color: #f38ba8; margin-left: 2px; }
-.line-numbers { cursor: default; }
+/* Cycle badge & toolbar controls */
+.cycle-badge { font-size: 13px; color: #b6efb2; background: #16231a; border: 1px solid #2f4a33; padding: 3px 10px; border-radius: 12px; font-weight: 600; white-space: nowrap; }
+.cycle-badge b { color: #ffe08f; }
+.toolbar .run-btn { background: #b6efb2; color: #11151a; font-weight: 700; }
+.toolbar .run-btn:hover { background: #b4f2b4; }
+.toolbar .stop-btn { background: #ff9ab0; color: #1e1e2e; font-weight: 700; }
+.toolbar .stop-btn:hover { background: #eda0b5; }
+.toolbar .gear { background: #565c87; }
+.toolbar .gear:hover { background: #585b70; }
 
-/* Settings / cycles overlay panel */
-.cycles-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none;
-  align-items: center; justify-content: center; z-index: 50;
-}
-.cycles-overlay.open { display: flex; }
-.cycles-panel {
-  background: #1e1e2e; border: 1px solid #313244; border-radius: 10px;
-  width: min(680px, 94vw); max-height: 88vh; display: flex; flex-direction: column;
-  box-shadow: 0 12px 44px rgba(0,0,0,0.55);
-}
-.cycles-panel .c-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; border-bottom: 1px solid #313244;
-  font-size: 16px; font-weight: 600; color: #cba6f7;
-}
-.cycles-panel .c-head button {
-  background: none; border: none; color: #a6adc8; font-size: 18px; cursor: pointer;
-}
-.cycles-panel .c-head button:hover { color: #f38ba8; }
-.cycles-panel .c-body {
-  padding: 12px 16px; overflow: auto; display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;
-}
-.cycle-field label {
-  display: block; font-size: 12px; color: #a6adc8; margin-bottom: 3px;
-}
-.cycle-field input {
-  width: 100%; background: #313244; border: 1px solid #45475a; color: #cdd6f4;
-  padding: 5px 8px; font-size: 13px; border-radius: 5px; font-family: inherit;
-}
-.cycle-field input:focus { outline: none; border-color: #cba6f7; }
-.cycles-panel .c-foot {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 16px; border-top: 1px solid #313244; gap: 8px;
-}
-.cycles-panel .c-foot button {
-  background: #313244; color: #cdd6f4; border: none; padding: 6px 14px;
-  border-radius: 5px; cursor: pointer; font-size: 13px; font-family: inherit;
-}
-.cycles-panel .c-foot button:hover { background: #45475a; }
-.cycles-panel .c-foot button.primary { background: #cba6f7; color: #1e1e2e; font-weight: 600; }
-.cycles-panel .c-foot button.primary:hover { background: #b4befe; }
-.cycles-panel .cycle-hint {
-  color: #6c7086; font-size: 12px; padding: 0 16px 8px;
-  grid-column: 1 / -1;
-}
+/* Line-number gutter (breakpoints + current-PC) */
+.line-numbers .ln { display: flex; align-items: center; height: 19.5px; cursor: pointer; padding: 0 6px 0 2px; }
+.line-numbers .ln-bp, .line-numbers .ln-pc { width: 14px; flex: none; font-size: 11px; line-height: 19.5px; }
+.line-numbers .ln-num { width: 24px; flex: none; text-align: right; }
+.line-numbers .ln-bp { color: transparent; }
+.line-numbers .ln-break .ln-bp { color: #ff9ab0; text-shadow: 0 0 5px #ff9ab0; }
+.line-numbers .ln-current { background: rgba(203,166,247,0.12); border-left: 2px solid #d2bbff; }
+.line-numbers .ln-current .ln-num { color: #d2bbff; font-weight: 700; }
+.line-numbers .ln-current .ln-pc { color: #d2bbff; }
+.line-numbers .ln:hover { background: rgba(137,180,250,0.08); }
 
+/* Cycle configuration overlay */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.cycle-panel { background: #1e1e2e; border: 1px solid #565c87; border-radius: 10px; width: min(680px, 94vw); max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 12px 44px rgba(0,0,0,0.55); }
+.cycle-panel .c-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #3e4158; font-size: 16px; font-weight: 600; color: #d2bbff; }
+.cycle-panel .c-head button { background: none; border: none; color: #c4cae4; font-size: 18px; cursor: pointer; }
+.cycle-panel .c-head button:hover { color: #ff9ab0; }
+.cycle-panel .c-body { padding: 12px 16px; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.cycle-field label { display: block; font-size: 12px; color: #c4cae4; margin-bottom: 3px; }
+.cycle-field input { width: 100%; background: #3e4158; border: 1px solid #565c87; color: #e9ebf8; padding: 5px 8px; font-size: 13px; border-radius: 5px; }
+.cycle-field input:focus { outline: none; border-color: 
+#d2bbff; }
+.cycle-panel .c-foot { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid #3e4158; gap: 8px; }
+.cycle-panel .c-foot button { background: #3e4158; color: #e9ebf8; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+.cycle-panel .c-foot button:hover { background: #565c87; }
+.cycle-panel .c-foot button.primary { background: #d2bbff; color: #1e1e2e; font-weight: 600; }
+.cycle-hint { grid-column: 1 / -1; font-size: 11px; color: #9aa3c4; }
+
+/* Memory view enhancements */
+.mem-view { white-space: pre; }
+.mem-view .val { display: inline-block; width: 18px; text-align: center; }
+.mem-view .ascii { display: inline-block; width: 9px; text-align: center; }
+.wordgap { display: inline-block; width: 12px; }
+.mem-label { color: #d2bbff; font-weight: 600; margin-left: 6px; }
+.mem-legend { font-size: 11px; color: #9aa3c4; margin-bottom: 6px; }
+.mem-legend .changed { color: #ffe08f; }
+
+/* Error line markers in gutter */
+.line-numbers .ln-error { background: rgba(255,154,176,0.10); }
+.line-numbers .ln-error .ln-num { color: #ff9ab0; }
 
 /* Responsive */
 @media (max-width: 800px) {
   .main { flex-direction: column; }
-  .right-panel { width: 100%; border-left: none; border-top: 1px solid #313244; max-height: 300px; }
-  .toolbar { font-size: 11px; }
+  .right-panel { width: 100%; border-left: none; border-top: 1px solid #3e4158; max-height: 300px; }
+  .toolbar { font-size: 12px; }
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #1e1e2e; }
-::-webkit-scrollbar-thumb { background: #45475a; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #565c87; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #585b70; }
 </style>
 </head>
@@ -206,40 +197,21 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   <div class="toolbar">
     <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
     <button onclick="document.getElementById('fileLoader').click()">📂 Open</button>
-    <button class="primary" onclick="assembleAndRun()">▶ Assemble &amp; Run</button>
-    <button onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
-    <button onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
-    <button onclick="resetAll()">⟲ Reset</button>
-    <button onclick="toggleCyclesPanel()" title="Configure cycles per instruction type" class="gear">⏱ Cycles…</button>
+    <button class="run-btn" id="runBtn" onclick="runProgram()" title="Run from the start. Click a line number in the left gutter to toggle a breakpoint.">▶ Run</button>
+    <button class="stop-btn" id="stopBtn" onclick="stopProgram()" style="display:none;">▪ Stop</button>
+    <button onclick="stepOnce()">⏭ Step</button>
+    <button onclick="resetAll()"> Reset</button>
     <span class="sep"></span>
-    <label>Start addr: <input type="text" id="baseAddr" value="0x10000" size="8" onchange="applyBaseAddress()"></label>
-    <label>Example:
-      <select id="exampleSelect" onchange="loadExample(this.value)">
-        <option value="basic">Basic</option>
-        <option value="fib">Fibonacci</option>
-        <option value="fact">Factorial</option>
-        <option value="loop">Loop &amp; Array</option>
-        <option value="io">I/O &amp; M-Ext</option>
-      </select>
-    </label>
-    <span class="stats" id="statsBar">Cycles: 0 &nbsp;|&nbsp; Instr: 0</span>
+    <button onclick="loadExample('basic')">Basic</button>
+    <button onclick="loadExample('fib')">Fib</button>
+    <button onclick="loadExample('fact')">Factorial</button>
+    <button onclick="loadExample('loop')">Loop</button>
+    <button onclick="loadExample('io')">I/O Demo</button>
+    <span class="sep"></span>
+    <button class="gear" onclick="toggleCyclesPanel()" title="Configure how many cycles each instruction class consumes">⏱ Cycles…</button>
+    <span class="cycle-badge" id="cycleBadge" title="Cycles taken so far">⏱ <b>0</b> cycles</span>
     <span class="status" id="statusBar">Ready</span>
   </div>
-
-<!-- Cycle configuration overlay -->
-<div class="cycles-overlay" id="cyclesOverlay" onclick="if(event.target===this)closeCyclesPanel()">
-  <div class="cycles-panel">
-    <div class="c-head">
-      <span>⏱ Cycle Configuration <span style="font-size:12px;color:#a6adc8;font-weight:400;margin-left:6px;">cycles consumed per instruction class</span></span>
-      <button onclick="closeCyclesPanel()" title="Close">&times;</button>
-    </div>
-    <div class="c-body" id="cyclesConfigBody"></div>
-    <div class="c-foot">
-      <button onclick="resetCyclesConfig()">Reset Defaults</button>
-      <button class="primary" onclick="closeCyclesPanel()">Done</button>
-    </div>
-  </div>
-</div>
   <div class="main">
     <div class="left-panel">
       <div class="editor-wrapper">
@@ -253,7 +225,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       </div>
       <div class="console" id="console"></div>
     </div>
-     <div class="right-panel">
+    <div class="right-panel">
       <div class="tab-bar">
         <button class="active" onclick="switchTab('registers',this)">Registers</button>
         <button onclick="switchTab('memory',this)">Memory</button>
@@ -267,24 +239,23 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       </div>
       <div class="tab-content" id="tab-memory">
         <div class="mem-toolbar">
-          <span style="color:#6c7086;font-size:13px;">Addr</span>
+          <span style="color:#9aa3c4;font-size:13px;">Addr</span>
           <input type="text" id="memAddr" value="0x10000" onchange="updateMemoryView()" onkeydown="if(event.key==='Enter')updateMemoryView()">
-          <span style="color:#6c7086;font-size:13px;">Rows</span>
+          <span style="color:#9aa3c4;font-size:13px;">Rows</span>
           <input type="number" id="memRows" value="16" min="1" max="64" style="width:50px;" onchange="updateMemoryView()">
           <button onclick="memGo('code')" title="Program / code segment">Code</button>
           <button onclick="memGo('data')" title="Data / static segment (writes land here)">Data</button>
           <button onclick="memGo('stack')" title="Stack region near the stack pointer">Stack</button>
           <button onclick="memGo('mmio')" title="Memory-mapped I/O region">MMIO</button>
-          <button onclick="updateMemoryView()">&#x21bb;</button>
         </div>
         <div class="mem-legend">
-          groups of 4 bytes = one 32-bit word &nbsp;·&nbsp; <span style="color:#cba6f7">label</span> = symbol at row &nbsp;·&nbsp;
-          <span style="color:#ffe08f;font-weight:bold">highlighted bytes</span> were written at runtime
+          groups of 4 bytes = one 32-bit word &nbsp;·&nbsp; <span style="color:#d2bbff">label</span> = symbol at row &nbsp;·&nbsp;
+          <span class="changed">highlighted bytes</span> were written at runtime
         </div>
         <div class="mem-view" id="memView"></div>
       </div>
       <div class="tab-content" id="tab-machine">
-        <div style="font-size:13px;margin-bottom:6px;color:#6c7086;">
+        <div style="font-size:13px;margin-bottom:6px;color:#9aa3c4;">
           <label><input type="checkbox" id="showHex" checked onchange="updateMachineCode()"> Show Hex</label>
           <label style="margin-left:8px;"><input type="checkbox" id="showBinary" onchange="updateMachineCode()"> Show Binary</label>
         </div>
@@ -293,6 +264,21 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
     </div>
   </div>
 </div >
+
+<!-- Cycle configuration overlay -->
+<div class="overlay" id="cyclesOverlay" style="display:none;">
+  <div class="cycle-panel">
+    <div class="c-head">
+      <span>⏱ Cycle Configuration <span style="font-size:12px;color:#9aa3c4;font-weight:400;margin-left:6px;">cycles consumed per instruction class</span></span>
+      <button onclick="closeCyclesPanel()" title="Close">&times;</button>
+    </div>
+    <div class="c-body" id="cyclesConfigBody"></div>
+    <div class="c-foot">
+      <button onclick="resetCyclesConfig()">Reset Defaults</button>
+      <button class="primary" onclick="closeCyclesPanel()">Done</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ============================================================
@@ -442,25 +428,25 @@ const PSEUDO_INSTRUCTIONS = {
   'negw':   ['subw %0, x0, %1'],
   'sext.w': ['addiw %0, %1, 0'],
   'seqz':   ['sltiu %0, %1, 1'],
-  'snez':   ['sltu %0, x0, %1'],
+  'snez':   ['sltiu %0, x0, %(1)'],
   'sltz':   ['slt %0, %1, x0'],
   'sgtz':   ['slt %0, x0, %1'],
-  'beqz':   ['beq %0, x0, %1'],
-  'bnez':   ['bne %0, x0, %1'],
-  'blez':   ['bge x0, %0, %1'],
-  'bgez':   ['bge %0, x0, %1'],
-  'bltz':   ['blt %0, x0, %1'],
-  'bgtz':   ['blt x0, %0, %1'],
+  'beqz':   ['beq %0, x0, %2'],
+  'bnez':   ['bne %0, x0, %2'],
+  'blez':   ['bge x0, %0, %2'],
+  'bgez':   ['bge %0, x0, %2'],
+  'bltz':   ['blt %0, x0, %2'],
+  'bgtz':   ['blt x0, %0, %2'],
   'bgt':    ['blt %1, %0, %2'],
   'ble':    ['bge %1, %0, %2'],
   'bgtu':   ['bltu %1, %0, %2'],
   'bleu':   ['bgeu %1, %0, %2'],
   'j':      ['jal x0, %0'],
+  'jal':    ['jal %0, %1'],
   'jr':     ['jalr x0, %0, 0'],
   'ret':    ['jalr x0, x1, 0'],
   'call':   ['auipc x6, %0', 'jalr x1, x6, %1'],
   'tail':   ['auipc x6, %0', 'jalr x0, x6, %1'],
-  'la':     [],
   'li':     function(rd, imm) {
     imm = Number(imm);
     if (imm >= -2048 && imm <= 2047) return [`addi ${rd}, x0, ${imm}`];
@@ -469,7 +455,7 @@ const PSEUDO_INSTRUCTIONS = {
     if (lower & 0x800) {
       upper = (upper + 1) & 0xFFFFF;
     }
-    const signExtended = (lower & 0x800) ? (lower - 0x1000) : lower;
+    const signExtended = (lower & 0x800) ? (lower | ~0x7FF) : lower;
     return [`lui ${rd}, ${upper}`, `addi ${rd}, ${rd}, ${signExtended}`];
   }
 };
@@ -498,45 +484,46 @@ let fregs = new Float32Array(32);
 let dregs = new Float64Array(32);
 let memory = new Uint8Array(4 * 1024 * 1024); // 4 MB memory
 let pc = 0x10000;
-// Configurable starting memory address (start of .text). .data is placed at base + DATA_OFFSET.
-let baseAddress = 0x10000;
-const DEFAULT_BASE = 0x10000;
-const DATA_OFFSET = 0x10000;
 let machineCode = []; // array of {address, bytes, instruction, line}
 let labels = {};
 let symbolTable = {};
 let assembled = false;
 let running = false;
 let stepMode = false;
-let breakpoints = new Set();           // set of source line numbers (1-based)
-let currentExecLine = -1;              // source line currently being executed (for highlight)
+let breakpoints = new Set();
 let lastChangedReg = -1;
 let lastChangedMem = [];
 let lastExecutedRd = -1; // Track which register was last written
 
-// Execution statistics
+// Cycle accounting & configuration
 let totalCycles = 0;
-let instructionCount = 0;
-
-// Cycles consumed per instruction category (configurable via the settings panel).
-let cycleConfig = {
-  basic: 1, muldiv: 2, load: 2, store: 2,
-  branch: 1, jump: 1, fp: 4, system: 1
+let lastInstrCycles = 0;
+const DEFAULT_CYCLE_CONFIG = {
+  alu: 1, mul: 3, div: 10, load: 4, store: 3,
+  branchTaken: 2, branchNotTaken: 1, jump: 2,
+  fp: 4, atomic: 12, system: 1
 };
+let cycleConfig = Object.assign({}, DEFAULT_CYCLE_CONFIG);
 
-// Step history for "back step". Each entry stores CPU state + memory writes for one executed instruction.
-let execHistory = [];       // stack of {pc, regs, fregs, dregs, writes, line}
-let historyCap = 5000;
-// Journal of memory writes performed during the current step (used to build undoable history).
-let stepWriteLog = [];
-let journalEnabled = false;
+// Breakpoints: line-breakpoint set drives the UI; address set drives the run loop
+let breakpointLines = new Set();
+let breakpointAddrs = new Set();
 
+// Live syntax-error tracking (lines with errors, for gutter markers)
+let errorLines = new Set();
+let lastErrorsSignature = '';
 
 // Memory-mapped I/O: For simulation, we use memory range 0x10000000-0x1000000F
 const MMIO_BASE = 0x10000000;
 const MMIO_GETC = 0x10000000; // read: get character from buffer
 const MMIO_PUTC = 0x10000004; // write: put character
 const MMIO_STATUS = 0x10000008; // read: bit0=1 if char available
+
+// Data segment: sits in low RAM just after the 64 KB code image.
+// Example programs load this base into a register and store data here,
+// instead of writing to absolute 0(x0).
+const DATA_BASE = 0x20000;
+
 let ioInputBuffer = '';
 let ioOutputBuffer = '';
 
@@ -569,19 +556,9 @@ function parseFReg(s) {
 
 function parseImm(s) {
   s = s.trim().replace(/,/g,'');
-  if (s === '') return NaN;
-  const sign = (s[0] === '-') ? -1 : (s[0] === '+' ? 1 : 1);
-  const body = s.replace(/^[+-]/, '');
-  const low = body.toLowerCase();
-  const hexM = low.match(/^0x([0-9a-f]+)$/);
-  if (hexM) return sign * parseInt(hexM[1], 16);
-  if (/^\d+$/.test(body)) return sign * parseInt(body, 10);
-  // Symbolic constant (.equ) or label used as an immediate (case-insensitive)
-  if (symbolTable[body] !== undefined) return sign * symbolTable[body];
-  if (symbolTable[low] !== undefined) return sign * symbolTable[low];
-  if (labels[body] !== undefined) return sign * labels[body];
-  if (labels[low] !== undefined) return sign * labels[low];
-  return NaN;
+  if (s.startsWith('0x') || s.startsWith('0X')) return parseInt(s, 16);
+  if (s.startsWith('-0x') || s.startsWith('-0X')) return -parseInt(s.substring(1), 16);
+  return parseInt(s, 10);
 }
 
 function parseMemOp(s) {
@@ -607,248 +584,237 @@ function sext(value, bits) {
 // ============================================================
 // 4. ASSEMBLER
 // ============================================================
-function numToBytes(n) {
-  return [n & 0xFF, (n >> 8) & 0xFF, (n >> 16) & 0xFF, (n >> 24) & 0xFF];
-}
-function resolveAddrRef(s) {
-  if (labels[s] !== undefined) return labels[s];
-  const n = parseImm(s);
-  if (!isNaN(n)) return n;
-  throw new Error(`Unknown symbol '${s}'`);
-}
-function instructionSlots(mnemonic, args) {
-  if (INSTRUCTIONS[mnemonic]) return 1;
-  switch (mnemonic) {
-    case 'la': case 'call': case 'tail': return 2;
-    case 'li': {
-      const imm = parseImm(args[1]);
-      return (!isNaN(imm) && imm >= -2048 && imm <= 2047) ? 1 : 2;
-    }
-  }
-  if (PSEUDO_INSTRUCTIONS[mnemonic]) {
-    if (typeof PSEUDO_INSTRUCTIONS[mnemonic] === 'function') {
-      try { return PSEUDO_INSTRUCTIONS[mnemonic](...args).length; } catch (e) { return 1; }
-    }
-    return PSEUDO_INSTRUCTIONS[mnemonic].length;
-  }
-  return 0;
-}
-function expandPseudoLines(mnemonic, args) {
-  const p = PSEUDO_INSTRUCTIONS[mnemonic];
-  if (typeof p === 'function') return p(...args);
-  return p.map(t => t.replace(/%\d+/g, (m) => { const idx = parseInt(m.substring(1), 10); return args[idx] || ''; }));
-}
 
-
-function assemble(source, startAddr) {
-  const base = (startAddr !== undefined) ? startAddr : baseAddress;
+function assemble(source) {
   const lines = source.split('\n');
   const output = [];
   labels = {};
-  symbolTable = {};
-
-  const splitLine = (line) => {
-    const idx = line.indexOf('#');
-    return { main: (idx >= 0 ? line.substring(0, idx) : line).trim(), comment: idx >= 0 ? line.substring(idx) : '' };
-  };
-  const parseArgs = (s) => {
-    const toks = s.trim().split(/\s+/);
-    return toks.slice(1).join(' ').split(',').map(t => t.trim()).filter(t => t);
-  };
-
-  // ---- Pre-pass: collect .equ constants (earlier constants usable in later ones) ----
+  let address = 0x10000;
+  
+  // First pass: collect labels and compute addresses
   for (let i = 0; i < lines.length; i++) {
-    const { main } = splitLine(lines[i]);
-    const m = main.match(/^\.equ\s+(\w+)\s*,\s*(.+)$/i);
-    if (m) {
-      const val = parseImm(m[2].trim());
-      if (!isNaN(val)) symbolTable[m[1]] = val;
-    }
-  }
-
-  // ---- Phase 1: assign addresses & collect labels ----
-  let textAddr = base, dataAddr = base + DATA_OFFSET, section = 'text';
-  const getAddr = () => section === 'text' ? textAddr : dataAddr;
-  const setAddr = (a) => { if (section === 'text') textAddr = a; else dataAddr = a; };
-  const bump = (n) => setAddr(getAddr() + n);
-
-  const sizeLine = (main) => {
-    const toks = main.split(/\s+/);
-    const mn = toks[0].toLowerCase();
-    switch (mn) {
-      case '.text': section = 'text'; break;
-      case '.data': section = 'data'; break;
-      case '.equ': break; // constants already collected in the pre-pass
-      case '.align': { const al = parseInt(toks[1], 10) || 0; if (al > 0) setAddr((getAddr() + ((1 << al) - 1)) & ~((1 << al) - 1)); break; }
-      case '.word': case '.half': case '.byte': {
-        const vals = toks.slice(1).join('').split(',').filter(Boolean);
-        bump((mn === '.byte' ? 1 : mn === '.half' ? 2 : 4) * vals.length);
-        break;
-      }
-      case '.dword': { const vals = toks.slice(1).join('').split(',').filter(Boolean); bump(8 * vals.length); break; }
-      case '.space': bump(parseInt(toks[1], 10) || 0); break;
-      case '.asciiz': case '.asciz': bump(parseStringLiteral(main.slice(main.indexOf(' ')).trim()).length + 1); break;
-      case '.ascii': bump(parseStringLiteral(main.slice(main.indexOf(' ')).trim()).length); break;
-      default:
-        if (INSTRUCTIONS[mn] || PSEUDO_INSTRUCTIONS[mn]) bump((instructionSlots(mn, parseArgs(main)) || 1) * 4);
-        else if (!mn.startsWith('.')) bump(4); // unknown mnemonic: keep labels roughly aligned
-    }
-  };
-
-  for (let i = 0; i < lines.length; i++) {
-    const { main } = splitLine(lines[i]);
-    if (!main) continue;
-    const first = main.split(/\s+/)[0];
-    if (first.endsWith(':')) {
-      labels[first.slice(0, -1)] = getAddr();
-      const rest = main.slice(first.length).trim();
-      if (rest) sizeLine(rest);
+    let line = lines[i];
+    const commentIdx = line.indexOf('#');
+    if (commentIdx >= 0) line = line.substring(0, commentIdx);
+    line = line.trim();
+    if (!line) continue;
+    
+    if (line.endsWith(':')) {
+      const label = line.substring(0, line.length - 1);
+      labels[label] = address;
       continue;
     }
-    sizeLine(main);
+    
+    const parts = line.split(/\s+/);
+    const mnemonic = parts[0].toLowerCase();
+    if (PSEUDO_INSTRUCTIONS[mnemonic]) continue;
+    if (INSTRUCTIONS[mnemonic]) {
+      address += 4;
+    } else if (mnemonic === '.word') {
+      address += 4;
+    } else if (mnemonic === '.byte') {
+      address += 1;
+    } else if (mnemonic === '.half') {
+      address += 2;
+    } else if (mnemonic === '.space') {
+      if (parts[1]) address += parseInt(parts[1], 10) || 0;
+    } else if (mnemonic === '.asciiz') {
+      const str = line.substring(line.indexOf(' ')).trim();
+      const strVal = parseStringLiteral(str);
+      address += strVal.length + 1;
+    } else if (mnemonic === '.asciz' || mnemonic === '.ascii') {
+      const str = line.substring(line.indexOf(' ')).trim();
+      const strVal = parseStringLiteral(str);
+      address += mnemonic === '.ascii' ? strVal.length : strVal.length + 1;
+    } else if (mnemonic === '.align') {
+      const align = parseInt(parts[1], 10);
+      if (align > 0) address = (address + (1 << align) - 1) & ~((1 << align) - 1);
+    }
   }
 
-  // ---- Phase 2: emit encoded bytes ----
-  textAddr = base; dataAddr = base + DATA_OFFSET; section = 'text';
-
-  const push = (item) => { output.push(item); };
-  const pushInstr = (mnMnemonic, args, address, lineNo, asmText) => {
-    const encoding = encodeInstruction(mnMnemonic, args, address);
-    if (encoding === null) throw new Error('Encoding failed');
-    push({ address, bytes: encoding, text: asmText, line: lineNo, asmLine: asmText });
-    bump(4);
-  };
-
-  const emitPseudo = (mn, args, address, lineNo, asmText) => {
-    if (mn === 'la' || mn === 'call' || mn === 'tail') {
-      // figure registers & second instruction depending on pseudo
-      let target, rdA, rdJ, rsJ, second;
-      if (mn === 'la') {
-        // la rd, symbol  =>  auipc rd, %pcrel_hi ; addi rd, rd, %pcrel_lo
-        const rd = parseReg(args[0]);
-        rdA = rd; rdJ = rd; rsJ = rd;
-        target = args[1];
-        second = 'addi';
-      } else {
-        // call : auipc ra, hi ; jalr ra, lo(ra)
-        // tail : auipc t1(x6), hi ; jalr x0, lo(x6)
-        if (mn === 'call') { rdA = 1; rdJ = 1; rsJ = 1; }
-        else { rdA = 6; rdJ = 0; rsJ = 6; }
-        target = args[0];
-        second = 'jalr';
-      }
-      const tgt = resolveAddrRef(target);
-      const hi = tgt - address;
-      const hi20 = Math.floor((hi + 0x800) / 4096) & 0xFFFFF;
-      const lo = hi - (hi20 << 12);
-      const ae = (hi20 << 12) | (rdA << 7) | 0b0010111;               // auipc rdA, hi
-      let be;
-      if (second === 'addi') {
-        be = ((lo & 0xFFF) << 20) | (rdA << 15) | (rdA << 7) | 0b0010011; // addi rdA, rdA, lo
-      } else {
-        be = ((lo & 0xFFF) << 20) | (rsJ << 15) | (rdJ << 7) | 0b1100111; // jalr rdJ, lo(rsJ)
-      }
-      push({ address, bytes: numToBytes(ae), text: asmText, line: lineNo, asmLine: asmText });
-      push({ address: address + 4, bytes: numToBytes(be), text: asmText, line: lineNo, asmLine: asmText });
-      bump(8);
-      return;
+  // Second pass: expand pseudo-instructions and encode
+  address = 0x10000;
+  let expandedLines = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    const commentIdx = line.indexOf('#');
+    let comment = '';
+    if (commentIdx >= 0) {
+      comment = line.substring(commentIdx);
+      line = line.substring(0, commentIdx);
     }
-    const lines2 = expandPseudoLines(mn, args);
-    for (let k = 0; k < lines2.length; k++) {
-      const e = lines2[k];
-      const eargs = parseArgs(e);
-      const emn = e.split(/\s+/)[0].toLowerCase();
-      pushInstr(emn, eargs, getAddr(), lineNo, asmText);
+    const origLine = line.trim();
+    if (!origLine) {
+      expandedLines.push({ text: '', line: i, comment: '' });
+      continue;
     }
-  };
-
-  function emitOne(main, lineNo, asmText) {
-    const toks = main.split(/\s+/);
-    const mn = toks[0].toLowerCase();
-    const args = parseArgs(main);
-    try {
-      if (INSTRUCTIONS[mn]) {
-        pushInstr(mn, args, getAddr(), lineNo, asmText);
-      } else if (PSEUDO_INSTRUCTIONS[mn]) {
-        emitPseudo(mn, args, getAddr(), lineNo, asmText);
+    if (origLine.endsWith(':')) {
+      expandedLines.push({ text: origLine, line: i, comment: '' });
+      continue;
+    }
+    const parts = origLine.split(/\s+/);
+    const mnemonic = parts[0].toLowerCase();
+    const args = parts.slice(1).join(' ').split(',').map(s => s.trim()).filter(s => s);
+    
+    if (PSEUDO_INSTRUCTIONS[mnemonic]) {
+      let exp;
+      if (typeof PSEUDO_INSTRUCTIONS[mnemonic] === 'function') {
+        exp = PSEUDO_INSTRUCTIONS[mnemonic](...args);
       } else {
-        switch (mn) {
-          case '.text': section = 'text'; break;
-          case '.data': section = 'data'; break;
-          case '.equ': break; // constant, resolved at pre-pass time
-          case '.align': {
-            const al = parseInt(toks[1], 10) || 0;
-            if (al > 0) {
-              const na = (getAddr() + ((1 << al) - 1)) & ~((1 << al) - 1);
-              const pad = na - getAddr();
-              if (pad > 0) { push({ address: getAddr(), bytes: new Array(pad).fill(0), text: asmText, line: lineNo, asmLine: main }); bump(pad); }
-            }
-            break;
-          }
-          case '.word': case '.half': case '.byte': {
-            const vals = toks.slice(1).join('').split(',').filter(Boolean);
-            const bytesArr = [];
-            for (const v of vals) {
-              const val = parseImm(v);
-              if (isNaN(val)) throw new Error(`Bad numeric value '${v}' in ${mn}`);
-              const sz = mn === '.byte' ? 1 : mn === '.half' ? 2 : 4;
-              const usz = val >>> 0;
-              for (let b = 0; b < sz; b++) bytesArr.push((usz >> (b * 8)) & 0xFF);
-            }
-            if (bytesArr.length) { push({ address: getAddr(), bytes: bytesArr, text: asmText, line: lineNo, asmLine: main }); bump(bytesArr.length); }
-            break;
-          }
-          case '.dword': {
-            const vals = toks.slice(1).join('').split(',').filter(Boolean);
-            const bytesArr = [];
-            for (const v of vals) {
-              let usz = BigInt.asUintN(64, BigInt(v.replace(/_/g, '')));
-              for (let b = 0; b < 8; b++) bytesArr.push(Number((usz >> BigInt(b * 8)) & BigInt(0xff)));
-            }
-            push({ address: getAddr(), bytes: bytesArr, text: asmText, line: lineNo, asmLine: main }); bump(bytesArr.length);
-            break;
-          }
-          case '.space': {
-            const n = parseInt(toks[1], 10) || 0;
-            if (n > 0) { push({ address: getAddr(), bytes: new Array(n).fill(0), text: asmText, line: lineNo, asmLine: main }); bump(n); }
-            break;
-          }
-          case '.asciiz': case '.asciz': case '.ascii': {
-            const s = main.slice(main.indexOf(' ')).trim();
-            const strVal = parseStringLiteral(s);
-            const bytes = [];
-            for (let c = 0; c < strVal.length; c++) bytes.push(strVal.charCodeAt(c) & 0xFF);
-            if (mn !== '.ascii') bytes.push(0);
-            push({ address: getAddr(), bytes: bytes, text: asmText, line: lineNo, asmLine: main }); bump(bytes.length);
-            break;
-          }
-          default: {
-            push({ address: getAddr(), bytes: null, text: asmText, line: lineNo, error: `Unknown mnemonic or directive '${mn}'`, asmLine: main });
-            bump(4);
-          }
+        exp = PSEUDO_INSTRUCTIONS[mnemonic].map(t => {
+          let s = t;
+          s = s.replace(/%(\d+)/g, (m, idx) => args[parseInt(idx)] || '');
+          return s;
+        });
+      }
+      if (exp) {
+        for (const e of exp) {
+          const ec = e.indexOf('#');
+          let etext = ec >= 0 ? e.substring(0, ec).trim() : e.trim();
+          if (etext) expandedLines.push({ text: etext, line: i, comment: '' });
         }
       }
-    } catch (e) {
-      push({ address: getAddr(), bytes: null, text: asmText, line: lineNo, error: e.message, asmLine: main });
-      bump(4);
+    } else {
+      expandedLines.push({ text: origLine, line: i, comment });
     }
   }
 
-  for (let i = 0; i < lines.length; i++) {
-    const { main, comment } = splitLine(lines[i]);
-    const lineNo = i + 1;
-    const asmText = main + (comment ? ' ' + comment : '');
-    if (!main) continue;
-    const first = main.split(/\s+/)[0];
-    if (first.endsWith(':')) {
-      const rest = main.slice(first.length).trim();
-      if (!rest) continue;
-      emitOne(rest, lineNo, asmText);
-      continue;
+  // Third pass: encode instructions
+  for (let i = 0; i < expandedLines.length; i++) {
+    const { text, line, comment } = expandedLines[i];
+    if (!text || text.endsWith(':')) continue;
+    
+    const parts = text.split(/\s+/);
+    const mnemonic = parts[0].toLowerCase();
+    const args = parts.slice(1).join(' ').split(',').map(s => s.trim()).filter(s => s);
+    
+    if (INSTRUCTIONS[mnemonic]) {
+      const instr = INSTRUCTIONS[mnemonic];
+      try {
+        let encoding = encodeInstruction(mnemonic, args, address);
+        if (encoding !== null) {
+          output.push({
+            address,
+            bytes: encoding,
+            text: text + (comment ? ' ' + comment : ''),
+            line: line + 1,
+            asmLine: text
+          });
+          address += 4;
+        } else {
+          output.push({
+            address,
+            bytes: null,
+            text: text + (comment ? ' ' + comment : ''),
+            line: line + 1,
+            error: 'Encoding failed',
+            asmLine: text
+          });
+          address += 4;
+        }
+      } catch (e) {
+        output.push({
+          address,
+          bytes: null,
+          text: text + (comment ? ' ' + comment : ''),
+          line: line + 1,
+          error: e.message,
+          asmLine: text
+        });
+        address += 4;
+      }
+    } else if (mnemonic === '.word') {
+      const val = parseImm(text.substring(5));
+      if (!isNaN(val)) {
+        output.push({
+          address,
+          bytes: [val & 0xFF, (val >> 8) & 0xFF, (val >> 16) & 0xFF, (val >> 24) & 0xFF],
+          text: text + (comment ? ' ' + comment : ''),
+          line: line + 1,
+          asmLine: text
+        });
+        address += 4;
+      }
+    } else if (mnemonic === '.half') {
+      const val = parseImm(text.substring(5));
+      if (!isNaN(val)) {
+        output.push({
+          address,
+          bytes: [val & 0xFF, (val >> 8) & 0xFF],
+          text: text + (comment ? ' ' + comment : ''),
+          line: line + 1,
+          asmLine: text
+        });
+        address += 2;
+      }
+    } else if (mnemonic === '.byte') {
+      const val = parseImm(text.substring(5));
+      if (!isNaN(val)) {
+        output.push({
+          address,
+          bytes: [val & 0xFF],
+          text: text + (comment ? ' ' + comment : ''),
+          line: line + 1,
+          asmLine: text
+        });
+        address += 1;
+      }
+    } else if (mnemonic === '.space') {
+      const size = parseInt(args[0], 10) || 0;
+      output.push({
+        address,
+        bytes: new Array(size).fill(0),
+        text: text + (comment ? ' ' + comment : ''),
+        line: line + 1,
+        asmLine: text
+      });
+      address += size;
+    } else if (mnemonic === '.asciiz' || mnemonic === '.asciz' || mnemonic === '.ascii') {
+      const str = text.substring(text.indexOf(' ')).trim();
+      const strVal = parseStringLiteral(str);
+      const bytes = [];
+      for (let c = 0; c < strVal.length; c++) bytes.push(strVal.charCodeAt(c) & 0xFF);
+      if (mnemonic !== '.ascii') bytes.push(0);
+      output.push({
+        address,
+        bytes: bytes,
+        text: text + (comment ? ' ' + comment : ''),
+        line: line + 1,
+        asmLine: text
+      });
+      address += bytes.length;
+    } else if (mnemonic === '.align') {
+      const align = parseInt(args[0], 10);
+      if (align > 0) {
+        const newAddr = (address + (1 << align) - 1) & ~((1 << align) - 1);
+        const padding = new Array(newAddr - address).fill(0);
+        if (padding.length > 0) {
+          output.push({
+            address,
+            bytes: padding,
+            text: text + (comment ? ' ' + comment : ''),
+            line: line + 1,
+            asmLine: text
+          });
+        }
+        address = newAddr;
+      }
+    } else if (/^\./.test(mnemonic)) {
+      // Directive we don't encode (.text, .data, .globl, ...): skip silently.
+    } else {
+      output.push({
+        address,
+        bytes: null,
+        text: text + (comment ? ' ' + comment : ''),
+        line: line + 1,
+        error: `Unknown instruction or pseudo-op "${mnemonic}"`,
+        asmLine: text
+      });
+      address += 4;
     }
-    emitOne(main, lineNo, asmText);
   }
-
+  
   return output;
 }
 
@@ -1014,7 +980,6 @@ function encodeInstruction(mnemonic, args, address) {
       }
       
       if (rd < 0 || rs1 < 0) throw new Error(`Invalid register in ${mnemonic}`);
-      if (isNaN(imm)) throw new Error(`Invalid immediate '${args[2]}' in ${mnemonic}`);
       if (imm < -2048 || imm > 2047) throw new Error(`Immediate out of range: ${imm}`);
       
       const imm12 = imm & 0xFFF;
@@ -1091,17 +1056,15 @@ function encodeInstruction(mnemonic, args, address) {
       let imm = args.length >= 2 ? parseImm(args[1]) : 0;
       
       if (rd < 0) throw new Error(`Invalid register in ${mnemonic}`);
-      if (isNaN(imm)) throw new Error(`Invalid immediate '${args[1]}' in ${mnemonic}`);
       
-      const uimm = imm & 0xFFFFF;   // LUI/AUIPC take a 20-bit immediate directly
+      const uimm = (imm >> 12) & 0xFFFFF;
       encoding = (uimm << 12) | (rd << 7) | instr.opcode;
       break;
     }
     
     case 'J': {
-      // 'jal <label>' is shorthand for 'jal ra, <label>'
-      let rd = args.length >= 2 ? parseReg(args[0]) : 1;
-      let targetStr = args.length >= 2 ? args[1] : args[0];
+      let rd = parseReg(args[0]);
+      let targetStr = args[1];
       let targetAddr;
       
       if (labels[targetStr] !== undefined) {
@@ -1139,21 +1102,17 @@ function initializeState() {
   fregs = new Float32Array(32);
   dregs = new Float64Array(32);
   memory = new Uint8Array(4 * 1024 * 1024);
-  pc = baseAddress;
+  pc = 0x10000;
   lastChangedReg = -1;
   lastChangedMem = [];
   ioInputBuffer = '';
   ioOutputBuffer = '';
   totalCycles = 0;
-  instructionCount = 0;
-  currentExecLine = -1;
   regs[2] = 0x7FFFFC;
 }
 
 function loadProgram(mc) {
   initializeState();
-  execHistory = [];
-  stepWriteLog = [];
   for (const item of mc) {
     if (item.bytes && !item.error) {
       const addr = item.address;
@@ -1164,7 +1123,7 @@ function loadProgram(mc) {
       }
     }
   }
-  pc = baseAddress;
+  pc = 0x10000;
 }
 
 function readMem(addr, size) {
@@ -1189,12 +1148,6 @@ function writeMem(addr, val, size) {
   if (addr >= MMIO_BASE && addr < MMIO_BASE + 16) {
     handleMMIOWrite(addr, val, size);
     return;
-  }
-  // Journal old bytes for back-step (only during single-stepping execution)
-  if (journalEnabled) {
-    for (let i = 0; i < size; i++) {
-      stepWriteLog.push({ addr: addr + i, old: memory[addr + i] });
-    }
   }
   for (let i = 0; i < size; i++) {
     memory[addr + i] = (val >> (i * 8)) & 0xFF;
@@ -1231,6 +1184,31 @@ function fetchInstruction(addr) {
   return readMem(addr, 4);
 }
 
+function computeCycles(opcode, funct3, funct7) {
+  const cfg = cycleConfig;
+  switch (opcode) {
+    case 0b0110111:                     // LUI
+    case 0b0010111: return cfg.alu;     // AUIPC
+    case 0b1101111:                     // JAL
+    case 0b1100111: return cfg.jump;    // JALR
+    case 0b0000011:                     // LOAD
+    case 0b0000111: return cfg.load;    // LOAD FP
+    case 0b0100011:                     // STORE
+    case 0b0100111: return cfg.store;   // STORE FP
+    case 0b0110011:                     // ALU reg / M-extension
+      if (funct7 === 0b0000001) {
+        if (funct3 >= 0b100) return cfg.div; // DIV DIVU REM REMU
+        return cfg.mul;                       // MUL MULH MULHSU MULHU
+      }
+      return cfg.alu;
+    case 0b0010011: return cfg.alu;     // ALU immediate
+    case 0b1010011: return cfg.fp;      // FP ops
+    case 0b0101111: return cfg.atomic;  // atomic AMO
+    case 0b1110011: return cfg.system;  // ECALL / EBREAK
+    default: return cfg.alu;
+  }
+}
+
 function decodeAndExecute(instr32, addr) {
   const opcode = instr32 & 0x7F;
   const rd = (instr32 >> 7) & 0x1F;
@@ -1255,6 +1233,7 @@ function decodeAndExecute(instr32, addr) {
     ((instr32 >> 12) & 0xFF) << 12, 21);
   
   let nextPC = addr + 4;
+  lastInstrCycles = computeCycles(opcode, funct3, funct7);
   
   switch (opcode) {
     case 0b0110111: // LUI
@@ -1282,6 +1261,7 @@ function decodeAndExecute(instr32, addr) {
         case 0b111: taken = unsigned(regs[rs1]) >= unsigned(regs[rs2]); break; // BGEU
       }
       if (taken) nextPC = addr + immB;
+      lastInstrCycles = taken ? cycleConfig.branchTaken : cycleConfig.branchNotTaken;
       break;
     case 0b0000011: // LOAD
       let loadAddr = regs[rs1] + immI;
@@ -1664,7 +1644,7 @@ function clearLog() {
 
 function setStatus(msg, type = '') {
   statusBar.textContent = msg;
-  statusBar.style.color = type === 'error' ? '#f38ba8' : type === 'success' ? '#a6e3a1' : '#a6adc8';
+  statusBar.style.color = type === 'error' ? '#ff9ab0' : type === 'success' ? '#b6efb2' : '#c4cae4';
 }
 
 function syncScroll() {
@@ -1673,12 +1653,46 @@ function syncScroll() {
   lineNumbers.scrollTop = editor.scrollTop;
 }
 
+function currentSourceLine() {
+  for (const item of machineCode) {
+    if (item.bytes && item.address === pc) return item.line;
+  }
+  return 0;
+}
+
+function syncBreakpoints() {
+  breakpointAddrs.clear();
+  for (const item of machineCode) {
+    if (item.bytes && breakpointLines.has(item.line)) {
+      breakpointAddrs.add(item.address);
+    }
+  }
+}
+
+function toggleBreakpoint(line) {
+  if (breakpointLines.has(line)) breakpointLines.delete(line);
+  else breakpointLines.add(line);
+  syncBreakpoints();
+  updateLineNumbers();
+  setStatus(breakpointLines.has(line) ? 'Breakpoint set on line ' + line : 'Breakpoint cleared on line ' + line);
+}
+
 function updateLineNumbers() {
   const lines = editor.value.split('\n');
+  const currentLine = currentSourceLine();
   let html = '';
   for (let i = 1; i <= lines.length; i++) {
-    const cls = breakpoints.has(i) ? 'bp-line' : '';
-    html += `<div class="${cls}" onclick="toggleBreakpoint(${i})" title="Click to toggle breakpoint">${i}</div>`;
+    const isBp = breakpointLines.has(i);
+    const isCur = (i === currentLine);
+    const isErr = errorLines.has(i);
+    let rowCls = 'ln';
+    if (isBp) rowCls += ' ln-break';
+    if (isCur) rowCls += ' ln-current';
+    if (isErr) rowCls += ' ln-error';
+    const marker = isBp ? '●' : (isCur ? '▶' : '');
+    const markerCls = isBp ? 'ln-bp' : (isCur ? 'ln-pc' : 'ln-bp');
+    html += `<div class="${rowCls}" data-line="${i}" title="${isBp ? 'Click to remove breakpoint' : 'Click to set breakpoint'}">` +
+            `<span class="${markerCls}">${marker}</span><span class="ln-num">${i}</span></div>`;
   }
   lineNumbers.innerHTML = html;
 }
@@ -1761,12 +1775,46 @@ function escapeHtml(s) {
 function updateEditor() {
   updateLineNumbers();
   highlightSyntax();
-  if (editor.value.trim()) {
+  const src = editor.value;
+  if (src.trim()) {
     try {
-      const mc = assemble(editor.value);
+      const mc = assemble(src);
       machineCode = mc;
+      syncBreakpoints();
       updateMachineCode();
-    } catch(e) {}
+
+      const errs = mc.filter(i => i.error);
+      errorLines.clear();
+      for (const e of errs) errorLines.add(e.line);
+
+      const sig = errs.map(e => e.line + ':' + e.error).join(' | ');
+      if (sig !== lastErrorsSignature) {
+        lastErrorsSignature = sig;
+        clearLog();
+        if (errs.length) {
+          log('⚠ Assembling: ' + errs.length + ' syntax error(s)', 'error');
+          for (const e of errs.slice(0, 6)) log('  Line ' + e.line + ': ' + e.error, 'error');
+          if (errs.length > 6) log('  … and ' + (errs.length - 6) + ' more', 'error');
+        } else {
+          log('Assembled OK — ' + mc.filter(i => i.bytes).length + ' instruction(s)', 'success');
+        }
+      }
+
+      const n = mc.filter(i => i.bytes).length;
+      if (errs.length) {
+        setStatus(errs.length + ' syntax error' + (errs.length > 1 ? 's' : '') + ': Line ' + errs[0].line + ' — ' + errs[0].error, 'error');
+      } else {
+        setStatus('Assembled ' + n + ' instruction(s) — no errors', 'success');
+      }
+    } catch (e) {
+      errorLines.clear();
+      setStatus('Assembler error: ' + e.message, 'error');
+    }
+    updateLineNumbers(); // redraw gutter with error markers
+  } else {
+    errorLines.clear();
+    lastErrorsSignature = '';
+    setStatus('Ready — type some assembly above');
   }
 }
 
@@ -1785,60 +1833,51 @@ function updateRegisters() {
   regBody.innerHTML = html;
 }
 
+function memGo(region) {
+  const el = document.getElementById('memAddr');
+  if (region === 'code') el.value = '0x10000';
+  else if (region === 'data') el.value = '0x' + DATA_BASE.toString(16);
+  else if (region === 'stack') el.value = '0x7FFE0';
+  else if (region === 'mmio') el.value = '0x10000000';
+  updateMemoryView();
+  setStatus('Memory view: ' + el.value);
+}
+
 function updateMemoryView() {
   const addrStr = document.getElementById('memAddr').value;
   const rows = parseInt(document.getElementById('memRows').value) || 16;
   let addr = parseInt(addrStr, 16);
-  if (isNaN(addr) || addr < 0) addr = baseAddress;
+  if (isNaN(addr)) addr = 0x10000;
   addr = addr & ~0xF;
-  
+
+  // Reverse map: label-name -> address (labels are set during assembly)
+  const labelAt = {};
+  for (const n in labels) {
+    if (labels.hasOwnProperty(n)) labelAt[labels[n]] = n;
+  }
+
   let html = '';
   for (let r = 0; r < rows; r++) {
     const base = addr + r * 16;
     if (base >= memory.length) break;
-    
+
     let hexVals = '';
     let asciiVals = '';
-    
     for (let c = 0; c < 16; c++) {
       const offset = base + c;
       if (offset >= memory.length) break;
       const val = memory[offset];
       const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
       const cls = isChanged ? ' changed' : '';
-      const onclick = `ondblclick="editMemByte(${offset})"`;
-      hexVals += `<span class="val${cls}" ${onclick} title="Double-click to edit">${val.toString(16).padStart(2,'0')}</span>`;
-      if (c === 7) hexVals += ' ';
-      
+      hexVals += `<span class="val${cls}">${val.toString(16).padStart(2,'0')}</span>`;
+      if (c === 7) hexVals += '<span class="wordgap"></span>';
       const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-      const asciiOnclick = `ondblclick="editMemByte(${offset})" title="Double-click to edit"`;
-      asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+      asciiVals += `<span class="ascii${cls}">${escapeHtml(ch)}</span>`;
     }
-    
-    html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span> ${hexVals}  ${asciiVals}</div>`;
+    const label = labelAt[base] ? `<span class="mem-label">${escapeHtml(labelAt[base])}:</span>` : '';
+    html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span>  ${hexVals}  ${asciiVals}${label}</div>`;
   }
   memView.innerHTML = html;
-}
-
-function editMemByte(addr) {
-  const oldVal = memory[addr];
-  const newVal = prompt('Edit byte at 0x' + addr.toString(16).padStart(8,'0') + ' (current: 0x' + oldVal.toString(16).padStart(2,'0') + '):', oldVal.toString(16));
-  if (newVal === null) return;
-  const val = parseInt(newVal, 16);
-  if (isNaN(val) || val < 0 || val > 255) { setStatus('Invalid byte value', 'error'); return; }
-  memory[addr] = val;
-  lastChangedMem = [{ addr, size: 1 }];
-  updateMemoryView();
-  setStatus('Memory updated at 0x' + addr.toString(16), 'success');
-}
-
-function memGo(region) {
-  const el = document.getElementById('memAddr');
-  if (region === 'code') el.value = '0x10000';
-  else if (region === 'data') el.value = '0x20000';
-  else if (region === 'stack') el.value = '0x7ffffc';
-  else if (region === 'mmio') el.value = '0x10000000';
-  updateMemoryView();
 }
 
 function updateMachineCode() {
@@ -1864,11 +1903,11 @@ function updateMachineCode() {
       }
     }
     
-    const errClass = item.error ? ' style="color:#f38ba8;"' : '';
+    const errClass = item.error ? ' style="color:#ff9ab0;"' : '';
     html += `<tr${errClass}>
-      <td style="color:#6c7086;padding:1px 6px;">0x${item.address.toString(16).padStart(8,'0')}</td>
-      <td style="color:#f5c2e7;padding:1px 6px;font-family:monospace;">${escapeHtml(bytesStr)}</td>
-      <td style="color:#a6adc8;padding:1px 6px;">${escapeHtml(item.text || item.asmLine || '')}</td>
+      <td style="color:#9aa3c4;padding:1px 6px;">0x${item.address.toString(16).padStart(8,'0')}</td>
+      <td style="color:#f7c8e8;padding:1px 6px;font-family:monospace;">${escapeHtml(bytesStr)}</td>
+      <td style="color:#c4cae4;padding:1px 6px;">${escapeHtml(item.text || item.asmLine || '')}</td>
     </tr>`;
   }
   html += '</table>';
@@ -1884,186 +1923,26 @@ function switchTab(tab, btn) {
   if (tab === 'machine') updateMachineCode();
 }
 
-function loadExample(name) {
-  const examples = {
-    basic: `# Basic RISC-V — compute sum = a + b + c
-.text
-main:
-\tli\tx1, 10\t# a = 10
-\tli\tx2, 20\t# b = 20
-\tli\tx3, 30\t# c = 30
-\tadd\tx4, x1, x2
-\tadd\tx5, x4, x3\t# x5 = sum
-\tla\tx28, result
-\tsw\tx5, 0(x28)\t# result = sum
-\tli\ta7, 1\t# print_int
-\tmv\ta0, x5
-\tecall
-\tli\ta7, 10\t# exit
-\tecall
-.data
-result: .word 0
-`,
-
-    fib: `# Fibonacci — compute fib(10) = 55
-.text
-main:
-\tli\tx1, 0\t# fib(0)
-\tli\tx2, 1\t# fib(1)
-\tli\tx3, 10\t# n = 10
-\tli\tx4, 2\t# counter
-loop:
-\tbgt\tx4, x3, done
-\tadd\tx5, x1, x2\t# next fib
-\tmv\tx1, x2
-\tmv\tx2, x5
-\taddi\tx4, x4, 1
-\tj\tloop
-done:
-\tla\tx28, result
-\tsw\tx2, 0(x28)
-\tli\ta7, 1
-\tmv\ta0, x2
-\tecall
-\tli\ta7, 10
-\tecall
-.data
-result: .word 0
-`,
-
-    fact: `# Factorial — compute 5! = 120
-.text
-main:
-\tli\tx1, 5\t# n
-\tli\tx2, 1\t# result
-\tli\tx3, 1\t# counter
-loop:
-\tbgt\tx3, x1, done
-\tmul\tx2, x2, x3
-\taddi\tx3, x3, 1
-\tj\tloop
-done:
-\tla\tx28, result
-\tsw\tx2, 0(x28)
-\tli\ta7, 1
-\tmv\ta0, x2
-\tecall
-\tli\ta7, 10
-\tecall
-.data
-result: .word 0
-`,
-
-    loop: `# Sum an array of 5 numbers using memory
-.text
-main:
-\tla\tx28, arr\t# pointer to array
-\tli\tx1, 10
-\tli\tx2, 20
-\tli\tx3, 30
-\tli\tx4, 40
-\tli\tx5, 50
-\tsw\tx1, 0(x28)
-\tsw\tx2, 4(x28)
-\tsw\tx3, 8(x28)
-\tsw\tx4, 12(x28)
-\tsw\tx5, 16(x28)
-\tli\tx6, 0\t# sum
-\tli\tx7, 5\t# count
-\tli\tx8, 0\t# index
-sum_loop:
-\tbeq\tx8, x7, finish
-\tlw\tx9, 0(x28)
-\tadd\tx6, x6, x9
-\taddi\tx28, x28, 4
-\taddi\tx8, x8, 1
-\tj\tsum_loop
-finish:
-\tli\ta7, 1
-\tmv\ta0, x6
-\tecall
-\tli\ta7, 10
-\tecall
-.data
-arr: .word 0, 0, 0, 0, 0
-`,
-
-    io: `# M-extension arithmetic + ecall demo
-.text
-main:
-\tli\tx1, 7
-\tli\tx2, 8
-\tmul\tx3, x1, x2\t# 56
-\tdiv\tx4, x3, x2\t# 7
-\trem\tx5, x3, x1\t# 0
-\tla\tx28, results
-\tsw\tx3, 0(x28)
-\tsw\tx4, 4(x28)
-\tsw\tx5, 8(x28)
-\tli\ta7, 1\t# print_int
-\tmv\ta0, x3
-\tecall
-\tli\ta7, 10\t# exit
-\tecall
-.data
-results: .word 0, 0, 0
-`
-  };
-  
-  editor.value = examples[name] || examples.basic;
-  updateEditor();
-  clearLog();
-  setStatus('Example loaded: ' + name);
-}
-
-// ============================================================
-// 7. MAIN CONTROL
-// ============================================================
-
-function instrCycles(instr32) {
-  const opcode = instr32 & 0x7F;
-  const funct7 = (instr32 >>> 25) & 0x7F;
-  switch (opcode) {
-    case 0b0000011: return cycleConfig.load;                    // loads
-    case 0b0100011: case 0b0100111: return cycleConfig.store;   // stores
-    case 0b1100011: return cycleConfig.branch;                  // branches
-    case 0b1101111: case 0b1100111: return cycleConfig.jump;     // jumps
-    case 0b0110011: return funct7 === 0b0000001 ? cycleConfig.muldiv : cycleConfig.basic;
-    case 0b1010011: return cycleConfig.fp;                      // FP
-    case 0b0101111: return cycleConfig.load;                    // atomic ≈ load/store
-    case 0b1110011: return cycleConfig.system;                  // system / ecall
-    default: return cycleConfig.basic;
-  }
-}
-
-function updateStats() {
-  const el = document.getElementById('statsBar');
-  if (el) el.innerHTML = `Cycles: ${totalCycles} &nbsp;|&nbsp; Instr: ${instructionCount}`;
-}
-
-function hideExecMarker() {
-  const m = document.getElementById('execMarker');
-  if (m) m.style.display = 'none';
-}
-
-// Cycle configuration
 const CYCLE_FIELD_DEFS = [
-  ['basic', 'ALU / Shift / LUI / AUIPC'],
-  ['muldiv', 'Multiply / Divide (M-extension)'],
+  ['alu', 'ALU / Shift / LUI / AUIPC'],
+  ['mul', 'Multiply (MUL / MULH…)'],
+  ['div', 'Divide / Remainder (DIV / REM…)'],
   ['load', 'Load (LW / LH / FLW / FLD)'],
   ['store', 'Store (SW / SH / FSW / FSD)'],
-  ['branch', 'Branch (BEQ / BNE …)'],
+  ['branchTaken', 'Branch Taken'],
+  ['branchNotTaken', 'Branch Not Taken'],
   ['jump', 'Jumps (JAL / JALR)'],
   ['fp', 'Floating-Point Ops'],
+  ['atomic', 'Atomic (AMO)'],
   ['system', 'System (ECALL / EBREAK)']
 ];
 
 function buildCyclesPanel() {
   const body = document.getElementById('cyclesConfigBody');
-  let html = '<div class="cycle-hint">Applied live — changes take effect on the next instruction executed.</div>';
+  let html = '<div class="cycle-hint">Applied live — changes take effect on the next instruction executed. Branch-taken cost replaces the normal branch cost.</div>';
   for (const [key, label] of CYCLE_FIELD_DEFS) {
-    html += '<div class="cycle-field"><label for="cf-' + key + '">' + label + '</label>' +
-            '<input id="cf-' + key + '" type="number" min="1" max="1000" value="' + cycleConfig[key] + '"></div>';
+    html += `<div class="cycle-field"><label for="cf-${key}">${label}</label>` +
+            `<input id="cf-${key}" type="number" min="1" max="1000" value="${cycleConfig[key]}"></div>`;
   }
   body.innerHTML = html;
   for (const [key] of CYCLE_FIELD_DEFS) {
@@ -2077,99 +1956,198 @@ function buildCyclesPanel() {
 
 function toggleCyclesPanel() {
   const ov = document.getElementById('cyclesOverlay');
-  if (ov.style.display === 'none' || !ov.classList.contains('open')) {
+  if (ov.style.display === 'none') {
     buildCyclesPanel();
-    ov.classList.add('open');
+    ov.style.display = 'flex';
   } else {
     closeCyclesPanel();
   }
 }
 
 function closeCyclesPanel() {
-  const ov = document.getElementById('cyclesOverlay');
-  ov.classList.remove('open');
-  ov.style.display = 'none';
+  document.getElementById('cyclesOverlay').style.display = 'none';
 }
 
 function resetCyclesConfig() {
-  cycleConfig.basic  = 1;
-  cycleConfig.muldiv = 2;
-  cycleConfig.load   = 2;
-  cycleConfig.store  = 2;
-  cycleConfig.branch = 1;
-  cycleConfig.jump   = 1;
-  cycleConfig.fp     = 4;
-  cycleConfig.system = 1;
+  cycleConfig = Object.assign({}, DEFAULT_CYCLE_CONFIG);
   buildCyclesPanel();
-  setStatus('Cycle defaults restored', 'success');
+  setStatus('Cycle configuration reset to defaults');
 }
 
-// Read cycle values from the overlay panel inputs
-function getCyclesFromPanel() {
-  for (const [key] of CYCLE_FIELD_DEFS) {
-    const el = document.getElementById('cf-' + key);
-    if (el) {
-      const v = parseInt(el.value, 10);
-      cycleConfig[key] = (v > 0 && v <= 1000) ? v : 1;
-    }
-  }
+function updateCycleBadge() {
+  const el = document.getElementById('cycleBadge');
+  if (el) el.innerHTML = '⏱ <b>' + totalCycles + '</b> cycles';
 }
 
-function applyBaseAddress() {
-  const el = document.getElementById('baseAddr');
-  let v = parseInt(el.value, 16);
-  if (isNaN(v) || v < 0) { v = DEFAULT_BASE; el.value = '0x' + DEFAULT_BASE.toString(16); }
-  baseAddress = v & ~3;
-  document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
-  resetAll();
-  setStatus('Start address set to 0x' + baseAddress.toString(16), 'success');
-}
+function loadExample(name) {
+  const examples = {
+    basic: `# Basic RISC-V Example
+# Calculate: sum = a + b + c
+.text
+main:
+    # Load values into registers
+    addi  x1, x0, 10     # x1 = 10
+    addi  x2, x0, 20     # x2 = 20
+    addi  x3, x0, 30     # x3 = 30
+    
+    # Compute sum
+    add   x4, x1, x2     # x4 = x1 + x2
+    add   x5, x4, x3     # x5 = x4 + x3 (final sum)
+    
+    # Store result to memory (data segment)
+    li    x28, 0x20000   # data segment base
+    sw    x5, 0(x28)     # data[0] = x5
+    
+    # Loop here
+loop:
+    j loop
+`,
 
-function sourceLineForPc(addr) {
-  for (const item of machineCode) {
-    if (!item.error && item.address === addr) return item.line;
-  }
-  return -1;
-}
+    fib: `# Fibonacci Sequence
+# Calculate fib(10) = 55
+.text
+main:
+    addi  x1, x0, 0      # x1 = fib(0) = 0
+    addi  x2, x0, 1      # x2 = fib(1) = 1
+    addi  x3, x0, 10     # x3 = n = 10
+    addi  x4, x0, 2      # x4 = counter = 2
+    
+loop:
+    bge   x4, x3, done   # if counter >= n, done
+    add   x5, x1, x2     # x5 = x1 + x2 (next fib)
+    addi  x1, x2, 0      # x1 = x2
+    addi  x2, x5, 0      # x2 = x5
+    addi  x4, x4, 1      # counter++
+    j     loop
+    
+done:
+    li    x28, 0x20000   # data segment base
+    sw    x2, 0(x28)     # store result to data[0]
+    j     done
+`,
 
-function highlightCurrentLine() {
-  const hl = document.getElementById('highlightLayer');
-  if (!hl) return;
-  let marker = document.getElementById('execMarker');
-  if (!marker) {
-    marker = document.createElement('div');
-    marker.id = 'execMarker';
-    marker.className = 'exec-marker';
-    hl.appendChild(marker);
-  }
-  if (currentExecLine < 1) { marker.style.display = 'none'; return; }
-  marker.style.display = 'block';
-  // +12 accounts for the 12px padding on the highlight-layer
-  marker.style.top = (12 + (currentExecLine - 1) * 20) + 'px';
-}
+    fact: `# Factorial Calculation
+# Calculate factorial(5) = 120
+.text
+main:
+    addi  x1, x0, 5      # x1 = n = 5
+    addi  x2, x0, 1      # x2 = result = 1
+    addi  x3, x0, 1      # x3 = counter = 1
+    
+loop:
+    bgt   x3, x1, done   # if counter > n, done
+    mul   x2, x2, x3     # result *= counter
+    addi  x3, x3, 1      # counter++
+    j     loop
+    
+done:
+    li    x28, 0x20000   # data segment base
+    sw    x2, 0(x28)     # store result to data[0]
+    j     done
+`,
 
-function toggleBreakpoint(line) {
-  if (breakpoints.has(line)) breakpoints.delete(line);
-  else breakpoints.add(line);
-  updateLineNumbers();
+    loop: `# Loop with Memory Access
+# Sum array elements
+.text
+main:
+    # Initialize array in memory
+    addi  x1, x0, 10     # x1 = 10
+    addi  x2, x0, 20     # x2 = 20
+    addi  x3, x0, 30     # x3 = 30
+    addi  x4, x0, 40     # x4 = 40
+    addi  x5, x0, 50     # x5 = 50
+    
+    li    x28, 0x20000   # data segment base
+    sw    x1, 0(x28)     # array[0]
+    sw    x2, 4(x28)     # array[1]
+    sw    x3, 8(x28)     # array[2]
+    sw    x4, 12(x28)    # array[3]
+    sw    x5, 16(x28)    # array[4]
+    
+    # Sum them
+    addi  x6, x0, 0      # sum = 0
+    addi  x7, x0, 5      # count = 5
+    addi  x8, x0, 0      # index = 0
+    
+sum_loop:
+    beq   x8, x7, finish # if index == count, done
+    add   x30, x28, x8   # address of array[index]
+    lw    x9, 0(x30)     # load array[index]
+    add   x6, x6, x9     # sum += value
+    addi  x8, x8, 4      # index += 4
+    j     sum_loop
+    
+finish:
+    sw    x6, 20(x28)    # store sum at data[20]
+    j     finish
+`,
+
+    io: `# I/O Demo with M Multiplication
+# Read from MMIO and multiply
+.text
+main:
+    addi  x1, x0, 7      # x1 = 7
+    addi  x2, x0, 8      # x2 = 8
+    
+    mul   x3, x1, x2     # x3 = 7 * 8 = 56
+    div   x4, x3, x2     # x4 = 56 / 8 = 7
+    rem   x5, x3, x1     # x5 = 56 % 7 = 0
+    
+    li    x28, 0x20000   # data segment base
+    sw    x3, 0(x28)     # Store results
+    sw    x4, 4(x28)
+    sw    x5, 8(x28)
+    
+    # Test with compressed-style simple loop
+    addi  x6, x0, 10     # counter = 10
+count_loop:
+    addi  x6, x6, -1     # counter--
+    bne   x6, x0, count_loop
+    
+    sw    x6, 12(x28)    # counter should be 0
+    
+    # Floating point demo
+    li    x10, 0x40A0      # 5.0 in IEEE 754 single precision
+    li    x11, 0x4120      # 10.0
+    # Store and load as floats (simulated)
+    sw    x10, 0x100(x28)
+    sw    x11, 0x104(x28)
+    
+    j     end
+end:
+    j     end
+`
+  };
+  
+  editor.value = examples[name] || examples.basic;
   updateEditor();
+  clearLog();
+  setStatus('Example loaded: ' + name);
 }
 
-function editorCursorLine() {
-  return editor.value.substring(0, editor.selectionStart || 0).split('\n').length;
-}
+// ============================================================
+// 7. MAIN CONTROL
+// ============================================================
 
-function prepareAssembly() {
+function runProgram() {
+  if (running) return;
+  clearLog();
+  resetState();
+  assembled = false;
+
   const source = editor.value;
   if (!source.trim()) {
     log('No assembly code to assemble.', 'error');
     setStatus('Error: No code', 'error');
-    return null;
+    return;
   }
+
+  let mc;
   try {
     log('Assembling...', 'info');
-    const mc = assemble(source, baseAddress);
+    mc = assemble(source);
     machineCode = mc;
+
     let hasError = false;
     for (const item of mc) {
       if (item.error) {
@@ -2177,144 +2155,177 @@ function prepareAssembly() {
         hasError = true;
       }
     }
+
     if (hasError) {
-      setStatus('Assembly failed — see errors below', 'error');
+      setStatus('Assembly failed', 'error');
       updateMachineCode();
-      return null;
+      return;
     }
-    return mc;
+
+    loadProgram(mc);
+    updateMachineCode();
+    assembled = true;
+    syncBreakpoints();
   } catch (e) {
     log(`Assembly error: ${e.message}`, 'error');
     setStatus('Error: ' + e.message, 'error');
-    return null;
+    return;
   }
+
+  log(`Assembly successful. ${mc.length} instructions.`, 'success');
+  runLoop();
 }
 
-function executeOne() {
-  // Execute the instruction at PC, updating stats. Returns the source line executed.
-  const addr = pc;
-  const instr32 = fetchInstruction(addr);
-  const line = sourceLineForPc(addr);
-  if (instr32 === 0) { pc += 4; return line; }
-  totalCycles += instrCycles(instr32);
-  instructionCount++;
-  pc = decodeAndExecute(instr32, addr);
-  lastChangedReg = lastExecutedRd;
-  return line;
-}
-
-function assembleAndRun() {
-  clearLog();
-  const mc = prepareAssembly();
-  if (!mc) return;
-  const nInstr = mc.filter(i => !i.error).length;
-  log(`Assembly successful. ${nInstr} instructions.`, 'success');
-  loadProgram(mc);
-  updateMachineCode();
-  updateStats();
-
+async function runLoop() {
   running = true;
-  let count = 0;
-  const maxCycles = 100000;
-  while (running && count < maxCycles) {
-    const execAddr = pc;
-    const line = sourceLineForPc(execAddr);
-    if (line >= 1) currentExecLine = line;
+  setStatus('Running...');
+  document.getElementById('runBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = '';
+
+  const MAX_RC = 100000;
+  let guard = 0;
+  let executedAny = false;
+  let stopReason = null;
+
+  while (running) {
+    const instr32 = fetchInstruction(pc);
+    if (instr32 === 0) {
+      pc += 4;
+      totalCycles += cycleConfig.alu;
+      guard++;
+      if (pc >= memory.length) { stopReason = 'end'; break; }
+      if (executedAny && breakpointAddrs.has(pc)) { stopReason = 'breakpoint'; break; }
+      if (guard >= MAX_RC) { stopReason = 'max'; break; }
+      continue;
+    }
+
     try {
-      executeOne();
+      pc = decodeAndExecute(instr32, pc);
     } catch (e) {
-      log(`Error executing at PC 0x${execAddr.toString(16)}: ${e.message}`, 'error');
+      log(`Error at PC 0x${pc.toString(16)}: ${e.message}`, 'error');
+      stopReason = 'error';
       break;
     }
-    count++;
-    if (line >= 1 && breakpoints.has(line)) {
-      log(`Breakpoint hit at line ${line}`, 'warn');
-      running = false;
-      break;
-    }
-    if (!running) break;                       // e.g. ecall exit
-    if (pc < baseAddress || pc >= memory.length) {
+
+    totalCycles += lastInstrCycles;
+    guard++;
+    lastChangedReg = lastExecutedRd;
+    executedAny = true;
+
+    if (pc < 0x10000 || pc >= memory.length) {
       log(`PC out of bounds: 0x${pc.toString(16)}`, 'error');
+      stopReason = 'bounds';
       break;
     }
+    if (breakpointAddrs.has(pc)) {
+      log(`Breakpoint hit at 0x${pc.toString(16)}`, 'warn');
+      stopReason = 'breakpoint';
+      break;
+    }
+    if (guard >= MAX_RC) { stopReason = 'max'; break; }
+
+    // Yield to keep the UI responsive and the cycle badge live
+    if (guard % 1500 === 0) {
+      updateCycleBadge();
+      updateRegisters();
+      updateMemoryView();
+      updateLineNumbers();
+      await new Promise(r => setTimeout(r, 0));
+      if (!running) break;
+    }
   }
+
   running = false;
-  assembled = true;
-  if (count >= maxCycles) {
-    log('Max cycles reached (possible infinite loop).', 'warn');
-    setStatus('Stopped (max cycles)', 'warn');
-  } else {
-    log(`Program completed after ${totalCycles} cycles, ${instructionCount} instructions.`, 'success');
-    setStatus('Program finished', 'success');
-  }
+  document.getElementById('runBtn').style.display = '';
+  document.getElementById('stopBtn').style.display = 'none';
+
+  updateCycleBadge();
   updateRegisters();
   updateMemoryView();
-  updateStats();
-  highlightCurrentLine();
+  updateLineNumbers();
+
+  if (stopReason === 'breakpoint') {
+    setStatus(`Paused at breakpoint — ${totalCycles} cycles`, 'warn');
+  } else if (stopReason === 'max') {
+    log('Max instructions reached. Program may have an infinite loop.', 'warn');
+    setStatus('Stopped (max instructions)', 'warn');
+  } else if (stopReason === 'error' || stopReason === 'bounds') {
+    setStatus('Stopped (error)', 'error');
+  } else {
+    log(`Program completed in ${totalCycles} cycles.`, 'success');
+    setStatus(`Finished — ${totalCycles} cycles`, 'success');
+  }
+}
+
+function stopProgram() {
+  running = false;
+  setStatus('Stopping...');
 }
 
 function stepOnce() {
   if (!assembled) {
     clearLog();
-    const mc = prepareAssembly();
-    if (!mc) return;
-    loadProgram(mc);
-    updateMachineCode();
-    assembled = true;
-    log('Assembly loaded. Stepping...', 'info');
+    resetState();
+    
+    const source = editor.value;
+    if (!source.trim()) {
+      log('No code to step.', 'error');
+      return;
+    }
+    
+    try {
+      const mc = assemble(source);
+      machineCode = mc;
+      let hasError = false;
+      for (const item of mc) {
+        if (item.error) {
+          log(`Line ${item.line}: ${item.error}`, 'error');
+          hasError = true;
+        }
+      }
+      if (hasError) {
+        setStatus('Assembly failed', 'error');
+        updateMachineCode();
+        return;
+      }
+      loadProgram(mc);
+      syncBreakpoints();
+      updateMachineCode();
+      assembled = true;
+      log('Assembly loaded. Stepping...', 'info');
+    } catch (e) {
+      log(`Assembly error: ${e.message}`, 'error');
+      return;
+    }
   }
-
-  journalEnabled = true;
-  stepWriteLog = [];
-  const preRegs = Int32Array.from(regs);
-  const preFregs = Float32Array.from(fregs);
-  const preDregs = Float64Array.from(dregs);
-  const prePc = pc;
-  const cycBefore = totalCycles;
-  let line;
+  
+  const instr32 = fetchInstruction(pc);
+  if (instr32 === 0) {
+    log(`PC 0x${pc.toString(16)}: NOP (skipping)`, 'info');
+    pc += 4;
+    totalCycles += cycleConfig.alu;
+    updateCycleBadge();
+    updateLineNumbers();
+    updateRegisters();
+    updateMemoryView();
+    setStatus(`Step: PC = 0x${pc.toString(16)} (${totalCycles} cycles)`);
+    return;
+  }
+  
   try {
-    line = executeOne();
+    const oldPc = pc;
+    pc = decodeAndExecute(instr32, pc);
+    lastChangedReg = lastExecutedRd;
+    totalCycles += lastInstrCycles;
+    updateCycleBadge();
+    log(`0x${oldPc.toString(16)}: executed (next: 0x${pc.toString(16)}, +${lastInstrCycles}c)`, 'info');
+    updateLineNumbers();
+    updateRegisters();
+    updateMemoryView();
+    setStatus(`Step: PC = 0x${pc.toString(16)} (${totalCycles} cycles)`);
   } catch (e) {
-    log(`Error at PC 0x${prePc.toString(16)}: ${e.message}`, 'error');
-    journalEnabled = false;
-    updateRegisters(); updateMemoryView(); updateStats();
-    return;
+    log(`Error at PC 0x${pc.toString(16)}: ${e.message}`, 'error');
   }
-  journalEnabled = false;
-  currentExecLine = line;
-  execHistory.push({
-    pc: prePc, regs: preRegs, fregs: preFregs, dregs: preDregs,
-    writes: stepWriteLog.slice(), cycles: totalCycles - cycBefore, instr: 1, line: line
-  });
-  if (execHistory.length > historyCap) execHistory.shift();
-  highlightCurrentLine();
-  updateRegisters(); updateMemoryView(); updateStats();
-  setStatus(`Step ${instructionCount}: PC = 0x${pc.toString(16)}`);
-  log(`0x${prePc.toString(16)}: executed (next: 0x${pc.toString(16)})`, 'info');
-}
-
-function stepBack() {
-  if (execHistory.length === 0) {
-    log('Nothing to step back to.', 'warn');
-    return;
-  }
-  const st = execHistory.pop();
-  for (let i = st.writes.length - 1; i >= 0; i--) {
-    const w = st.writes[i];
-    memory[w.addr] = w.old;
-  }
-  regs.set(st.regs);
-  fregs.set(st.fregs);
-  dregs.set(st.dregs);
-  pc = st.pc;
-  currentExecLine = st.line;
-  totalCycles = Math.max(0, totalCycles - st.cycles);
-  instructionCount = Math.max(0, instructionCount - st.instr);
-  lastChangedReg = -1;
-  highlightCurrentLine();
-  updateRegisters(); updateMemoryView(); updateStats();
-  setStatus(`Back step: PC = 0x${pc.toString(16)}`);
-  log(`Back to 0x${st.pc.toString(16)}`, 'info');
 }
 
 function resetAll() {
@@ -2326,14 +2337,12 @@ function resetAll() {
 
 function resetState() {
   initializeState();
-  execHistory = [];
-  stepWriteLog = [];
   updateRegisters();
   updateMemoryView();
   machineCode = [];
   updateMachineCode();
-  updateStats();
-  hideExecMarker();
+  updateLineNumbers();
+  updateCycleBadge();
 }
 
 // ============================================================
@@ -2365,76 +2374,115 @@ function loadFile(event) {
 
 // Default example
 editor.value = `# RISC-V RV32GC Simulator
-# Write your code here and click "Assemble & Run" (F5).
-# Use Tab to indent — it aligns to the natural tab stops.
+# Write your code here and click "Assemble & Run"
 
 .text
 main:
-\taddi\tx1, x0, 42\t# x1 = 42
-\taddi\tx2, x0, 58\t# x2 = 58
-\tadd\tx3, x1, x2\t# x3 = 100
-\tsw\tx3, 0(x0)\t# Store to memory
-
-\t# Multiplication
-\taddi\tx4, x0, 7
-\taddi\tx5, x0, 8
-\tmul\tx6, x4, x5\t# x6 = 56
-
-\t# Division
-\tdiv\tx7, x6, x4\t# x7 = 8
-
-\t# Loop
-\taddi\tx8, x0, 5\t# counter = 5
+    # Simple addition
+    addi  x1, x0, 42     # x1 = 42
+    addi  x2, x0, 58     # x2 = 58
+    add   x3, x1, x2     # x3 = 100
+    li    x28, 0x20000   # data segment base
+    sw    x3, 0(x28)     # data[0] = x3
+    
+    # Multiplication
+    addi  x4, x0, 7      
+    addi  x5, x0, 8      
+    mul   x6, x4, x5     # x6 = 56
+    
+    # Division
+    div   x7, x6, x4     # x7 = 8
+    
+    # Loop
+    addi  x8, x0, 5      # counter = 5
 loop:
-\taddi\tx8, x8, -1\t# counter--
-\tbne\tx8, x0, loop\t# if counter != 0, loop
-
-\t# Branching demo
-\taddi\tx9, x0, 100
-\taddi\tx10, x0, 100
-\tbeq\tx9, x10, equal\t# branch if equal
-\taddi\tx11, x0, 0\t# skipped
-\tj\tdone
-
+    addi  x8, x8, -1     # counter--
+    bne   x8, x0, loop   # if counter != 0, loop
+    
+    # Branching demo
+    addi  x9, x0, 100
+    addi  x10, x0, 100
+    beq   x9, x10, equal # branch if equal
+    addi  x11, x0, 0     # skipped
+    j     done
+    
 equal:
-\taddi\tx11, x0, 1\t# x11 = 1 (equal flag)
+    addi  x11, x0, 1     # x11 = 1 (equal flag)
+    
 done:
-\tsw\tx11, 4(x0)\t# Store result
-\tj\tdone\t# Infinite loop to prevent crash
+    li    x28, 0x20000   # data segment base
+    sw    x11, 4(x28)    # data[1] = x11
+    j     done           # Infinite loop to prevent crash
 `;
 
 updateEditor();
 updateRegisters();
 updateMemoryView();
-updateStats();
-setStatus('Ready. Assemble & Run (F5) or Step (F8). Click a line number to set a breakpoint.');
+setStatus('Ready. Assemble & Run or Step through code.');
 log('RISC-V RV32GC Simulator loaded', 'success');
 log('Supports: RV32I, M, F, D, A extensions', 'info');
-log('F5 Run · F8 Step · Shift+F8 Back · F9 Breakpoint · Tab to indent', 'info');
-  </script>
-  <script>
-  // --- Keyboard shortcuts & Tab handling for the editor ---
-  document.addEventListener('keydown', (e) => {
-    if (e.target && e.target.id === 'asmEditor') {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        insertTab();
-        return;
-      }
-    }
-    if (e.key === 'F5') { e.preventDefault(); assembleAndRun(); }
-    else if (e.key === 'F8' && e.shiftKey) { e.preventDefault(); stepBack(); }
-    else if (e.key === 'F8') { e.preventDefault(); stepOnce(); }
-    else if (e.key === 'F9') { e.preventDefault(); toggleBreakpoint(editorCursorLine()); }
-    else if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); assembleAndRun(); }
-  });
+log('Click line numbers to set breakpoints; Run stops at them.', 'info');
+log('Configure instruction cycle costs under "⏱ Cycles…".', 'info');
 
-  function insertTab() {
-    const start = editor.selectionStart, end = editor.selectionEnd;
-    editor.value = editor.value.substring(0, start) + '\t' + editor.value.substring(end);
-    editor.selectionStart = editor.selectionEnd = start + 1;
-    updateEditor();
+// Wire up breakpoint toggling on the line-number gutter
+lineNumbers.addEventListener('click', function(e) {
+  const row = e.target.closest('.ln');
+  if (!row) return;
+  toggleBreakpoint(parseInt(row.getAttribute('data-line'), 10));
+});
+
+// Tab key handling in the assembly editor: insert / remove indentation instead
+// of letting the browser move focus out of the textarea.
+function handleEditorKeydown(e) {
+  if (e.key !== 'Tab') return;
+  e.preventDefault();
+
+  const el = editor;
+  const { value } = el;
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
+  const indent = '\t';
+
+  const lineStartOf = ch => value.lastIndexOf('\n', ch - 1) + 1;
+  const lineEndOf = ch => {
+    const nl = value.indexOf('\n', ch);
+    return nl === -1 ? value.length : nl;
+  };
+
+  if (e.shiftKey) {
+    // Dedent every selected line by one indentation level.
+    const blockStart = lineStartOf(start);
+    const blockEnd = lineEndOf(end);
+    const newBlock = value.slice(blockStart, blockEnd).split('\n').map(l => {
+      if (l.startsWith('\t')) return l.slice(1);
+      if (l.startsWith('    ')) return l.slice(4);
+      if (l.startsWith(' ')) return l.slice(1);
+      return l;
+    }).join('\n');
+    el.value = value.slice(0, blockStart) + newBlock + value.slice(blockEnd);
+    el.setSelectionRange(blockStart, blockStart + newBlock.length);
+  } else if (start === end) {
+    // Single caret: just insert one indentation level.
+    el.value = value.slice(0, start) + indent + value.slice(end);
+    el.setSelectionRange(start + indent.length, start + indent.length);
+  } else {
+    // Multi-line (or in-line span) selection: indent every selected line.
+    const blockStart = lineStartOf(start);
+    const blockEnd = lineEndOf(end);
+    const newBlock = value.slice(blockStart, blockEnd).split('\n').map(l => indent + l).join('\n');
+    el.value = value.slice(0, blockStart) + newBlock + value.slice(blockEnd);
+    el.setSelectionRange(blockStart, blockStart + newBlock.length);
   }
-  </script>
-  </body>
+
+  updateEditor();
+  syncScroll();
+}
+
+editor.addEventListener('keydown', handleEditorKeydown);
+
+buildCyclesPanel();
+updateCycleBadge();
+</script>
+</body>
 </html>
+
