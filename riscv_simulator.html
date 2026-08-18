@@ -236,8 +236,9 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
     <button onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
     <button onclick="resetAll()">⟲ Reset</button>
     <button onclick="toggleCyclesPanel()" title="Configure cycles per instruction type" class="gear">⏱ Cycles…</button>
+    <button onclick="toggleMemSegmentsPanel()" title="Configure memory segment addresses" class="gear">🗺 Segments…</button>
+    <button onclick="downloadMemFile()" title="Dump code &amp; data memories to a Verilog .mem file">💾 Dump .mem</button>
     <span class="sep"></span>
-    <label>Start addr: <input type="text" id="baseAddr" value="0x10000" size="8" onchange="applyBaseAddress()"></label>
     <label>Example:
       <select id="exampleSelect" onchange="loadExample(this.value)">
         <option value="basic">Basic</option>
@@ -262,6 +263,21 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
     <div class="c-foot">
       <button onclick="resetCyclesConfig()">Reset Defaults</button>
       <button class="primary" onclick="closeCyclesPanel()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Memory segments configuration overlay -->
+<div class="cycles-overlay" id="memSegmentsOverlay" onclick="if(event.target===this)closeMemSegmentsPanel()">
+  <div class="cycles-panel">
+    <div class="c-head">
+      <span>🗺 Memory Segments <span style="font-size:12px;color:#a6adc8;font-weight:400;margin-left:6px;">base address of each region</span></span>
+      <button onclick="closeMemSegmentsPanel()" title="Close">&times;</button>
+    </div>
+    <div class="c-body" id="memSegmentsConfigBody"></div>
+    <div class="c-foot">
+      <button onclick="resetMemSegments()">Reset Defaults</button>
+      <button class="primary" onclick="applyMemSegments()">Apply</button>
     </div>
   </div>
 </div>
@@ -526,10 +542,13 @@ let fregs = new Float32Array(32);
 let dregs = new Float64Array(32);
 let memory = new Uint8Array(4 * 1024 * 1024); // 4 MB memory
 let pc = 0x10000;
-// Configurable starting memory address (start of .text). .data is placed at base + DATA_OFFSET.
-let baseAddress = 0x10000;
+// Configurable memory segment addresses.
 const DEFAULT_BASE = 0x10000;
-const DATA_OFFSET = 0x10000;
+const DEFAULT_DATA_OFFSET = 0x10000;
+let baseAddress = DEFAULT_BASE;                    // .text base
+let dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET; // .data base
+let stackBase = 0x7ffffc;                          // stack top
+let mmioBase = 0x10000000;                         // MMIO base
 let machineCode = []; // array of {address, bytes, instruction, line}
 let labels = {};
 let symbolTable = {};
@@ -560,11 +579,11 @@ let stepWriteLog = [];
 let journalEnabled = false;
 
 
-// Memory-mapped I/O: For simulation, we use memory range 0x10000000-0x1000000F
-const MMIO_BASE = 0x10000000;
-const MMIO_GETC = 0x10000000; // read: get character from buffer
-const MMIO_PUTC = 0x10000004; // write: put character
-const MMIO_STATUS = 0x10000008; // read: bit0=1 if char available
+// Memory-mapped I/O: For simulation, we use a 16-byte window at mmioBase.
+let MMIO_BASE = mmioBase;
+let MMIO_GETC = mmioBase;       // read: get character from buffer
+let MMIO_PUTC = mmioBase + 4;   // write: put character
+let MMIO_STATUS = mmioBase + 8; // read: bit0=1 if char available
 let ioInputBuffer = '';
 let ioOutputBuffer = '';
 
@@ -678,6 +697,21 @@ function signedHex(n) {
   return sign + '0x' + Math.abs(v).toString(16);
 }
 
+// GNU as directives that need no code generation in this simulator.
+const DIRECTIVE_NOOP = new Set([
+  '.globl', '.global', '.type', '.size', '.option', '.macro', '.endm', '.end',
+  '.file', '.ident', '.comm', '.lcomm', '.pushsection', '.popsection',
+  '.altmacro', '.noaltmacro', '.weak', '.local', '.extern', '.hidden', '.protected'
+]);
+
+// Map a section name (possibly quoted / dot-prefixed) to 'text' or 'data'.
+function setSection(name) {
+  const n = String(name || '').replace(/["']/g, '').replace(/^\./, '').toLowerCase();
+  if (n === 'text') return 'text';
+  if (n === 'data' || n === 'bss' || n === 'rodata' || n === 'sdata' || n === 'sbss') return 'data';
+  return null;
+}
+
 
 function assemble(source, startAddr) {
   const base = (startAddr !== undefined) ? startAddr : baseAddress;
@@ -695,18 +729,18 @@ function assemble(source, startAddr) {
     return toks.slice(1).join(' ').split(',').map(t => t.trim()).filter(t => t);
   };
 
-  // ---- Pre-pass: collect .equ constants (earlier constants usable in later ones) ----
+  // ---- Pre-pass: collect .equ/.eqv/.set constants (earlier ones usable in later ones) ----
   for (let i = 0; i < lines.length; i++) {
     const { main } = splitLine(lines[i]);
-    const m = main.match(/^\.equ\s+(\w+)\s*,\s*(.+)$/i);
+    const m = main.match(/^\.(equ|eqv|set)\s+(\w+)\s*,?\s*(.+)$/i);
     if (m) {
-      const val = parseImm(m[2].trim());
-      if (!isNaN(val)) symbolTable[m[1]] = val;
+      const val = parseImm(m[3].trim());
+      if (!isNaN(val)) symbolTable[m[2]] = val;
     }
   }
 
   // ---- Phase 1: assign addresses & collect labels ----
-  let textAddr = base, dataAddr = base + DATA_OFFSET, section = 'text';
+  let textAddr = base, dataAddr = dataBase, section = 'text';
   const getAddr = () => section === 'text' ? textAddr : dataAddr;
   const setAddr = (a) => { if (section === 'text') textAddr = a; else dataAddr = a; };
   const bump = (n) => setAddr(getAddr() + n);
@@ -717,16 +751,24 @@ function assemble(source, startAddr) {
     switch (mn) {
       case '.text': section = 'text'; break;
       case '.data': section = 'data'; break;
-      case '.equ': break; // constants already collected in the pre-pass
+      case '.section': case '.rodata': case '.bss': {
+        const s = setSection(toks[1] || mn);
+        if (s) section = s;
+        break;
+      }
+      case '.equ': case '.eqv': case '.set': break; // constants already collected in the pre-pass
       case '.align': { const al = parseInt(toks[1], 10) || 0; if (al > 0) setAddr((getAddr() + ((1 << al) - 1)) & ~((1 << al) - 1)); break; }
+      case '.balign': { const b = parseInt(toks[1], 10) || 0; if (b > 0) setAddr((getAddr() + (b - 1)) & ~(b - 1)); break; }
+      case '.p2align': { const p = parseInt(toks[1], 10) || 0; if (p > 0) setAddr((getAddr() + ((1 << p) - 1)) & ~((1 << p) - 1)); break; }
+      case '.org': { const o = parseImm(toks.slice(1).join(' ')); if (!isNaN(o)) setAddr(o); break; }
       case '.word': case '.half': case '.byte': {
         const vals = toks.slice(1).join('').split(',').filter(Boolean);
         bump((mn === '.byte' ? 1 : mn === '.half' ? 2 : 4) * vals.length);
         break;
       }
       case '.dword': { const vals = toks.slice(1).join('').split(',').filter(Boolean); bump(8 * vals.length); break; }
-      case '.space': bump(parseInt(toks[1], 10) || 0); break;
-      case '.asciiz': case '.asciz': bump(parseStringLiteral(main.slice(main.indexOf(' ')).trim()).length + 1); break;
+      case '.space': case '.zero': bump(parseInt(toks[1], 10) || 0); break;
+      case '.asciiz': case '.asciz': case '.string': bump(parseStringLiteral(main.slice(main.indexOf(' ')).trim()).length + 1); break;
       case '.ascii': bump(parseStringLiteral(main.slice(main.indexOf(' ')).trim()).length); break;
       default:
         if (INSTRUCTIONS[mn] || PSEUDO_INSTRUCTIONS[mn]) bump((instructionSlots(mn, parseArgs(main)) || 1) * 4);
@@ -748,7 +790,7 @@ function assemble(source, startAddr) {
   }
 
   // ---- Phase 2: emit encoded bytes ----
-  textAddr = base; dataAddr = base + DATA_OFFSET; section = 'text';
+  textAddr = base; dataAddr = dataBase; section = 'text';
 
   const push = (item) => { output.push(item); };
   const pushInstr = (mnMnemonic, args, address, lineNo, asmText, isPseudo = false) => {
@@ -818,12 +860,43 @@ function assemble(source, startAddr) {
         switch (mn) {
           case '.text': section = 'text'; break;
           case '.data': section = 'data'; break;
-          case '.equ': break; // constant, resolved at pre-pass time
+          case '.section': case '.rodata': case '.bss': {
+            const s = setSection(toks[1] || mn);
+            if (s) section = s;
+            break;
+          }
+          case '.equ': case '.eqv': case '.set': break; // constant, resolved at pre-pass time
           case '.align': {
             const al = parseInt(toks[1], 10) || 0;
             if (al > 0) {
               const na = (getAddr() + ((1 << al) - 1)) & ~((1 << al) - 1);
               const pad = na - getAddr();
+              if (pad > 0) { push({ address: getAddr(), bytes: new Array(pad).fill(0), text: asmText, line: lineNo, asmLine: main }); bump(pad); }
+            }
+            break;
+          }
+          case '.balign': {
+            const b = parseInt(toks[1], 10) || 0;
+            if (b > 0) {
+              const na = (getAddr() + (b - 1)) & ~(b - 1);
+              const pad = na - getAddr();
+              if (pad > 0) { push({ address: getAddr(), bytes: new Array(pad).fill(0), text: asmText, line: lineNo, asmLine: main }); bump(pad); }
+            }
+            break;
+          }
+          case '.p2align': {
+            const p = parseInt(toks[1], 10) || 0;
+            if (p > 0) {
+              const na = (getAddr() + ((1 << p) - 1)) & ~((1 << p) - 1);
+              const pad = na - getAddr();
+              if (pad > 0) { push({ address: getAddr(), bytes: new Array(pad).fill(0), text: asmText, line: lineNo, asmLine: main }); bump(pad); }
+            }
+            break;
+          }
+          case '.org': {
+            const o = parseImm(toks.slice(1).join(' '));
+            if (!isNaN(o) && o >= getAddr()) {
+              const pad = o - getAddr();
               if (pad > 0) { push({ address: getAddr(), bytes: new Array(pad).fill(0), text: asmText, line: lineNo, asmLine: main }); bump(pad); }
             }
             break;
@@ -851,12 +924,12 @@ function assemble(source, startAddr) {
             push({ address: getAddr(), bytes: bytesArr, text: asmText, line: lineNo, asmLine: main }); bump(bytesArr.length);
             break;
           }
-          case '.space': {
+          case '.space': case '.zero': {
             const n = parseInt(toks[1], 10) || 0;
             if (n > 0) { push({ address: getAddr(), bytes: new Array(n).fill(0), text: asmText, line: lineNo, asmLine: main }); bump(n); }
             break;
           }
-          case '.asciiz': case '.asciz': case '.ascii': {
+          case '.asciiz': case '.asciz': case '.string': case '.ascii': {
             const s = main.slice(main.indexOf(' ')).trim();
             const strVal = parseStringLiteral(s);
             const bytes = [];
@@ -866,6 +939,7 @@ function assemble(source, startAddr) {
             break;
           }
           default: {
+            if (DIRECTIVE_NOOP.has(mn)) break;
             push({ address: getAddr(), bytes: null, text: asmText, line: lineNo, error: `Unknown mnemonic or directive '${mn}'`, asmLine: main });
             bump(4);
           }
@@ -1190,7 +1264,7 @@ function initializeState() {
   totalCycles = 0;
   instructionCount = 0;
   currentExecLine = -1;
-  regs[2] = 0x7FFFFC;
+  regs[2] = stackBase;
 }
 
 function loadProgram(mc) {
@@ -2007,10 +2081,10 @@ function getSelectedTextLength() {
 
 function memGo(region) {
   const el = document.getElementById('memAddr');
-  if (region === 'code') el.value = '0x10000';
-  else if (region === 'data') el.value = '0x20000';
-  else if (region === 'stack') el.value = '0x7ffffc';
-  else if (region === 'mmio') el.value = '0x10000000';
+  if (region === 'code') el.value = '0x' + baseAddress.toString(16);
+  else if (region === 'data') el.value = '0x' + dataBase.toString(16);
+  else if (region === 'stack') el.value = '0x' + stackBase.toString(16);
+  else if (region === 'mmio') el.value = '0x' + mmioBase.toString(16);
   updateMemoryView();
 }
 
@@ -2299,14 +2373,76 @@ function getCyclesFromPanel() {
   }
 }
 
-function applyBaseAddress() {
-  const el = document.getElementById('baseAddr');
-  let v = parseInt(el.value, 16);
-  if (isNaN(v) || v < 0) { v = DEFAULT_BASE; el.value = '0x' + DEFAULT_BASE.toString(16); }
-  baseAddress = v & ~3;
+// Memory-segment configuration popup (mirrors the cycles popup).
+function buildMemSegmentsPanel() {
+  const body = document.getElementById('memSegmentsConfigBody');
+  const defs = [
+    ['code', 'Code (.text) base', baseAddress],
+    ['data', 'Data (.data) base', dataBase],
+    ['stack', 'Stack top', stackBase],
+    ['mmio', 'MMIO base', mmioBase]
+  ];
+  let html = '<div class="cycle-hint">Base address of each region (hex). Apply reloads the program at the new layout.</div>';
+  for (const [key, label, value] of defs) {
+    html += '<div class="cycle-field"><label for="ms-' + key + '">' + label + '</label>' +
+            '<input id="ms-' + key + '" type="text" value="0x' + value.toString(16) + '"></div>';
+  }
+  body.innerHTML = html;
+}
+
+function toggleMemSegmentsPanel() {
+  const ov = document.getElementById('memSegmentsOverlay');
+  if (ov.style.display === 'none' || !ov.classList.contains('open')) {
+    buildMemSegmentsPanel();
+    ov.classList.add('open');
+  } else {
+    closeMemSegmentsPanel();
+  }
+}
+
+function closeMemSegmentsPanel() {
+  const ov = document.getElementById('memSegmentsOverlay');
+  ov.classList.remove('open');
+  ov.style.display = 'none';
+}
+
+function parseHexAddr(str, fallback) {
+  let v = parseInt(String(str).trim(), 16);
+  if (isNaN(v) || v < 0) v = fallback;
+  return v & ~3; // word align
+}
+
+function applyMemSegments() {
+  const g = (id) => document.getElementById(id).value;
+  baseAddress = parseHexAddr(g('ms-code'), baseAddress);
+  dataBase = parseHexAddr(g('ms-data'), dataBase);
+  stackBase = parseHexAddr(g('ms-stack'), stackBase);
+  mmioBase = parseHexAddr(g('ms-mmio'), mmioBase);
+  MMIO_BASE = mmioBase;
+  MMIO_GETC = mmioBase;
+  MMIO_PUTC = mmioBase + 4;
+  MMIO_STATUS = mmioBase + 8;
   document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
+  closeMemSegmentsPanel();
+  reloadAfterLayoutChange();
+  setStatus('Memory segments updated', 'success');
+}
+
+function resetMemSegments() {
+  baseAddress = DEFAULT_BASE;
+  dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET;
+  stackBase = 0x7ffffc;
+  mmioBase = 0x10000000;
+  MMIO_BASE = mmioBase; MMIO_GETC = mmioBase; MMIO_PUTC = mmioBase + 4; MMIO_STATUS = mmioBase + 8;
+  document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
+  buildMemSegmentsPanel();
+  setStatus('Segment defaults restored', 'success');
+}
+
+// Reset execution state, then re-assemble and load the program so the memory
+// view reflects the current segment addresses. Shared by the segments popup.
+function reloadAfterLayoutChange() {
   resetAll();
-  // Reload the program into memory so the memory window reflects the new start address.
   if (editor.value.trim()) {
     try {
       const mc = assemble(editor.value, baseAddress);
@@ -2320,7 +2456,43 @@ function applyBaseAddress() {
       assembled = true;
     } catch (e) {}
   }
-  setStatus('Start address set to 0x' + baseAddress.toString(16), 'success');
+}
+
+// Build a Verilog $readmemh-format dump of the code and data memories.
+function buildMemFile() {
+  const items = machineCode.filter(i => !i.error && i.bytes).sort((a, b) => a.address - b.address);
+  const text = items.filter(i => i.address < dataBase);
+  const data = items.filter(i => i.address >= dataBase);
+  const lines = [];
+  const emitRange = (start, list) => {
+    if (!list.length) return;
+    lines.push('@' + start.toString(16).padStart(8, '0').toUpperCase());
+    for (const it of list) {
+      const b = it.bytes;
+      for (let i = 0; i < b.length; i += 4) {
+        const w = (b[i] || 0) | ((b[i + 1] || 0) << 8) | ((b[i + 2] || 0) << 16) | ((b[i + 3] || 0) << 24);
+        lines.push((w >>> 0).toString(16).padStart(8, '0').toUpperCase());
+      }
+    }
+  };
+  emitRange(baseAddress, text);
+  emitRange(dataBase, data);
+  return lines.length ? lines.join('\n') + '\n' : '';
+}
+
+function downloadMemFile() {
+  const text = buildMemFile();
+  if (!text.trim()) { setStatus('No program loaded to dump', 'error'); return; }
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'memory.mem';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setStatus('Dumped memory.mem', 'success');
 }
 
 function sourceLineForPc(addr) {
