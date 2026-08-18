@@ -1,7 +1,7 @@
 # RISC-V Simulator — Specification Document
 
 ## Project Overview
-A single-file web application (`riscv_simulator.html`) implementing a **RISC-V RV32GC Assembler + Simulator** with an interactive code editor, disassembly view, execution control, and Verilog-compatible memory dump export.
+A single-file web application (`riscv_simulator.html`) implementing a **RISC-V RV32GC Assembler + Simulator** with an interactive code editor, disassembly view, execution control, and interactive debugging features.
 
 ---
 
@@ -11,15 +11,15 @@ A single-file web application (`riscv_simulator.html`) implementing a **RISC-V R
 - **Platform**: Single HTML file (self-contained web app)
 - **Language**: HTML + CSS + JavaScript (vanilla, no frameworks)
 - **Architecture**: RV32GC (RISC-V 32-bit with Compressed instructions)
-- **Output Format**: Verilog `$readmemh`-compatible `.mem` files
 
 ### Core Components
-1. **Code Editor**: Syntax-aware textarea with line numbers, syntax highlighting layer, and scroll synchronization
+1. **Code Editor**: Syntax-aware textarea with line numbers, syntax highlighting layer, scroll synchronization, and **full undo/redo history** (Ctrl+Z/Ctrl+Y)
 2. **Assembler**: Two-pass assembler (label collection → encoding)
-3. **Simulator**: Step-by-step execution engine with cycle counting
-4. **Disassembly View**: Real-time instruction decode display
-5. **Memory Viewer**: Code and data segment visualization
+3. **Simulator**: Step-by-step execution engine with cycle counting, **pause capability**, and **100M cycle limit**
+4. **Disassembly View**: Real-time instruction decode display with **fixed-width aligned columns** (table-layout: fixed)
+5. **Memory Viewer**: Code and data segment visualization with **8-byte row wrapping**
 6. **Configuration Panels**: Memory segment addresses, instruction cycle counts
+7. **Debug Features**: Breakpoints (F9), Pause button, invalid breakpoint validation
 
 ---
 
@@ -191,53 +191,11 @@ Low Address -> High Address
 
 ---
 
-## Memory Dump Specification
-
-### Verilog $readmemh Format
-```
-@<address_in_hex>
-<hex_data_value>
-```
-
-**Rules**:
-- Address prefix: `@` followed by 8-digit hex (zero-padded)
-- Data value: 8-digit hex (zero-padded, uppercase)
-- Consecutive addresses can omit `@` prefix (contiguous write)
-- Each word is 4 bytes (32-bit)
-- Little-endian byte order for multi-byte values
-
-### Dump Functions
-
-#### `buildMemFile()` — Combined Dump
-Returns combined text + data segment dump.
-
-#### `buildMemFileText(items)` — Segment Formatter
-- Takes array of `{bytes: Uint8Array}` items
-- Groups by contiguous addresses
-- Omits `@` prefix for consecutive addresses
-- Returns formatted string
-
-#### `dumpTextSegment()` — Code Dump
-- Dumps code segment (`address < dataBase`)
-- Output file: `code.mem`
-- Error handling if no code segment loaded
-
-#### `dumpDataSegment()` — Data Dump
-- Dumps data segment (`address >= dataBase`)
-- Output file: `data.mem`
-- Error handling if no data segment loaded
-
-#### `downloadMemFile()` — Combined Download
-- Dumps both segments combined
-- Output file: `memory.mem`
-- Uses Blob API for client-side file generation
-
-### Dump Button Interface
-| Button | Function | Output File |
-|--------|----------|-------------|
-| Dump txt | `dumpTextSegment()` | `code.mem` |
-| Dump data | `dumpDataSegment()` | `data.mem` |
-| Dump all | `downloadMemFile()` | `memory.mem` |
+### Memory Viewer Display
+- Displays 8 bytes per row (aligned to 8-byte boundaries)
+- Each row shows: hex address, 8 hex bytes (with word gap after 4th byte), ASCII representation
+- Changed bytes highlighted during execution
+- Click hex byte to edit; double-click to edit as 32-bit word
 
 ---
 
@@ -371,6 +329,11 @@ bnez x2, there       # Branch if not zero
 | F5 | Run program |
 | F8 | Step forward |
 | Shift+F8 | Back step |
+| F9 | Toggle breakpoint |
+| Ctrl+Z | Undo last edit |
+| Ctrl+Y / Ctrl+Shift+Z | Redo last undone edit |
+| Ctrl+S | Save file |
+| Ctrl+Enter | Assemble only |
 
 ---
 
@@ -395,23 +358,21 @@ bnez x2, there       # Branch if not zero
 ### Known Issues Addressed
 - `.eqv` comma parsing fix
 - Label support in `parseMemOp` for memory operands
-- Separate text/data `.mem` dump functionality
+- Separate text/data `.mem` dump functionality (removed in v2.0)
 - `.dword` directive rendering
 - Base address removal (uses configurable segments)
 - In-place memory editing during assembly
+- **v2.0**: Fixed column alignment, 8-byte memory view, invalid breakpoint handling, mobile scrolling
 
 ---
 
 ## Future Extensions
 
 ### Potential Features
-1. **Breakpoint GUI**: Visual breakpoint markers in editor
-2. **Memory Viewer**: Interactive hex dump with edit capability
-3. **Register Viewer**: Real-time register value display
-4. **Cycle Stats**: Per-instruction-type execution counts
-5. **Trace Output**: Instruction-by-instruction execution log
-6. **Waveform Viewer**: Signal timing visualization
-7. **Simulation Controls**: Run speed, pause, resume
+1. **Memory Viewer**: Interactive hex dump with edit capability (partially implemented)
+2. **Trace Output**: Instruction-by-instruction execution log
+3. **Waveform Viewer**: Signal timing visualization
+4. **Simulation Speed Control**: Adjustable run speed
 
 ### Configuration Persistence
 - Save custom cycle counts to localStorage
@@ -423,11 +384,36 @@ bnez x2, there       # Branch if not zero
 ## Version History
 
 | Version | Changes |
-|---------|---------
+|---------|---------|
 | 1.0 | Initial implementation: Assembler, simulator, editor |
 | 1.1 | `.eqv` comma fix, base address removal |
 | 1.2 | `parseMemOp` label support, separate `.mem` dumps |
 | 1.3 | `.dword` directive rendering, in-place memory editing |
+| 2.0 | **UI Improvements**: Undo/Redo (Ctrl+Z/Y), fixed column alignment, 8-byte memory view, Pause button, 100M cycle limit, invalid breakpoint handling, mobile scrolling fixes, removed dump buttons |
+
+---
+
+## v2.0 UI Improvements
+
+### Editor Enhancements
+- **Undo/Redo System**: Full history management with up to 100 states
+  - `Ctrl+Z` to undo
+  - `Ctrl+Y` or `Ctrl+Shift+Z` to redo
+  - Automatic state tracking on every edit
+  - Duplicate state prevention
+
+### Display Improvements
+- **Fixed Column Alignment**: `table-layout: fixed` ensures consistent column widths in disassembly view
+- **8-byte Memory View**: Memory viewer now displays 8 bytes per row instead of 16 for better readability
+- **Mobile Responsive**: Fixed scrolling issues on mobile devices with proper overflow handling
+
+### Execution Controls
+- **Pause Button**: Appears during execution to allow stopping long-running programs
+- **Increased Cycle Limit**: Maximum cycles increased from 100,000 to 100,000,000
+- **Breakpoint Validation**: Invalid breakpoint line numbers are now detected and reported
+
+### Removed Features
+- **Dump Buttons**: Removed "Dump txt", "Dump data", and "Dump all" buttons (functionality not directly useful for export)
 
 ---
 

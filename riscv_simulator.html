@@ -16,8 +16,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .header .subtitle { font-size: 13px; color: #6c7086; }
 
 /* Main Layout */
-.main { display: flex; flex: 1; overflow: hidden; }
-.left-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+.left-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100% !important; }
 .splitter {
   width: 6px; cursor: col-resize; flex: 0 0 6px;
   background: #181825; border-left: 1px solid #313244;
@@ -26,7 +26,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .right-panel { width: 640px; display: flex; flex-direction: column; border-left: 1px solid #313244; min-width: 220px; flex-shrink: 0; }
 
 /* Simulation Output */
-.editor-container { position: relative; flex: 1; overflow: hidden; }
+.editor-container { position: relative; flex: 1; overflow: hidden; min-height: 0; }
 .editor-container textarea, .editor-container .highlight-layer {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   padding: 12px; font-family: 'Consolas', 'Courier New', monospace;
@@ -97,24 +97,25 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .mem-toolbar button:hover { background: #45475a; }
 .mem-toolbar button.gear { background: #45475a; color: #f5c2e7; font-size: 15px; padding: 3px 10px; }
 .mem-toolbar button.gear:hover { background: #585b70; }
-.mem-view { font-size: 13px; line-height: 1.6; }
-.mem-view .addr { color: #6c7086; }
-.mem-view span.val { color: #f5c2e7; cursor: text; display: inline-block; min-width: 2ch; text-align: center; border-radius: 2px; }
+.mem-view { font-size: 13px; line-height: 1.6; overflow-x: auto; word-wrap: break-word; }
+.mem-view .addr { color: #6c7086; white-space: nowrap; display: inline-block; min-width: 10ch; }
+.mem-view span.val { color: #f5c2e7; cursor: text; display: inline-block; min-width: 2ch; text-align: center; border-radius: 2px; margin: 0 1px; }
 .mem-view span.val:hover { background: rgba(203, 166, 247, 0.2); }
 .mem-view span.val.changed { color: #ffe08f; font-weight: bold; }
 .mem-view span.val.editing { background: #f5c2e7; color: #1e1e2e; outline: 1px solid #cba6f7; }
 .mem-view span.ascii { color: #74c7ec; cursor: pointer; }
+.mem-view div { margin: 2px 0; }
 .wordgap { display: inline-block; width: 20px; }
 .mem-legend { font-size: 11px; color: #6c7086; padding: 4px 8px; border-bottom: 1px solid #313244; }
 
 /* Machine / Disassembly views */
-.code-list { width: 100%; border-collapse: collapse; font-size: 13px; }
+.code-list { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
 .code-list th { text-align: left; padding: 2px 6px; color: #6c7086; font-weight: 600; border-bottom: 1px solid #313244; }
 .code-list td { padding: 1px 6px; vertical-align: top; border-bottom: 1px solid #181825; }
 .code-list .addr { color: #6c7086; white-space: nowrap; }
 .code-list .bytes { color: #f5c2e7; font-family: 'Consolas', 'Courier New', monospace; white-space: nowrap; }
-.code-list .source { color: #a6adc8; }
-.code-list .native { color: #cdd6f4; }
+.code-list .source { color: #a6adc8; min-width: 30ch; }
+.code-list .native { color: #cdd6f4; min-width: 30ch; word-break: break-all; padding-right: 8px; }
 .code-list .pseudo { color: #fab387; }
 .code-list .native-expanded { color: #a6e3a1; }
 .code-list tr.current-native td { background: rgba(137, 180, 250, 0.20); }
@@ -131,10 +132,10 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .console .warn { color: #f9e2af; }
 
 /* Line numbers */
-.editor-wrapper { position: relative; flex: 1; overflow: hidden; display: flex; }
-.line-numbers { background: #181825; color: #6c7086; padding: 12px 6px; text-align: right; font-size: 13px; line-height: 20px; min-width: 40px; overflow: hidden; user-select: none; font-family: 'Consolas', 'Courier New', monospace; white-space: pre; }
-.line-numbers div { height: 20px; display: flex; align-items: center; justify-content: flex-end; }
-.code-area { position: relative; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.editor-wrapper { position: relative; flex: 1; overflow: hidden; display: flex; min-height: 0; }
+.line-numbers { background: #181825; color: #6c7086; padding: 12px 4px 12px 6px; text-align: right; font-size: 13px; line-height: 20px; width: 40px; flex: 0 0 auto; overflow: hidden; user-select: none; font-family: 'Consolas', 'Courier New', monospace; white-space: pre; }
+.line-numbers div { height: 20px; display: flex; align-items: center; justify-content: flex-end; padding-right: 4px; }
+.code-area { position: relative; flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
 
 /* Syntax highlighting colors */
 .hl-comment { color: #6c7086; font-style: italic; }
@@ -209,8 +210,10 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 
 /* Responsive */
 @media (max-width: 800px) {
-  .main { flex-direction: column; }
-  .splitter { display: none; }
+  body { overflow: auto; }
+  .main { flex-direction: column; overflow: auto; }
+  .left-panel { min-height: auto; height: auto; }
+  .editor-container { min-height: 200px; }
   .right-panel { width: 100%; max-height: 300px; border-left: none; border-top: 1px solid #313244; }
   .toolbar { font-size: 11px; }
 }
@@ -232,8 +235,11 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
     <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
     <button onclick="document.getElementById('fileLoader').click()">📂 Open</button>
     <button onclick="saveFile()" title="Save the edited source code as a .asm file">💾 Save</button>
+    <button onclick="editorHistory.undo()" title="Undo last edit (Ctrl+Z)">↶ Undo</button>
+    <button onclick="editorHistory.redo()" title="Redo last undone edit (Ctrl+Y)">↷ Redo</button>
     <button onclick="assembleOnly()" title="Assemble and reset state without running">⚙ Assemble</button>
     <button onclick="runProgram()" title="Run the currently assembled program from the start (F5)">▶ Run</button>
+    <button onclick="togglePause()" id="pauseBtn" style="display:none;" title="Pause execution">⏸ Pause</button>
     <button onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
     <button onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
     <button onclick="resetAll()">⟲ Reset</button>
@@ -241,7 +247,6 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
     <button onclick="toggleMemSegmentsPanel()" title="Configure memory segment addresses" class="gear">🗺 Segments…</button>
     <button onclick="dumpTextSegment()" title="Dump code (text) segment to a Verilog .mem file">💾 Dump txt</button>
     <button onclick="dumpDataSegment()" title="Dump data segment to a Verilog .mem file">💾 Dump data</button>
-    <button onclick="downloadMemFile()" title="Dump code &amp; data memories combined to a Verilog .mem file">💾 Dump all</button>
     <span class="sep"></span>
     <label>Example:
       <select id="exampleSelect" onchange="loadExample(this.value)">
@@ -1782,6 +1787,72 @@ const memView = document.getElementById('memView');
 const disassemblyDisplay = document.getElementById('disassemblyDisplay');
 const statusBar = document.getElementById('statusBar');
 
+// Editor History for Undo/Redo
+class EditorHistory {
+  constructor(editor) {
+    this.editor = editor;
+    this.history = [];
+    this.currentIndex = -1;
+    this.maxHistory = 100;
+    this.ignoreInput = false;
+  }
+
+  pushState() {
+    if (this.ignoreInput) return;
+    
+    const state = this.editor.value;
+    const cursorPos = this.editor.selectionStart;
+    
+    // Remove any redo states
+    if (this.currentIndex < this.history.length - 1) {
+      this.history = this.history.slice(0, this.currentIndex + 1);
+    }
+    
+    // Don't push duplicate states
+    if (this.history.length > 0 && this.history[this.history.length - 1] === state) {
+      return;
+    }
+    
+    this.history.push(state);
+    if (this.history.length > this.maxHistory) {
+      this.history.shift();
+    } else {
+      this.currentIndex++;
+    }
+  }
+
+  undo() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      this.ignoreInput = true;
+      this.editor.value = this.history[this.currentIndex];
+      this.editor.dispatchEvent(new Event('input'));
+      this.ignoreInput = false;
+      return true;
+    }
+    return false;
+  }
+
+  redo() {
+    if (this.currentIndex < this.history.length - 1) {
+      this.currentIndex++;
+      this.ignoreInput = true;
+      this.editor.value = this.history[this.currentIndex];
+      this.editor.dispatchEvent(new Event('input'));
+      this.ignoreInput = false;
+      return true;
+    }
+    return false;
+  }
+
+  initialState() {
+    this.history = [this.editor.value];
+    this.currentIndex = 0;
+  }
+}
+
+const editorHistory = new EditorHistory(editor);
+
 function log(msg, type = 'info') {
   const div = document.createElement('div');
   div.className = type;
@@ -1961,6 +2032,7 @@ function escapeHtml(s) {
 }
 
 function updateEditor() {
+  editorHistory.pushState();
   resetExecutionForSourceChange();
   updateLineNumbers();
   highlightSyntax();
@@ -1995,26 +2067,24 @@ function updateMemoryView() {
   const rows = parseInt(document.getElementById('memRows').value) || 16;
   let addr = parseInt(addrStr, 16);
   if (isNaN(addr) || addr < 0) addr = baseAddress;
-  addr = addr & ~0xF;
+  addr = addr & ~0x7;  // Align to 8-byte boundary
   
   let html = '';
   for (let r = 0; r < rows; r++) {
-    const base = addr + r * 16;
+    const base = addr + r * 8;  // Changed from 16 to 8 bytes per row
     if (base >= memory.length) break;
     
     let hexVals = '';
     let asciiVals = '';
     
-    for (let c = 0; c < 16; c++) {
+    for (let c = 0; c < 8; c++) {  // Changed from 16 to 8
       const offset = base + c;
       if (offset >= memory.length) break;
       const val = memory[offset];
       const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
       const cls = isChanged ? ' changed' : '';
-      // Insert wordgap after every 4th byte (between words)
+      // Insert gap after every 4th byte (between words)
       if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
-      // Add a larger gap between the two halves
-      if (c === 7) hexVals += '<span class="wordgap" style="width:32px"></span>';
       hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2,'0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2,'0')}</span>`;
       
       const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
@@ -2681,20 +2751,7 @@ function dumpDataSegment() {
   setStatus('Dumped data segment to data.mem', 'success');
 }
 
-function downloadMemFile() {
-  const text = buildMemFile();
-  if (!text.trim()) { setStatus('No program loaded to dump', 'error'); return; }
-  const blob = new Blob([text], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'memory.mem';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  setStatus('Dumped memory.mem', 'success');
-}
+
 
 function saveFile() {
   const content = editor.value;
@@ -2738,8 +2795,37 @@ function highlightCurrentLine() {
 }
 
 function toggleBreakpoint(line) {
-  if (breakpoints.has(line)) breakpoints.delete(line);
-  else breakpoints.add(line);
+  // Validate line number - must be positive
+  if (!line || line < 1) {
+    log('Invalid breakpoint line number.', 'warn');
+    return;
+  }
+  
+  // Get total number of lines in editor
+  const totalLines = editor.value.split('\n').length;
+  
+  // Validate against actual code lines (skip empty lines at end)
+  let lastCodeLine = totalLines;
+  for (let i = totalLines; i >= 1; i--) {
+    const lineContent = editor.value.split('\n')[i - 1];
+    if (lineContent && lineContent.trim()) {
+      lastCodeLine = i;
+      break;
+    }
+  }
+  
+  if (line > lastCodeLine) {
+    log(`Invalid breakpoint: line ${line} is beyond code (max: ${lastCodeLine}).`, 'warn');
+    return;
+  }
+  
+  if (breakpoints.has(line)) {
+    breakpoints.delete(line);
+    log(`Breakpoint removed at line ${line}.`, 'info');
+  } else {
+    breakpoints.add(line);
+    log(`Breakpoint set at line ${line}.`, 'info');
+  }
   updateLineNumbers();
   updateEditor();
 }
@@ -2828,8 +2914,13 @@ function runProgram() {
 
   running = true;
   let count = 0;
-  const maxCycles = 100000;
+  const maxCycles = 100000000;  // Increased to 100 million
   let stopReason = 'finished';
+  
+  // Show pause button
+  const pauseBtn = document.getElementById('pauseBtn');
+  pauseBtn.style.display = 'inline-block';
+  
   while (running && count < maxCycles) {
     const execAddr = pc;
     const line = sourceLineForPc(execAddr);
@@ -2850,6 +2941,7 @@ function runProgram() {
     } catch (e) {
       log(`Error executing at PC 0x${execAddr.toString(16)}: ${e.message}`, 'error');
       stopReason = 'error';
+      running = false;
       break;
     }
     count++;
@@ -2859,6 +2951,10 @@ function runProgram() {
   }
   running = false;
   assembled = true;
+  
+  // Hide pause button
+  pauseBtn.style.display = 'none';
+  
   if (count >= maxCycles) {
     log('Max cycles reached (possible infinite loop).', 'warn');
     setStatus('Stopped (max cycles)', 'warn');
@@ -2961,6 +3057,20 @@ function resetAll() {
   highlightFirstLine(mc);
 }
 
+function togglePause() {
+  running = false;  // This will cause the run loop to exit
+  const pauseBtn = document.getElementById('pauseBtn');
+  pauseBtn.style.display = 'none';
+  setStatus('Paused', 'info');
+  log('Execution paused by user.', 'info');
+  updateRegisters();
+  updateMemoryView();
+  updateStats();
+  highlightCurrentLine();
+  updateMachineCode();
+  updateDisassembly();
+}
+
 function resetState() {
   initializeState();
   execHistory = [];
@@ -3060,6 +3170,17 @@ initSplitter();
       if (e.key === 'Tab') {
         e.preventDefault();
         insertTab();
+        return;
+      }
+      // Undo/Redo shortcuts in editor
+      if ((e.key === 'z' && (e.ctrlKey || e.metaKey)) && !e.shiftKey) {
+        e.preventDefault();
+        editorHistory.undo();
+        return;
+      }
+      if ((e.key === 'y' && (e.ctrlKey || e.metaKey)) || (e.key === 'z' && e.ctrlKey && e.shiftKey)) {
+        e.preventDefault();
+        editorHistory.redo();
         return;
       }
     }
