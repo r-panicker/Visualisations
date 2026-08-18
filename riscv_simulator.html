@@ -83,8 +83,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 
 /* Register Table */
 .reg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.reg-table th { text-align: left; padding: 5px 6px; color: #6c7086; font-weight: 600; border-bottom: 1px solid #313244; position: sticky; top: 0; background: #1e1e2e; }
-.reg-table td { padding: 3px 6px; border-bottom: 1px solid #181825; }
+.reg-table th { text-align: right; padding: 4px 6px; color: #6c7086; font-weight: 600; border-bottom: 1px solid #313244; position: sticky; top: 0; background: #1e1e2e; }
+.reg-table td { padding: 4px 6px; border-bottom: 1px solid #181825; }
 .reg-table tr:hover td { background: #181825; }
 .reg-table .reg-name { color: #89b4fa; }
 .reg-table .reg-val { color: #a6e3a1; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -633,8 +633,8 @@ function parseImm(s) {
 
 function parseMemOp(s) {
   // Formats: "offset(reg)" or "reg"
-  s = s.trim();
-  const m = s.match(/^(-?(?:0x[0-9a-fA-F]+|\d+))\s*\(\s*(x\d+|f\d+|\w+)\s*\)$/i);
+  s = s.trim().replace(/^[\(\)]/, '').replace(/[\(\)]$/, '');
+  const m = s.match(/^(-?(?:0x[0-9a-fA-F]+|\d+))\s*\(\s*(\w+)\s*\)$/i);
   if (m) {
     const offsetStr = m[1];
     const offset = parseImm(offsetStr);
