@@ -81,7 +81,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .reg-table td { padding: 3px 6px; border-bottom: 1px solid #181825; }
 .reg-table tr:hover td { background: #181825; }
 .reg-table .reg-name { color: #89b4fa; }
-.reg-table .reg-val { color: #a6e3a1; text-align: right; font-variant-numeric: tabular-nums; }
+.reg-table .reg-val { color: #a6e3a1; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .reg-table .reg-changed { color: #f9e2af; }
 
 /* Memory View */
@@ -93,11 +93,26 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .mem-toolbar button.gear:hover { background: #585b70; }
 .mem-view { font-size: 13px; line-height: 1.6; }
 .mem-view .addr { color: #6c7086; }
-.mem-view span.val { color: #f5c2e7; cursor: default; }
-.mem-view span.val:hover { background: rgba(203, 166, 247, 0.2); border-radius: 2px; padding: 0 2px; }
+.mem-view span.val { color: #f5c2e7; cursor: text; display: inline-block; min-width: 2ch; text-align: center; border-radius: 2px; }
+.mem-view span.val:hover { background: rgba(203, 166, 247, 0.2); }
 .mem-view span.val.changed { color: #ffe08f; font-weight: bold; }
-.mem-view span.ascii { color: #74c7ec; }
+.mem-view span.val.editing { background: #f5c2e7; color: #1e1e2e; outline: 1px solid #cba6f7; }
+.mem-view span.ascii { color: #74c7ec; cursor: pointer; }
 .mem-legend { font-size: 11px; color: #6c7086; padding: 4px 8px; border-bottom: 1px solid #313244; }
+
+/* Machine / Disassembly views */
+.code-list { width: 100%; border-collapse: collapse; font-size: 13px; }
+.code-list th { text-align: left; padding: 2px 6px; color: #6c7086; font-weight: 600; border-bottom: 1px solid #313244; }
+.code-list td { padding: 1px 6px; vertical-align: top; border-bottom: 1px solid #181825; }
+.code-list .addr { color: #6c7086; white-space: nowrap; }
+.code-list .bytes { color: #f5c2e7; font-family: 'Consolas', 'Courier New', monospace; white-space: nowrap; }
+.code-list .source { color: #a6adc8; }
+.code-list .native { color: #cdd6f4; }
+.code-list .pseudo { color: #fab387; }
+.code-list .native-expanded { color: #a6e3a1; }
+.code-list tr.current-native td { background: rgba(137, 180, 250, 0.20); }
+.code-list tr.error-row td { color: #f38ba8; }
+.disasm-hint { font-size: 12px; line-height: 1.4; color: #6c7086; margin-bottom: 6px; }
 
 /* Console */
 .console { background: #11111b; padding: 8px 10px; font-size: 13px; border-top: 1px solid #313244; max-height: 140px; overflow: auto; min-height: 40px; line-height: 1.5; }
@@ -257,6 +272,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       <div class="tab-bar">
         <button class="active" onclick="switchTab('registers',this)">Registers</button>
         <button onclick="switchTab('memory',this)">Memory</button>
+        <button onclick="switchTab('disassembly',this)">Disassembly</button>
         <button onclick="switchTab('machine',this)">Machine</button>
       </div>
       <div class="tab-content active" id="tab-registers">
@@ -282,6 +298,12 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
           <span style="color:#ffe08f;font-weight:bold">highlighted bytes</span> were written at runtime
         </div>
         <div class="mem-view" id="memView"></div>
+      </div>
+      <div class="tab-content" id="tab-disassembly">
+        <div class="disasm-hint">
+          Native instruction stream after pseudo-instruction expansion. The blue row is the instruction at the current PC.
+        </div>
+        <div id="disassemblyDisplay"></div>
       </div>
       <div class="tab-content" id="tab-machine">
         <div style="font-size:13px;margin-bottom:6px;color:#6c7086;">
@@ -462,7 +484,8 @@ const PSEUDO_INSTRUCTIONS = {
   'tail':   ['auipc x6, %0', 'jalr x0, x6, %1'],
   'la':     [],
   'li':     function(rd, imm) {
-    imm = Number(imm);
+    const parsed = parseImm(String(imm));
+    imm = isNaN(parsed) ? Number(imm) : parsed;
     if (imm >= -2048 && imm <= 2047) return [`addi ${rd}, x0, ${imm}`];
     let upper = imm >>> 12;
     let lower = imm & 0xFFF;
@@ -639,6 +662,17 @@ function expandPseudoLines(mnemonic, args) {
   return p.map(t => t.replace(/%\d+/g, (m) => { const idx = parseInt(m.substring(1), 10); return args[idx] || ''; }));
 }
 
+function formatNativeInstruction(mnemonic, args) {
+  return mnemonic + (args.length ? ' ' + args.join(', ') : '');
+}
+
+function signedHex(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return String(n);
+  const sign = v < 0 ? '-' : '';
+  return sign + '0x' + Math.abs(v).toString(16);
+}
+
 
 function assemble(source, startAddr) {
   const base = (startAddr !== undefined) ? startAddr : baseAddress;
@@ -712,10 +746,10 @@ function assemble(source, startAddr) {
   textAddr = base; dataAddr = base + DATA_OFFSET; section = 'text';
 
   const push = (item) => { output.push(item); };
-  const pushInstr = (mnMnemonic, args, address, lineNo, asmText) => {
+  const pushInstr = (mnMnemonic, args, address, lineNo, asmText, isPseudo = false) => {
     const encoding = encodeInstruction(mnMnemonic, args, address);
     if (encoding === null) throw new Error('Encoding failed');
-    push({ address, bytes: encoding, text: asmText, line: lineNo, asmLine: asmText });
+    push({ address, bytes: encoding, text: asmText, native: formatNativeInstruction(mnMnemonic, args), isPseudo, line: lineNo, asmLine: asmText });
     bump(4);
   };
 
@@ -748,8 +782,12 @@ function assemble(source, startAddr) {
       } else {
         be = ((lo & 0xFFF) << 20) | (rsJ << 15) | (rdJ << 7) | 0b1100111; // jalr rdJ, lo(rsJ)
       }
-      push({ address, bytes: numToBytes(ae), text: asmText, line: lineNo, asmLine: asmText });
-      push({ address: address + 4, bytes: numToBytes(be), text: asmText, line: lineNo, asmLine: asmText });
+      const auipcText = `auipc x${rdA}, ${signedHex(hi20 << 12)}`;
+      const secondText = second === 'addi'
+        ? `addi x${rdA}, x${rdA}, ${signedHex(lo)}`
+        : `jalr x${rdJ}, x${rsJ}, ${signedHex(lo)}`;
+      push({ address, bytes: numToBytes(ae), text: asmText, native: auipcText, isPseudo: true, line: lineNo, asmLine: asmText });
+      push({ address: address + 4, bytes: numToBytes(be), text: asmText, native: secondText, isPseudo: true, line: lineNo, asmLine: asmText });
       bump(8);
       return;
     }
@@ -758,7 +796,7 @@ function assemble(source, startAddr) {
       const e = lines2[k];
       const eargs = parseArgs(e);
       const emn = e.split(/\s+/)[0].toLowerCase();
-      pushInstr(emn, eargs, getAddr(), lineNo, asmText);
+      pushInstr(emn, eargs, getAddr(), lineNo, asmText, true);
     }
   };
 
@@ -1648,6 +1686,7 @@ const consoleEl = document.getElementById('console');
 const regBody = document.getElementById('regBody');
 const memView = document.getElementById('memView');
 const machineCodeDisplay = document.getElementById('machineCodeDisplay');
+const disassemblyDisplay = document.getElementById('disassemblyDisplay');
 const statusBar = document.getElementById('statusBar');
 
 function log(msg, type = 'info') {
@@ -1704,9 +1743,11 @@ function highlightSyntax() {
     if (labelMatch) {
       html += escapeHtml(labelMatch[1]);
       html += '<span class="hl-label">' + escapeHtml(labelMatch[2]) + '</span>';
+      const sepMatch = labelMatch[3].match(/^(\s*):(\s*)$/);
+      html += escapeHtml(sepMatch ? sepMatch[1] : '');
       html += '<span class="hl-punctuation">:</span>';
-      const rest = labelMatch[3] + labelMatch[4];
-      html += highlightInstructionPart(rest);
+      html += escapeHtml(sepMatch ? sepMatch[2] : labelMatch[3].replace(':', ''));
+      html += highlightDirectiveOrInstructionPart(labelMatch[4]);
       if (commentPart) html += '<span class="hl-comment">' + escapeHtml(commentPart) + '</span>';
       continue;
     }
@@ -1754,6 +1795,14 @@ function highlightInstructionPart(s) {
   return result;
 }
 
+function highlightDirectiveOrInstructionPart(s) {
+  const dirMatch = s.match(/^(\s*)(\.\w+)(.*)$/i);
+  if (!dirMatch) return highlightInstructionPart(s);
+  return escapeHtml(dirMatch[1]) +
+    '<span class="hl-directive">' + escapeHtml(dirMatch[2]) + '</span>' +
+    highlightInstructionPart(dirMatch[3]);
+}
+
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -1766,6 +1815,7 @@ function updateEditor() {
       const mc = assemble(editor.value);
       machineCode = mc;
       updateMachineCode();
+      updateDisassembly();
     } catch(e) {}
   }
 }
@@ -1777,7 +1827,7 @@ function updateRegisters() {
     const val = regs[i];
     const uval = val >>> 0;
     const isChanged = i === lastChangedReg;
-    const valClass = isChanged ? 'reg-changed' : 'reg-val';
+    const valClass = 'reg-val' + (isChanged ? ' reg-changed' : '');
     html += `<tr><td class="reg-name">x${i}</td><td class="reg-name">${name}</td>
       <td class="${valClass}">0x${uval.toString(16).padStart(8,'0')}</td>
       <td class="${valClass}">${val}</td></tr>`;
@@ -1806,12 +1856,11 @@ function updateMemoryView() {
       const val = memory[offset];
       const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
       const cls = isChanged ? ' changed' : '';
-      const onclick = `ondblclick="editMemByte(${offset})"`;
-      hexVals += `<span class="val${cls}" ${onclick} title="Double-click to edit">${val.toString(16).padStart(2,'0')}</span>`;
+      hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-old="${val.toString(16).padStart(2,'0')}" onfocus="startMemByteEdit(this)" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Edit byte in-place: type 00-ff, Enter commits, Esc cancels">${val.toString(16).padStart(2,'0')}</span>`;
       if (c === 7) hexVals += ' ';
       
       const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-      const asciiOnclick = `ondblclick="editMemByte(${offset})" title="Double-click to edit"`;
+      const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
       asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
     }
     
@@ -1821,15 +1870,86 @@ function updateMemoryView() {
 }
 
 function editMemByte(addr) {
-  const oldVal = memory[addr];
-  const newVal = prompt('Edit byte at 0x' + addr.toString(16).padStart(8,'0') + ' (current: 0x' + oldVal.toString(16).padStart(2,'0') + '):', oldVal.toString(16));
-  if (newVal === null) return;
-  const val = parseInt(newVal, 16);
-  if (isNaN(val) || val < 0 || val > 255) { setStatus('Invalid byte value', 'error'); return; }
+  focusMemByte(addr);
+}
+
+function startMemByteEdit(el) {
+  el.dataset.old = (el.textContent || '').trim().padStart(2, '0').slice(-2);
+  el.classList.add('editing');
+  selectElementText(el);
+}
+
+function handleMemByteEditKey(event, el) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    el.blur();
+    return;
+  }
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    cancelMemByteEdit(el);
+    return;
+  }
+  if (event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1) return;
+  if (!/[0-9a-fA-F]/.test(event.key)) {
+    event.preventDefault();
+    return;
+  }
+  const selected = getSelectedTextLength();
+  const currentLen = (el.textContent || '').trim().length;
+  if (currentLen - selected >= 2) event.preventDefault();
+}
+
+function commitMemByteEdit(el) {
+  if (!el || !el.classList || !el.classList.contains('editing')) return;
+  const addr = parseInt(el.dataset.addr, 10);
+  const text = (el.textContent || '').trim();
+  const normalized = text.replace(/^0x/i, '');
+  if (!/^[0-9a-fA-F]{1,2}$/.test(normalized)) {
+    const oldText = el.dataset.old || '00';
+    el.textContent = oldText;
+    el.classList.remove('editing');
+    setStatus('Invalid byte value; use hex 00-ff', 'error');
+    return;
+  }
+  const val = parseInt(normalized, 16);
+  if (isNaN(addr) || addr < 0 || addr >= memory.length || isNaN(val) || val < 0 || val > 255) {
+    el.textContent = el.dataset.old || '00';
+    el.classList.remove('editing');
+    setStatus('Invalid memory edit', 'error');
+    return;
+  }
   memory[addr] = val;
   lastChangedMem = [{ addr, size: 1 }];
   updateMemoryView();
-  setStatus('Memory updated at 0x' + addr.toString(16), 'success');
+  setStatus('Memory updated at 0x' + addr.toString(16).padStart(8,'0'), 'success');
+}
+
+function cancelMemByteEdit(el) {
+  el.textContent = el.dataset.old || '00';
+  el.classList.remove('editing');
+  el.blur();
+}
+
+function focusMemByte(addr) {
+  const el = memView.querySelector(`[data-addr="${addr}"]`);
+  if (!el) return;
+  el.focus();
+  selectElementText(el);
+}
+
+function selectElementText(el) {
+  if (!window.getSelection || !document.createRange) return;
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function getSelectedTextLength() {
+  const sel = window.getSelection && window.getSelection();
+  return sel ? sel.toString().length : 0;
 }
 
 function memGo(region) {
@@ -1845,8 +1965,8 @@ function updateMachineCode() {
   const showHex = document.getElementById('showHex').checked;
   const showBinary = document.getElementById('showBinary').checked;
   
-  let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-  html += '<tr><th style="text-align:left;padding:2px 6px;">Addr</th><th style="text-align:left;padding:2px 6px;">Bytes</th><th style="text-align:left;padding:2px 6px;">Source</th></tr>';
+  let html = '<table class="code-list">';
+  html += '<tr><th>Addr</th><th>Bytes</th><th>Source</th></tr>';
   
   for (const item of machineCode) {
     if (!item.bytes) continue;
@@ -1864,15 +1984,35 @@ function updateMachineCode() {
       }
     }
     
-    const errClass = item.error ? ' style="color:#f38ba8;"' : '';
-    html += `<tr${errClass}>
-      <td style="color:#6c7086;padding:1px 6px;">0x${item.address.toString(16).padStart(8,'0')}</td>
-      <td style="color:#f5c2e7;padding:1px 6px;font-family:monospace;">${escapeHtml(bytesStr)}</td>
-      <td style="color:#a6adc8;padding:1px 6px;">${escapeHtml(item.text || item.asmLine || '')}</td>
+    const rowClass = [item.error ? 'error-row' : '', item.address === pc ? 'current-native' : ''].filter(Boolean).join(' ');
+    html += `<tr${rowClass ? ` class="${rowClass}"` : ''}>
+      <td class="addr">0x${item.address.toString(16).padStart(8,'0')}</td>
+      <td class="bytes">${escapeHtml(bytesStr)}</td>
+      <td class="source">${escapeHtml(item.text || item.asmLine || '')}</td>
     </tr>`;
   }
   html += '</table>';
   machineCodeDisplay.innerHTML = html;
+}
+
+function updateDisassembly() {
+  if (!disassemblyDisplay) return;
+  let html = '<table class="code-list">';
+  html += '<tr><th>Addr</th><th>Native instruction</th><th>Original source</th></tr>';
+  for (const item of machineCode) {
+    if (!item.bytes || item.error) continue;
+    const source = item.text || item.asmLine || '';
+    const native = item.native || source;
+    const expanded = !!item.isPseudo;
+    const rowClass = item.address === pc ? 'current-native' : '';
+    html += `<tr${rowClass ? ` class="${rowClass}"` : ''}>
+      <td class="addr">0x${item.address.toString(16).padStart(8,'0')}</td>
+      <td class="native ${expanded ? 'native-expanded' : ''}">${escapeHtml(native)}</td>
+      <td class="source ${expanded ? 'pseudo' : ''}">${escapeHtml(source)}</td>
+    </tr>`;
+  }
+  html += '</table>';
+  disassemblyDisplay.innerHTML = html;
 }
 
 function switchTab(tab, btn) {
@@ -1881,6 +2021,7 @@ function switchTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
   if (tab === 'memory') updateMemoryView();
+  if (tab === 'disassembly') updateDisassembly();
   if (tab === 'machine') updateMachineCode();
 }
 
@@ -2180,6 +2321,7 @@ function prepareAssembly() {
     if (hasError) {
       setStatus('Assembly failed — see errors below', 'error');
       updateMachineCode();
+      updateDisassembly();
       return null;
     }
     return mc;
@@ -2211,6 +2353,7 @@ function assembleAndRun() {
   log(`Assembly successful. ${nInstr} instructions.`, 'success');
   loadProgram(mc);
   updateMachineCode();
+  updateDisassembly();
   updateStats();
 
   running = true;
@@ -2251,6 +2394,8 @@ function assembleAndRun() {
   updateMemoryView();
   updateStats();
   highlightCurrentLine();
+  updateMachineCode();
+  updateDisassembly();
 }
 
 function stepOnce() {
@@ -2260,6 +2405,7 @@ function stepOnce() {
     if (!mc) return;
     loadProgram(mc);
     updateMachineCode();
+    updateDisassembly();
     assembled = true;
     log('Assembly loaded. Stepping...', 'info');
   }
@@ -2277,7 +2423,7 @@ function stepOnce() {
   } catch (e) {
     log(`Error at PC 0x${prePc.toString(16)}: ${e.message}`, 'error');
     journalEnabled = false;
-    updateRegisters(); updateMemoryView(); updateStats();
+    updateRegisters(); updateMemoryView(); updateMachineCode(); updateDisassembly(); updateStats();
     return;
   }
   journalEnabled = false;
@@ -2288,7 +2434,7 @@ function stepOnce() {
   });
   if (execHistory.length > historyCap) execHistory.shift();
   highlightCurrentLine();
-  updateRegisters(); updateMemoryView(); updateStats();
+  updateRegisters(); updateMemoryView(); updateMachineCode(); updateDisassembly(); updateStats();
   setStatus(`Step ${instructionCount}: PC = 0x${pc.toString(16)}`);
   log(`0x${prePc.toString(16)}: executed (next: 0x${pc.toString(16)})`, 'info');
 }
@@ -2312,7 +2458,7 @@ function stepBack() {
   instructionCount = Math.max(0, instructionCount - st.instr);
   lastChangedReg = -1;
   highlightCurrentLine();
-  updateRegisters(); updateMemoryView(); updateStats();
+  updateRegisters(); updateMemoryView(); updateMachineCode(); updateDisassembly(); updateStats();
   setStatus(`Back step: PC = 0x${pc.toString(16)}`);
   log(`Back to 0x${st.pc.toString(16)}`, 'info');
 }
@@ -2332,6 +2478,7 @@ function resetState() {
   updateMemoryView();
   machineCode = [];
   updateMachineCode();
+  updateDisassembly();
   updateStats();
   hideExecMarker();
 }
