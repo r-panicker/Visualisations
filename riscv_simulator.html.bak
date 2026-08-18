@@ -632,32 +632,7 @@ function parseImm(s) {
 }
 
 
-
-function parseMemOp(s) {
-  // Formats: "offset(reg)" or "reg" or plain label/symbol
-  // Handle optional parentheses: strip if present, then parse
-  s = s.trim();
-  if (s.startsWith('(') && s.endsWith(')')) {
-    s = s.substring(1, s.length - 1);
-  }
-  const m = s.match(/^(-?(?:0x[0-9a-fA-F]+|\d+))\s*\(\s*(\w+)\s*\)$/i);
-  if (m) {
-    const offsetStr = m[1];
-    const offset = parseImm(offsetStr);
-    const reg = parseReg(m[2]);
-    return { offset, reg };
-  }
-  // Try as a plain register
-  const reg = parseReg(s);
-  if (reg >= 0 && reg <= 31) return { offset: 0, reg };
-  // Try as a label/symbol reference (resolved to address)
-  const body = s.toLowerCase();
-  if (labels[body] !== undefined) return { offset: labels[body], reg: 0 };
-  if (symbolTable[body] !== undefined) return { offset: symbolTable[body], reg: 0 };
-  if (labels[s] !== undefined) return { offset: labels[s], reg: 0 };
-  if (symbolTable[s] !== undefined) return { offset: symbolTable[s], reg: 0 };
-  return null;
-}function sext(value, bits) {
+function sext(value, bits) {
   const sign = 1 << (bits - 1);
   return (value & (sign - 1)) - (value & sign);
 }
