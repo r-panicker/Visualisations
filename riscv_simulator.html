@@ -237,7 +237,9 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
     <button onclick="resetAll()">⟲ Reset</button>
     <button onclick="toggleCyclesPanel()" title="Configure cycles per instruction type" class="gear">⏱ Cycles…</button>
     <button onclick="toggleMemSegmentsPanel()" title="Configure memory segment addresses" class="gear">🗺 Segments…</button>
-    <button onclick="downloadMemFile()" title="Dump code &amp; data memories to a Verilog .mem file">💾 Dump .mem</button>
+    <button onclick="dumpTextSegment()" title="Dump code (text) segment to a Verilog .mem file">💾 Dump txt</button>
+    <button onclick="dumpDataSegment()" title="Dump data segment to a Verilog .mem file">💾 Dump data</button>
+    <button onclick="downloadMemFile()" title="Dump code &amp; data memories combined to a Verilog .mem file">💾 Dump all</button>
     <span class="sep"></span>
     <label>Example:
       <select id="exampleSelect" onchange="loadExample(this.value)">
@@ -2469,26 +2471,64 @@ function reloadAfterLayoutChange() {
   }
 }
 
-// Build a Verilog $readmemh-format dump of the code and data memories.
+// Build a Verilog $readmemh-format dump of code and data memories.
 function buildMemFile() {
   const items = machineCode.filter(i => !i.error && i.bytes).sort((a, b) => a.address - b.address);
   const text = items.filter(i => i.address < dataBase);
   const data = items.filter(i => i.address >= dataBase);
-  const lines = [];
-  const emitRange = (start, list) => {
-    if (!list.length) return;
-    lines.push('@' + start.toString(16).padStart(8, '0').toUpperCase());
-    for (const it of list) {
-      const b = it.bytes;
-      for (let i = 0; i < b.length; i += 4) {
-        const w = (b[i] || 0) | ((b[i + 1] || 0) << 8) | ((b[i + 2] || 0) << 16) | ((b[i + 3] || 0) << 24);
-        lines.push((w >>> 0).toString(16).padStart(8, '0').toUpperCase());
+  return buildMemFileText(text) + '\n' + buildMemFileText(data);
+}
+
+function buildMemFileText(items) {
+  if (!items.length) return '';
+  let result = '';
+  let lastAddr = -1;
+  for (const item of items) {
+    const wordCount = Math.floor(item.bytes.length / 4);
+    for (let w = 0; w < wordCount; w++) {
+      const addr = item.address + w * 4;
+      if (addr !== lastAddr + 4) {
+        result += '@' + addr.toString(16).padStart(8, '0').toUpperCase() + '\n';
       }
+      const b = item.bytes;
+      const word = (b[w * 4] || 0) | ((b[w * 4 + 1] || 0) << 8) | ((b[w * 4 + 2] || 0) << 16) | ((b[w * 4 + 3] || 0) << 24);
+      result += (word >>> 0).toString(16).padStart(8, '0').toUpperCase() + '\n';
+      lastAddr = addr;
     }
-  };
-  emitRange(baseAddress, text);
-  emitRange(dataBase, data);
-  return lines.length ? lines.join('\n') + '\n' : '';
+  }
+  return result;
+}
+
+function dumpTextSegment() {
+  const items = machineCode.filter(i => !i.error && i.bytes && i.address < dataBase).sort((a, b) => a.address - b.address);
+  if (!items.length) { setStatus('No code segment loaded', 'error'); return; }
+  const text = buildMemFileText(items);
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'code.mem';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setStatus('Dumped code segment to code.mem', 'success');
+}
+
+function dumpDataSegment() {
+  const items = machineCode.filter(i => !i.error && i.bytes && i.address >= dataBase).sort((a, b) => a.address - b.address);
+  if (!items.length) { setStatus('No data segment loaded', 'error'); return; }
+  const text = buildMemFileText(items);
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'data.mem';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setStatus('Dumped data segment to data.mem', 'success');
 }
 
 function downloadMemFile() {
