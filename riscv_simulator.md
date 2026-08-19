@@ -12,6 +12,12 @@ A single-file web application (`riscv_simulator.html`) implementing a **RISC-V R
 - **Language**: HTML + CSS + JavaScript (vanilla, no frameworks)
 - **Architecture**: RV32GC (RISC-V 32-bit with Compressed instructions)
 
+### CSS Layout
+- **Flexbox layout**: `.main` uses `flex: 1` with `min-height: 0` to prevent collapse
+- **Editor container**: `min-height: 300px !important` ensures minimum editor height
+- **Disassembly table**: `table-layout: fixed` with `min-width: 30ch` on native/source columns
+- **Mobile responsive**: `@media (max-width: 800px)` sets `overflow: auto` on body and main panel
+
 ### Core Components
 1. **Code Editor**: Syntax-aware textarea with line numbers, syntax highlighting layer, scroll synchronization, and **full undo/redo history** (Ctrl+Z/Ctrl+Y)
 2. **Assembler**: Two-pass assembler (label collection → encoding)
@@ -140,6 +146,8 @@ label            -> load/store with label as absolute address
 - **Registers**: 32 general-purpose registers (x0-x31)
 - **Memory**: Unified address space with separate text/data regions
 - **MMIO**: Memory-mapped I/O for system calls and device interaction
+- **Max Cycles**: 100,000,000 (100 million) before forced stop
+- **Pause**: `running` flag checked each iteration; Pause button sets `running = false`
 
 ### System Call Interface (MIPS-style)
 | a7 value | Function | a0 input | Description |
@@ -206,7 +214,29 @@ Low Address -> High Address
 - **Syntax highlighting**: Via overlay layer (`#highlightLayer`)
 - **Scroll sync**: `syncScroll()` function maintains alignment
 - **Input handling**: `oninput="updateEditor()"` for real-time assembly
-- **Breakpoints**: Toggleable per line number
+- **Breakpoints**: Toggleable per line number with **invalid line validation**
+- **Undo/Redo**: `EditorHistory` class tracking up to 100 states
+
+### Editor History (Undo/Redo)
+```javascript
+class EditorHistory {
+  constructor(editor) {
+    this.editor = editor;
+    this.history = [];        // Array of editor value strings
+    this.currentIndex = -1;   // Position in history stack
+    this.maxHistory = 100;    // Maximum stored states
+    this.ignoreInput = false; // Prevents recursive state pushes
+  }
+  pushState()   // Record current editor state
+  undo()        // Restore previous state, dispatch 'input' event
+  redo()        // Restore next state, dispatch 'input' event
+  initialState() // Initialize history with current editor value
+}
+```
+
+- State is pushed on every `updateEditor()` call
+- Duplicate consecutive states are not recorded
+- Undo/Redo dispatches an `input` event to update syntax highlighting and assembly
 
 ### Editor Structure
 ```
@@ -233,6 +263,12 @@ function syncScroll() {
 - Marker top: `(currentExecLine - 1) * 20 + 12` pixels
 - Marker class: `.exec-marker`
 
+### Breakpoint Validation
+- `toggleBreakpoint(line)` validates line number before setting
+- Rejects line numbers < 1 or > last non-empty line in editor
+- Invalid lines produce warning: "Invalid breakpoint: line N is beyond code (max: M)"
+- Feedback logged: "Breakpoint set/removed at line N"
+
 ---
 
 ## UI Components
@@ -241,16 +277,23 @@ function syncScroll() {
 | Button | Function | Description |
 |--------|----------|-------------|
 | Open | `fileLoader.click()` | Load `.asm`, `.s`, or `.txt` file |
+| Save | `saveFile()` | Save editor content as `.asm` file |
+| Undo | `editorHistory.undo()` | Undo last edit (Ctrl+Z) |
+| Redo | `editorHistory.redo()` | Redo last undone edit (Ctrl+Y / Ctrl+Shift+Z) |
 | Assemble | `assembleOnly()` | Assemble without running |
 | Run | `runProgram()` | Execute from start (F5) |
+| Pause | `togglePause()` | Pause execution (visible during run only) |
 | Step | `stepOnce()` | Single step (F8) |
 | Back | `stepBack()` | Back step (Shift+F8) |
 | Reset | `resetAll()` | Clear state and memory |
 | Cycles | `toggleCyclesPanel()` | Configure instruction cycles |
 | Segments | `toggleMemSegmentsPanel()` | Configure memory addresses |
-| Dump txt | `dumpTextSegment()` | Export code to `.mem` |
-| Dump data | `dumpDataSegment()` | Export data to `.mem` |
-| Dump all | `downloadMemFile()` | Export combined to `.mem` |
+
+### Pause Button Behavior
+- **Hidden by default**, shown only during `runProgram()` execution
+- Clicking Pause sets `running = false`, which exits the run loop after the current instruction completes
+- The loop checks `running` on each iteration; since JavaScript is single-threaded, the button is only responsive when the loop yields (at breakpoints, errors, or cycle limit)
+- When paused, registers, memory, stats, and disassembly are updated to reflect current state
 
 ### Configuration Panels
 - **Cycles Panel**: Per-instruction-type cycle count configuration
@@ -329,6 +372,13 @@ bnez x2, there       # Branch if not zero
 | F5 | Run program |
 | F8 | Step forward |
 | Shift+F8 | Back step |
+| F9 | Toggle breakpoint on current line |
+| Ctrl+Enter | Assemble only |
+| Ctrl+S | Save file |
+| Ctrl+Z | Undo (in editor) |
+| Ctrl+Y | Redo (in editor) |
+| Ctrl+Shift+Z | Redo (in editor) |
+| Tab | Insert tab (in editor) |
 | F9 | Toggle breakpoint |
 | Ctrl+Z | Undo last edit |
 | Ctrl+Y / Ctrl+Shift+Z | Redo last undone edit |
@@ -390,6 +440,7 @@ bnez x2, there       # Branch if not zero
 | 1.2 | `parseMemOp` label support, separate `.mem` dumps |
 | 1.3 | `.dword` directive rendering, in-place memory editing |
 | 2.0 | **UI Improvements**: Undo/Redo (Ctrl+Z/Y), fixed column alignment, 8-byte memory view, Pause button, 100M cycle limit, invalid breakpoint handling, mobile scrolling fixes, removed dump buttons |
+| 2.1 | **Peripherals Tab**: Single-row LED display (8-bit + clock LED + PC[8:2] with dividers), single-row scrollable DIP switches (16), 2-row grid push buttons (BTNL/BTNC/BTNR/BTND) with click-to-toggle interaction, SVG-based 7-segment display (hex a-f rendering on 22x40 SVGs) |
 
 ---
 
@@ -416,6 +467,37 @@ bnez x2, there       # Branch if not zero
 - **Dump Buttons**: Removed "Dump txt", "Dump data", and "Dump all" buttons (functionality not directly useful for export)
 
 ---
+
+
+## v2.1 Peripherals Tab
+
+### LEDs
+- Single-row LED display with 8 LEDs (bit 7 to bit 0)
+- Clock LED (blinks at divided clock rate)
+- PC[8:2] bits (7 LEDs showing upper PC bits)
+- Dividers between sections for visual clarity
+- CSS: `.led`, `.led-pc`, `.led-clock`, `.led-divider`, `.led-label`
+
+### DIP Switches
+- 16 DIP switches in a single row with horizontal scrolling
+- Click to toggle on/off
+- CSS: `.dip-container`, `.dip-switch`
+
+### Push Buttons
+- 2-row grid layout (BTNU above RST, BTND below C):
+  - Row 1: BTNL | BTNC | BTNU | BTNR
+  - Row 2: (hidden) | BTND | RST | (hidden)
+- Click-to-toggle interaction (replaces "hold" behavior)
+- CSS: `.pb-container`, `.pb-btn`, `.pause-btn`, `.reset-btn`, `.pressed`
+
+### 7-Segment Display
+- SVG-based rendering (22x40 viewBox per digit)
+- Full hex support (0-F) with custom segment paths
+- 7 segments: a(top), b(top-right), c(bottom-right), d(bottom), e(bottom-left), f(top-left), g(middle)
+- CSS: `.sevseg-container`, `.sevseg-digit`, `.sevseg-segment` (lit/unlit)
+
+---
+
 
 ## Author Notes
 

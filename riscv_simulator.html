@@ -207,8 +207,289 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   grid-column: 1 / -1;
 }
 
+/* ============================================================
+   PERIPHERALS UI
+   ============================================================ */
 
-/* Responsive */
+.peripherals-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.periph-section {
+  background: #1e1e2e;
+  border: 1px solid #313244;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.periph-title {
+  font-weight: 600;
+  color: #6c7086;
+  margin-bottom: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.periph-addr {
+  font-family: 'Consolas', monospace;
+  font-size: 10px;
+  color: #585b70;
+}
+
+/* LED Display */
+/* LED Row — 8 bits + clock + PC[8:2] in one row */
+.led-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.led {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2a2a3a;
+  border: 1px solid #313244;
+  transition: all 0.15s ease;
+}
+
+.led.on {
+  background: #a6e3a1;
+  box-shadow: 0 0 6px #a6e3a1, 0 0 12px rgba(166, 227, 161, 0.3);
+  border-color: #a6e3a1;
+}
+
+.led-divider {
+  width: 1px;
+  height: 16px;
+  background: #45475a;
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+
+.led-label {
+  font-size: 8px;
+  color: #585b70;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.led-clock {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2a2a3a;
+  border: 2px solid #313244;
+  transition: all 0.1s ease;
+  flex-shrink: 0;
+}
+
+.led-clock.on {
+  background: #fab387;
+  box-shadow: 0 0 8px #fab387, 0 0 16px rgba(250, 179, 135, 0.3);
+  border-color: #fab387;
+  animation: clockPulse 0.5s infinite alternate;
+}
+
+@keyframes clockPulse {
+  from { box-shadow: 0 0 4px #fab387; }
+  to { box-shadow: 0 0 12px #fab387, 0 0 20px rgba(250, 179, 135, 0.4); }
+}
+
+/* PC bits in LED row */
+.led-pc {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2a2a3a;
+  border: 1px solid #313244;
+  transition: all 0.15s ease;
+}
+
+.led-pc.on {
+  background: #89b4fa;
+  border-color: #89b4fa;
+  box-shadow: 0 0 6px #89b4fa, 0 0 12px rgba(137, 180, 250, 0.3);
+}
+
+/* PC Display */
+.pc-display {
+  margin-top: 8px;
+  font-family: 'Consolas', monospace;
+  font-size: 10px;
+  color: #6c7086;
+}
+
+.pc-display span {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: #2a2a3a;
+  border: 1px solid #313244;
+  margin-left: 2px;
+  text-align: center;
+  line-height: 10px;
+  font-size: 8px;
+  color: #585b70;
+}
+
+.pc-display span.on {
+  background: #89b4fa;
+  border-color: #89b4fa;
+  color: #1e1e2e;
+}
+
+/* DIP Switches — single row */
+.dip-container {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.dip-switch {
+  width: 24px;
+  height: 14px;
+  border-radius: 3px;
+  background: #2a2a3a;
+  border: 2px solid #313244;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.dip-switch.on {
+  background: #cba6f7;
+  border-color: #cba6f7;
+  box-shadow: 0 0 8px rgba(203, 166, 247, 0.6);
+}
+
+.dip-switch:hover {
+  border-color: #cba6f7;
+}
+
+/* Push Buttons — BTNU above BTNC, BTND below BTNC */
+.pb-container {
+  display: grid;
+  grid-template-columns: 32px 32px 32px;
+  grid-template-rows: 32px 32px 32px;
+  gap: 4px;
+  align-items: center;
+  justify-items: center;
+  width: fit-content;
+}
+
+.pb-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2a2a3a;
+  border: 2px solid #313244;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 600;
+  color: #6c7086;
+  transition: all 0.1s ease;
+  user-select: none;
+}
+
+.pb-btn:hover {
+  border-color: #f9e2af;
+  color: #f9e2af;
+}
+
+.pb-btn.pressed {
+  background: #f9e2af;
+  border-color: #f9e2af;
+  color: #1e1e2e;
+  box-shadow: 0 0 8px rgba(249, 226, 175, 0.4);
+  transform: scale(0.95);
+}
+
+.pb-btn.reset-btn {
+  border-color: #f38ba8;
+  color: #f38ba8;
+}
+
+.pb-btn.reset-btn:hover,
+.pb-btn.reset-btn.pressed {
+  background: #f38ba8;
+  border-color: #f38ba8;
+  color: #1e1e2e;
+  box-shadow: 0 0 10px rgba(243, 139, 168, 0.5);
+}
+
+.pb-btn.pause-btn {
+  border-color: #fab387;
+  color: #fab387;
+}
+
+.pb-btn.pause-btn:hover,
+.pb-btn.pause-btn.pressed {
+  background: #fab387;
+  border-color: #fab387;
+  color: #1e1e2e;
+  box-shadow: 0 0 10px rgba(250, 179, 135, 0.5);
+}
+
+/* 7-Segment Display — SVG-based */
+.sevseg-container {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  background: #0a0a1a;
+  border: 1px solid #313244;
+  border-radius: 6px;
+  padding: 8px 6px;
+  overflow-x: auto;
+}
+
+.sevseg-digit {
+  width: 22px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.sevseg-segment {
+  fill: #1a1a2a;
+  transition: fill 0.1s ease;
+}
+
+.sevseg-segment.lit {
+  fill: #a6e3a1;
+  filter: drop-shadow(0 0 2px rgba(166, 227, 161, 0.6));
+}
+
+/* Peripherals Legend */
+.periph-legend {
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: #181825;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #585b70;
+  line-height: 1.6;
+}
+
+.periph-legend strong {
+  color: #6c7086;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
 @media (max-width: 800px) {
   body { overflow: auto; }
   .main { flex-direction: column; overflow: auto; }
@@ -308,6 +589,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       <div class="tab-bar">
         <button class="active" onclick="switchTab('registers',this)">Registers</button>
         <button onclick="switchTab('memory',this)">Memory</button>
+        <button onclick="switchTab('peripherals',this)">Peripherals</button>
         <button onclick="switchTab('disassembly',this)">Disassembly</button>
       </div>
       <div class="tab-content active" id="tab-registers">
@@ -334,6 +616,35 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
         </div>
         <div class="mem-view" id="memView"></div>
       </div>
+      <div class="tab-content" id="tab-peripherals">
+        <div class="peripherals-grid">
+          <div class="periph-section">
+            <div class="periph-title">LED <span class="periph-addr">0xFFFF0060 WO</span></div>
+            <div class="led-row" id="ledRow"></div>
+          </div>
+          <div class="periph-section">
+            <div class="periph-title">DIP Switches <span class="periph-addr">0xFFFF0064 RO</span></div>
+            <div class="dip-container" id="dipContainer"></div>
+          </div>
+          <div class="periph-section">
+            <div class="periph-title">Push Buttons <span class="periph-addr">0xFFFF0068 RO</span></div>
+            <div class="pb-container" id="pbContainer"></div>
+            <div style="margin-top:8px;font-size:10px;color:#585b70;">
+              BTNL | BTNC | BTNR — click to toggle &nbsp;·&nbsp; BTND = RESET &nbsp;·&nbsp; BTNU = PAUSE
+            </div>
+          </div>
+          <div class="periph-section">
+            <div class="periph-title">7-Segment Display <span class="periph-addr">0xFFFF0080 WO</span></div>
+            <div class="sevseg-container" id="sevsegContainer"></div>
+          </div>
+        </div>
+        <div class="periph-legend">
+          <strong>LED:</strong> 8 bits lit from written value &nbsp;·&nbsp; Clock (orange) shows divided clock &nbsp;·&nbsp; PC[8:2] displayed after divider
+          <br><strong>DIP:</strong> Click to toggle &nbsp;·&nbsp; Read at 0xFFFF0064 (16 bits)
+          <br><strong>PB:</strong> Click to toggle press/release &nbsp;·&nbsp; Read at 0xFFFF0068 (BTNL, BTNC, BTNR) &nbsp;·&nbsp; BTND=RESET, BTNU=PAUSE
+          <br><strong>7SEG:</strong> 8-digit hex rendered as SVG 7-segment (0–F)
+        </div>
+      </div>
       <div class="tab-content" id="tab-disassembly">
         <div class="disasm-toolbar">
           <label><input type="checkbox" id="showHex" checked onchange="updateDisassembly()"> Show Hex</label>
@@ -344,7 +655,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       </div>
     </div>
   </div>
-</div >
+</div>
 
 <script>
 // ============================================================
@@ -550,14 +861,14 @@ let regs = new Int32Array(32);
 let fregs = new Float32Array(32);
 let dregs = new Float64Array(32);
 let memory = new Uint8Array(4 * 1024 * 1024); // 4 MB memory
-let pc = 0x10000;
+let pc = 0x400000;
 // Configurable memory segment addresses.
-const DEFAULT_BASE = 0x10000;
-const DEFAULT_DATA_OFFSET = 0x10000;
+const DEFAULT_BASE = 0x00400000;
+const DEFAULT_DATA_OFFSET = 0x0FC10000;
 let baseAddress = DEFAULT_BASE;                    // .text base
 let dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET; // .data base
-let stackBase = 0x7ffffc;                          // stack top
-let mmioBase = 0x10000000;                         // MMIO base
+let stackBase = 0x10010200;                          // stack top
+let mmioBase = 0xFFFF0000;                         // MMIO base
 let machineCode = []; // array of {address, bytes, instruction, line}
 let labels = {};
 let symbolTable = {};
@@ -593,8 +904,23 @@ let MMIO_BASE = mmioBase;
 let MMIO_GETC = mmioBase;       // read: get character from buffer
 let MMIO_PUTC = mmioBase + 4;   // write: put character
 let MMIO_STATUS = mmioBase + 8; // read: bit0=1 if char available
+
+// Peripherals
+let PERIPH_LED = 0xFFFF0060;    // write-only: 8-bit LED display
+let PERIPH_DIP = 0xFFFF0064;    // read-only: 16-bit DIP switches
+let PERIPH_PB = 0xFFFF0068;     // read-only: 3-bit push buttons
+let PERIPH_SEVENSEG = 0xFFFF0080; // write-only: 7-segment display
+
 let ioInputBuffer = '';
 let ioOutputBuffer = '';
+
+// Peripheral state
+let ledState = 0;                // current LED display value
+let sevsegState = '00000000';    // 7-segment display string
+let dipSwitches = 0;             // simulated DIP switch value (16 bits)
+let pbState = 0;                 // simulated push button state (3 bits)
+let pbReset = false;             // simulated reset button
+let pbPause = false;             // simulated pause button
 
 // ============================================================
 // 3. REGISTER UTILITIES
@@ -684,6 +1010,13 @@ function resolveAddrRef(s) {
   throw new Error(`Unknown symbol '${s}'`);
 }
 function instructionSlots(mnemonic, args) {
+  // Loads with a bare label operand may expand to lui + load (2 slots)
+  if (['lb','lh','lw','lbu','lhu'].includes(mnemonic) && args.length === 2) {
+    const mem = parseMemOp(args[1]);
+    if (mem && mem.reg === 0 && (mem.offset > 2047 || mem.offset < -2048)) {
+      return 2;
+    }
+  }
   if (INSTRUCTIONS[mnemonic]) return 1;
   switch (mnemonic) {
     case 'la': case 'call': case 'tail': return 2;
@@ -873,6 +1206,24 @@ function assemble(source, startAddr) {
     const args = parseArgs(main);
     try {
       if (INSTRUCTIONS[mn]) {
+        // Special: lw/lb/lh/lbu/lhu rd, label  -> expand to lui + load when label is out of 12-bit range
+        if (['lb','lh','lw','lbu','lhu'].includes(mn) && args.length === 2) {
+          const rd = parseReg(args[0]);
+          const mem = parseMemOp(args[1]);
+          if (rd >= 0 && rd <= 31 && mem && mem.reg === 0) {
+            const addr = mem.offset;
+            if (addr > 2047 || addr < -2048) {
+              let upper = addr >>> 12;
+              let lower = addr & 0xFFF;
+              if (lower & 0x800) { upper = (upper + 1) & 0xFFFFF; }
+              const loSigned = (lower & 0x800) ? (lower - 0x1000) : lower;
+              const rn = 'x' + rd;
+              pushInstr('lui', [rn, upper], getAddr(), lineNo, asmText, true);
+              pushInstr(mn, [rn, loSigned + '(' + rn + ')'], getAddr(), lineNo, asmText, true);
+              return;
+            }
+          }
+        }
         pushInstr(mn, args, getAddr(), lineNo, asmText);
       } else if (PSEUDO_INSTRUCTIONS[mn]) {
         emitPseudo(mn, args, getAddr(), lineNo, asmText);
@@ -1340,6 +1691,7 @@ function writeMem(addr, val, size) {
 }
 
 function handleMMIOWrite(addr, val, size) {
+  // Original MMIO
   if (addr === MMIO_PUTC) {
     const ch = val & 0xFF;
     if (ch >= 32 && ch <= 126) {
@@ -1350,9 +1702,23 @@ function handleMMIOWrite(addr, val, size) {
       log('\n', 'info');
     }
   }
+  
+  // Peripherals
+  if (addr === PERIPH_LED) {
+    // Only least significant 8 bits used
+    ledState = val & 0xFF;
+    updatePeripherals();
+  }
+  
+  if (addr === PERIPH_SEVENSEG) {
+    // Display as 8-digit hex
+    sevsegState = val.toString(16).padStart(8, '0').toUpperCase();
+    updatePeripherals();
+  }
 }
 
 function handleMMIORead(addr, size) {
+  // Original MMIO
   if (addr === MMIO_GETC && ioInputBuffer.length > 0) {
     const ch = ioInputBuffer.charCodeAt(0);
     ioInputBuffer = ioInputBuffer.substring(1);
@@ -1361,6 +1727,18 @@ function handleMMIORead(addr, size) {
   if (addr === MMIO_STATUS) {
     return ioInputBuffer.length > 0 ? 1 : 0;
   }
+  
+  // Peripherals
+  if (addr === PERIPH_DIP) {
+    // Only least significant 16 bits valid
+    return dipSwitches & 0xFFFF;
+  }
+  
+  if (addr === PERIPH_PB) {
+    // Only least significant 3 bits valid: [2:0] → BTNL, BTNC, BTNR
+    return pbState & 0x7;
+  }
+  
   return 0;
 }
 
@@ -2062,6 +2440,201 @@ function updateRegisters() {
   regBody.innerHTML = html;
 }
 
+// ============================================================
+// PERIPHERALS
+// ============================================================
+
+function initPeripherals() {
+  const ledRow = document.getElementById('ledRow');
+  if (!ledRow) return;
+  let ledHtml = '';
+  for (let i = 7; i >= 0; i--) {
+    ledHtml += '<div class="led" id="led' + i + '" title="LED[' + i + '"></div>';
+  }
+  ledHtml += '<div class="led-divider"></div>';
+  ledHtml += '<div class="led-clock" id="ledClock" title="Clock (divided)"></div>';
+  ledHtml += '<div class="led-divider"></div>';
+  ledHtml += '<span class="led-label">PC</span>';
+  for (let i = 8; i >= 2; i--) {
+    ledHtml += '<div class="led-pc" id="pc' + i + '" title="PC[' + i + '"></div>';
+  }
+  ledRow.innerHTML = ledHtml;
+
+  const dipCont = document.getElementById('dipContainer');
+  if (dipCont) {
+    let dipHtml = '';
+    for (let i = 15; i >= 0; i--) {
+      dipHtml += '<div class="dip-switch" id="dip' + i + '" onclick="toggleDip(' + i + ')" title="DIP[' + i + ']"> </div>';
+    }
+    dipCont.innerHTML = dipHtml;
+  }
+
+  const pbCont = document.getElementById('pbContainer');
+  if (pbCont) {
+    const SQ = String.fromCharCode(39);
+    pbCont.innerHTML =
+      '<div class="pb-btn" id="pbBtnL" title="BTNL" style="grid-row:2;grid-column:1" onclick="pbToggle('+SQ+'0'+SQ+')">L</div>' +
+      '<div class="pb-btn" id="pbBtnC" title="BTNC" style="grid-row:2;grid-column:2" onclick="pbToggle('+SQ+'1'+SQ+')">C</div>' +
+      '<div class="pb-btn" id="pbBtnR" title="BTNR" style="grid-row:2;grid-column:3" onclick="pbToggle('+SQ+'2'+SQ+')">R</div>' +
+      '<div class="pb-btn pause-btn" id="pbPause" title="BTNU" style="grid-row:1;grid-column:2" onclick="pbToggle('+SQ+'pause'+SQ+')">PAU</div>' +
+      '<div class="pb-btn reset-btn" id="pbReset" title="BTND" style="grid-row:3;grid-column:2" onclick="pbToggle('+SQ+'reset'+SQ+')">RST</div>' +
+      '<div style="visibility:hidden"></div>' +
+      '<div style="visibility:hidden"></div>' +
+      '<div style="visibility:hidden"></div>' +
+      '<div style="visibility:hidden"></div>' +
+      '<div style="visibility:hidden"></div>' +
+      '<div style="visibility:hidden"></div>' +
+      '<div style="visibility:hidden"></div>' +
+      '<div style="visibility:hidden"></div>';
+  }
+
+  const sevseg = document.getElementById('sevsegContainer');
+  if (sevseg) sevseg.innerHTML = '';
+
+  updatePeripherals();
+}
+
+
+function updatePeripherals() {
+  // Update LEDs (8 bits)
+  for (let i = 0; i < 8; i++) {
+    const led = document.getElementById('led' + i);
+    if (led) led.classList.toggle('on', !!(ledState & (1 << i)));
+  }
+  
+  // Update clock LED
+  const clockLed = document.getElementById('ledClock');
+  if (clockLed) clockLed.classList.toggle('on', totalCycles % 100 < 50);
+  
+  // Update PC[8:2] bits
+  for (let i = 8; i >= 2; i--) {
+    const pcLed = document.getElementById('pc' + i);
+    if (pcLed) pcLed.classList.toggle('on', !!(pc & (1 << i)));
+  }
+  
+  // Update DIP switches
+  for (let i = 0; i < 16; i++) {
+    const dip = document.getElementById('dip' + i);
+    if (dip) dip.classList.toggle('on', !!(dipSwitches & (1 << i)));
+  }
+  
+  // Update push buttons
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(['pbBtnL','pbBtnC','pbBtnR'][i]);
+    if (el) el.classList.toggle('pressed', !!(pbState & (1 << i)));
+  }
+  const pbReset = document.getElementById('pbReset');
+  if (pbReset) pbReset.classList.toggle('pressed', !!(pbState & (1 << 3)));
+  const pbPause = document.getElementById('pbPause');
+  if (pbPause) pbPause.classList.toggle('pressed', !!(pbState & (1 << 4)));
+  
+  // Update 7-segment display
+  sevsegUpdate();
+}
+
+function toggleDip(idx) {
+  dipSwitches ^= (1 << idx);
+  dipSwitches &= 0xFFFF;
+  updatePeripherals();
+}
+
+// Push button: click to toggle press/release
+function pbToggle(btn) {
+  if (btn === 'reset') {
+    if (pbState & (1 << 3)) {
+      pbState &= ~(1 << 3);
+    } else {
+      pbState |= (1 << 3);
+      resetAll();
+    }
+  } else if (btn === 'pause') {
+    if (pbState & (1 << 4)) {
+      pbState &= ~(1 << 4);
+    } else {
+      pbState |= (1 << 4);
+      togglePause();
+    }
+  } else {
+    if (pbState & (1 << btn)) {
+      pbState &= ~(1 << btn);
+    } else {
+      pbState |= (1 << btn);
+    }
+  }
+  updatePeripherals();
+}
+
+// ============================================================
+// SVG 7-Segment Display
+// ============================================================
+
+// Segment shapes for one 7-segment digit (22x40 SVG)
+// a=top, b=top-right, c=bottom-right, d=bottom, e=bottom-left, f=top-left, g=middle
+const SEGMENT_PATHS = [
+  'M3,3 L19,3 L18,5 L4,5 Z',
+  'M19,5 L21,4 L21,17 L19,16 Z',
+  'M19,23 L21,24 L21,35 L19,36 Z',
+  'M4,35 L18,35 L18,37 L3,37 Z',
+  'M1,35 L3,36 L3,24 L1,23 Z',
+  'M1,16 L3,17 L3,4 L1,3 Z',
+  'M4,18 L18,18 L18,20 L4,20 Z'
+];
+
+// Segment bits for each hex digit [a,b,c,d,e,f,g]
+const HEX_SEGMENTS = {
+  0: [1,1,1,1,1,1,0],
+  1: [0,1,1,0,0,0,0],
+  2: [1,1,0,1,1,0,1],
+  3: [1,1,1,1,0,0,1],
+  4: [0,1,1,0,0,1,1],
+  5: [1,0,1,1,0,1,1],
+  6: [1,0,1,1,1,1,1],
+  7: [1,1,1,0,0,0,0],
+  8: [1,1,1,1,1,1,1],
+  9: [1,1,1,1,0,1,1],
+  'a': [1,1,1,0,1,1,1],
+  'b': [0,0,1,1,1,1,1],
+  'c': [1,0,0,1,1,1,0],
+  'd': [0,1,1,1,1,0,1],
+  'e': [1,0,0,1,1,1,1],
+  'f': [1,0,0,0,1,1,1]
+};
+
+function createDigitSVG(digit) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'sevseg-digit');
+  svg.setAttribute('viewBox', '0 0 22 40');
+  
+  const bits = HEX_SEGMENTS[digit] || [0,0,0,0,0,0,0];
+  
+  for (let i = 0; i < 7; i++) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', SEGMENT_PATHS[i]);
+    path.setAttribute('class', 'sevseg-segment' + (bits[i] ? ' lit' : ''));
+    path.setAttribute('data-seg', i);
+    svg.appendChild(path);
+  }
+  
+  return svg;
+}
+
+function sevsegUpdate() {
+  const container = document.getElementById('sevsegContainer');
+  if (!container) return;
+  
+  const val = sevsegState.padStart(8, '0').toLowerCase();
+  container.innerHTML = '';
+  
+  for (let i = 0; i < 8; i++) {
+    const ch = val[i];
+    const svg = createDigitSVG(ch);
+    container.appendChild(svg);
+  }
+}
+
+// ============================================================
+// ============================================================
+
 function updateMemoryView() {
   const addrStr = document.getElementById('memAddr').value;
   const rows = parseInt(document.getElementById('memRows').value) || 16;
@@ -2381,6 +2954,7 @@ function switchTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
   if (tab === 'memory') updateMemoryView();
+  if (tab === 'peripherals') { initPeripherals(); }
   if (tab === 'disassembly') updateDisassembly();
 }
 
@@ -2675,7 +3249,7 @@ function applyMemSegments() {
 function resetMemSegments() {
   baseAddress = DEFAULT_BASE;
   dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET;
-  stackBase = 0x7ffffc;
+  stackBase = 0x10010200;
   mmioBase = 0x10000000;
   MMIO_BASE = mmioBase; MMIO_GETC = mmioBase; MMIO_PUTC = mmioBase + 4; MMIO_STATUS = mmioBase + 8;
   document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
