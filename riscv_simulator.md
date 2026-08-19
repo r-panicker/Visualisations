@@ -44,6 +44,8 @@ A single-file web application (`riscv_simulator.html`) implementing a **RISC-V R
 #### Compressed (C) Instructions
 - Support for compressed instruction encoding and decoding
 - Pseudo-instruction expansion to 32-bit equivalents
+- Includes: `c.addi`, `c.lw`, `c.sw`, `c.nop`, and other C-extension instructions
+- 16-bit compressed instructions are expanded to their 32-bit equivalents during assembly
 
 #### FENCE Instructions
 - `fence`, `fence.i` support
@@ -379,11 +381,6 @@ bnez x2, there       # Branch if not zero
 | Ctrl+Y | Redo (in editor) |
 | Ctrl+Shift+Z | Redo (in editor) |
 | Tab | Insert tab (in editor) |
-| F9 | Toggle breakpoint |
-| Ctrl+Z | Undo last edit |
-| Ctrl+Y / Ctrl+Shift+Z | Redo last undone edit |
-| Ctrl+S | Save file |
-| Ctrl+Enter | Assemble only |
 
 ---
 
@@ -414,6 +411,9 @@ bnez x2, there       # Branch if not zero
 - In-place memory editing during assembly
 - **v2.0**: Fixed column alignment, 8-byte memory view, invalid breakpoint handling, mobile scrolling
 
+### Known Issues (Ongoing)
+- **`lw` pseudo-instruction**: When `lw rd, label` is used with a label that resolves to an address outside the 12-bit signed immediate range, the assembler expands it to `lui` + `load` (e.g., `lw` → `lui` + `lw`). This expansion may produce incorrect results for certain label offsets and requires manual review.
+
 ---
 
 ## Future Extensions
@@ -439,8 +439,9 @@ bnez x2, there       # Branch if not zero
 | 1.1 | `.eqv` comma fix, base address removal |
 | 1.2 | `parseMemOp` label support, separate `.mem` dumps |
 | 1.3 | `.dword` directive rendering, in-place memory editing |
-| 2.0 | **UI Improvements**: Undo/Redo (Ctrl+Z/Y), fixed column alignment, 8-byte memory view, Pause button, 100M cycle limit, invalid breakpoint handling, mobile scrolling fixes, removed dump buttons |
-| 2.1 | **Peripherals Tab**: Single-row LED display (8-bit + clock LED + PC[8:2] with dividers), single-row scrollable DIP switches (16), 2-row grid push buttons (BTNL/BTNC/BTNR/BTND) with click-to-toggle interaction, SVG-based 7-segment display (hex a-f rendering on 22x40 SVGs) |
+| 2.0 | **UI Improvements**: Undo/Redo (Ctrl+Z/Y), fixed column alignment, 8-byte memory view, Pause button, 100M cycle limit, invalid breakpoint handling, mobile scrolling fixes |
+| 2.1 | **Peripherals Tab**: Single-row LED display (8-bit + clock LED + PC[8:2] with dividers), single-row scrollable DIP switches (16), 3x3 grid push buttons (BTNL/BTNC/BTNR/BTND/PAU/RST), SVG-based 7-segment display (hex a-f rendering on 22x40 SVGs) |
+| 2.2 | **Documentation Updates**: Fixed push button layout docs, added lw pseudo-instruction known issue, clarified dump buttons are retained, removed keyboard shortcut duplicates |
 
 ---
 
@@ -463,8 +464,9 @@ bnez x2, there       # Branch if not zero
 - **Increased Cycle Limit**: Maximum cycles increased from 100,000 to 100,000,000
 - **Breakpoint Validation**: Invalid breakpoint line numbers are now detected and reported
 
-### Removed Features
-- **Dump Buttons**: Removed "Dump txt", "Dump data", and "Dump all" buttons (functionality not directly useful for export)
+### Dump Buttons
+- **"Dump txt"**: Exports code (text) segment to Verilog `$readmemh` format
+- **"Dump data"**: Exports data segment to Verilog `$readmemh` format
 
 ---
 
@@ -484,9 +486,10 @@ bnez x2, there       # Branch if not zero
 - CSS: `.dip-container`, `.dip-switch`
 
 ### Push Buttons
-- 2-row grid layout (BTNU above RST, BTND below C):
-  - Row 1: BTNL | BTNC | BTNU | BTNR
-  - Row 2: (hidden) | BTND | RST | (hidden)
+- 3x3 grid layout (32px cells, 4px gap):
+  - Row 1: (empty) | BTNU (PAU) | (empty)
+  - Row 2: BTNL (L) | BTNC (C) | BTNR (R)
+  - Row 3: (empty) | BTND/RST | (empty)
 - Click-to-toggle interaction (replaces "hold" behavior)
 - CSS: `.pb-container`, `.pb-btn`, `.pause-btn`, `.reset-btn`, `.pressed`
 
