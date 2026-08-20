@@ -979,7 +979,9 @@ function parseMemOp(s) {
   if (labels[s] !== undefined) return { offset: labels[s], reg: 0 };
   if (symbolTable[s] !== undefined) return { offset: symbolTable[s], reg: 0 };
   return null;
-}function sext(value, bits) {
+}
+
+function sext(value, bits) {
   const sign = 1 << (bits - 1);
   return (value & (sign - 1)) - (value & sign);
 }
@@ -3798,73 +3800,6 @@ function assembleOnly() {
   return mc;
 }
 
-function runProgram() {
-  clearLog();
-  const mc = assembleOnly();
-  if (!mc) return;
-
-  running = true;
-  let count = 0;
-  const maxCycles = 100000000;  // Increased to 100 million
-  let stopReason = 'finished';
-  
-  // Show pause button
-  const pauseBtn = document.getElementById('pauseBtn');
-  pauseBtn.style.display = 'inline-block';
-  
-  while (running && count < maxCycles) {
-    const execAddr = pc;
-    const line = sourceLineForPc(execAddr);
-    // Highlight the instruction about to execute (debugger convention).
-    currentExecLine = (line >= 1) ? line : -1;
-
-    // Stop BEFORE executing the breakpoint instruction so the highlighted line
-    // is the one that will run next.
-    if (line >= 1 && breakpoints.has(line)) {
-      log(`Breakpoint hit at line ${line}`, 'warn');
-      stopReason = 'breakpoint';
-      running = false;
-      break;
-    }
-
-    try {
-      executeOne();
-    } catch (e) {
-      log(`Error executing at PC 0x${execAddr.toString(16)}: ${e.message}`, 'error');
-      stopReason = 'error';
-      running = false;
-      break;
-    }
-    count++;
-
-    if (!running) { stopReason = 'exit'; break; }          // e.g. ecall exit
-    if (pc < baseAddress || pc >= memory.length) { stopReason = 'bounds'; break; }
-  }
-  running = false;
-  assembled = true;
-  
-  // Hide pause button
-  pauseBtn.style.display = 'none';
-  
-  if (count >= maxCycles) {
-    log('Max cycles reached (possible infinite loop).', 'warn');
-    setStatus('Stopped (max cycles)', 'warn');
-  } else if (stopReason === 'exit' || stopReason === 'bounds') {
-    // The program ended: there is no next instruction to highlight.
-    currentExecLine = -1;
-    log(`Program completed after ${totalCycles} cycles, ${instructionCount} instructions.`, 'success');
-    setStatus('Program finished', 'success');
-  }
-  // For 'breakpoint', 'error', and max-cycles stops, currentExecLine already points
-  // at the next instruction to execute, so leave it as-is.
-  updateRegisters();
-  updateMemoryView();
-  updateStats();
-  highlightCurrentLine();
-  updateMachineCode();
-  updateDisassembly();
-}
-
 function assembleAndRun() {
   runProgram();
 }
@@ -4160,8 +4095,7 @@ log('RISC-V RV32GC Simulator loaded', 'success');
 log('Supports: RV32I, M, F, D, A extensions', 'info');
 log('F5 Run · Ctrl+Enter Assemble · F8 Step · Shift+F8 Back · F9 Breakpoint · Tab to indent', 'info');
 initSplitter();
-  </script>
-  <script>
+
   // --- Keyboard shortcuts & Tab handling for the editor ---
   document.addEventListener('keydown', (e) => {
     if (e.target && e.target.id === 'asmEditor') {

@@ -184,16 +184,17 @@ The simulator supports the complete **RV32GC** instruction set architecture:
 
 ---
 
-## 9. Version History (v1.0 – v3.7)
+## 9. Version History (v1.0 – v3.8)
 
 | Version | Milestone Description & Features Implemented |
 |---------|----------------------------------------------|
 | **v1.0 – v2.8** | Initial RV32GC simulator core, dual-layer syntax editor, `.equ` pre-pass, `.dword` data rendering, and spec-compliant PC-relative jump/branch offset calculations (`targetAddr - address`). |
 | **v3.0** | Nexys 4 FPGA peripheral board simulation with 16 LEDs, 16 DIP switches, 3-color scheme (Cyan, Amber, Green), divided clock blink/pause logic, and 32-bit unsigned MMIO addressing. |
-| **v3.1** | **Register Editing & Non-Blocking Engine**: Single-click localized inline edit, double-click popup modal window (`#regEditOverlay`), non-blocking chunked batch loop (`CHUNK_SIZE = 5000`), and responsive `⏸ Pause` / `▶ Resume` controls. |
-| **v3.2** | **MMIO Address Formatting & Toolbar Polishing**: Fixed 32-bit bitwise sign-extension in memory viewer (`(addr >>> 0) & ~0x7`), rendering MMIO addresses from `0xffff0000` upwards. Enforced 28px uniform toolbar button height. |
-| **v3.3** | **Compact Mobile DIP Switch & LED Layout**: Optimized DIP switch width (16px x 11px) and inter-switch gaps (1px), bringing total board width to 319px so all 16 DIP switches and 16 LEDs fit on mobile viewports without horizontal scrolling. |
-| **v3.4** | **Data Segment Upward Direction & MMIO Sync**: Restricted downward row stepping to Stack exclusively. Data segment (`.data` at `0x00020000`) steps upwards in increasing address order. Updated `handleMMIOWrite` to sync byte/word writes across LED, DIP, Push Buttons, and 7-Segment registers. Added detailed in-memory row annotations (`[LED WO 0xFFFF0060 · DIP RO 0xFFFF0064]`, `[7SEG WO 0xFFFF0080]`). |
-| **v3.5** | **MMIO Read Persistence**: Updated `handleMMIORead(addr, size)` to return stored byte/word values for `PERIPH_LED` (`0xFFFF0060`) and `PERIPH_SEVENSEG` (`0xFFFF0080`), ensuring edited MMIO values persist permanently in the Memory View. Adjusted `.dip-sublabel` `margin-top: 3px` to match LED sublabel spacing. |
-| **v3.6** | **Register Table Column Gap Reduction**: Applied `table-layout: fixed` with compact column width constraints on `Name` to reduce distance between `Name` and `Value (Hex)` while keeping `Value (Hex)` and `Value (Dec)` spacing natural. Centered 7-segment display digits (`justify-content: center`) inside the bounding box and increased inter-digit gap to `8px`. |
-| **v3.7** | **Push Button Bit Mapping Fix**: Corrected Push Button bit mapping `[2:0]` at `0xFFFF0068` so Bit 2 = BTNL (Left), Bit 1 = BTNC (Center), and Bit 0 = BTNR (Right), resolving L and R button bit swapping. |
+| **v3.1** | Register Edit UI overhaul, non-blocking run loop, memory MMIO rendering and editing. |
+| **v3.2** | MMIO address formatting fix, stack downward direction, toolbar height, register header alignment. |
+| **v3.3** | Compact mobile DIP switch & LED layout (319px total width, 0 horizontal scroll). |
+| **v3.4** | Data segment growth fix, MMIO edits sync, detailed row annotations. |
+| **v3.5** | MMIO read persistence fix, DIP switch sublabel margin adjustment. |
+| **v3.6** | Register column gap reduction, 7-segment display centering and spacing. |
+| **v3.7** | Push Button bit mapping fix (`[2:0] → Bit 2=BTNL, Bit 1=BTNC, Bit 0=BTNR`). |
+| **v3.8** | **Code Base Refactoring & Cleanup**: Removed obsolete duplicate synchronous `runProgram()` definition, formatted line breaks (`function sext`), merged script blocks, and reorganized source codebase into 11 structured sections with comprehensive block comments. |
