@@ -2007,7 +2007,7 @@ function initializeState() {
   totalCycles = 0;
   instructionCount = 0;
   currentExecLine = -1;
-  regs[2] = stackBase;
+  // Note: In RISC-V hardware, integer registers (including sp / x2) are initialized to 0 on reset
   oledCol = 0;
   oledRow = 0;
   oledCtrl = 0;
@@ -2039,9 +2039,9 @@ function isMMIOAddr(addr) {
   return (u >= 0xFFFF0000 && u < 0xFFFF0100);
 }
 
-function readMem(addr, size) {
+function readMem(addr, size, peekOnly = false) {
   const uaddr = addr >>> 0;
-  if (isMMIOAddr(uaddr)) return handleMMIORead(uaddr, size);
+  if (isMMIOAddr(uaddr)) return handleMMIORead(uaddr, size, peekOnly);
   if (uaddr + size > memory.length) return 0;
   let val = 0;
   for (let i = 0; i < size; i++) {
@@ -2050,8 +2050,8 @@ function readMem(addr, size) {
   return val >>> 0;
 }
 
-function readMemSigned(addr, size) {
-  let val = readMem(addr, size);
+function readMemSigned(addr, size, peekOnly = false) {
+  let val = readMem(addr, size, peekOnly);
   if (size === 4) return val | 0;
   const signBit = 1 << (size * 8 - 1);
   if (val & signBit) val -= (1 << (size * 8));
@@ -2250,7 +2250,7 @@ function handleMMIOWrite(addr, val, size) {
   }
 }
 
-function handleMMIORead(addr, size) {
+function handleMMIORead(addr, size, peekOnly = false) {
   const u = addr >>> 0;
 
   // UART_RX_VALID (0xFFFF0000 .. 0xFFFF0003) -> Bit 0 = 1 if RX queue has data
@@ -2261,15 +2261,19 @@ function handleMMIORead(addr, size) {
     return (offset === 0) ? isVal : 0;
   }
 
-  // UART_RX (0xFFFF0004 .. 0xFFFF0007) -> Read next byte from RX queue
+  // UART_RX (0xFFFF0004 .. 0xFFFF0007) -> Read next byte from RX queue (or peek if peekOnly)
   const rxBase = UART_RX >>> 0;
   if (u >= rxBase && u < rxBase + 4) {
     const offset = u - rxBase;
     if (offset === 0) {
       if (uartRxQueue.length > 0) {
-        const b = uartRxQueue.shift() & 0xFF;
-        updatePeripherals();
-        return b;
+        if (peekOnly) {
+          return (uartRxQueue[0] & 0xFF);
+        } else {
+          const b = uartRxQueue.shift() & 0xFF;
+          updatePeripherals();
+          return b;
+        }
       }
       return 0;
     }
@@ -3453,9 +3457,7 @@ function sendUartInput() {
       if (!token) continue;
       let val = NaN;
       if (token.startsWith('0x') || token.startsWith('0X') || /[a-fA-F]/.test(token)) {
-        val = parseInt(token.replace(/^0x/i, ''), 16);
-      } else {
-        val = parseInt(token, 10);
+      val = parseInt(token, 10);
       }
       if (!isNaN(val) && val >= 0 && val <= 255) {
         bytes.push(val & 0xFF);
@@ -3467,20 +3469,24 @@ function sendUartInput() {
 
   const isBufferMode = checkEl && checkEl.checked;
   if (isBufferMode) {
-    autoSeqQueue = bytes;
+    // Put the first byte immediately into the UART RX FIFO queue, and schedule the rest
+    uartRxQueue = [bytes[0]];
+    autoSeqQueue = bytes.slice(1);
     autoSeqTotalBytes = bytes.length;
     autoSeqDelayInstr = Math.max(1, parseInt(delayEl ? delayEl.value : 10, 10) || 10);
-    autoSeqPending = true;
+    autoSeqPending = autoSeqQueue.length > 0;
     autoSeqNextTargetInstr = instructionCount + autoSeqDelayInstr;
     textEl.value = '';
-    if (btnEl) {
+    if (btnEl && autoSeqPending) {
       btnEl.innerText = 'Cancel';
       btnEl.style.background = '#f38ba8';
     }
-    if (statusEl) statusEl.innerText = `Buffered ${autoSeqTotalBytes} bytes (${autoSeqDelayInstr} instr delay)`;
+    if (statusEl) statusEl.innerText = autoSeqPending ? `Buffering: 1/${autoSeqTotalBytes} (${autoSeqDelayInstr} instr delay)` : '';
   } else {
-    // Real hardware UART: strictly 1-character buffer when Buffer/auto-send is unchecked
-    uartRxQueue = [bytes[0]];
+    // Direct send: push all bytes into the FIFO queue (first byte immediately available at 0xFFFF0004)
+    for (const b of bytes) {
+      uartRxQueue.push(b);
+    }
     textEl.value = '';
     if (statusEl) statusEl.innerText = '';
   }
@@ -3491,7 +3497,18 @@ function sendUartInput() {
 
 function clearUartTx() {
   uartTxBuffer = '';
+  uartRxQueue = [];
+  autoSeqPending = false;
+  autoSeqQueue = [];
+  const btnEl = document.getElementById('uartSendBtn');
+  if (btnEl) {
+    btnEl.innerText = 'Send';
+    btnEl.style.background = '';
+  }
+  const statusEl = document.getElementById('uartAutoSendStatus');
+  if (statusEl) statusEl.innerText = '';
   updatePeripherals();
+  updateMemoryView();
 }
 
 function toggleDip(idx) {
@@ -3608,7 +3625,7 @@ function updateMemoryView() {
 
       for (let c = 0; c < 8; c++) {
         const offset = (base + c) >>> 0;
-        const val = readMem(offset, 1) & 0xFF;
+        const val = readMem(offset, 1, true) & 0xFF;
         const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
         const cls = isChanged ? ' changed' : '';
         if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
@@ -4623,14 +4640,19 @@ CYCLECOUNT_ADDR:
   editor.value = examples[name] || examples.basic;
   editor.scrollTop = 0;
   editor.scrollLeft = 0;
+  breakpoints.clear();
+  resetAll();
+  editorHistory.initialState();
   updateEditor();
+  updateLineNumbers();
   clearLog();
+  log(`Example loaded: ${name}`, 'info');
   setStatus('Example loaded: ' + name);
 }
 window.loadExample = loadExample;
 
 // ============================================================
-// 7. MAIN CONTROL
+// 10. MAIN CONTROL (Execution, Cycles, Segments, Debugger)
 // ============================================================
 
 function instrCycles(instr32) {
@@ -4690,9 +4712,10 @@ function buildCyclesPanel() {
 
 function toggleCyclesPanel() {
   const ov = document.getElementById('cyclesOverlay');
-  if (ov.style.display === 'none' || !ov.classList.contains('open')) {
+  if (!ov.classList.contains('open')) {
     buildCyclesPanel();
     ov.classList.add('open');
+    ov.style.display = '';
   } else {
     closeCyclesPanel();
   }
@@ -4701,7 +4724,7 @@ function toggleCyclesPanel() {
 function closeCyclesPanel() {
   const ov = document.getElementById('cyclesOverlay');
   ov.classList.remove('open');
-  ov.style.display = 'none';
+  ov.style.display = '';
 }
 
 function resetCyclesConfig() {
@@ -4747,9 +4770,10 @@ function buildMemSegmentsPanel() {
 
 function toggleMemSegmentsPanel() {
   const ov = document.getElementById('memSegmentsOverlay');
-  if (ov.style.display === 'none' || !ov.classList.contains('open')) {
+  if (!ov.classList.contains('open')) {
     buildMemSegmentsPanel();
     ov.classList.add('open');
+    ov.style.display = '';
   } else {
     closeMemSegmentsPanel();
   }
@@ -4758,7 +4782,7 @@ function toggleMemSegmentsPanel() {
 function closeMemSegmentsPanel() {
   const ov = document.getElementById('memSegmentsOverlay');
   ov.classList.remove('open');
-  ov.style.display = 'none';
+  ov.style.display = '';
 }
 
 function parseHexAddr(str, fallback) {
@@ -4791,6 +4815,7 @@ function resetMemSegments() {
   MMIO_BASE = mmioBase; MMIO_GETC = mmioBase; MMIO_PUTC = mmioBase + 4; MMIO_STATUS = mmioBase + 8;
   document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
   buildMemSegmentsPanel();
+  reloadAfterLayoutChange();
   setStatus('Segment defaults restored', 'success');
 }
 
@@ -4799,17 +4824,7 @@ function resetMemSegments() {
 function reloadAfterLayoutChange() {
   resetAll();
   if (editor.value.trim()) {
-    try {
-      const mc = assemble(editor.value, baseAddress);
-      machineCode = mc;
-      loadProgram(mc);
-      updateMachineCode();
-      updateDisassembly();
-      updateMemoryView();
-      updateStats();
-      highlightFirstLine(mc);
-      assembled = true;
-    } catch (e) {}
+    assembleOnly();
   }
 }
 
@@ -4826,7 +4841,7 @@ function buildMemFileText(items) {
   let result = '';
   let lastAddr = -1;
   for (const item of items) {
-    const wordCount = Math.floor(item.bytes.length / 4);
+    const wordCount = Math.max(1, Math.ceil(item.bytes.length / 4));
     for (let w = 0; w < wordCount; w++) {
       const addr = item.address + w * 4;
       if (addr !== lastAddr + 4) {
@@ -5332,7 +5347,7 @@ function resetState() {
 }
 
 // ============================================================
-// 8. INITIALIZATION
+// 11. INITIALIZATION & FILE I/O
 // ============================================================
 
 // Load file from file input
@@ -5345,7 +5360,11 @@ function loadFile(event) {
     editor.value = e.target.result;
     editor.scrollTop = 0;
     editor.scrollLeft = 0;
+    breakpoints.clear();
+    resetAll();
+    editorHistory.initialState();
     updateEditor();
+    updateLineNumbers();
     clearLog();
     log(`Loaded file: ${file.name}`, 'success');
     setStatus('File loaded: ' + file.name);

@@ -255,6 +255,73 @@ runProgram();
 const bpPass6 = (regs[1] === 5 && programFinished === true);
 console.log('  Run after finished (re-assembles and runs from start):', bpPass6 ? 'PASS' : `FAIL (x1=${regs[1]}, finished=${programFinished})`);
 
+console.log('=== UART Send, MMIO Peek, and Program Switch Verification ===');
+// 1. Send UART character 'A' (0x41)
+document.getElementById('uartInputMode').value = 'ascii';
+document.getElementById('uartInputText').value = 'A';
+document.getElementById('uartAutoSendCheck').checked = false;
+sendUartInput();
+
+const uartPass1 = (uartRxQueue.length === 1 && uartRxQueue[0] === 0x41);
+console.log('  UART send \'A\' into RX FIFO:', uartPass1 ? 'PASS' : `FAIL (queue=${JSON.stringify(uartRxQueue)})`);
+
+const rxValidVal = readMem(0xFFFF0000, 1, true);
+const rxDataVal = readMem(0xFFFF0004, 1, true);
+const badgeRxValid = document.getElementById('badgeRxValid').innerText;
+const uartPass2 = (rxValidVal === 1 && rxDataVal === 0x41 && badgeRxValid === '1' && uartRxQueue.length === 1);
+console.log('  RX_VALID=1 and RX=0x41 before CPU read (peek non-destructive):', uartPass2 ? 'PASS' : `FAIL (rxVal=${rxValidVal}, rxData=0x${rxDataVal.toString(16)}, badge=${badgeRxValid}, qLen=${uartRxQueue.length})`);
+
+// 2. CPU instruction reads 0xFFFF0004 -> consumes 'A'
+const cpuRead = readMem(0xFFFF0004, 1, false);
+const rxValidAfter = readMem(0xFFFF0000, 1, true);
+const badgeRxValidAfter = document.getElementById('badgeRxValid').innerText;
+const uartPass3 = (cpuRead === 0x41 && uartRxQueue.length === 0 && rxValidAfter === 0 && badgeRxValidAfter === '0');
+console.log('  CPU readMem consumes byte and clears RX_VALID to 0:', uartPass3 ? 'PASS' : `FAIL (cpuRead=0x${cpuRead.toString(16)}, qLen=${uartRxQueue.length}, rxVal=${rxValidAfter})`);
+
+// 3. Write to UART_TX (0xFFFF000C)
+writeMem(0xFFFF000C, 0x48, 1); // 'H'
+writeMem(0xFFFF000C, 0x69, 1); // 'i'
+const uartPass4 = (uartTxBuffer === 'Hi');
+console.log('  UART TX write outputs to terminal buffer (\'Hi\'):', uartPass4 ? 'PASS' : `FAIL (uartTxBuffer=${uartTxBuffer})`);
+
+// 4. Switching assembly program clears serial console and resets peripherals
+loadExample('basic');
+const uartPass5 = (uartTxBuffer === '' && uartRxQueue.length === 0 && document.getElementById('badgeRxValid').innerText === '0');
+console.log('  Switching example clears serial console & resets UART state:', uartPass5 ? 'PASS' : `FAIL (tx=${uartTxBuffer}, qLen=${uartRxQueue.length})`);
+
+// 5. Verify Stack Pointer (x2 / sp) is 0 on reset
+resetAll();
+const spResetPass = (regs[2] === 0);
+console.log('  Stack Pointer (x2 / sp) is 0 on reset (hardware spec):', spResetPass ? 'PASS' : `FAIL (sp=0x${regs[2].toString(16)})`);
+
+// 6. Segment address change triggers re-assembly
+const segTestCode = [
+  '.text',
+  'main:',
+  '  la x1, mydata',
+  '  lw x2, 0(x1)',
+  '.data',
+  'mydata: .word 0x12345678'
+].join('\n');
+
+editor.value = segTestCode;
+assembleOnly();
+
+// Change segment addresses to Code=0x40000, Data=0x80000
+document.getElementById('ms-code').value = '0x40000';
+document.getElementById('ms-data').value = '0x80000';
+document.getElementById('ms-stack').value = '0x90000';
+document.getElementById('ms-mmio').value = '0xFFFF0000';
+applyMemSegments();
+
+const segPass1 = (baseAddress === 0x40000 && dataBase === 0x80000 && labels['mydata'] === 0x80000 && readMem(0x80000, 4) === 0x12345678 && machineCode[0].address === 0x40000 && assembled === true);
+console.log('  applyMemSegments() re-assembles code & data to new addresses:', segPass1 ? 'PASS' : `FAIL (base=0x${baseAddress.toString(16)}, data=0x${dataBase.toString(16)}, lbl=0x${labels['mydata']?.toString(16)})`);
+
+// Restore default segment addresses
+resetMemSegments();
+const segPass2 = (baseAddress === 0x10000 && dataBase === 0x20000 && labels['mydata'] === 0x20000 && readMem(0x20000, 4) === 0x12345678 && machineCode[0].address === 0x10000 && assembled === true);
+console.log('  resetMemSegments() re-assembles back to default addresses:', segPass2 ? 'PASS' : `FAIL (base=0x${baseAddress.toString(16)}, data=0x${dataBase.toString(16)}, lbl=0x${labels['mydata']?.toString(16)})`);
+
 console.log('=== Comprehensive Instruction Set Verification (RV32I, RV32M, RV32F, RV32D, RV32A, Pseudo) ===');
 require('./test_all_instructions.js');
 
