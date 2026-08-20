@@ -334,11 +334,16 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 
 .periph-title {
   font-weight: 600;
-  color: #6c7086;
+  color: #a6adc8;
   margin-bottom: 8px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  cursor: help;
+  transition: color 0.15s ease;
+}
+.periph-title:hover {
+  color: #cdd6f4;
 }
 
 .periph-addr {
@@ -611,43 +616,6 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 </head>
 <body id="simulatorBody">
 <div class="container">
-  <div class="header">
-    <h1>🦾 RISC-V Simulator</h1>
-    <span class="subtitle">RV32GC — Assembler + Simulator</span>
-  </div>
-  <div class="toolbar">
-    <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
-    <button onclick="document.getElementById('fileLoader').click()">📂 Open</button>
-    <button onclick="saveFile()" title="Save the edited source code as a .asm file">💾 Save</button>
-    <button onclick="editorHistory.undo()" title="Undo last edit (Ctrl+Z)">↶ Undo</button>
-    <button onclick="editorHistory.redo()" title="Redo last undone edit (Ctrl+Y)">↷ Redo</button>
-    <button onclick="assembleOnly()" title="Assemble and reset state without running">⚙ Assemble</button>
-    <button onclick="runProgram()" title="Run the currently assembled program from the start (F5)">▶ Run</button>
-    <button onclick="togglePause()" id="pauseBtn" style="display:none;" title="Pause execution">⏸ Pause</button>
-    <button onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
-    <button onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
-    <button onclick="resetAll()">⟲ Reset</button>
-    <button onclick="toggleCyclesPanel()" title="Configure cycles per instruction type" class="gear">⏱ Cycles…</button>
-    <button onclick="toggleMemSegmentsPanel()" title="Configure memory segment addresses" class="gear">🗺 Segments…</button>
-    <button onclick="dumpTextSegment()" title="Dump code (text) segment to a Verilog .mem file">💾 Dump txt</button>
-    <button onclick="dumpDataSegment()" title="Dump data segment to a Verilog .mem file">💾 Dump data</button>
-    <span class="sep"></span>
-    <label>Example:
-      <select id="exampleSelect" onchange="loadExample(this.value)">
-        <option value="basic">Basic</option>
-        <option value="fib">Fibonacci</option>
-        <option value="fact">Factorial</option>
-        <option value="loop">Loop &amp; Array</option>
-        <option value="io">I/O &amp; M-Ext</option>
-        <option value="dip_led">DIP to LED (DIP_to_LED.asm)</option>
-        <option value="hello_world">Hello World (HelloWorld.asm)</option>
-        <option value="hello_jal">Hello World Subroutine (HelloWorld_jal_jalr.asm)</option>
-      </select>
-    </label>
-    <span class="stats" id="statsBar">Cycles: 0 &nbsp;|&nbsp; Instr: 0</span>
-    <span class="status" id="statusBar">Ready</span>
-  </div>
-
 <!-- Cycle configuration overlay -->
 <div class="cycles-overlay" id="cyclesOverlay" onclick="if(event.target===this)closeCyclesPanel()">
   <div class="cycles-panel">
@@ -679,6 +647,48 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 </div>
   <div class="main">
     <div class="left-panel">
+      <div class="header">
+        <h1>🦾 RISC-V Simulator</h1>
+        <span class="subtitle">RV32GC — Assembler + Simulator</span>
+      </div>
+      <div class="toolbar" style="flex-direction:column;gap:6px;padding:6px 12px;align-items:stretch;">
+        <!-- Row 1: Primary Action Buttons -->
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+          <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
+          <button onclick="document.getElementById('fileLoader').click()">📂 Open</button>
+          <button onclick="saveFile()" title="Save the edited source code as a .asm file">💾 Save</button>
+          <button onclick="editorHistory.undo()" title="Undo last edit (Ctrl+Z)">↶ Undo</button>
+          <button onclick="editorHistory.redo()" title="Redo last undone edit (Ctrl+Y)">↷ Redo</button>
+          <button onclick="assembleOnly()" title="Assemble and reset state without running">⚙ Assemble</button>
+          <button onclick="runProgram()" title="Run the currently assembled program from the start (F5)">▶ Run</button>
+          <button onclick="togglePause()" id="pauseBtn" style="display:none;" title="Pause execution">⏸ Pause</button>
+          <button onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
+          <button onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
+          <button onclick="resetAll()">⟲ Reset</button>
+          <button onclick="toggleCyclesPanel()" title="Configure cycles per instruction type" class="gear">⏱ Cycles…</button>
+          <button onclick="toggleMemSegmentsPanel()" title="Configure memory segment addresses" class="gear">🗺 Segments…</button>
+        </div>
+        <!-- Row 2: Example Selector, Dump Buttons, and Status Readout -->
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <label style="font-size:12px;color:#a6adc8;display:inline-flex;align-items:center;gap:4px;">Example:
+            <select id="exampleSelect" onchange="loadExample(this.value)" style="background:#313244;border:1px solid #45475a;color:#cdd6f4;padding:3px 6px;font-size:12px;border-radius:4px;">
+              <option value="basic">Basic</option>
+              <option value="fib">Fibonacci</option>
+              <option value="fact">Factorial</option>
+              <option value="loop">Loop &amp; Array</option>
+              <option value="io">I/O &amp; M-Ext</option>
+              <option value="dip_led">DIP to LED (DIP_to_LED.asm)</option>
+              <option value="hello_world">Hello World (HelloWorld.asm)</option>
+              <option value="hello_jal">Hello World Subroutine (HelloWorld_jal_jalr.asm)</option>
+              <option value="circle_accel">Circle &amp; Delay Accel (Circle_delay_accel.asm)</option>
+            </select>
+          </label>
+          <button onclick="dumpTextSegment()" title="Dump code (text) segment to a Verilog .mem file">💾 Dump txt</button>
+          <button onclick="dumpDataSegment()" title="Dump data segment to a Verilog .mem file">💾 Dump data</button>
+          <span class="stats" id="statsBar" style="margin-left:auto;font-size:12px;color:#a6e3a1;">Cycles: 0 &nbsp;|&nbsp; Instr: 0</span>
+          <span class="status" id="statusBar" style="font-size:12px;color:#a6adc8;">Ready</span>
+        </div>
+      </div>
       <div class="editor-wrapper">
         <div class="line-numbers" id="lineNumbers">1</div>
         <div class="code-area">
@@ -709,7 +719,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
           <span style="color:#6c7086;font-size:13px;">Addr</span>
           <input type="text" id="memAddr" value="0x10000" onchange="updateMemoryView()" onkeydown="if(event.key==='Enter')updateMemoryView()">
           <span style="color:#6c7086;font-size:13px;">Rows</span>
-          <input type="number" id="memRows" value="16" min="1" max="64" style="width:50px;" onchange="updateMemoryView()">
+          <input type="number" id="memRows" value="64" min="1" max="128" style="width:50px;" onchange="updateMemoryView()">
           <button onclick="memGo('code')" title="Program / code segment">Code</button>
           <button onclick="memGo('data')" title="Data / static segment (writes land here)">Data</button>
           <button onclick="memGo('stack')" title="Stack region near the stack pointer">Stack</button>
@@ -724,8 +734,55 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       </div>
       <div class="tab-content" id="tab-peripherals">
         <div class="peripherals-grid">
+          <!-- LEDs & DIP Switches Section (Top) -->
+          <div class="periph-section">
+            <div class="periph-title" title="LED[15:9] = PC[8:2], LED[8] = Clock, LED[7:0] = User Output (0xFFFF0060 WO). DIP[15:0] = Switches (0xFFFF0064 RO).">
+              LEDs (LED[15:0]) &amp; DIP Switches (SW[15:0])
+            </div>
+            <div class="periph-board">
+              <div class="periph-group-labels">
+                <span class="lbl-pc">PC[8:2] (LED[15:9])</span>
+                <span class="lbl-clk">CLK (LED[8])</span>
+                <span class="lbl-user">User OUT (LED[7:0]) <span class="periph-addr">0xFFFF0060 WO</span></span>
+              </div>
+              <div class="led-row" id="ledRow"></div>
+              <div class="dip-container" id="dipContainer"></div>
+              <div style="font-size:10px;color:#585b70;margin-top:2px;">DIP Switches <span class="periph-addr">0xFFFF0064 RO (SW15..SW0)</span></div>
+            </div>
+          </div>
+
+          <!-- Push Buttons & 7-Segment Display Section -->
+          <div class="periph-pair">
+            <div class="periph-section">
+              <div class="periph-title" title="Push Buttons: Read at 0xFFFF0068 RO [Bit 0: BTNL, Bit 1: BTNC, Bit 2: BTNR]. Click to toggle.">
+                Push Buttons <span class="periph-addr">0xFFFF0068 RO</span>
+              </div>
+              <div id="pbContainer"></div>
+              <div style="margin-top:8px;font-size:10px;color:#585b70;">
+                BTNL | BTNC | BTNR — click to toggle
+              </div>
+            </div>
+            <div class="periph-section">
+              <div class="periph-title" title="7-Segment Display: 8-digit 32-bit hex display at 0xFFFF0080 WO.">
+                7-Segment Display <span class="periph-addr">0xFFFF0080 WO</span>
+              </div>
+              <div class="sevseg-container" id="sevsegContainer"></div>
+            </div>
+          </div>
+
+          <!-- Cycle Counter Standalone Peripheral Section -->
+          <div class="periph-section" id="cycleSection">
+            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;" title="Cycle Counter: 32-bit elapsed CPU clock cycles since system reset (0xFFFF00A0 RO).">
+              <span>Cycle Counter &nbsp;<span class="periph-addr" style="margin-left:4px;">0xFFFF00A0 RO</span></span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;color:#a6adc8;">Total Cycles: <span id="badgeCycleCount" style="color:#89b4fa;font-family:'Consolas','Courier New',monospace;font-weight:bold;font-size:12px;background:#181825;padding:2px 8px;border-radius:4px;border:1px solid #313244;">0</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- UART Serial Console Section -->
           <div class="periph-section" id="uartSection">
-            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;" title="UART 16550 Serial Console (115200 8N1): 0xFFFF0000 RX_VALID (RO), 0xFFFF0004 RX (RO), 0xFFFF0008 TX_READY (RO), 0xFFFF000C TX (WO).">
               <span>UART Serial Console (115200 8N1) &nbsp;<span class="periph-addr" style="margin-left:4px;">0xFFFF0000–0xFFFF000C</span></span>
               <span style="font-size:10px;color:#a6adc8;" id="uartStatusBadges">
                 RX_VALID: <span id="badgeRxValid" style="color:#f9e2af;font-weight:bold;">0</span> &nbsp;·&nbsp;
@@ -757,41 +814,69 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
               </span>
             </div>
           </div>
-          <div class="periph-section">
-            <div class="periph-title">LEDs (LED[15:0]) &amp; DIP Switches (SW[15:0])</div>
-            <div class="periph-board">
-              <div class="periph-group-labels">
-                <span class="lbl-pc">PC[8:2] (LED[15:9])</span>
-                <span class="lbl-clk">CLK (LED[8])</span>
-                <span class="lbl-user">User OUT (LED[7:0]) <span class="periph-addr">0xFFFF0060 WO</span></span>
+
+          <!-- 3-Axis Accelerometer & Temp Sensor Section -->
+          <div class="periph-section" id="accelSection">
+            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;" title="3-Axis Accelerometer &amp; Temp: 0xFFFF0040 ACCEL_DATA RO ([31:24] Temp, [23:16] Z, [15:8] Y, [7:0] X), 0xFFFF0044 ACCEL_DREADY RO (Bit 0).">
+              <span>3-Axis Accelerometer &amp; Temp &nbsp;<span class="periph-addr" style="margin-left:4px;">0xFFFF0040–0xFFFF0044</span></span>
+              <span style="font-size:10px;color:#a6adc8;">
+                DREADY: <span id="badgeAccelDready" style="color:#a6e3a1;font-weight:bold;">1</span>
+              </span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;font-size:11px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="width:50px;color:#89b4fa;font-weight:bold;">X Axis:</span>
+                <input type="range" id="accelXSlider" min="-128" max="127" value="0" style="flex:1;accent-color:#89b4fa;cursor:pointer;" oninput="updateAccelValues()">
+                <span id="accelXVal" style="width:130px;font-family:monospace;color:#cdd6f4;">0 (0x00, +0.00g)</span>
               </div>
-              <div class="led-row" id="ledRow"></div>
-              <div class="dip-container" id="dipContainer"></div>
-              <div style="font-size:10px;color:#585b70;margin-top:2px;">DIP Switches <span class="periph-addr">0xFFFF0064 RO (SW15..SW0)</span></div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="width:50px;color:#a6e3a1;font-weight:bold;">Y Axis:</span>
+                <input type="range" id="accelYSlider" min="-128" max="127" value="0" style="flex:1;accent-color:#a6e3a1;cursor:pointer;" oninput="updateAccelValues()">
+                <span id="accelYVal" style="width:130px;font-family:monospace;color:#cdd6f4;">0 (0x00, +0.00g)</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="width:50px;color:#fab387;font-weight:bold;">Z Axis:</span>
+                <input type="range" id="accelZSlider" min="-128" max="127" value="64" style="flex:1;accent-color:#fab387;cursor:pointer;" oninput="updateAccelValues()">
+                <span id="accelZVal" style="width:130px;font-family:monospace;color:#cdd6f4;">64 (0x40, +1.00g)</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+                <span style="width:50px;color:#f38ba8;font-weight:bold;">Temp:</span>
+                <input type="range" id="accelTempSlider" min="-40" max="85" value="25" style="flex:1;accent-color:#f38ba8;cursor:pointer;" oninput="updateAccelValues()">
+                <span id="accelTempVal" style="width:130px;font-family:monospace;color:#cdd6f4;">25°C (0x19)</span>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:4px;font-size:10px;">
+                <button onclick="setAccelPreset('flat')" style="padding:2px 6px;font-size:10px;">Flat (Z=+1g)</button>
+                <button onclick="setAccelPreset('tiltX')" style="padding:2px 6px;font-size:10px;">Tilt X (+1g)</button>
+                <button onclick="setAccelPreset('tiltY')" style="padding:2px 6px;font-size:10px;">Tilt Y (+1g)</button>
+                <button onclick="setAccelPreset('shake')" style="padding:2px 6px;font-size:10px;">Shake (±2g)</button>
+                <button onclick="setAccelPreset('zero')" style="padding:2px 6px;font-size:10px;">Zero All</button>
+              </div>
             </div>
           </div>
-          <div class="periph-pair">
-            <div class="periph-section">
-              <div class="periph-title">Push Buttons <span class="periph-addr">0xFFFF0068 RO</span></div>
-              <div id="pbContainer"></div>
-              <div style="margin-top:8px;font-size:10px;color:#585b70;">
-                BTNL | BTNC | BTNR — click to toggle
+
+          <!-- OLED 96x64 Pixel Display Section (Absolute Bottom) -->
+          <div class="periph-section" id="oledSection">
+            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;" title="OLED 96x64 Display: 0xFFFF0020 OLED_COL WO (0-95), 0xFFFF0024 OLED_ROW WO (0-63), 0xFFFF0028 OLED_DATA WO, 0xFFFF002C OLED_CTRL WO.">
+              <span>OLED 96x64 Pixel Display &nbsp;<span class="periph-addr" style="margin-left:4px;">0xFFFF0020–0xFFFF002C</span></span>
+              <button onclick="clearOledDisplay()" title="Clear OLED Frame Buffer" style="font-size:10px;padding:2px 8px;">Clear Display</button>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;margin-top:6px;">
+              <div style="background:#09090d;border:2px solid #313244;border-radius:6px;padding:4px;display:inline-block;box-shadow:0 0 10px rgba(0,0,0,0.5);">
+                <canvas id="oledCanvas" width="96" height="64" style="width:192px;height:128px;display:block;image-rendering:pixelated;background:#000;border-radius:2px;"></canvas>
+              </div>
+              <div style="font-size:11px;color:#a6adc8;line-height:1.6;flex:1;">
+                <div><strong>OLED_COL:</strong> <span id="oledColVal" style="color:#f9e2af;font-family:monospace;font-weight:bold;">0</span> (0–95)</div>
+                <div><strong>OLED_ROW:</strong> <span id="oledRowVal" style="color:#f9e2af;font-family:monospace;font-weight:bold;">0</span> (0–63)</div>
+                <div><strong>OLED_CTRL:</strong> <span id="oledCtrlVal" style="color:#89b4fa;font-family:monospace;font-weight:bold;">0x00</span></div>
+                <div style="font-size:10px;color:#6c7086;margin-top:4px;" id="oledModeDesc">
+                  Mode: vary_pixel_data_mode &nbsp;·&nbsp; Format: 8-bit (3R-3G-2B)
+                </div>
+                <div style="font-size:9.5px;color:#f38ba8;margin-top:6px;font-style:italic;">
+                  ⚠️ Caution: Do not leave OLED on unnecessarily long with static frames to prevent burn-in.
+                </div>
               </div>
             </div>
-            <div class="periph-section">
-              <div class="periph-title">7-Segment Display <span class="periph-addr">0xFFFF0080 WO</span></div>
-              <div class="sevseg-container" id="sevsegContainer"></div>
-            </div>
           </div>
-        </div>
-        <div class="periph-legend">
-          <strong>UART Console (115200 8N1):</strong> RX_VALID at 0xFFFF0000 (RO) &nbsp;·&nbsp; RX at 0xFFFF0004 (RO) &nbsp;·&nbsp; TX_READY at 0xFFFF0008 (RO) &nbsp;·&nbsp; TX at 0xFFFF000C (WO)
-          <br><strong>LED[15:9] (Cyan):</strong> Shows PC[8:2] &nbsp;·&nbsp;
-          <strong>LED[8] (Orange):</strong> Divided Clock (blinks per cycle, lit at pause) &nbsp;·&nbsp;
-          <strong>LED[7:0] (Green):</strong> User Output at 0xFFFF0060
-          <br><strong>DIP[15:0]:</strong> 16 switches aligned 1-to-1 with LEDs &nbsp;·&nbsp; Read at 0xFFFF0064
-          <br><strong>PB:</strong> Click to toggle press/release &nbsp;·&nbsp; Read at 0xFFFF0068 (BTNL, BTNC, BTNR)
-          <br><strong>7SEG:</strong> 8-digit hex rendered as SVG 7-segment (0–F) at 0xFFFF0080
         </div>
       </div>
       <div class="tab-content" id="tab-disassembly">
@@ -1056,6 +1141,29 @@ let UART_RX       = 0xFFFF0004; // RO: 8-bit character read (pops from queue)
 let UART_TX_READY = 0xFFFF0008; // RO: Bit 0 = 1 when TX is ready to receive data
 let UART_TX       = 0xFFFF000C; // WO: 8-bit character write (outputs to display terminal)
 
+// OLED 96x64 Pixel Display MMIO Registers
+let OLED_COL   = 0xFFFF0020; // WO: OLED pixel column index (0..95)
+let OLED_ROW   = 0xFFFF0024; // WO: OLED pixel row index (0..63)
+let OLED_DATA  = 0xFFFF0028; // WO: OLED color data word (triggers write)
+let OLED_CTRL  = 0xFFFF002C; // WO: OLED control register (bits [3:0] trigger mode, bits [7:4] color format)
+
+// Accelerometer & Cycle Count MMIO Registers
+let ACCEL_DATA   = 0xFFFF0040; // RO: 32-bit packed [31:24] Temp, [23:16] Z, [15:8] Y, [7:0] X
+let ACCEL_DREADY = 0xFFFF0044; // RO: Bit 0 = 1 when new reading is available
+let CYCLECOUNT   = 0xFFFF00A0; // RO: Cycles elapsed since system reset
+
+let oledCol = 0;
+let oledRow = 0;
+let oledCtrl = 0;
+let oledDataVal = 0;
+let oledBuffer = new Uint8Array(96 * 64 * 4); // 96x64 RGBA Canvas Frame Buffer
+
+let accelX = 0;      // 8-bit signed (-128..+127), 0g = 0x00
+let accelY = 0;      // 8-bit signed (-128..+127), 0g = 0x00
+let accelZ = 64;     // 8-bit signed (-128..+127), +1g = 0x40 (64)
+let accelTemp = 25;  // 8-bit signed temperature (-40..+85), default 25°C
+let accelDready = 1; // Bit 0 = 1 when data ready
+
 // Legacy aliases for backward compatibility
 let MMIO_GETC   = UART_RX;
 let MMIO_PUTC   = UART_TX;
@@ -1118,9 +1226,30 @@ function parseFReg(s) {
   return -1;
 }
 
-function parseImm(s) {
+function parseImm(s, allowForward = false) {
   s = s.trim().replace(/,/g,'');
   if (s === '') return NaN;
+
+  // Handle GNU RISC-V Relocation Operators: %hi(symbol) and %lo(symbol)
+  const hiMatch = s.match(/^%hi\((.+)\)$/i);
+  if (hiMatch) {
+    const sym = hiMatch[1].trim();
+    const targetAddr = resolveAddrRef(sym, allowForward);
+    if (!isNaN(targetAddr)) {
+      return Math.floor((targetAddr + 0x800) / 4096) & 0xFFFFF;
+    }
+  }
+
+  const loMatch = s.match(/^%lo\((.+)\)$/i);
+  if (loMatch) {
+    const sym = loMatch[1].trim();
+    const targetAddr = resolveAddrRef(sym, allowForward);
+    if (!isNaN(targetAddr)) {
+      const hi20 = Math.floor((targetAddr + 0x800) / 4096) & 0xFFFFF;
+      const lo12 = targetAddr - (hi20 << 12);
+      return lo12;
+    }
+  }
 
   // Character literal format: 'c' or '\c' or '\xHH'
   if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) {
@@ -1159,35 +1288,33 @@ function parseImm(s) {
   if (symbolTable[low] !== undefined) return sign * symbolTable[low];
   if (labels[body] !== undefined) return sign * labels[body];
   if (labels[low] !== undefined) return sign * labels[low];
+  if (allowForward) return 0;
   return NaN;
 }
 
 
-
-function parseMemOp(s) {
-  // Formats: "offset(reg)" or "reg" or plain label/symbol
-  // Handle optional parentheses: strip if present, then parse
+function parseMemOp(s, allowForward = false) {
+  // Formats: "offset(reg)" or "%lo(sym)(reg)" or "reg" or plain label/symbol
   if (typeof s !== 'string') s = String(s);
   s = s.trim();
   if (s.startsWith('(') && s.endsWith(')')) {
     s = s.substring(1, s.length - 1);
   }
-  const m = s.match(/^(-?(?:0x[0-9a-fA-F]+|\d+))\s*\(\s*(\w+)\s*\)$/i);
+  const m = s.match(/^(.+)\s*\(\s*(\w+)\s*\)$/i);
   if (m) {
-    const offsetStr = m[1];
-    const offset = parseImm(offsetStr);
-    const reg = parseReg(m[2]);
-    return { offset, reg };
+    const offsetStr = m[1].trim();
+    const offset = parseImm(offsetStr, allowForward);
+    const reg = parseReg(m[2].trim());
+    if (!isNaN(offset) && reg >= 0 && reg <= 31) {
+      return { offset, reg };
+    }
   }
   // Try as a plain register
   const reg = parseReg(s);
   if (reg >= 0 && reg <= 31) return { offset: 0, reg };
   // Try as a label/symbol reference (resolved to address)
-  const body = s.toLowerCase();
-  if (labels[body] !== undefined) return { offset: labels[body], reg: 0 };
-  if (symbolTable[body] !== undefined) return { offset: symbolTable[body], reg: 0 };
-  if (labels[s] !== undefined) return { offset: labels[s], reg: 0 };
-  if (symbolTable[s] !== undefined) return { offset: symbolTable[s], reg: 0 };
+  const target = resolveAddrRef(s, allowForward);
+  if (!isNaN(target)) return { offset: target, reg: 0 };
   return null;
 }
 
@@ -1202,16 +1329,21 @@ function sext(value, bits) {
 function numToBytes(n) {
   return [n & 0xFF, (n >> 8) & 0xFF, (n >> 16) & 0xFF, (n >> 24) & 0xFF];
 }
-function resolveAddrRef(s) {
+function resolveAddrRef(s, allowForward = false) {
   if (labels[s] !== undefined) return labels[s];
-  const n = parseImm(s);
+  if (symbolTable[s] !== undefined) return symbolTable[s];
+  const low = s.toLowerCase();
+  if (labels[low] !== undefined) return labels[low];
+  if (symbolTable[low] !== undefined) return symbolTable[low];
+  const n = parseImm(s, allowForward);
   if (!isNaN(n)) return n;
+  if (allowForward) return 0;
   throw new Error(`Unknown symbol '${s}'`);
 }
 function instructionSlots(mnemonic, args) {
   // Loads with a bare label operand expand to lui + load (2 slots)
   if (['lb','lh','lw','lbu','lhu'].includes(mnemonic) && args.length === 2) {
-    const mem = parseMemOp(args[1]);
+    const mem = parseMemOp(args[1], true);
     if (mem) {
       if (mem.reg === 0 && (mem.offset > 2047 || mem.offset < -2048)) return 2;
     } else {
@@ -1299,6 +1431,7 @@ function assemble(source, startAddr) {
 
   // ---- Phase 1: assign addresses & collect labels ----
   let textAddr = base, dataAddr = dataBase, section = 'text';
+  let activeDataDirPass1 = null;
   const getAddr = () => section === 'text' ? textAddr : dataAddr;
   const setAddr = (a) => { if (section === 'text') textAddr = a; else dataAddr = a; };
   const bump = (n) => setAddr(getAddr() + n);
@@ -1307,24 +1440,26 @@ function assemble(source, startAddr) {
     const toks = main.split(/\s+/);
     const mn = toks[0].toLowerCase();
     switch (mn) {
-      case '.text': section = 'text'; break;
-      case '.data': section = 'data'; break;
+      case '.text': section = 'text'; activeDataDirPass1 = null; break;
+      case '.data': section = 'data'; activeDataDirPass1 = null; break;
       case '.section': case '.rodata': case '.bss': {
         const s = setSection(toks[1] || mn);
         if (s) section = s;
+        activeDataDirPass1 = null;
         break;
       }
       case '.equ': case '.eqv': case '.set': break; // constants already collected in the pre-pass
       case '.align': { const al = parseInt(toks[1], 10) || 0; if (al > 0) setAddr((getAddr() + ((1 << al) - 1)) & ~((1 << al) - 1)); break; }
       case '.balign': { const b = parseInt(toks[1], 10) || 0; if (b > 0) setAddr((getAddr() + (b - 1)) & ~(b - 1)); break; }
       case '.p2align': { const p = parseInt(toks[1], 10) || 0; if (p > 0) setAddr((getAddr() + ((1 << p) - 1)) & ~((1 << p) - 1)); break; }
-      case '.org': { const o = parseImm(toks.slice(1).join(' ')); if (!isNaN(o)) setAddr(o); break; }
-      case '.word': case '.half': case '.byte': {
+      case '.org': { const o = parseImm(toks.slice(1).join(' '), true); if (!isNaN(o)) setAddr(o); break; }
+      case '.word': case '.half': case '.byte': case '.dword': {
+        activeDataDirPass1 = mn;
         const vals = toks.slice(1).join('').split(',').filter(Boolean);
-        bump((mn === '.byte' ? 1 : mn === '.half' ? 2 : 4) * vals.length);
+        const sz = (mn === '.byte' ? 1 : mn === '.half' ? 2 : mn === '.dword' ? 8 : 4);
+        bump(sz * vals.length);
         break;
       }
-      case '.dword': { const vals = toks.slice(1).join('').split(',').filter(Boolean); bump(8 * vals.length); break; }
       case '.space': case '.zero': bump(parseInt(toks[1], 10) || 0); break;
       case '.asciiz': case '.asciz': case '.string': bump(parseStringLiteral(main.slice(main.indexOf(' ')).trim()).length + 1); break;
       case '.ascii': bump(parseStringLiteral(main.slice(main.indexOf(' ')).trim()).length); break;
@@ -1335,13 +1470,21 @@ function assemble(source, startAddr) {
   };
 
   for (let i = 0; i < lines.length; i++) {
-    const { main } = splitLine(lines[i]);
+    let { main } = splitLine(lines[i]);
     if (!main) continue;
-    const first = main.split(/\s+/)[0];
+    let first = main.split(/\s+/)[0];
+    if (section === 'data' && activeDataDirPass1 && !first.endsWith(':') && !first.startsWith('.') && !INSTRUCTIONS[first.toLowerCase()] && !PSEUDO_INSTRUCTIONS[first.toLowerCase()]) {
+      main = activeDataDirPass1 + ' ' + main;
+      first = activeDataDirPass1;
+    }
     if (first.endsWith(':')) {
       labels[first.slice(0, -1)] = getAddr();
       const rest = main.slice(first.length).trim();
-      if (rest) sizeLine(rest);
+      if (rest) {
+        let rfirst = rest.split(/\s+/)[0].toLowerCase();
+        if (['.byte', '.word', '.half', '.dword'].includes(rfirst)) activeDataDirPass1 = rfirst;
+        sizeLine(rest);
+      }
       continue;
     }
     sizeLine(main);
@@ -1527,15 +1670,28 @@ function assemble(source, startAddr) {
     }
   }
 
+  let activeDataDirPass2 = null;
   for (let i = 0; i < lines.length; i++) {
-    const { main, comment } = splitLine(lines[i]);
+    let { main, comment } = splitLine(lines[i]);
     const lineNo = i + 1;
     const asmText = main + (comment ? ' ' + comment : '');
     if (!main) continue;
-    const first = main.split(/\s+/)[0];
+    let first = main.split(/\s+/)[0];
+    const mnLow = first.toLowerCase();
+    if (mnLow === '.text' || mnLow === '.data' || mnLow === '.section' || mnLow === '.rodata' || mnLow === '.bss') {
+      section = (mnLow === '.text') ? 'text' : 'data';
+      activeDataDirPass2 = null;
+    } else if (['.byte', '.word', '.half', '.dword'].includes(mnLow)) {
+      activeDataDirPass2 = mnLow;
+    } else if (section === 'data' && activeDataDirPass2 && !first.endsWith(':') && !first.startsWith('.') && !INSTRUCTIONS[mnLow] && !PSEUDO_INSTRUCTIONS[mnLow]) {
+      main = activeDataDirPass2 + ' ' + main;
+      first = activeDataDirPass2;
+    }
     if (first.endsWith(':')) {
       const rest = main.slice(first.length).trim();
       if (!rest) continue;
+      let rfirst = rest.split(/\s+/)[0].toLowerCase();
+      if (['.byte', '.word', '.half', '.dword'].includes(rfirst)) activeDataDirPass2 = rfirst;
       emitOne(rest, lineNo, asmText);
       continue;
     }
@@ -1867,8 +2023,14 @@ function initializeState() {
   totalCycles = 0;
   instructionCount = 0;
   currentExecLine = -1;
-  clockToggle = 0;
   regs[2] = stackBase;
+  oledCol = 0;
+  oledRow = 0;
+  oledCtrl = 0;
+  oledDataVal = 0;
+  oledBuffer = new Uint8Array(96 * 64 * 4);
+  for (let i = 3; i < oledBuffer.length; i += 4) oledBuffer[i] = 255;
+  updateOledCanvas();
 }
 
 function loadProgram(mc) {
@@ -1932,6 +2094,41 @@ function writeMem(addr, val, size) {
   lastChangedMem.push({ addr: uaddr, size });
 }
 
+let lastOledWriteCycle = 0;
+
+function writeOledPixel(val) {
+  const colorMode = (oledCtrl >> 4) & 0x0F;
+  let r = 0, g = 0, b = 0;
+
+  if (colorMode === 0x0) { // 8-bit color mode: 3R-3G-2B
+    const r3 = (val >> 5) & 0x07;
+    const g3 = (val >> 2) & 0x07;
+    const b2 = val & 0x03;
+    r = Math.round((r3 / 7) * 255);
+    g = Math.round((g3 / 7) * 255);
+    b = Math.round((b2 / 3) * 255);
+  } else if (colorMode === 0x1) { // 16-bit color mode: 5R-6G-5B
+    const r5 = (val >> 11) & 0x1F;
+    const g6 = (val >> 5) & 0x3F;
+    const b5 = val & 0x1F;
+    r = Math.round((r5 / 31) * 255);
+    g = Math.round((g6 / 63) * 255);
+    b = Math.round((b5 / 31) * 255);
+  } else { // 24-bit color mode: [7:0] = X Accel (Red), [15:8] = Y Accel (Green), [23:16] = Z Accel (Blue)
+    r = val & 0xFF;
+    g = (val >>> 8) & 0xFF;
+    b = (val >>> 16) & 0xFF;
+  }
+
+  const c = Math.min(95, Math.max(0, oledCol));
+  const rIdx = Math.min(63, Math.max(0, oledRow));
+  const pixelIdx = (rIdx * 96 + c) * 4;
+  oledBuffer[pixelIdx] = r;
+  oledBuffer[pixelIdx + 1] = g;
+  oledBuffer[pixelIdx + 2] = b;
+  oledBuffer[pixelIdx + 3] = 255;
+}
+
 function handleMMIOWrite(addr, val, size) {
   const u = addr >>> 0;
 
@@ -1954,6 +2151,64 @@ function handleMMIOWrite(addr, val, size) {
   if (u >= rxBase && u < rxBase + 4) {
     const b = val & 0xFF;
     uartRxQueue.push(b);
+    updatePeripherals();
+    return;
+  }
+
+  // OLED_COL (0xFFFF0020 .. 0xFFFF0023)
+  const oledColBase = OLED_COL >>> 0;
+  if (u >= oledColBase && u < oledColBase + 4) {
+    oledCol = (val & 0xFF) % 96;
+    const triggerMode = oledCtrl & 0x0F;
+    if (triggerMode === 0x1) { // vary_col_mode (x): writing column triggers pixel draw
+      writeOledPixel(oledDataVal);
+    }
+    updatePeripherals();
+    return;
+  }
+
+  // OLED_ROW (0xFFFF0024 .. 0xFFFF0027)
+  const oledRowBase = OLED_ROW >>> 0;
+  if (u >= oledRowBase && u < oledRowBase + 4) {
+    oledRow = (val & 0xFF) % 64;
+    const triggerMode = oledCtrl & 0x0F;
+    if (triggerMode === 0x2) { // vary_row_mode (y): writing row triggers pixel draw
+      writeOledPixel(oledDataVal);
+    }
+    updatePeripherals();
+    return;
+  }
+
+  // OLED_CTRL (0xFFFF002C .. 0xFFFF002F)
+  const oledCtrlBase = OLED_CTRL >>> 0;
+  if (u >= oledCtrlBase && u < oledCtrlBase + 4) {
+    oledCtrl = val & 0xFF;
+    updatePeripherals();
+    return;
+  }
+
+  // OLED_DATA (0xFFFF0028 .. 0xFFFF002B) -> Stores color data & triggers pixel write if trigger mode is data/autoadvance
+  const oledDataBase = OLED_DATA >>> 0;
+  if (u >= oledDataBase && u < oledDataBase + 4) {
+    oledDataVal = val >>> 0;
+    const triggerMode = oledCtrl & 0x0F;
+    if (triggerMode === 0x0 || triggerMode === 0x4 || triggerMode === 0x5) {
+      writeOledPixel(oledDataVal);
+      if (triggerMode === 0x4) { // autoadvance_col (row major)
+        oledCol++;
+        if (oledCol >= 96) {
+          oledCol = 0;
+          oledRow = (oledRow + 1) % 64;
+        }
+      } else if (triggerMode === 0x5) { // autoadvance_row (column major)
+        oledRow++;
+        if (oledRow >= 64) {
+          oledRow = 0;
+          oledCol = (oledCol + 1) % 96;
+        }
+      }
+    }
+
     updatePeripherals();
     return;
   }
@@ -2077,6 +2332,35 @@ function handleMMIORead(addr, size) {
     const offset = u - sevBase;
     const val = parseInt(sevsegState, 16) || 0;
     return (val >> (offset * 8)) & 0xFF;
+  }
+
+  // ACCEL_DATA (0xFFFF0040 .. 0xFFFF0043) -> RO: [31:24] Temp, [23:16] Z, [15:8] Y, [7:0] X
+  const accelDataBase = ACCEL_DATA >>> 0;
+  if (u >= accelDataBase && u < accelDataBase + 4) {
+    const xByte = accelX & 0xFF;
+    const yByte = accelY & 0xFF;
+    const zByte = accelZ & 0xFF;
+    const tByte = accelTemp & 0xFF;
+    const packed = ((tByte << 24) | (zByte << 16) | (yByte << 8) | xByte) >>> 0;
+    if (size === 4) return packed;
+    const offset = u - accelDataBase;
+    return (packed >> (offset * 8)) & 0xFF;
+  }
+
+  // ACCEL_DREADY (0xFFFF0044 .. 0xFFFF0047) -> RO: Bit 0 = 1 when data available
+  const accelDreadyBase = ACCEL_DREADY >>> 0;
+  if (u >= accelDreadyBase && u < accelDreadyBase + 4) {
+    const offset = u - accelDreadyBase;
+    return (offset === 0) ? (accelDready & 0x1) : 0;
+  }
+
+  // CYCLECOUNT (0xFFFF00A0 .. 0xFFFF00A3) -> RO: Cycles elapsed since system reset
+  const cycleCountBase = CYCLECOUNT >>> 0;
+  if (u >= cycleCountBase && u < cycleCountBase + 4) {
+    const cycles = totalCycles >>> 0;
+    if (size === 4) return cycles;
+    const offset = u - cycleCountBase;
+    return (cycles >> (offset * 8)) & 0xFF;
   }
 
   return 0;
@@ -2213,13 +2497,13 @@ function decodeAndExecute(instr32, addr) {
               if (funct7 & 0x20) regs[rd] = regs[rs1] - regs[rs2]; // SUB
               else regs[rd] = regs[rs1] + regs[rs2]; // ADD
               break;
-            case 0b001: regs[rd] = regs[rs1] << (rs2 & 0x1F); break; // SLL
+            case 0b001: regs[rd] = regs[rs1] << (regs[rs2] & 0x1F); break; // SLL
             case 0b010: regs[rd] = regs[rs1] < regs[rs2] ? 1 : 0; break; // SLT
             case 0b011: regs[rd] = unsigned(regs[rs1]) < unsigned(regs[rs2]) ? 1 : 0; break; // SLTU
             case 0b100: regs[rd] = regs[rs1] ^ regs[rs2]; break; // XOR
             case 0b101:
-              if (funct7 & 0x20) regs[rd] = regs[rs1] >> (rs2 & 0x1F); // SRA
-              else regs[rd] = unsigned(regs[rs1]) >>> (rs2 & 0x1F); // SRL
+              if (funct7 & 0x20) regs[rd] = regs[rs1] >> (regs[rs2] & 0x1F); // SRA
+              else regs[rd] = unsigned(regs[rs1]) >>> (regs[rs2] & 0x1F); // SRL
               break;
             case 0b110: regs[rd] = regs[rs1] | regs[rs2]; break; // OR
             case 0b111: regs[rd] = regs[rs1] & regs[rs2]; break; // AND
@@ -2926,18 +3210,116 @@ function updatePeripherals() {
     termEl.scrollTop = termEl.scrollHeight;
   }
 
-  // Update Auto-Send status indicator
   const autoStatusEl = document.getElementById('uartAutoSendStatus');
   const btnEl = document.getElementById('uartSendBtn');
-  if (autoSeqPending) {
-    const sentCount = autoSeqTotalBytes - autoSeqQueue.length;
-    if (autoStatusEl) autoStatusEl.innerText = `Buffering: ${sentCount}/${autoSeqTotalBytes} (${autoSeqDelayInstr} instr delay)`;
-  } else {
-    if (btnEl && btnEl.innerText === 'Cancel') {
-      btnEl.innerText = 'Send';
-      btnEl.style.background = '';
+  if (autoStatusEl) {
+    if (autoSeqPending) {
+      const sentCount = autoSeqTotalBytes - autoSeqQueue.length;
+      autoStatusEl.innerText = `Buffering: ${sentCount}/${autoSeqTotalBytes} (${autoSeqDelayInstr} instr delay)`;
+    } else {
+      if (btnEl && btnEl.innerText === 'Cancel') {
+        btnEl.innerText = 'Send';
+        btnEl.style.background = '';
+      }
     }
   }
+
+  // Update OLED Status Badges & Mode Text
+  const oledColEl = document.getElementById('oledColVal');
+  const oledRowEl = document.getElementById('oledRowVal');
+  const oledCtrlEl = document.getElementById('oledCtrlVal');
+  const oledDescEl = document.getElementById('oledModeDesc');
+
+  if (oledColEl) oledColEl.innerText = oledCol;
+  if (oledRowEl) oledRowEl.innerText = oledRow;
+  if (oledCtrlEl) oledCtrlEl.innerText = '0x' + (oledCtrl & 0xFF).toString(16).padStart(2, '0').toUpperCase();
+
+  if (oledDescEl) {
+    const triggerMode = oledCtrl & 0x0F;
+    const colorMode = (oledCtrl >> 4) & 0x0F;
+    const triggerNames = {
+      0x0: 'vary_pixel_data_mode',
+      0x1: 'vary_col_mode (x)',
+      0x2: 'vary_row_mode (y)',
+      0x4: 'autoadvance_col (row major)',
+      0x5: 'autoadvance_row (column major)'
+    };
+    const colorNames = {
+      0x0: '8-bit (3R-3G-2B)',
+      0x1: '16-bit (5R-6G-5B)',
+      0x2: '24-bit (5R-3(0)-6G-2(0)-5B-3(0))'
+    };
+    const tName = triggerNames[triggerMode] || `trigger_0x${triggerMode.toString(16)}`;
+    const cName = colorNames[colorMode] || `color_0x${colorMode.toString(16)}`;
+    oledDescEl.innerText = `Mode: ${tName}  ·  Format: ${cName}`;
+  }
+
+  // Update Accelerometer UI & Cycle Count Badge
+  const xEl = document.getElementById('accelXVal');
+  const yEl = document.getElementById('accelYVal');
+  const zEl = document.getElementById('accelZVal');
+  const tEl = document.getElementById('accelTempVal');
+  const dreadyEl = document.getElementById('badgeAccelDready');
+  const cycleEl = document.getElementById('badgeCycleCount');
+
+  const fmtHexByte = (v) => '0x' + (v & 0xFF).toString(16).padStart(2, '0').toUpperCase();
+  const fmtG = (v) => (v / 64 >= 0 ? '+' : '') + (v / 64).toFixed(2) + 'g';
+
+  if (xEl) xEl.innerText = `${accelX} (${fmtHexByte(accelX)}, ${fmtG(accelX)})`;
+  if (yEl) yEl.innerText = `${accelY} (${fmtHexByte(accelY)}, ${fmtG(accelY)})`;
+  if (zEl) zEl.innerText = `${accelZ} (${fmtHexByte(accelZ)}, ${fmtG(accelZ)})`;
+  if (tEl) tEl.innerText = `${accelTemp}°C (${fmtHexByte(accelTemp)})`;
+  if (dreadyEl) dreadyEl.innerText = accelDready ? '1' : '0';
+  if (cycleEl) cycleEl.innerText = totalCycles;
+  updateOledCanvas();
+}
+
+function updateAccelValues() {
+  const xS = document.getElementById('accelXSlider');
+  const yS = document.getElementById('accelYSlider');
+  const zS = document.getElementById('accelZSlider');
+  const tS = document.getElementById('accelTempSlider');
+
+  if (xS) accelX = parseInt(xS.value, 10);
+  if (yS) accelY = parseInt(yS.value, 10);
+  if (zS) accelZ = parseInt(zS.value, 10);
+  if (tS) accelTemp = parseInt(tS.value, 10);
+
+  updatePeripherals();
+}
+
+function setAccelPreset(preset) {
+  if (preset === 'flat') { accelX = 0; accelY = 0; accelZ = 64; }
+  else if (preset === 'tiltX') { accelX = 64; accelY = 0; accelZ = 0; }
+  else if (preset === 'tiltY') { accelX = 0; accelY = 64; accelZ = 0; }
+  else if (preset === 'shake') { accelX = 127; accelY = -128; accelZ = 127; }
+  else if (preset === 'zero') { accelX = 0; accelY = 0; accelZ = 0; }
+
+  const xS = document.getElementById('accelXSlider');
+  const yS = document.getElementById('accelYSlider');
+  const zS = document.getElementById('accelZSlider');
+  if (xS) xS.value = accelX;
+  if (yS) yS.value = accelY;
+  if (zS) zS.value = accelZ;
+
+  updatePeripherals();
+}
+
+function updateOledCanvas() {
+  const canvas = document.getElementById('oledCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const imgData = ctx.createImageData(96, 64);
+  imgData.data.set(oledBuffer);
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function clearOledDisplay() {
+  oledBuffer.fill(0);
+  for (let i = 3; i < oledBuffer.length; i += 4) oledBuffer[i] = 255;
+  updateOledCanvas();
+  updatePeripherals();
 }
 
 function parseAsciiEscapes(str) {
@@ -3205,10 +3587,17 @@ function updateMemoryView() {
         else if (wordAddr === (UART_RX >>> 0)) descriptors.push('UART RX RO 0xFFFF0004');
         else if (wordAddr === (UART_TX_READY >>> 0)) descriptors.push('UART TX READY RO 0xFFFF0008');
         else if (wordAddr === (UART_TX >>> 0)) descriptors.push('UART TX WO 0xFFFF000C');
+        else if (wordAddr === (OLED_COL >>> 0)) descriptors.push('OLED COL WO 0xFFFF0020');
+        else if (wordAddr === (OLED_ROW >>> 0)) descriptors.push('OLED ROW WO 0xFFFF0024');
+        else if (wordAddr === (OLED_DATA >>> 0)) descriptors.push('OLED DATA WO 0xFFFF0028');
+        else if (wordAddr === (OLED_CTRL >>> 0)) descriptors.push('OLED CTRL WO 0xFFFF002C');
+        else if (wordAddr === (ACCEL_DATA >>> 0)) descriptors.push('ACCEL DATA RO 0xFFFF0040');
+        else if (wordAddr === (ACCEL_DREADY >>> 0)) descriptors.push('ACCEL DREADY RO 0xFFFF0044');
         else if (wordAddr === (PERIPH_LED >>> 0)) descriptors.push('LED WO 0xFFFF0060');
         else if (wordAddr === (PERIPH_DIP >>> 0)) descriptors.push('DIP RO 0xFFFF0064');
         else if (wordAddr === (PERIPH_PB >>> 0)) descriptors.push('PB RO 0xFFFF0068');
         else if (wordAddr === (PERIPH_SEVENSEG >>> 0)) descriptors.push('7SEG WO 0xFFFF0080');
+        else if (wordAddr === (CYCLECOUNT >>> 0)) descriptors.push('CYCLECOUNT RO 0xFFFF00A0');
       }
       let desc = descriptors.length ? `[${descriptors.join(' · ')}]` : '[MMIO]';
 
@@ -3626,10 +4015,11 @@ function memGo(region) {
   activeMemRegion = region;
   const el = document.getElementById('memAddr');
   const rowsEl = document.getElementById('memRows');
+  if (rowsEl && region !== 'mmio') rowsEl.value = '64';
   if (region === 'code') { el.value = '0x' + (baseAddress >>> 0).toString(16); }
   else if (region === 'data') { el.value = '0x' + (dataBase >>> 0).toString(16); }
   else if (region === 'stack') { el.value = '0x' + (stackBase >>> 0).toString(16); }
-  else if (region === 'mmio') { el.value = '0x' + (mmioBase >>> 0).toString(16); if (rowsEl) rowsEl.value = '20'; }
+  else if (region === 'mmio') { el.value = '0x' + (mmioBase >>> 0).toString(16); if (rowsEl) rowsEl.value = '24'; }
   updateMemoryView();
 }
 
@@ -4015,13 +4405,182 @@ halt:
 \tj halt
 
 .data
-DMEM:
+ DMEM:
 string1: .asciz "\\r\\nWelcome to CG3207..\\r\\n"
 .align 9
 STACK_INIT:
+`,
+
+    circle_accel: `# Output of Circle_delay_accel.c when compiled using RISC-V rv32gc clang 20.1.0 with -Os directive
+main:
+\taddi    sp, sp, -32
+\tsw      ra, 28(sp)
+\tsw      s0, 24(sp)
+\tsw      s1, 20(sp)
+\tsw      s2, 16(sp)
+\tsw      s3, 12(sp)
+\tsw      s4, 8(sp)
+\tlui     s0, 1048560
+\tlui     sp, 65552
+\taddi    sp, sp, 512
+\tli      s2, 24
+\tlui     s1, 1044480
+\tlui     s3, %hi(CYCLECOUNT_ADDR)
+\tli      s4, 500\t# Simulator-optimized delay for smooth real-time rendering
+.LBB0_1:
+\tli      a3, 0
+\tlw      a0, 64(s0)
+\tsw      a0, 128(s0)
+\tli      a2, 24
+.LBB0_2:
+\tmv      a1, a2
+.LBB0_3:
+\tlw      a2, 8(s0)
+\tbeqz    a2, .LBB0_3
+\tsrl     a2, a0, a1
+\tsw      a2, 12(s0)
+.LBB0_5:
+\tlw      a2, 8(s0)
+\tbeqz    a2, .LBB0_5
+\tsub     a2, s2, a1
+\tsll     a5, a0, a2
+\tand     a4, a5, s1
+\tbgez    a5, .LBB0_8
+\tneg     a4, a4
+.LBB0_8:
+\tsrl     a2, a4, a2
+\tsrli    a4, a4, 24
+\tadd     a3, a3, a2
+\tsw      a4, 12(s0)
+\taddi    a2, a1, -8
+\tbnez    a1, .LBB0_2
+\tslli    a3, a3, 1
+\tli      a0, 48
+\tli      a1, 32
+\tli      a2, 28
+\tcall    drawFilledMidpointCircleSinglePixelVisit
+\tlw      a0, %lo(CYCLECOUNT_ADDR)(s3)
+\tlw      a1, 0(a0)
+\tadd     a1, a1, s4
+.LBB0_10:
+\tlw      a2, 0(a0)
+\tbltu    a2, a1, .LBB0_10
+\tj       .LBB0_1
+
+drawFilledMidpointCircleSinglePixelVisit:
+\tbltz    a2, .LBB1_19
+\tli      t1, 0
+\tlui     t3, 1048560
+\tli      a6, 1
+\tsub     t0, a6, a2
+\tli      a7, 33
+.LBB1_2:
+\tmv      t2, t1
+\tadd     a4, t1, a1
+\tsw      a4, 36(t3)
+\tsw      a7, 44(t3)
+\tsw      a3, 40(t3)
+\tbltz    a2, .LBB1_8
+\tsub     t1, a0, a2
+\tslli    t4, a2, 1
+\taddi    t4, t4, 1
+\tmv      a4, t4
+\tmv      a5, t1
+.LBB1_4:
+\tsw      a5, 32(t3)
+\taddi    a4, a4, -1
+\taddi    a5, a5, 1
+\tbnez    a4, .LBB1_4
+\tbeqz    t2, .LBB1_10
+\tsub     a4, a1, t2
+\tsw      a4, 36(t3)
+\tsw      a7, 44(t3)
+\tsw      a3, 40(t3)
+.LBB1_7:
+\tsw      t1, 32(t3)
+\taddi    t4, t4, -1
+\taddi    t1, t1, 1
+\tbnez    t4, .LBB1_7
+\tj       .LBB1_10
+.LBB1_8:
+\tbeqz    t2, .LBB1_10
+\tsub     a4, a1, t2
+\tsw      a4, 36(t3)
+\tsw      a7, 44(t3)
+\tsw      a3, 40(t3)
+.LBB1_10:
+\taddi    t1, t2, 1
+\tbltz    t0, .LBB1_17
+\tbge     t2, a2, .LBB1_16
+\tsub     t4, a0, t2
+\tadd     a4, a2, a1
+\tsw      a4, 36(t3)
+\tsw      a7, 44(t3)
+\tsw      a3, 40(t3)
+\tmv      a4, a6
+\tmv      a5, t4
+.LBB1_13:
+\tsw      a5, 32(t3)
+\taddi    a4, a4, -1
+\taddi    a5, a5, 1
+\tbnez    a4, .LBB1_13
+\tsub     a4, a1, a2
+\tsw      a4, 36(t3)
+\tsw      a7, 44(t3)
+\tsw      a3, 40(t3)
+\tmv      a4, a6
+.LBB1_15:
+\tsw      t4, 32(t3)
+\taddi    a4, a4, -1
+\taddi    t4, t4, 1
+\tbnez    a4, .LBB1_15
+.LBB1_16:
+\taddi    a2, a2, -1
+\tsub     a4, t1, a2
+\tslli    a4, a4, 1
+\taddi    a4, a4, 2
+\tj       .LBB1_18
+.LBB1_17:
+\tslli    a4, t1, 1
+\taddi    a4, a4, 1
+.LBB1_18:
+\tadd     t0, t0, a4
+\taddi    a6, a6, 2
+\tblt     t2, a2, .LBB1_2
+.LBB1_19:
+\tret
+
+delay:
+\tlui     a1, %hi(CYCLECOUNT_ADDR)
+\tlw      a1, %lo(CYCLECOUNT_ADDR)(a1)
+\tlw      a2, 0(a1)
+\tadd     a0, a0, a2
+.LBB2_1:
+\tlw      a2, 0(a1)
+\tbltu    a2, a0, .LBB2_1
+\tret
+
+drawHorizontalLine:
+\tlui     a4, 1048560
+\tsw      a2, 36(a4)
+\tli      a2, 33
+\tsw      a2, 44(a4)
+\tsw      a3, 40(a4)
+\tblt     a1, a0, .LBB3_3
+\taddi    a1, a1, 1
+.LBB3_2:
+\tsw      a0, 32(a4)
+\taddi    a0, a0, 1
+\tbne     a1, a0, .LBB3_2
+.LBB3_3:
+\tret
+
+.data
+CYCLECOUNT_ADDR:
+\t.word   4294901920
 `
   };
-  
+
   editor.value = examples[name] || examples.basic;
   editor.scrollTop = 0;
   editor.scrollLeft = 0;
@@ -4029,6 +4588,7 @@ STACK_INIT:
   clearLog();
   setStatus('Example loaded: ' + name);
 }
+window.loadExample = loadExample;
 
 // ============================================================
 // 7. MAIN CONTROL
@@ -4535,7 +5095,7 @@ function runProgram() {
   running = true;
   let count = 0;
   const maxCycles = 100000000;
-  const CHUNK_SIZE = 5000;
+  const CHUNK_SIZE = 50000;
 
   const pauseBtn = document.getElementById('pauseBtn');
   if (pauseBtn) {
@@ -4675,6 +5235,23 @@ function resetState() {
   }
   const statusEl = document.getElementById('uartAutoSendStatus');
   if (statusEl) statusEl.innerText = '';
+  oledCol = 0;
+  oledRow = 0;
+  oledCtrl = 0;
+  clearOledDisplay();
+  accelX = 0;
+  accelY = 0;
+  accelZ = 64;
+  accelTemp = 25;
+  accelDready = 1;
+  const xS = document.getElementById('accelXSlider');
+  const yS = document.getElementById('accelYSlider');
+  const zS = document.getElementById('accelZSlider');
+  const tS = document.getElementById('accelTempSlider');
+  if (xS) xS.value = 0;
+  if (yS) yS.value = 0;
+  if (zS) zS.value = 64;
+  if (tS) tS.value = 25;
   updatePeripherals();
   updateRegisters();
   updateMemoryView();
@@ -4701,6 +5278,20 @@ function loadFile(event) {
     clearLog();
     log(`Loaded file: ${file.name}`, 'success');
     setStatus('File loaded: ' + file.name);
+
+    // Display loaded filename in example dropdown
+    const select = document.getElementById('exampleSelect');
+    if (select) {
+      let opt = document.getElementById('tempFileOption');
+      if (!opt) {
+        opt = document.createElement('option');
+        opt.id = 'tempFileOption';
+        opt.value = 'user_file';
+        select.appendChild(opt);
+      }
+      opt.textContent = `📁 ${file.name}`;
+      select.value = 'user_file';
+    }
   };
   reader.onerror = function() {
     log('Error reading file: ' + file.name, 'error');
@@ -4796,6 +5387,10 @@ initSplitter();
     editor.selectionStart = editor.selectionEnd = start + 1;
     updateEditor();
   }
+  window.loadExample = loadExample;
+  window.assembleOnly = assembleOnly;
+  window.runProgram = runProgram;
+  window.togglePause = togglePause;
   </script>
   </body>
 </html>
