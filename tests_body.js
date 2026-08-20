@@ -177,4 +177,33 @@ const dipOut = assembleok('dip_pattern', dipCode);
 const jalWaitEnc = dipOut[5].bytes.map(b=>b.toString(16).padStart(2,'0')).join(' ');
 console.log('  jal zero, wait target (0x1000c addi) encoding:', jalWaitEnc === '6f f0 9f ff' ? 'PASS' : `FAIL (${jalWaitEnc})`);
 
+console.log('=== Circle_delay_accel.asm Execution & Accelerometer Visualisation ===');
+const circleAsm = fs.readFileSync('Circle_delay_accel.asm', 'utf8');
+const circleProg = assembleok('circle_accel', circleAsm);
+loadProgram(circleProg);
+
+const circlePresets = [
+  { name: 'Flat (Z=+1g) [Blue]',  x: 0,  y: 0,  z: 64, exp: [0, 0, 128] },
+  { name: 'Tilt X (+1g) [Red]',   x: 64, y: 0,  z: 0,  exp: [128, 0, 0] },
+  { name: 'Tilt Y (+1g) [Green]', x: 0,  y: 64, z: 0,  exp: [0, 128, 0] },
+  { name: 'Tilt X+Y [Yellow]',    x: 64, y: 64, z: 0,  exp: [128, 128, 0] },
+];
+
+for (const cp of circlePresets) {
+  accelX = cp.x; accelY = cp.y; accelZ = cp.z; accelTemp = 25; accelDready = 1;
+  let pxCount = 0; let cColor = null;
+  const oldWrite = writeOledPixel;
+  writeOledPixel = function(val) {
+    pxCount++; oldWrite(val);
+    const idx = (oledRow * 96 + oledCol) * 4;
+    cColor = [oledBuffer[idx], oledBuffer[idx+1], oledBuffer[idx+2]];
+  };
+  while (pc !== labels['.LBB0_10']) { executeOne(); }
+  writeOledPixel = oldWrite;
+  const colPass = cColor && cColor[0] === cp.exp[0] && cColor[1] === cp.exp[1] && cColor[2] === cp.exp[2];
+  console.log(`  ${cp.name}: pixels=${pxCount} (${pxCount===2533?'PASS':'FAIL'}), color=RGB(${cColor}) (${colPass?'PASS':'FAIL'})`);
+  totalCycles = regs[11];
+  while (pc !== labels['.LBB0_1']) { executeOne(); }
+}
+
 console.log('DONE');

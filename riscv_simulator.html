@@ -1343,6 +1343,7 @@ function resolveAddrRef(s, allowForward = false) {
 function instructionSlots(mnemonic, args) {
   // Loads with a bare label operand expand to lui + load (2 slots)
   if (['lb','lh','lw','lbu','lhu'].includes(mnemonic) && args.length === 2) {
+    if (!args[1].includes('(')) return 2;
     const mem = parseMemOp(args[1], true);
     if (mem) {
       if (mem.reg === 0 && (mem.offset > 2047 || mem.offset < -2048)) return 2;
@@ -2404,12 +2405,13 @@ function decodeAndExecute(instr32, addr) {
       regs[rd] = addr + immU;
       break;
     case 0b1101111: // JAL
-      regs[rd] = addr + 4;
+      if (rd !== 0) regs[rd] = addr + 4;
       nextPC = addr + immJ;
       break;
     case 0b1100111: // JALR
-      regs[rd] = addr + 4;
-      nextPC = (regs[rs1] + immI) & ~1;
+      const jalrTarget = (regs[rs1] + immI) & ~1;
+      if (rd !== 0) regs[rd] = addr + 4;
+      nextPC = jalrTarget;
       break;
     case 0b1100011: // BRANCH
       let taken = false;
