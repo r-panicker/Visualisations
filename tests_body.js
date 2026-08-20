@@ -206,4 +206,56 @@ for (const cp of circlePresets) {
   while (pc !== labels['.LBB0_1']) { executeOne(); }
 }
 
+console.log('=== Breakpoint Resume & Step-Then-Run Verification ===');
+const bpCode = [
+  'main:',
+  '  addi x1, x0, 0',
+  '  addi x2, x0, 5',
+  'loop:',
+  '  addi x1, x1, 1',
+  '  bne x1, x2, loop',
+  '  j done',
+  'done:',
+  '  nop'
+].join('\n');
+
+editor.value = bpCode;
+resetAll();
+breakpoints.clear();
+breakpoints.add(5); // Breakpoint on line 5 ("addi x1, x1, 1")
+
+// 1. Initial Run -> stops at line 5 before execution
+runProgram();
+const bpPass1 = (pc === 0x10008 && regs[1] === 0 && currentExecLine === 5);
+console.log('  Initial Run (stops at BP line 5):', bpPass1 ? 'PASS' : `FAIL (pc=0x${pc.toString(16)}, x1=${regs[1]}, line=${currentExecLine})`);
+
+// 2. Resume Run directly from BP -> advances x1 to 1 and loops back to line 5 BP
+runProgram();
+const bpPass2 = (pc === 0x10008 && regs[1] === 1 && currentExecLine === 5);
+console.log('  Resume Run directly from BP (iter 1):', bpPass2 ? 'PASS' : `FAIL (pc=0x${pc.toString(16)}, x1=${regs[1]}, line=${currentExecLine})`);
+
+// 3. Step Once -> executes line 5, advances to line 6
+stepOnce();
+const bpPass3 = (pc === 0x1000c && regs[1] === 2 && currentExecLine === 6);
+console.log('  Step Once after BP (advances to line 6, x1=2):', bpPass3 ? 'PASS' : `FAIL (pc=0x${pc.toString(16)}, x1=${regs[1]}, line=${currentExecLine})`);
+
+// 4. Run from after step -> continues loop without resetting and hits line 5 BP on next iteration
+runProgram();
+const bpPass4 = (pc === 0x10008 && regs[1] === 2 && currentExecLine === 5);
+console.log('  Run from after step (continues to next iter BP):', bpPass4 ? 'PASS' : `FAIL (pc=0x${pc.toString(16)}, x1=${regs[1]}, line=${currentExecLine})`);
+
+// 5. Clear BP and run to completion
+breakpoints.clear();
+runProgram();
+const bpPass5 = (regs[1] === 5 && programFinished === true);
+console.log('  Clear BP and Run to completion (x1=5, finished=true):', bpPass5 ? 'PASS' : `FAIL (x1=${regs[1]}, finished=${programFinished})`);
+
+// 6. Run after program finished -> restarts fresh from beginning
+runProgram();
+const bpPass6 = (regs[1] === 5 && programFinished === true);
+console.log('  Run after finished (re-assembles and runs from start):', bpPass6 ? 'PASS' : `FAIL (x1=${regs[1]}, finished=${programFinished})`);
+
+console.log('=== Comprehensive Instruction Set Verification (RV32I, RV32M, RV32F, RV32D, RV32A, Pseudo) ===');
+require('./test_all_instructions.js');
+
 console.log('DONE');

@@ -1209,18 +1209,21 @@ function parseReg(s) {
     const n = parseInt(s.substring(1), 10);
     if (n >= 0 && n <= 31) return n;
   }
-  if (s.startsWith('f')) {
-    const n = parseInt(s.substring(1), 10);
-    if (n >= 0 && n <= 31) return n;
-  }
+  if (s === 'fp') return 8;
   if (REG_NAMES[s] !== undefined) return parseInt(REG_NAMES[s].substring(1), 10);
   return -1;
 }
 
 function parseFReg(s) {
   s = s.toLowerCase().replace(/,/g,' ').trim();
-  if (s.startsWith('f')) {
+  const fpAbi = { ft0:0, ft1:1, ft2:2, ft3:3, ft4:4, ft5:5, ft6:6, ft7:7, fs0:8, fs1:9, fa0:10, fa1:11, fa2:12, fa3:13, fa4:14, fa5:15, fa6:16, fa7:17, fs2:18, fs3:19, fs4:20, fs5:21, fs6:22, fs7:23, fs8:24, fs9:25, fs10:26, fs11:27, ft8:28, ft9:29, ft10:30, ft11:31 };
+  if (fpAbi[s] !== undefined) return fpAbi[s];
+  if (s.startsWith('f') || s.startsWith('d')) {
     const n = parseInt(s.substring(1), 10);
+    if (!isNaN(n) && n >= 0 && n <= 31) return n;
+  }
+  if (/^\d+$/.test(s)) {
+    const n = parseInt(s, 10);
     if (n >= 0 && n <= 31) return n;
   }
   return -1;
@@ -1738,60 +1741,40 @@ function encodeInstruction(mnemonic, args, address) {
     case 'R': {
       let rd = 0, rs1 = 0, rs2 = 0;
       
-      if (['fadd.s','fsub.s','fmul.s','fdiv.s','fsqrt.s','fsgnj.s','fsgnjn.s','fsgnjx.s',
-           'fmin.s','fmax.s','feq.s','flt.s','fle.s','fclass.s',
-           'fcvt.w.s','fcvt.wu.s','fmv.x.w','fcvt.s.w','fcvt.s.wu','fmv.w.x',
-           'fadd.d','fsub.d','fmul.d','fdiv.d','fsqrt.d','fsgnj.d','fsgnjn.d','fsgnjx.d',
-           'fmin.d','fmax.d','feq.d','flt.d','fle.d','fclass.d',
-           'fcvt.s.d','fcvt.d.s',
-           'mul','mulh','mulhsu','mulhu','div','divu','rem','remu',
-           'add','sub','sll','slt','sltu','xor','srl','sra','or','and',
-           'addw','subw','sllw','srlw','sraw',
-           'lr.w','sc.w',
-           'amoswap.w','amoadd.w','amoxor.w','amoand.w','amoor.w',
-           'amomin.w','amomax.w','amominu.w','amomaxu.w'].includes(mnemonic)) {
-        if (['fcvt.w.s','fcvt.wu.s','fmv.x.w','fclass.s',
-             'fcvt.w.d','fcvt.wu.d','fmv.x.d','fclass.d'].includes(mnemonic)) {
-          rd = parseReg(args[0]);
-          rs1 = parseFReg(args[1]);
-        } else if (['fcvt.s.w','fcvt.s.wu','fmv.w.x',
-                     'fcvt.d.w','fcvt.d.wu','fmv.d.x',
-                     'fsqrt.s','fsqrt.d'].includes(mnemonic)) {
-          rd = parseFReg(args[0]);
-          rs1 = parseFReg(args[1]);
-        } else if (['fcvt.s.d'].includes(mnemonic)) {
-          rd = parseFReg(args[0]);
-          rs1 = parseFReg(args[1]);
-        } else if (['fcvt.d.s'].includes(mnemonic)) {
-          rd = parseFReg(args[0]);
-          rs1 = parseFReg(args[1]);
-        } else if (['lr.w'].includes(mnemonic)) {
-          rd = parseReg(args[0]);
-          rs1 = parseReg(args[1]);
-          rs2 = 0;
-        } else if (['sc.w'].includes(mnemonic)) {
-          rd = parseReg(args[0]);
-          rs1 = parseReg(args[1]);
-          rs2 = parseReg(args[2]);
-        } else if (mnemonic.startsWith('amo')) {
-          rd = parseReg(args[0]);
-          rs1 = parseReg(args[1]);
-          rs2 = parseReg(args[2]);
-        } else if (mnemonic.startsWith('f') && !mnemonic.startsWith('fcv') && !mnemonic.startsWith('fm')) {
-          if (args.length >= 3) {
-            rd = parseFReg(args[0]);
-            rs1 = parseFReg(args[1]);
-            rs2 = parseFReg(args[2]);
-          } else {
-            rd = parseFReg(args[0]);
-            rs1 = parseFReg(args[1]);
-            rs2 = 0;
-          }
-        } else {
-          rd = parseReg(args[0]);
-          rs1 = parseReg(args[1]);
-          rs2 = args.length >= 3 ? parseReg(args[2]) : 0;
-        }
+      if (['feq.s','flt.s','fle.s','feq.d','flt.d','fle.d'].includes(mnemonic)) {
+        rd = parseReg(args[0]);
+        rs1 = parseFReg(args[1]);
+        rs2 = parseFReg(args[2]);
+      } else if (['fcvt.w.s','fcvt.wu.s','fmv.x.w','fclass.s','fcvt.w.d','fcvt.wu.d','fmv.x.d','fclass.d'].includes(mnemonic)) {
+        rd = parseReg(args[0]);
+        rs1 = parseFReg(args[1]);
+        rs2 = 0;
+      } else if (['fcvt.s.w','fcvt.s.wu','fmv.w.x','fcvt.d.w','fcvt.d.wu','fmv.d.x'].includes(mnemonic)) {
+        rd = parseFReg(args[0]);
+        rs1 = parseReg(args[1]);
+        rs2 = 0;
+      } else if (['fsqrt.s','fsqrt.d','fcvt.s.d','fcvt.d.s'].includes(mnemonic)) {
+        rd = parseFReg(args[0]);
+        rs1 = parseFReg(args[1]);
+        rs2 = 0;
+      } else if (mnemonic.startsWith('f') && ['fadd.s','fsub.s','fmul.s','fdiv.s','fsgnj.s','fsgnjn.s','fsgnjx.s','fmin.s','fmax.s','fadd.d','fsub.d','fmul.d','fdiv.d','fsgnj.d','fsgnjn.d','fsgnjx.d','fmin.d','fmax.d'].includes(mnemonic)) {
+        rd = parseFReg(args[0]);
+        rs1 = parseFReg(args[1]);
+        rs2 = args.length >= 3 ? parseFReg(args[2]) : 0;
+      } else if (['lr.w'].includes(mnemonic)) {
+        rd = parseReg(args[0]);
+        const m = parseMemOp(args[1]);
+        rs1 = m ? m.reg : parseReg(args[1].replace(/[()]/g, ''));
+        rs2 = 0;
+      } else if (['sc.w'].includes(mnemonic) || mnemonic.startsWith('amo')) {
+        rd = parseReg(args[0]);
+        rs2 = parseReg(args[1]);
+        const m = parseMemOp(args[2]);
+        rs1 = m ? m.reg : parseReg(args[2].replace(/[()]/g, ''));
+      } else {
+        rd = parseReg(args[0]);
+        rs1 = parseReg(args[1]);
+        rs2 = args.length >= 3 ? parseReg(args[2]) : 0;
       }
       
       if (rd < 0 || rs1 < 0 || rs2 < 0) throw new Error(`Invalid register in ${mnemonic}`);
@@ -1808,7 +1791,7 @@ function encodeInstruction(mnemonic, args, address) {
       
       if (rd < 0 || rs1 < 0 || rs2 < 0 || rs3 < 0) throw new Error(`Invalid register in ${mnemonic}`);
       
-      encoding = (instr.funct2 << 27) | (rs3 << 20) | (rs2 << 15) | (rs1 << 10) | (instr.funct3 << 7) | rd | (instr.opcode << 0);
+      encoding = (rs3 << 27) | (instr.funct2 << 25) | (rs2 << 20) | (rs1 << 15) | (instr.funct3 << 12) | (rd << 7) | instr.opcode;
       break;
     }
     
@@ -1817,7 +1800,7 @@ function encodeInstruction(mnemonic, args, address) {
       
       if (['lb','lh','lw','lbu','lhu','flw','fld'].includes(mnemonic)) {
         if (args.length >= 2) {
-          rd = parseReg(args[0]);
+          rd = ['flw','fld'].includes(mnemonic) ? parseFReg(args[0]) : parseReg(args[0]);
           const mem = parseMemOp(args[1]);
           if (mem) {
             rs1 = mem.reg;
@@ -1896,7 +1879,7 @@ function encodeInstruction(mnemonic, args, address) {
       let rs1 = 0, rs2 = 0, imm = 0;
       
       if (['sb','sh','sw','fsw','fsd'].includes(mnemonic)) {
-        rs2 = parseReg(args[0]);
+        rs2 = ['fsw','fsd'].includes(mnemonic) ? parseFReg(args[0]) : parseReg(args[0]);
         if (args.length >= 2) {
           const mem = parseMemOp(args[1]);
           if (mem) {
@@ -2447,6 +2430,59 @@ function decodeAndExecute(instr32, addr) {
         }
       }
       break;
+    case 0b0011011: // OP-IMM-32 (addiw, slliw, srliw, sraiw)
+      if (rd !== 0) {
+        let shamtW = rs2 & 0x1F;
+        switch (funct3) {
+          case 0b000: regs[rd] = (regs[rs1] + immI) | 0; break; // ADDIW
+          case 0b001: regs[rd] = (regs[rs1] << shamtW) | 0; break; // SLLIW
+          case 0b101:
+            if ((funct7 >> 5) & 1) regs[rd] = (regs[rs1] >> shamtW) | 0; // SRAIW
+            else regs[rd] = (unsigned(regs[rs1]) >>> shamtW) | 0; // SRLIW
+            break;
+        }
+      }
+      break;
+    case 0b0111011: // OP-32 (addw, subw, sllw, srlw, sraw)
+      if (rd !== 0) {
+        let shamtW = regs[rs2] & 0x1F;
+        switch (funct3) {
+          case 0b000:
+            if (funct7 & 0x20) regs[rd] = (regs[rs1] - regs[rs2]) | 0; // SUBW
+            else regs[rd] = (regs[rs1] + regs[rs2]) | 0; // ADDW
+            break;
+          case 0b001: regs[rd] = (regs[rs1] << shamtW) | 0; break; // SLLW
+          case 0b101:
+            if (funct7 & 0x20) regs[rd] = (regs[rs1] >> shamtW) | 0; // SRAW
+            else regs[rd] = (unsigned(regs[rs1]) >>> shamtW) | 0; // SRLW
+            break;
+        }
+      }
+      break;
+    case 0b1000011: // FMADD
+    case 0b1000111: // FMSUB
+    case 0b1001011: // FNMSUB
+    case 0b1001111: // FNMADD
+      {
+        const rs3 = (instr32 >> 27) & 0x1F;
+        const funct2 = (instr32 >> 25) & 0x3;
+        if (funct2 === 0) { // Single precision .s
+          let val = 0;
+          if (opcode === 0b1000011) val = fregs[rs1] * fregs[rs2] + fregs[rs3];
+          else if (opcode === 0b1000111) val = fregs[rs1] * fregs[rs2] - fregs[rs3];
+          else if (opcode === 0b1001011) val = -(fregs[rs1] * fregs[rs2]) + fregs[rs3];
+          else if (opcode === 0b1001111) val = -(fregs[rs1] * fregs[rs2]) - fregs[rs3];
+          if (rd < 32) fregs[rd] = val;
+        } else if (funct2 === 1) { // Double precision .d
+          let val = 0;
+          if (opcode === 0b1000011) val = dregs[rs1] * dregs[rs2] + dregs[rs3];
+          else if (opcode === 0b1000111) val = dregs[rs1] * dregs[rs2] - dregs[rs3];
+          else if (opcode === 0b1001011) val = -(dregs[rs1] * dregs[rs2]) + dregs[rs3];
+          else if (opcode === 0b1001111) val = -(dregs[rs1] * dregs[rs2]) - dregs[rs3];
+          if (rd < 32) dregs[rd] = val;
+        }
+      }
+      break;
     case 0b0010011: // ALU IMMEDIATE
       if (rd !== 0) {
         let shamt = rs2 & 0x1F;
@@ -2469,7 +2505,7 @@ function decodeAndExecute(instr32, addr) {
       if (rd !== 0) {
         if (funct7 === 0b0000001) {
           switch (funct3) {
-            case 0b000: regs[rd] = regs[rs1] * regs[rs2]; break; // MUL
+            case 0b000: regs[rd] = Math.imul(regs[rs1], regs[rs2]); break; // MUL
             case 0b001: // MULH
               regs[rd] = mulh(regs[rs1], regs[rs2]); break;
             case 0b010: // MULHSU
@@ -2522,8 +2558,8 @@ function decodeAndExecute(instr32, addr) {
         let fAddr = regs[rs1] + immI;
         let low = readMem(fAddr, 4);
         let high = readMem(fAddr + 4, 4);
-        let bits = (high << 32) | unsigned(low);
-        if (rd < 32) dregs[rd] = new Float64Array(new BigInt64Array([BigInt(bits)]).buffer)[0];
+        let bits = (BigInt(high) << 32n) | BigInt(unsigned(low));
+        if (rd < 32) dregs[rd] = new Float64Array(new BigInt64Array([bits]).buffer)[0];
       }
       break;
     case 0b0100111: // STORE FP
@@ -2570,15 +2606,15 @@ function unsigned(val) {
 }
 
 function mulh(a, b) {
-  return Math.trunc((BigInt(a) * BigInt(b)) >> BigInt(32));
+  return Number((BigInt(a) * BigInt(b)) >> 32n);
 }
 
 function mulhu(a, b) {
-  return Number((BigInt(a >>> 0) * BigInt(b >>> 0)) >> BigInt(32));
+  return Number((BigInt(a >>> 0) * BigInt(b >>> 0)) >> 32n);
 }
 
 function mulhsu(a, b) {
-  return Number((BigInt(a) * BigInt(b >>> 0)) >> BigInt(32));
+  return Number((BigInt(a) * BigInt(b >>> 0)) >> 32n);
 }
 
 function executeFP(instr32, rd, funct3, rs1, rs2, funct7) {
@@ -2605,7 +2641,8 @@ function executeFP(instr32, rd, funct3, rs1, rs2, funct7) {
       case 0b1100011: if (funct3 === 0b000 && rs2 === 0) regs[rd] = unsigned(Math.trunc(dregs[rs1])); break; // FCVT.WU.D
       case 0b1101001: if (funct3 === 0b000 && rs2 === 0) dregs[rd] = regs[rs1]; break; // FCVT.D.W
       case 0b1101011: if (funct3 === 0b000 && rs2 === 0) dregs[rd] = unsigned(regs[rs1]); break; // FCVT.D.WU
-      case 0b0100000: if (funct3 === 0b000) dregs[rd] = dregs[rs1]; break; // FSGNJ.D (simplified)
+      case 0b0100000: if (funct3 === 0b000 && rd < 32 && rs1 < 32) fregs[rd] = dregs[rs1]; break; // FCVT.S.D
+      case 0b0100001: if (funct3 === 0b000 && rd < 32 && rs1 < 32) dregs[rd] = fregs[rs1]; break; // FCVT.D.S
       case 0b0010001:
         if (funct3 === 0b000) { // FSGNJ.D
           let bits = new BigInt64Array(new Float64Array([dregs[rs1]]).buffer)[0];
@@ -5011,6 +5048,7 @@ function assembleOnly() {
   updateStats();
   highlightFirstLine(mc);
   assembled = true;
+  programFinished = false;
   setStatus(`Assembled ${nInstr} instructions. Ready to run.`, 'success');
   return mc;
 }
@@ -5020,7 +5058,7 @@ function assembleAndRun() {
 }
 
 function stepOnce() {
-  if (!assembled) {
+  if (!assembled || programFinished) {
     clearLog();
     const mc = prepareAssembly();
     if (!mc) return;
@@ -5029,6 +5067,7 @@ function stepOnce() {
     updateDisassembly();
     highlightFirstLine(mc);
     assembled = true;
+    programFinished = false;
     log('Assembly loaded. Stepping...', 'info');
   }
 
@@ -5088,16 +5127,24 @@ function stepBack() {
 }
 
 let runTimerId = null;
+let programFinished = false;
 
 function runProgram() {
-  clearLog();
-  const mc = assembleOnly();
-  if (!mc) return;
+  if (!assembled || programFinished) {
+    clearLog();
+    const mc = assembleOnly();
+    if (!mc) return;
+    programFinished = false;
+  } else {
+    log(`Resuming execution from PC 0x${pc.toString(16)} (line ${sourceLineForPc(pc)})...`, 'info');
+  }
 
   running = true;
   let count = 0;
   const maxCycles = 100000000;
   const CHUNK_SIZE = 50000;
+  const initialLine = sourceLineForPc(pc);
+  let resumeLine = (initialLine >= 1 && breakpoints.has(initialLine)) ? initialLine : -1;
 
   const pauseBtn = document.getElementById('pauseBtn');
   if (pauseBtn) {
@@ -5115,10 +5162,20 @@ function runProgram() {
     if (cycleCount >= maxCycles) {
       log('Max cycles reached (possible infinite loop).', 'warn');
       setStatus('Stopped (max cycles)', 'warn');
+      programFinished = false;
     } else if (stopReason === 'exit' || stopReason === 'bounds') {
       currentExecLine = -1;
+      programFinished = true;
       log(`Program completed after ${totalCycles} cycles, ${instructionCount} instructions.`, 'success');
       setStatus('Program finished', 'success');
+    } else if (stopReason === 'breakpoint') {
+      programFinished = false;
+      setStatus(`Stopped at breakpoint (line ${currentExecLine})`, 'warn');
+    } else if (stopReason === 'paused') {
+      programFinished = false;
+      setStatus('Paused', 'info');
+    } else {
+      programFinished = false;
     }
     updateRegisters();
     updateMemoryView();
@@ -5143,10 +5200,14 @@ function runProgram() {
       currentExecLine = (line >= 1) ? line : -1;
 
       if (line >= 1 && breakpoints.has(line)) {
-        log(`Breakpoint hit at line ${line}`, 'warn');
-        stopReason = 'breakpoint';
-        running = false;
-        break;
+        if (line !== resumeLine) {
+          log(`Breakpoint hit at line ${line}`, 'warn');
+          stopReason = 'breakpoint';
+          running = false;
+          break;
+        }
+      } else {
+        resumeLine = -1;
       }
 
       try {
@@ -5158,11 +5219,16 @@ function runProgram() {
         break;
       }
 
+      if (pc !== execAddr + 4) {
+        resumeLine = -1;
+      }
+
       count++;
       batchCount++;
 
       if (!running) { stopReason = 'exit'; break; }
       if (pc < baseAddress || pc >= memory.length) { stopReason = 'bounds'; break; }
+      if (sourceLineForPc(pc) === -1 && fetchInstruction(pc) === 0) { stopReason = 'exit'; break; }
     }
 
     updatePeripherals();
@@ -5210,6 +5276,9 @@ function resetAll() {
   resetState();
   clearLog();
   assembled = false;
+  programFinished = false;
+  currentExecLine = -1;
+  highlightCurrentLine();
   setStatus('Reset');
   let mc = [];
   try { if (editor.value.trim()) mc = assemble(editor.value); } catch (e) {}
