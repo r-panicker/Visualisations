@@ -69,6 +69,38 @@ console.log('=== branch pseudo + call/tail/la expansion ===');
 out = assembleok('pseudo', 'main:\n  beqz x1, there\n  bnez x2, there\n  j there\n  jal there\nthere:\n  call func\nfunc:\n  ret\n');
 out.forEach(i=>console.log(' 0x'+i.address.toString(16)+': '+(i.bytes?i.bytes.map(b=>b.toString(16).padStart(2,'0')).join(''):'ERR')+' | '+i.text));
 
+console.log('=== lw rd, label (direct, out-of-12-bit-range) ===');
+const lwLabelCode = [
+'.text',
+'main:',
+'  lw s3, delay_val',
+'  j done',
+'.data',
+'delay_val: .word 0x12345678',
+'.text',
+'done:',
+'  j done'
+].join('\n');
+out = assembleok('lwlabel', lwLabelCode);
+const lwHasErr = out.some(i=>i.error);
+out.forEach(i=>console.log(' 0x'+i.address.toString(16)+': '+(i.bytes?i.bytes.map(b=>b.toString(16).padStart(2,'0')).join(' '):'ERR')+' | '+i.text));
+console.log('  lw-label no assembler error:', lwHasErr ? 'FAIL' : 'PASS');
+// Verify expansion: lui x5, hi(delay_val); lw s3, lo(x5) loads the stored word.
+if (!lwHasErr) {
+  const toHexBytes = arr => arr.map(b => b.toString(16).padStart(2, '0')).join('');
+  const deadAddr = labels['delay_val'];
+  const upper = deadAddr >>> 12;
+  const lower = deadAddr & 0xFFF;
+  // lui x5, upper ; lw s3, lower(x5)
+  const luiEnc = (upper << 12) | (5 << 7) | 0b0110111;
+  const lwEnc = (lower << 20) | (5 << 15) | (0b010 << 12) | (19 << 7) | 0b0000011;
+  const expLui = toHexBytes([luiEnc & 0xFF, (luiEnc>>8)&0xFF, (luiEnc>>16)&0xFF, (luiEnc>>24)&0xFF]);
+  const expLw = toHexBytes([lwEnc & 0xFF, (lwEnc>>8)&0xFF, (lwEnc>>16)&0xFF, (lwEnc>>24)&0xFF]);
+  const gotLui = toHexBytes(out[0].bytes);
+  const gotLw = toHexBytes(out[1].bytes);
+  console.log('  lui+load expansion correct:', (gotLui === expLui && gotLw === expLw) ? 'PASS' : `FAIL (got ${gotLui},${gotLw} want ${expLui},${expLw})`);
+}
+
 console.log('=== li x6, -1 ===');
 resetAll();
 loadProgram(assemble('main:\n  li x6, -1\n'));

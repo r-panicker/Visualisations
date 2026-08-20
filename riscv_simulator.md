@@ -412,7 +412,9 @@ bnez x2, there       # Branch if not zero
 - **v2.0**: Fixed column alignment, 8-byte memory view, invalid breakpoint handling, mobile scrolling
 
 ### Known Issues (Ongoing)
-- **`lw` pseudo-instruction**: When `lw rd, label` is used with a label that resolves to an address outside the 12-bit signed immediate range, the assembler expands it to `lui` + `load` (e.g., `lw` → `lui` + `lw`). This expansion may produce incorrect results for certain label offsets and requires manual review.
+- **`lw` pseudo-instruction (previously reported)**: When `lw rd, label` is used with a label that resolves to an address outside the 12-bit signed immediate range, the assembler expands it to `lui` + `load` (e.g., `lw` → `lui` + `lw`). **Resolved in v2.4** — the expansion now passes the immediate as a string (no more "s.trim is not a function" crash) and uses the `x5`/t0 temporary register plus the original destination register for correct encoding.
+- **Simulation memory layout (previously reported)**: The default segment bases had been set to `baseAddress = 0x00400000` (equal to the 4 MB array length) and `dataBase = 0x10010000` (beyond it), so no code or data was ever loaded into the simulated RAM — every instruction executed as a no-op and no registers changed. **Resolved in v2.5** — defaults now match the documented layout (`code 0x10000`, `data 0x20000`, `stack 0x7ffffc`, `MMIO 0xFFFF0000`), so programs assemble, load, and execute correctly.
+- **MMIO peripheral access (previously reported)**: `lw`/`sw` to the peripheral board (`0xFFFF00xx`, e.g. DIP at `0xFFFF0064`, LED at `0xFFFF0060`) bypassed the MMIO handlers because the addresses fell outside the simulated memory bounds and were treated as signed. **Resolved in v2.5** — `readMem`/`writeMem` route MMIO/peripheral addresses to `handleMMIORead`/`handleMMIOWrite` before the bounds check, and load/store effective addresses are computed as unsigned so `0xFFFF00xx` work correctly.
 
 ---
 
@@ -442,6 +444,8 @@ bnez x2, there       # Branch if not zero
 | 2.0 | **UI Improvements**: Undo/Redo (Ctrl+Z/Y), fixed column alignment, 8-byte memory view, Pause button, 100M cycle limit, invalid breakpoint handling, mobile scrolling fixes |
 | 2.1 | **Peripherals Tab**: Single-row LED display (8-bit + clock LED + PC[8:2] with dividers), single-row scrollable DIP switches (16), 3x3 grid push buttons (BTNL/BTNC/BTNR/BTND/PAU/RST), SVG-based 7-segment display (hex a-f rendering on 22x40 SVGs) |
 | 2.2 | **Documentation Updates**: Fixed push button layout docs, added lw pseudo-instruction known issue, clarified dump buttons are retained, removed keyboard shortcut duplicates |
+| 2.4 | **`lw rd, label` Fix**: `pushInstr` for the lui+load expansion passes the immediate as a string (fixes "s.trim is not a function" crash) and uses a valid temp register (`x5`/t0) plus the original destination register, so out-of-range label loads assemble and encode correctly. |
+| 2.5 | **Simulation Fix**: Restored default memory layout to the documented values (`code 0x10000`, `data 0x20000`, `stack 0x7ffffc`, `MMIO 0xFFFF0000`) so code/data actually load into the simulated RAM and registers update. Routed `lw`/`sw` to MMIO/peripheral boards (`0xFFFF00xx`) through `handleMMIORead`/`handleMMIOWrite` before the bounds check, and compute load/store addresses as unsigned so peripheral I/O (DIP, PB, LED, 7-segment) works. |
 
 ---
 
@@ -486,14 +490,14 @@ bnez x2, there       # Branch if not zero
 - CSS: `.dip-container`, `.dip-switch`
 
 ### Push Buttons
-- 3x3 grid layout (32px cells, 4px gap):
-  - Row 1: (empty) | BTNU (PAU) | (empty)
-  - Row 2: BTNL (L) | BTNC (C) | BTNR (R)
-  - Row 3: (empty) | BTND/RST | (empty)
+- Horizontal row layout (32px cells, 4px gap):
+  - BTNL (L) | BTNC (C) | BTNR (R)
 - Click-to-toggle interaction (replaces "hold" behavior)
-- CSS: `.pb-container`, `.pb-btn`, `.pause-btn`, `.reset-btn`, `.pressed`
+- Read at 0xFFFF0068 (3 bits: BTNL, BTNC, BTNR)
+- CSS: `.pb-container`, `.pb-btn`, `.pressed`
 
 ### 7-Segment Display
+- Individual box on the same row as Push Buttons
 - SVG-based rendering (22x40 viewBox per digit)
 - Full hex support (0-F) with custom segment paths
 - 7 segments: a(top), b(top-right), c(bottom-right), d(bottom), e(bottom-left), f(top-left), g(middle)

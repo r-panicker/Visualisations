@@ -223,6 +223,16 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   border: 1px solid #313244;
   border-radius: 6px;
   padding: 10px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Row group that holds two peripheral boxes side-by-side on the same row */
+.periph-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-width: 0;
 }
 
 .periph-title {
@@ -377,17 +387,6 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   border-color: #cba6f7;
 }
 
-/* Push Buttons — BTNU above BTNC, BTND below BTNC */
-.pb-container {
-  display: grid;
-  grid-template-columns: 32px 32px 32px;
-  grid-template-rows: 32px 32px 32px;
-  gap: 4px;
-  align-items: center;
-  justify-items: center;
-  width: fit-content;
-}
-
 .pb-btn {
   width: 28px;
   height: 28px;
@@ -418,33 +417,21 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   transform: scale(0.95);
 }
 
-.pb-btn.reset-btn {
-  border-color: #f38ba8;
-  color: #f38ba8;
+/* Button row: BTNL BTNC BTNR in a line */
+.btn-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
 }
 
-.pb-btn.reset-btn:hover,
-.pb-btn.reset-btn.pressed {
-  background: #f38ba8;
-  border-color: #f38ba8;
-  color: #1e1e2e;
-  box-shadow: 0 0 10px rgba(243, 139, 168, 0.5);
+/* Push Button container */
+#pbContainer {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
 }
 
-.pb-btn.pause-btn {
-  border-color: #fab387;
-  color: #fab387;
-}
-
-.pb-btn.pause-btn:hover,
-.pb-btn.pause-btn.pressed {
-  background: #fab387;
-  border-color: #fab387;
-  color: #1e1e2e;
-  box-shadow: 0 0 10px rgba(250, 179, 135, 0.5);
-}
-
-/* 7-Segment Display — SVG-based */
 .sevseg-container {
   display: flex;
   gap: 2px;
@@ -496,6 +483,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   .left-panel { min-height: auto; height: auto; }
   .editor-container { min-height: 200px; }
   .right-panel { width: 100%; max-height: 300px; border-left: none; border-top: 1px solid #313244; }
+  .periph-pair { grid-template-columns: 1fr; }
   .toolbar { font-size: 11px; }
 }
 
@@ -626,22 +614,24 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
             <div class="periph-title">DIP Switches <span class="periph-addr">0xFFFF0064 RO</span></div>
             <div class="dip-container" id="dipContainer"></div>
           </div>
-          <div class="periph-section">
-            <div class="periph-title">Push Buttons <span class="periph-addr">0xFFFF0068 RO</span></div>
-            <div class="pb-container" id="pbContainer"></div>
-            <div style="margin-top:8px;font-size:10px;color:#585b70;">
-              BTNL | BTNC | BTNR — click to toggle &nbsp;·&nbsp; BTND = RESET &nbsp;·&nbsp; BTNU = PAUSE
+          <div class="periph-pair">
+            <div class="periph-section">
+              <div class="periph-title">Push Buttons <span class="periph-addr">0xFFFF0068 RO</span></div>
+              <div id="pbContainer"></div>
+              <div style="margin-top:8px;font-size:10px;color:#585b70;">
+                BTNL | BTNC | BTNR — click to toggle
+              </div>
             </div>
-          </div>
-          <div class="periph-section">
-            <div class="periph-title">7-Segment Display <span class="periph-addr">0xFFFF0080 WO</span></div>
-            <div class="sevseg-container" id="sevsegContainer"></div>
+            <div class="periph-section">
+              <div class="periph-title">7-Segment Display <span class="periph-addr">0xFFFF0080 WO</span></div>
+              <div class="sevseg-container" id="sevsegContainer"></div>
+            </div>
           </div>
         </div>
         <div class="periph-legend">
           <strong>LED:</strong> 8 bits lit from written value &nbsp;·&nbsp; Clock (orange) shows divided clock &nbsp;·&nbsp; PC[8:2] displayed after divider
           <br><strong>DIP:</strong> Click to toggle &nbsp;·&nbsp; Read at 0xFFFF0064 (16 bits)
-          <br><strong>PB:</strong> Click to toggle press/release &nbsp;·&nbsp; Read at 0xFFFF0068 (BTNL, BTNC, BTNR) &nbsp;·&nbsp; BTND=RESET, BTNU=PAUSE
+          <br><strong>PB:</strong> Click to toggle press/release &nbsp;·&nbsp; Read at 0xFFFF0068 (BTNL, BTNC, BTNR)
           <br><strong>7SEG:</strong> 8-digit hex rendered as SVG 7-segment (0–F)
         </div>
       </div>
@@ -861,14 +851,15 @@ let regs = new Int32Array(32);
 let fregs = new Float32Array(32);
 let dregs = new Float64Array(32);
 let memory = new Uint8Array(4 * 1024 * 1024); // 4 MB memory
-let pc = 0x400000;
-// Configurable memory segment addresses.
-const DEFAULT_BASE = 0x00400000;
-const DEFAULT_DATA_OFFSET = 0x0FC10000;
+// Configurable memory segment addresses. Defaults match the documented layout:
+//   code .text = 0x10000, data = 0x20000, stack = 0x7ffffc, MMIO = 0xFFFF0000
+const DEFAULT_BASE = 0x00010000;
+const DEFAULT_DATA_OFFSET = 0x00010000;
 let baseAddress = DEFAULT_BASE;                    // .text base
-let dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET; // .data base
-let stackBase = 0x10010200;                          // stack top
+let dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET; // .data base = 0x20000
+let stackBase = 0x7ffffc;                          // stack top
 let mmioBase = 0xFFFF0000;                         // MMIO base
+let pc = baseAddress;
 let machineCode = []; // array of {address, bytes, instruction, line}
 let labels = {};
 let symbolTable = {};
@@ -918,9 +909,7 @@ let ioOutputBuffer = '';
 let ledState = 0;                // current LED display value
 let sevsegState = '00000000';    // 7-segment display string
 let dipSwitches = 0;             // simulated DIP switch value (16 bits)
-let pbState = 0;                 // simulated push button state (3 bits)
-let pbReset = false;             // simulated reset button
-let pbPause = false;             // simulated pause button
+let pbState = 0;                 // simulated push button state (3 bits: BTNL, BTNC, BTNR)
 
 // ============================================================
 // 3. REGISTER UTILITIES
@@ -971,6 +960,7 @@ function parseImm(s) {
 function parseMemOp(s) {
   // Formats: "offset(reg)" or "reg" or plain label/symbol
   // Handle optional parentheses: strip if present, then parse
+  if (typeof s !== 'string') s = String(s);
   s = s.trim();
   if (s.startsWith('(') && s.endsWith(')')) {
     s = s.substring(1, s.length - 1);
@@ -1217,9 +1207,9 @@ function assemble(source, startAddr) {
               let lower = addr & 0xFFF;
               if (lower & 0x800) { upper = (upper + 1) & 0xFFFFF; }
               const loSigned = (lower & 0x800) ? (lower - 0x1000) : lower;
-              const rn = 'x' + rd;
-              pushInstr('lui', [rn, upper], getAddr(), lineNo, asmText, true);
-              pushInstr(mn, [rn, loSigned + '(' + rn + ')'], getAddr(), lineNo, asmText, true);
+              // Use x5 (t0) as temp register for address construction, then load into rd
+              pushInstr('lui', ['x5', String(upper)], getAddr(), lineNo, asmText, true);
+              pushInstr(mn, [args[0], String(loSigned) + '(x5)'], getAddr(), lineNo, asmText, true);
               return;
             }
           }
@@ -1655,7 +1645,13 @@ function loadProgram(mc) {
   pc = baseAddress;
 }
 
+function isMMIOAddr(addr) {
+  return (addr >= MMIO_BASE && addr < MMIO_BASE + 16) ||
+    addr === PERIPH_LED || addr === PERIPH_DIP || addr === PERIPH_PB || addr === PERIPH_SEVENSEG;
+}
+
 function readMem(addr, size) {
+  if (addr >= 0 && isMMIOAddr(addr)) return handleMMIORead(addr, size);
   if (addr < 0 || addr + size > memory.length) return 0;
   let val = 0;
   for (let i = 0; i < size; i++) {
@@ -1672,12 +1668,12 @@ function readMemSigned(addr, size) {
 }
 
 function writeMem(addr, val, size) {
-  if (addr < 0 || addr + size > memory.length) return;
-  // Handle MMIO
-  if (addr >= MMIO_BASE && addr < MMIO_BASE + 16) {
+  if (addr >= 0 && isMMIOAddr(addr)) {
     handleMMIOWrite(addr, val, size);
+    lastChangedMem.push({ addr, size });
     return;
   }
+  if (addr < 0 || addr + size > memory.length) return;
   // Journal old bytes for back-step (only during single-stepping execution)
   if (journalEnabled) {
     for (let i = 0; i < size; i++) {
@@ -1799,7 +1795,7 @@ function decodeAndExecute(instr32, addr) {
       if (taken) nextPC = addr + immB;
       break;
     case 0b0000011: // LOAD
-      let loadAddr = regs[rs1] + immI;
+      let loadAddr = (regs[rs1] >>> 0) + immI;
       if (rd !== 0) {
         switch (funct3) {
           case 0b000: regs[rd] = readMemSigned(loadAddr, 1); break; // LB
@@ -1812,7 +1808,7 @@ function decodeAndExecute(instr32, addr) {
       break;
     case 0b0100011: // STORE
       {
-        let storeAddr = regs[rs1] + immS;
+        let storeAddr = (regs[rs1] >>> 0) + immS;
         switch (funct3) {
           case 0b000: writeMem(storeAddr, regs[rs2] & 0xFF, 1); break; // SB
           case 0b001: writeMem(storeAddr, regs[rs2] & 0xFFFF, 2); break; // SH
@@ -2473,19 +2469,11 @@ function initPeripherals() {
   if (pbCont) {
     const SQ = String.fromCharCode(39);
     pbCont.innerHTML =
-      '<div class="pb-btn" id="pbBtnL" title="BTNL" style="grid-row:2;grid-column:1" onclick="pbToggle('+SQ+'0'+SQ+')">L</div>' +
-      '<div class="pb-btn" id="pbBtnC" title="BTNC" style="grid-row:2;grid-column:2" onclick="pbToggle('+SQ+'1'+SQ+')">C</div>' +
-      '<div class="pb-btn" id="pbBtnR" title="BTNR" style="grid-row:2;grid-column:3" onclick="pbToggle('+SQ+'2'+SQ+')">R</div>' +
-      '<div class="pb-btn pause-btn" id="pbPause" title="BTNU" style="grid-row:1;grid-column:2" onclick="pbToggle('+SQ+'pause'+SQ+')">PAU</div>' +
-      '<div class="pb-btn reset-btn" id="pbReset" title="BTND" style="grid-row:3;grid-column:2" onclick="pbToggle('+SQ+'reset'+SQ+')">RST</div>' +
-      '<div style="visibility:hidden"></div>' +
-      '<div style="visibility:hidden"></div>' +
-      '<div style="visibility:hidden"></div>' +
-      '<div style="visibility:hidden"></div>' +
-      '<div style="visibility:hidden"></div>' +
-      '<div style="visibility:hidden"></div>' +
-      '<div style="visibility:hidden"></div>' +
-      '<div style="visibility:hidden"></div>';
+      '<div class="btn-row">' +
+        '<div class="pb-btn" id="pbBtnL" title="BTNL" onclick="pbToggle('+SQ+'0'+SQ+')">L</div>' +
+        '<div class="pb-btn" id="pbBtnC" title="BTNC" onclick="pbToggle('+SQ+'1'+SQ+')">C</div>' +
+        '<div class="pb-btn" id="pbBtnR" title="BTNR" onclick="pbToggle('+SQ+'2'+SQ+')">R</div>' +
+      '</div>';
   }
 
   const sevseg = document.getElementById('sevsegContainer');
@@ -2523,10 +2511,6 @@ function updatePeripherals() {
     const el = document.getElementById(['pbBtnL','pbBtnC','pbBtnR'][i]);
     if (el) el.classList.toggle('pressed', !!(pbState & (1 << i)));
   }
-  const pbReset = document.getElementById('pbReset');
-  if (pbReset) pbReset.classList.toggle('pressed', !!(pbState & (1 << 3)));
-  const pbPause = document.getElementById('pbPause');
-  if (pbPause) pbPause.classList.toggle('pressed', !!(pbState & (1 << 4)));
   
   // Update 7-segment display
   sevsegUpdate();
@@ -2540,21 +2524,7 @@ function toggleDip(idx) {
 
 // Push button: click to toggle press/release
 function pbToggle(btn) {
-  if (btn === 'reset') {
-    if (pbState & (1 << 3)) {
-      pbState &= ~(1 << 3);
-    } else {
-      pbState |= (1 << 3);
-      resetAll();
-    }
-  } else if (btn === 'pause') {
-    if (pbState & (1 << 4)) {
-      pbState &= ~(1 << 4);
-    } else {
-      pbState |= (1 << 4);
-      togglePause();
-    }
-  } else {
+  if (btn >= 0 && btn <= 2) {
     if (pbState & (1 << btn)) {
       pbState &= ~(1 << btn);
     } else {
@@ -3249,8 +3219,8 @@ function applyMemSegments() {
 function resetMemSegments() {
   baseAddress = DEFAULT_BASE;
   dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET;
-  stackBase = 0x10010200;
-  mmioBase = 0x10000000;
+  stackBase = 0x7ffffc;
+  mmioBase = 0xFFFF0000;
   MMIO_BASE = mmioBase; MMIO_GETC = mmioBase; MMIO_PUTC = mmioBase + 4; MMIO_STATUS = mmioBase + 8;
   document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
   buildMemSegmentsPanel();
