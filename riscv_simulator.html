@@ -49,9 +49,11 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 /* Toolbar */
 .toolbar { display: flex; gap: 6px; padding: 6px 12px; background: #181825; border-bottom: 1px solid #313244; flex-wrap: wrap; align-items: center; }
 .toolbar button {
-  background: #313244; color: #cdd6f4; border: none; padding: 6px 12px;
+  background: #313244; color: #cdd6f4; border: none; padding: 0 12px;
+  height: 28px; line-height: 28px; box-sizing: border-box;
   font-size: 13px; cursor: pointer; border-radius: 4px; font-family: inherit;
   transition: background 0.15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
 }
 .toolbar button:hover { background: #45475a; }
 .toolbar button.primary { background: #cba6f7; color: #1e1e2e; font-weight: 600; }
@@ -82,9 +84,13 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .tab-content.active { display: block; }
 
 /* Register Table */
-.reg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.reg-table th { text-align: right; padding: 4px 6px; color: #6c7086; font-weight: 600; border-bottom: 1px solid #313244; position: sticky; top: 0; background: #1e1e2e; }
-.reg-table td { padding: 4px 6px; border-bottom: 1px solid #181825; }
+.reg-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+.reg-table th { padding: 6px 4px; color: #6c7086; font-weight: 600; border-bottom: 1px solid #313244; position: sticky; top: 0; background: #1e1e2e; vertical-align: middle; }
+.reg-table th:nth-child(1), .reg-table td:nth-child(1) { width: 40px; text-align: left; }
+.reg-table th:nth-child(2), .reg-table td:nth-child(2) { width: 65px; text-align: left; }
+.reg-table th:nth-child(3), .reg-table td:nth-child(3) { width: 120px; text-align: right; }
+.reg-table th:nth-child(4), .reg-table td:nth-child(4) { width: 120px; text-align: right; }
+.reg-table td { padding: 4px; border-bottom: 1px solid #181825; vertical-align: middle; }
 .reg-table tr:hover td { background: #181825; }
 .reg-table .reg-name { color: #89b4fa; }
 .reg-table .reg-val { color: #a6e3a1; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -254,137 +260,111 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   color: #585b70;
 }
 
-/* LED Display */
-/* LED Row — 8 bits + clock + PC[8:2] in one row */
-.led-row {
+/* LED & DIP Board Layout */
+.periph-board {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #181825;
+  border: 1px solid #313244;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.periph-group-labels {
   display: flex;
   align-items: center;
-  gap: 3px;
-  flex-wrap: nowrap;
+  font-size: 9.5px;
+  font-weight: 600;
+  margin-bottom: 1px;
+}
+
+.lbl-pc { flex: 7; color: #89b4fa; text-align: center; }
+.lbl-clk { flex: 1; color: #fab387; text-align: center; }
+.lbl-user { flex: 8; color: #a6e3a1; text-align: center; }
+
+.led-row, .dip-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1px;
   overflow-x: auto;
+}
+
+.led-cell, .dip-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 14px;
+}
+
+.led-sublabel, .dip-sublabel {
+  font-size: 7.5px;
+  color: #6c7086;
+  margin-bottom: 1px;
+  line-height: 1;
+}
+
+.dip-sublabel {
+  margin-top: 3px;
+  margin-bottom: 0;
+}
+
+.led-group-divider {
+  width: 1px;
+  height: 18px;
+  background: #45475a;
+  margin: 0 1px;
+  flex-shrink: 0;
 }
 
 .led {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: #2a2a3a;
   border: 1px solid #313244;
-  transition: all 0.15s ease;
+  transition: background 0.1s ease, box-shadow 0.1s ease;
 }
 
-.led.on {
-  background: #a6e3a1;
-  box-shadow: 0 0 6px #a6e3a1, 0 0 12px rgba(166, 227, 161, 0.3);
-  border-color: #a6e3a1;
-}
-
-.led-divider {
-  width: 1px;
-  height: 16px;
-  background: #45475a;
-  margin: 0 6px;
-  flex-shrink: 0;
-}
-
-.led-label {
-  font-size: 8px;
-  color: #585b70;
-  white-space: nowrap;
-  letter-spacing: 0.5px;
-  flex-shrink: 0;
-}
-
-.led-clock {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #2a2a3a;
-  border: 2px solid #313244;
-  transition: all 0.1s ease;
-  flex-shrink: 0;
-}
-
-.led-clock.on {
-  background: #fab387;
-  box-shadow: 0 0 8px #fab387, 0 0 16px rgba(250, 179, 135, 0.3);
-  border-color: #fab387;
-  animation: clockPulse 0.5s infinite alternate;
-}
-
-@keyframes clockPulse {
-  from { box-shadow: 0 0 4px #fab387; }
-  to { box-shadow: 0 0 12px #fab387, 0 0 20px rgba(250, 179, 135, 0.4); }
-}
-
-/* PC bits in LED row */
-.led-pc {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #2a2a3a;
-  border: 1px solid #313244;
-  transition: all 0.15s ease;
-}
-
+/* 3 Distinct LED Group Colors */
+/* 1. PC[8:2] LEDs (LED[15:9]) - Vibrant Cyan/Blue */
 .led-pc.on {
   background: #89b4fa;
   border-color: #89b4fa;
-  box-shadow: 0 0 6px #89b4fa, 0 0 12px rgba(137, 180, 250, 0.3);
+  box-shadow: 0 0 5px #89b4fa, 0 0 10px rgba(137, 180, 250, 0.4);
 }
 
-/* PC Display */
-.pc-display {
-  margin-top: 8px;
-  font-family: 'Consolas', monospace;
-  font-size: 10px;
-  color: #6c7086;
+/* 2. Divided Clock LED (LED[8]) - Vibrant Amber/Orange */
+.led-clock.on {
+  background: #fab387;
+  border-color: #fab387;
+  box-shadow: 0 0 5px #fab387, 0 0 10px rgba(250, 179, 135, 0.4);
 }
 
-.pc-display span {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
+/* 3. User Controllable Output LED[7:0] - Vibrant Green */
+.led-user.on {
+  background: #a6e3a1;
+  border-color: #a6e3a1;
+  box-shadow: 0 0 5px #a6e3a1, 0 0 10px rgba(166, 227, 161, 0.4);
+}
+
+/* Compact DIP Switch */
+.dip-switch {
+  width: 16px;
+  height: 11px;
   border-radius: 2px;
   background: #2a2a3a;
-  border: 1px solid #313244;
-  margin-left: 2px;
-  text-align: center;
-  line-height: 10px;
-  font-size: 8px;
-  color: #585b70;
-}
-
-.pc-display span.on {
-  background: #89b4fa;
-  border-color: #89b4fa;
-  color: #1e1e2e;
-}
-
-/* DIP Switches — single row */
-.dip-container {
-  display: flex;
-  gap: 2px;
-  align-items: center;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-
-.dip-switch {
-  width: 24px;
-  height: 14px;
-  border-radius: 3px;
-  background: #2a2a3a;
-  border: 2px solid #313244;
+  border: 1.5px solid #313244;
   cursor: pointer;
   transition: all 0.15s ease;
-  flex-shrink: 0;
 }
 
 .dip-switch.on {
   background: #cba6f7;
   border-color: #cba6f7;
-  box-shadow: 0 0 8px rgba(203, 166, 247, 0.6);
+  box-shadow: 0 0 6px rgba(203, 166, 247, 0.6);
 }
 
 .dip-switch:hover {
@@ -438,12 +418,13 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 
 .sevseg-container {
   display: flex;
-  gap: 2px;
+  gap: 8px;
   align-items: center;
+  justify-content: center;
   background: #0a0a1a;
   border: 1px solid #313244;
   border-radius: 6px;
-  padding: 8px 6px;
+  padding: 10px 12px;
   overflow-x: auto;
 }
 
@@ -586,7 +567,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       </div>
       <div class="tab-content active" id="tab-registers">
         <table class="reg-table" id="regTable">
-          <thead><tr><th id="regId">#</th><th id="regName">Name</th><th id="regHex">Value (Hex)</th><th id="regDec">Value (Dec)</th></tr></thead>
+          <thead><tr><th id="regId" class="col-left">#</th><th id="regName" class="col-left">Name</th><th id="regHex" class="col-right">Value (Hex)</th><th id="regDec" class="col-right">Value (Dec)</th></tr></thead>
           <tbody id="regBody"></tbody>
         </table>
       </div>
@@ -611,12 +592,17 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       <div class="tab-content" id="tab-peripherals">
         <div class="peripherals-grid">
           <div class="periph-section">
-            <div class="periph-title">LED <span class="periph-addr">0xFFFF0060 WO</span></div>
-            <div class="led-row" id="ledRow"></div>
-          </div>
-          <div class="periph-section">
-            <div class="periph-title">DIP Switches <span class="periph-addr">0xFFFF0064 RO</span></div>
-            <div class="dip-container" id="dipContainer"></div>
+            <div class="periph-title">LEDs (LED[15:0]) &amp; DIP Switches (SW[15:0])</div>
+            <div class="periph-board">
+              <div class="periph-group-labels">
+                <span class="lbl-pc">PC[8:2] (LED[15:9])</span>
+                <span class="lbl-clk">CLK (LED[8])</span>
+                <span class="lbl-user">User OUT (LED[7:0]) <span class="periph-addr">0xFFFF0060 WO</span></span>
+              </div>
+              <div class="led-row" id="ledRow"></div>
+              <div class="dip-container" id="dipContainer"></div>
+              <div style="font-size:10px;color:#585b70;margin-top:2px;">DIP Switches <span class="periph-addr">0xFFFF0064 RO (SW15..SW0)</span></div>
+            </div>
           </div>
           <div class="periph-pair">
             <div class="periph-section">
@@ -633,10 +619,12 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
           </div>
         </div>
         <div class="periph-legend">
-          <strong>LED:</strong> 8 bits lit from written value &nbsp;·&nbsp; Clock (orange) shows divided clock &nbsp;·&nbsp; PC[8:2] displayed after divider
-          <br><strong>DIP:</strong> Click to toggle &nbsp;·&nbsp; Read at 0xFFFF0064 (16 bits)
+          <strong>LED[15:9] (Cyan):</strong> Shows PC[8:2] &nbsp;·&nbsp;
+          <strong>LED[8] (Orange):</strong> Divided Clock (blinks per cycle, lit at pause) &nbsp;·&nbsp;
+          <strong>LED[7:0] (Green):</strong> User Output at 0xFFFF0060
+          <br><strong>DIP[15:0]:</strong> 16 switches aligned 1-to-1 with LEDs &nbsp;·&nbsp; Read at 0xFFFF0064
           <br><strong>PB:</strong> Click to toggle press/release &nbsp;·&nbsp; Read at 0xFFFF0068 (BTNL, BTNC, BTNR)
-          <br><strong>7SEG:</strong> 8-digit hex rendered as SVG 7-segment (0–F)
+          <br><strong>7SEG:</strong> 8-digit hex rendered as SVG 7-segment (0–F) at 0xFFFF0080
         </div>
       </div>
       <div class="tab-content" id="tab-disassembly">
@@ -861,7 +849,7 @@ const DEFAULT_BASE = 0x00010000;
 const DEFAULT_DATA_OFFSET = 0x00010000;
 let baseAddress = DEFAULT_BASE;                    // .text base
 let dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET; // .data base = 0x20000
-let stackBase = 0x7ffffc;                          // stack top
+let stackBase = 0x00020200;                          // stack top
 let mmioBase = 0xFFFF0000;                         // MMIO base
 let pc = baseAddress;
 let machineCode = []; // array of {address, bytes, instruction, line}
@@ -914,6 +902,7 @@ let ledState = 0;                // current LED display value
 let sevsegState = '00000000';    // 7-segment display string
 let dipSwitches = 0;             // simulated DIP switch value (16 bits)
 let pbState = 0;                 // simulated push button state (3 bits: BTNL, BTNC, BTNR)
+let clockToggle = 0;             // divided clock blink toggle bit
 
 // ============================================================
 // 3. REGISTER UTILITIES
@@ -1666,6 +1655,7 @@ function initializeState() {
   totalCycles = 0;
   instructionCount = 0;
   currentExecLine = -1;
+  clockToggle = 0;
   regs[2] = stackBase;
 }
 
@@ -1687,49 +1677,56 @@ function loadProgram(mc) {
 }
 
 function isMMIOAddr(addr) {
-  return (addr >= MMIO_BASE && addr < MMIO_BASE + 16) ||
-    addr === PERIPH_LED || addr === PERIPH_DIP || addr === PERIPH_PB || addr === PERIPH_SEVENSEG;
+  const u = addr >>> 0;
+  const m = MMIO_BASE >>> 0;
+  return (u >= m && u < m + 16) ||
+    u === (PERIPH_LED >>> 0) || u === (PERIPH_DIP >>> 0) || u === (PERIPH_PB >>> 0) || u === (PERIPH_SEVENSEG >>> 0);
 }
 
 function readMem(addr, size) {
-  if (addr >= 0 && isMMIOAddr(addr)) return handleMMIORead(addr, size);
-  if (addr < 0 || addr + size > memory.length) return 0;
+  const uaddr = addr >>> 0;
+  if (isMMIOAddr(uaddr)) return handleMMIORead(uaddr, size);
+  if (uaddr + size > memory.length) return 0;
   let val = 0;
   for (let i = 0; i < size; i++) {
-    val |= (memory[addr + i] << (i * 8));
+    val |= (memory[uaddr + i] << (i * 8));
   }
-  return val;
+  return val >>> 0;
 }
 
 function readMemSigned(addr, size) {
   let val = readMem(addr, size);
-  const signBit = size * 8 - 1;
-  if (val & (1 << signBit)) val -= (1 << (size * 8));
+  if (size === 4) return val | 0;
+  const signBit = 1 << (size * 8 - 1);
+  if (val & signBit) val -= (1 << (size * 8));
   return val;
 }
 
 function writeMem(addr, val, size) {
-  if (addr >= 0 && isMMIOAddr(addr)) {
-    handleMMIOWrite(addr, val, size);
-    lastChangedMem.push({ addr, size });
+  const uaddr = addr >>> 0;
+  if (isMMIOAddr(uaddr)) {
+    handleMMIOWrite(uaddr, val, size);
+    lastChangedMem.push({ addr: uaddr, size });
     return;
   }
-  if (addr < 0 || addr + size > memory.length) return;
+  if (uaddr + size > memory.length) return;
   // Journal old bytes for back-step (only during single-stepping execution)
   if (journalEnabled) {
     for (let i = 0; i < size; i++) {
-      stepWriteLog.push({ addr: addr + i, old: memory[addr + i] });
+      stepWriteLog.push({ addr: uaddr + i, old: memory[uaddr + i] });
     }
   }
   for (let i = 0; i < size; i++) {
-    memory[addr + i] = (val >> (i * 8)) & 0xFF;
+    memory[uaddr + i] = (val >> (i * 8)) & 0xFF;
   }
-  lastChangedMem.push({ addr, size });
+  lastChangedMem.push({ addr: uaddr, size });
 }
 
 function handleMMIOWrite(addr, val, size) {
-  // Original MMIO
-  if (addr === MMIO_PUTC) {
+  const u = addr >>> 0;
+  
+  // Console Output (MMIO_PUTC)
+  if (u === (MMIO_PUTC >>> 0)) {
     const ch = val & 0xFF;
     if (ch >= 32 && ch <= 126) {
       ioOutputBuffer += String.fromCharCode(ch);
@@ -1739,43 +1736,102 @@ function handleMMIOWrite(addr, val, size) {
       log('\n', 'info');
     }
   }
-  
-  // Peripherals
-  if (addr === PERIPH_LED) {
-    // Only least significant 8 bits used
-    ledState = val & 0xFF;
+
+  // Peripherals: LED Output (0xFFFF0060 .. 0xFFFF0063)
+  const ledBase = PERIPH_LED >>> 0;
+  if (u >= ledBase && u < ledBase + 4) {
+    if (size === 4) {
+      ledState = val & 0xFF;
+    } else {
+      const offset = u - ledBase;
+      if (offset === 0) ledState = val & 0xFF;
+    }
     updatePeripherals();
   }
-  
-  if (addr === PERIPH_SEVENSEG) {
-    // Display as 8-digit hex
-    sevsegState = val.toString(16).padStart(8, '0').toUpperCase();
+
+  // Peripherals: DIP Switches (0xFFFF0064 .. 0xFFFF0067)
+  const dipBase = PERIPH_DIP >>> 0;
+  if (u >= dipBase && u < dipBase + 4) {
+    if (size === 4) {
+      dipSwitches = val & 0xFFFF;
+    } else {
+      const offset = u - dipBase;
+      dipSwitches = (dipSwitches & ~(0xFF << (offset * 8))) | ((val & 0xFF) << (offset * 8));
+      dipSwitches &= 0xFFFF;
+    }
+    updatePeripherals();
+  }
+
+  // Peripherals: Push Buttons (0xFFFF0068 .. 0xFFFF006B)
+  const pbBase = PERIPH_PB >>> 0;
+  if (u >= pbBase && u < pbBase + 4) {
+    if (size === 4) {
+      pbState = val & 0x7;
+    } else {
+      const offset = u - pbBase;
+      pbState = (pbState & ~(0xFF << (offset * 8))) | ((val & 0xFF) << (offset * 8));
+      pbState &= 0x7;
+    }
+    updatePeripherals();
+  }
+
+  // Peripherals: 7-Segment Display (0xFFFF0080 .. 0xFFFF0083)
+  const sevBase = PERIPH_SEVENSEG >>> 0;
+  if (u >= sevBase && u < sevBase + 4) {
+    let curVal = parseInt(sevsegState, 16) || 0;
+    if (size === 4) {
+      curVal = val >>> 0;
+    } else {
+      const offset = u - sevBase;
+      curVal = (curVal & ~(0xFF << (offset * 8))) | ((val & 0xFF) << (offset * 8));
+    }
+    sevsegState = (curVal >>> 0).toString(16).padStart(8, '0').toUpperCase();
     updatePeripherals();
   }
 }
 
 function handleMMIORead(addr, size) {
-  // Original MMIO
-  if (addr === MMIO_GETC && ioInputBuffer.length > 0) {
+  const u = addr >>> 0;
+
+  // Console Input & Status
+  if (u === (MMIO_GETC >>> 0) && ioInputBuffer.length > 0) {
     const ch = ioInputBuffer.charCodeAt(0);
     ioInputBuffer = ioInputBuffer.substring(1);
     return ch;
   }
-  if (addr === MMIO_STATUS) {
+  if (u === (MMIO_STATUS >>> 0)) {
     return ioInputBuffer.length > 0 ? 1 : 0;
   }
   
-  // Peripherals
-  if (addr === PERIPH_DIP) {
-    // Only least significant 16 bits valid
-    return dipSwitches & 0xFFFF;
+  // LED Output (0xFFFF0060 .. 0xFFFF0063)
+  const ledBase = PERIPH_LED >>> 0;
+  if (u >= ledBase && u < ledBase + 4) {
+    const offset = u - ledBase;
+    return (ledState >> (offset * 8)) & 0xFF;
   }
   
-  if (addr === PERIPH_PB) {
-    // Only least significant 3 bits valid: [2:0] → BTNL, BTNC, BTNR
-    return pbState & 0x7;
+  // DIP Switches (0xFFFF0064 .. 0xFFFF0067)
+  const dipBase = PERIPH_DIP >>> 0;
+  if (u >= dipBase && u < dipBase + 4) {
+    const offset = u - dipBase;
+    return (dipSwitches >> (offset * 8)) & 0xFF;
   }
-  
+
+  // Push Buttons (0xFFFF0068 .. 0xFFFF006B)
+  const pbBase = PERIPH_PB >>> 0;
+  if (u >= pbBase && u < pbBase + 4) {
+    const offset = u - pbBase;
+    return (pbState >> (offset * 8)) & 0xFF;
+  }
+
+  // 7-Segment Display (0xFFFF0080 .. 0xFFFF0083)
+  const sevBase = PERIPH_SEVENSEG >>> 0;
+  if (u >= sevBase && u < sevBase + 4) {
+    const offset = u - sevBase;
+    const val = parseInt(sevsegState, 16) || 0;
+    return (val >> (offset * 8)) & 0xFF;
+  }
+
   return 0;
 }
 
@@ -1784,6 +1840,7 @@ function fetchInstruction(addr) {
 }
 
 function decodeAndExecute(instr32, addr) {
+  clockToggle = 1 - clockToggle;
   const opcode = instr32 & 0x7F;
   const rd = (instr32 >> 7) & 0x1F;
   const funct3 = (instr32 >> 12) & 0x7;
@@ -2471,8 +2528,8 @@ function updateRegisters() {
     const isChanged = i === lastChangedReg;
     const valClass = 'reg-val' + (isChanged ? ' reg-changed' : '');
     html += `<tr><td class="reg-name">x${i}</td><td class="reg-name">${name}</td>
-      <td class="${valClass} reg-editable" data-idx="${i}" data-val="${uval.toString(16).padStart(8,'0')}" data-type="hex" ondblclick="startRegEdit(this)" onclick="selectRegText(this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)">0x${uval.toString(16).padStart(8,'0')}</td>
-      <td class="${valClass} reg-editable" data-idx="${i}" data-val="${val.toString().padStart(11,' ')}" data-type="dec" ondblclick="startRegEdit(this)" onclick="selectRegText(this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)" style="width:120px">${val}</td></tr>`;
+      <td class="${valClass} reg-editable" data-idx="${i}" data-val="${uval.toString(16).padStart(8,'0')}" data-type="hex" onclick="startRegEdit(this)" ondblclick="popRegEditModal(event,this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)" title="Single-click: edit inline | Double-click: open edit window">0x${uval.toString(16).padStart(8,'0')}</td>
+      <td class="${valClass} reg-editable" data-idx="${i}" data-val="${val.toString().padStart(11,' ')}" data-type="dec" onclick="startRegEdit(this)" ondblclick="popRegEditModal(event,this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)" style="width:120px" title="Single-click: edit inline | Double-click: open edit window">${val}</td></tr>`;
   }
   regBody.innerHTML = html;
   // Also update peripherals (PC LEDs, etc.) when registers are refreshed
@@ -2485,25 +2542,48 @@ function updateRegisters() {
 
 function initPeripherals() {
   const ledRow = document.getElementById('ledRow');
-  if (!ledRow) return;
-  let ledHtml = '';
-  for (let i = 7; i >= 0; i--) {
-    ledHtml += '<div class="led" id="led' + i + '" title="LED[' + i + '"></div>';
+  if (ledRow) {
+    let ledHtml = '';
+    for (let i = 15; i >= 0; i--) {
+      let typeClass, title, labelText;
+      if (i >= 9) {
+        typeClass = 'led-pc';
+        title = `LED[${i}] — PC[${i - 7}]`;
+        labelText = `P${i - 7}`;
+      } else if (i === 8) {
+        typeClass = 'led-clock';
+        title = `LED[8] — Divided Clock`;
+        labelText = `CLK`;
+      } else {
+        typeClass = 'led-user';
+        title = `LED[${i}] — User Output (0xFFFF0060)`;
+        labelText = `L${i}`;
+      }
+      
+      ledHtml += `<div class="led-cell">
+        <div class="led-sublabel">${labelText}</div>
+        <div class="led ${typeClass}" id="led${i}" title="${title}"></div>
+      </div>`;
+
+      if (i === 9 || i === 8) {
+        ledHtml += '<div class="led-group-divider"></div>';
+      }
+    }
+    ledRow.innerHTML = ledHtml;
   }
-  ledHtml += '<div class="led-divider"></div>';
-  ledHtml += '<div class="led-clock" id="ledClock" title="Clock (divided)"></div>';
-  ledHtml += '<div class="led-divider"></div>';
-  ledHtml += '<span class="led-label">PC</span>';
-  for (let i = 8; i >= 2; i--) {
-    ledHtml += '<div class="led-pc" id="pc' + i + '" title="PC[' + i + '"></div>';
-  }
-  ledRow.innerHTML = ledHtml;
 
   const dipCont = document.getElementById('dipContainer');
   if (dipCont) {
     let dipHtml = '';
     for (let i = 15; i >= 0; i--) {
-      dipHtml += '<div class="dip-switch" id="dip' + i + '" onclick="toggleDip(' + i + ')" title="DIP[' + i + ']"> </div>';
+      dipHtml += `<div class="dip-cell">
+        <div class="dip-switch" id="dip${i}" onclick="toggleDip(${i})" title="DIP[${i}] (SW${i})"></div>
+        <div class="dip-sublabel">SW${i}</div>
+      </div>`;
+
+      if (i === 9 || i === 8) {
+        dipHtml += '<div class="led-group-divider" style="visibility:hidden"></div>';
+      }
     }
     dipCont.innerHTML = dipHtml;
   }
@@ -2513,9 +2593,9 @@ function initPeripherals() {
     const SQ = String.fromCharCode(39);
     pbCont.innerHTML =
       '<div class="btn-row">' +
-        '<div class="pb-btn" id="pbBtnL" title="BTNL" onclick="pbToggle('+SQ+'0'+SQ+')">L</div>' +
-        '<div class="pb-btn" id="pbBtnC" title="BTNC" onclick="pbToggle('+SQ+'1'+SQ+')">C</div>' +
-        '<div class="pb-btn" id="pbBtnR" title="BTNR" onclick="pbToggle('+SQ+'2'+SQ+')">R</div>' +
+        '<div class="pb-btn" id="pbBtnL" title="BTNL (bit 2)" onclick="pbToggle('+SQ+'2'+SQ+')">L</div>' +
+        '<div class="pb-btn" id="pbBtnC" title="BTNC (bit 1)" onclick="pbToggle('+SQ+'1'+SQ+')">C</div>' +
+        '<div class="pb-btn" id="pbBtnR" title="BTNR (bit 0)" onclick="pbToggle('+SQ+'0'+SQ+')">R</div>' +
       '</div>';
   }
 
@@ -2527,34 +2607,39 @@ function initPeripherals() {
 
 
 function updatePeripherals() {
-  // Update LEDs (8 bits)
-  for (let i = 0; i < 8; i++) {
+  // 1. PC[8:2] LEDs (LED[15:9]) -> Cyan/Blue
+  for (let i = 15; i >= 9; i--) {
+    const pcBit = i - 7;
+    const led = document.getElementById('led' + i);
+    if (led) led.classList.toggle('on', !!(pc & (1 << pcBit)));
+  }
+
+  // 2. Divided Clock LED (LED[8]) -> Amber/Orange (blinks per cycle during execution, lit at pause)
+  const clockLed = document.getElementById('led8');
+  if (clockLed) {
+    clockLed.classList.toggle('on', running ? !!clockToggle : true);
+  }
+
+  // 3. User Output LEDs (LED[7:0]) -> Green (driven by PERIPH_LED 0xFFFF0060)
+  for (let i = 7; i >= 0; i--) {
     const led = document.getElementById('led' + i);
     if (led) led.classList.toggle('on', !!(ledState & (1 << i)));
   }
-  
-  // Update clock LED
-  const clockLed = document.getElementById('ledClock');
-  if (clockLed) clockLed.classList.toggle('on', totalCycles % 100 < 50);
-  
-  // Update PC[8:2] bits
-  for (let i = 8; i >= 2; i--) {
-    const pcLed = document.getElementById('pc' + i);
-    if (pcLed) pcLed.classList.toggle('on', !!(pc & (1 << i)));
-  }
-  
-  // Update DIP switches
-  for (let i = 0; i < 16; i++) {
+
+  // Update DIP switches (16 switches)
+  for (let i = 15; i >= 0; i--) {
     const dip = document.getElementById('dip' + i);
     if (dip) dip.classList.toggle('on', !!(dipSwitches & (1 << i)));
   }
-  
-  // Update push buttons
-  for (let i = 0; i < 3; i++) {
-    const el = document.getElementById(['pbBtnL','pbBtnC','pbBtnR'][i]);
-    if (el) el.classList.toggle('pressed', !!(pbState & (1 << i)));
-  }
-  
+
+  // Update push buttons: bit 2 = BTNL, bit 1 = BTNC, bit 0 = BTNR
+  const pbL = document.getElementById('pbBtnL');
+  const pbC = document.getElementById('pbBtnC');
+  const pbR = document.getElementById('pbBtnR');
+  if (pbL) pbL.classList.toggle('pressed', !!(pbState & (1 << 2)));
+  if (pbC) pbC.classList.toggle('pressed', !!(pbState & (1 << 1)));
+  if (pbR) pbR.classList.toggle('pressed', !!(pbState & (1 << 0)));
+
   // Update 7-segment display
   sevsegUpdate();
 }
@@ -2648,55 +2733,66 @@ function sevsegUpdate() {
 // ============================================================
 // ============================================================
 
+let activeMemRegion = 'code';
+
 function updateMemoryView() {
   const addrStr = document.getElementById('memAddr').value;
   const rows = parseInt(document.getElementById('memRows').value) || 16;
   let addr = parseInt(addrStr, 16);
-  if (isNaN(addr) || addr < 0) addr = baseAddress;
-  addr = addr & ~0x7;  // Align to 8-byte boundary
+  if (isNaN(addr)) addr = baseAddress;
+  addr = (addr >>> 0) & ~0x7;  // Align to 8-byte boundary unsigned
+
+  const isStackView = (activeMemRegion === 'stack');
 
   let html = '';
   for (let r = 0; r < rows; r++) {
-    const base = addr + r * 8;
+    // Stack grows downwards -> rows step downwards by 8 bytes; all other regions step upwards
+    const base = isStackView ? ((addr - r * 8) >>> 0) : ((addr + r * 8) >>> 0);
 
-    // Check if this row is entirely in MMIO range
-    const isMMIO = (base >= mmioBase && base < mmioBase + 256);
-    // Also check peripheral addresses
+    const isMMIO = (base >= 0xFFFF0000 && base < 0xFFFF0100) || (base >= mmioBase && base < mmioBase + 256);
     const hasPeriph = (base === PERIPH_LED || base === PERIPH_DIP || base === PERIPH_PB || base === PERIPH_SEVENSEG);
 
     if (isMMIO || hasPeriph) {
-      // Show MMIO/peripheral addresses as read-only
-      let hexVals = '<span class="mmio-label">[MMIO — read-only]</span>';
-      hexVals += '<span class="wordgap"></span>';
-      const periphInfo = [];
-      for (let p = 0; p < 8; p++) {
-        const paddr = base + p;
-        if (paddr === PERIPH_LED) periphInfo.push('LED WO');
-        else if (paddr === PERIPH_DIP) periphInfo.push('DIP RO');
-        else if (paddr === PERIPH_PB) periphInfo.push('PB RO');
-        else if (paddr === PERIPH_SEVENSEG) periphInfo.push('7SEG WO');
-        else periphInfo.push('MMIO');
-      }
-      hexVals += `<span class="mmio-desc" style="font-size:11px;color:#7f849c">`;
-      hexVals += periphInfo.join(' ');
-      hexVals += `</span>`;
-      html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span> ${hexVals}</div>`;
-    } else if (base >= memory.length) {
-      // Beyond memory range but not MMIO — show a marker
-      html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span> <span class="mmio-desc" style="font-size:11px;color:#7f849c">[beyond RAM]</span></div>`;
-      break;
-    } else {
-      // Normal RAM view
       let hexVals = '';
       let asciiVals = '';
 
       for (let c = 0; c < 8; c++) {
-        const offset = base + c;
-        if (offset >= memory.length) break;
-        const val = memory[offset];
+        const offset = (base + c) >>> 0;
+        const val = readMem(offset, 1) & 0xFF;
         const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
         const cls = isChanged ? ' changed' : '';
-        // Insert gap after every 4th byte (between words)
+        if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
+        hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2,'0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte | Double-click: edit word">${val.toString(16).padStart(2,'0')}</span>`;
+
+        const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
+        const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
+        asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+      }
+
+      const descriptors = [];
+      for (let p = 0; p < 8; p += 4) {
+        const wordAddr = (base + p) >>> 0;
+        if (wordAddr === (PERIPH_LED >>> 0)) descriptors.push('LED WO 0xFFFF0060');
+        else if (wordAddr === (PERIPH_DIP >>> 0)) descriptors.push('DIP RO 0xFFFF0064');
+        else if (wordAddr === (PERIPH_PB >>> 0)) descriptors.push('PB RO 0xFFFF0068');
+        else if (wordAddr === (PERIPH_SEVENSEG >>> 0)) descriptors.push('7SEG WO 0xFFFF0080');
+      }
+      let desc = descriptors.length ? `[${descriptors.join(' · ')}]` : '[MMIO]';
+
+      html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span> ${hexVals}  ${asciiVals} <span class="mmio-desc" style="font-size:10px;color:#cba6f7;">${desc}</span></div>`;
+    } else if (base >= memory.length) {
+      html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span> <span class="mmio-desc" style="font-size:11px;color:#7f849c">[beyond RAM]</span></div>`;
+      if (!isStackView) break;
+    } else {
+      let hexVals = '';
+      let asciiVals = '';
+
+      for (let c = 0; c < 8; c++) {
+        const offset = (base + c) >>> 0;
+        if (offset >= memory.length) break;
+        const val = memory[offset] || 0;
+        const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
+        const cls = isChanged ? ' changed' : '';
         if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
         hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2,'0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2,'0')}</span>`;
 
@@ -2755,15 +2851,16 @@ function commitMemByteEdit(el) {
     return;
   }
   const val = parseInt(normalized, 16);
-  if (isNaN(addr) || addr < 0 || addr >= memory.length || isNaN(val) || val < 0 || val > 255) {
+  if (isNaN(addr) || addr < 0 || isNaN(val) || val < 0 || val > 255) {
     el.textContent = el.dataset.old || '00';
     el.classList.remove('editing');
     setStatus('Invalid memory edit', 'error');
     return;
   }
-  memory[addr] = val;
+  writeMem(addr, val, 1);
   lastChangedMem = [{ addr, size: 1 }];
   updateMemoryView();
+  updatePeripherals();
   setStatus('Memory updated at 0x' + addr.toString(16).padStart(8,'0'), 'success');
 }
 
@@ -2873,17 +2970,13 @@ function commitMemWordEdit(overlay) {
   const addr = overlay._wordAddr;
   const spans = overlay._spans;
   
-  // Write little-endian bytes
-  for (let i = 0; i < 4; i++) {
-    const byteVal = (val >> (i * 8)) & 0xFF;
-    memory[addr + i] = byteVal;
-  }
-  
+  writeMem(addr, val, 4);
   lastChangedMem = [{ addr, size: 4 }];
   
   // Update the individual byte spans visually
   for (let i = 0; i < 4; i++) {
     if (spans[i]) {
+      const byteVal = (val >> (i * 8)) & 0xFF;
       spans[i].textContent = byteVal.toString(16).padStart(2, '0');
       spans[i].classList.add('changed');
       spans[i].dataset.old = byteVal.toString(16).padStart(2, '0');
@@ -2892,6 +2985,7 @@ function commitMemWordEdit(overlay) {
   
   cancelMemWordEdit(overlay);
   updateMemoryView();
+  updatePeripherals();
   setStatus(`Word updated at 0x${addr.toString(16).padStart(8, '0')}: 0x${(val >>> 0).toString(16).padStart(8, '0')}`, 'success');
 }
 
@@ -2926,32 +3020,32 @@ function selectRegText(el) {
 }
 
 function startRegEdit(el) {
+  if (!el) return;
+  el.contentEditable = "true";
   el.classList.add('editing');
-  const type = el.dataset.type;
-  if (type === 'hex') {
-    el.dataset.old = el.textContent.trim();
-    el.textContent = '0x';
-  } else {
-    el.dataset.old = el.textContent.trim();
-  }
+  el.dataset.old = el.textContent.trim();
   el.focus();
-  if (type === 'hex') {
-    el.setSelectionRange(2, 2);
-  }
+  selectElementText(el);
 }
 
 function commitRegEdit(el) {
   if (!el || !el.classList || !el.classList.contains('editing')) return;
+  el.contentEditable = "false";
   el.classList.remove('editing');
   const idx = parseInt(el.dataset.idx, 10);
   if (isNaN(idx) || idx < 0 || idx > 31) return;
+  if (idx === 0) {
+    regs[0] = 0;
+    updateRegisters();
+    return;
+  }
   const type = el.dataset.type;
   const text = (el.textContent || '').trim();
   let newVal;
   if (type === 'hex') {
     const hexStr = text.replace(/^0x/i, '');
     newVal = parseInt(hexStr, 16);
-    if (isNaN(newVal) || newVal > 0xFFFFFFFF) {
+    if (isNaN(newVal)) {
       el.textContent = el.dataset.old;
       return;
     }
@@ -2962,14 +3056,9 @@ function commitRegEdit(el) {
       return;
     }
   }
-  // Update register and re-render
-  if (type === 'hex') {
-    regs[idx] = newVal & 0xFFFFFFFF;
-    if (idx >= 16 && idx < 32) dregs[idx - 16] = new Float64Array([newVal & 0xFFFFFFFF])[0];
-  } else {
-    regs[idx] = newVal;
-    if (idx >= 16 && idx < 32) dregs[idx - 16] = new Float64Array([newVal & 0xFFFFFFFF])[0];
-  }
+  const uval = newVal >>> 0;
+  regs[idx] = uval;
+  if (idx >= 16 && idx < 32) dregs[idx - 16] = new Float64Array([uval])[0];
   lastChangedReg = idx;
   updateRegisters();
   updateMemoryView();
@@ -2977,6 +3066,7 @@ function commitRegEdit(el) {
 
 function cancelRegEdit(el) {
   if (!el || !el.classList || !el.classList.contains('editing')) return;
+  el.contentEditable = "false";
   el.classList.remove('editing');
   el.textContent = el.dataset.old;
 }
@@ -2984,6 +3074,7 @@ function cancelRegEdit(el) {
 function handleRegEditKey(event, el) {
   if (event.key === 'Enter') {
     event.preventDefault();
+    commitRegEdit(el);
     el.blur();
     return;
   }
@@ -2996,7 +3087,7 @@ function handleRegEditKey(event, el) {
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.key.length !== 1) return;
   if (el.dataset.type === 'hex') {
-    if (!/[0-9a-fA-F]/.test(event.key)) {
+    if (!/[0-9a-fA-FxX]/.test(event.key)) {
       event.preventDefault();
     }
   } else {
@@ -3006,17 +3097,106 @@ function handleRegEditKey(event, el) {
   }
 }
 
-function getSelectedTextLength() {
-  const sel = window.getSelection && window.getSelection();
-  return sel ? sel.toString().length : 0;
+function popRegEditModal(event, el) {
+  if (event) { event.preventDefault(); event.stopPropagation(); }
+  if (!el) return;
+  const idx = parseInt(el.dataset.idx, 10);
+  if (isNaN(idx) || idx < 0 || idx > 31) return;
+  const name = ABI_NAMES[idx] || `x${idx}`;
+  const type = el.dataset.type || 'hex';
+  const val = regs[idx];
+  const uval = val >>> 0;
+  const initVal = (type === 'hex') ? '0x' + uval.toString(16).padStart(8, '0') : val.toString();
+
+  let overlay = document.getElementById('regEditOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'regEditOverlay';
+    overlay.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e1e2e;border:2px solid #89b4fa;border-radius:8px;padding:16px 24px;z-index:10000;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <span style="color:#89b4fa;font-size:13px;font-weight:600;">Edit Register x${idx} (${name}):</span>
+    <input type="text" id="regEditModalInput" value="${initVal}" style="background:#181825;color:#f5c2e7;border:1px solid #585b70;border-radius:4px;padding:6px 12px;font-size:16px;font-family:'Consolas',monospace;text-align:center;width:220px;outline:none;" spellcheck="false" autocomplete="off" autofocus>
+    <span style="color:#6c7086;font-size:10px;">Type hex (0x...) or decimal. Enter = commit, Esc = cancel</span>
+  `;
+
+  const input = document.getElementById('regEditModalInput');
+  input.focus();
+  input.select();
+
+  const handleKey = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitRegEditModal(idx, input.value);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      closeRegEditModal();
+    }
+  };
+
+  const handleBlur = () => {
+    const inp = document.getElementById('regEditModalInput');
+    if (inp) closeRegEditModal();
+  };
+
+  input.addEventListener('keydown', handleKey);
+  input.addEventListener('blur', handleBlur, { once: true });
+
+  const handleOutsideClick = (e) => {
+    if (overlay && !overlay.contains(e.target)) {
+      closeRegEditModal();
+      document.removeEventListener('mousedown', handleOutsideClick);
+    }
+  };
+  setTimeout(() => document.addEventListener('mousedown', handleOutsideClick), 10);
+}
+
+function commitRegEditModal(idx, text) {
+  closeRegEditModal();
+  if (idx < 0 || idx > 31) return;
+  if (idx === 0) {
+    regs[0] = 0;
+    updateRegisters();
+    return;
+  }
+  text = (text || '').trim();
+  let newVal;
+  if (text.startsWith('0x') || text.startsWith('0X') || /^[0-9a-fA-F]+$/.test(text)) {
+    const hexStr = text.replace(/^0x/i, '');
+    newVal = parseInt(hexStr, 16);
+  } else {
+    newVal = parseInt(text, 10);
+  }
+  if (isNaN(newVal)) {
+    setStatus('Invalid register value', 'error');
+    return;
+  }
+  const uval = newVal >>> 0;
+  regs[idx] = uval;
+  if (idx >= 16 && idx < 32) dregs[idx - 16] = new Float64Array([uval])[0];
+  lastChangedReg = idx;
+  updateRegisters();
+  updateMemoryView();
+  setStatus(`Register x${idx} updated to 0x${uval.toString(16).padStart(8,'0')} (${uval})`, 'success');
+}
+
+function closeRegEditModal() {
+  const overlay = document.getElementById('regEditOverlay');
+  if (overlay) {
+    try { overlay.remove(); } catch (e) {}
+  }
 }
 
 function memGo(region) {
+  activeMemRegion = region;
   const el = document.getElementById('memAddr');
-  if (region === 'code') el.value = '0x' + baseAddress.toString(16);
-  else if (region === 'data') el.value = '0x' + dataBase.toString(16);
-  else if (region === 'stack') el.value = '0x' + stackBase.toString(16);
-  else if (region === 'mmio') el.value = '0x' + mmioBase.toString(16);
+  const rowsEl = document.getElementById('memRows');
+  if (region === 'code') { el.value = '0x' + (baseAddress >>> 0).toString(16); }
+  else if (region === 'data') { el.value = '0x' + (dataBase >>> 0).toString(16); }
+  else if (region === 'stack') { el.value = '0x' + (stackBase >>> 0).toString(16); }
+  else if (region === 'mmio') { el.value = '0x' + (mmioBase >>> 0).toString(16); if (rowsEl) rowsEl.value = '20'; }
   updateMemoryView();
 }
 
@@ -3375,7 +3555,7 @@ function applyMemSegments() {
 function resetMemSegments() {
   baseAddress = DEFAULT_BASE;
   dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET;
-  stackBase = 0x7ffffc;
+  stackBase = 0x00020200;
   mmioBase = 0xFFFF0000;
   MMIO_BASE = mmioBase; MMIO_GETC = mmioBase; MMIO_PUTC = mmioBase + 4; MMIO_STATUS = mmioBase + 8;
   document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
@@ -3757,29 +3937,133 @@ function stepBack() {
   log(`Back to 0x${st.pc.toString(16)}`, 'info');
 }
 
+let runTimerId = null;
+
+function runProgram() {
+  clearLog();
+  const mc = assembleOnly();
+  if (!mc) return;
+
+  running = true;
+  let count = 0;
+  const maxCycles = 100000000;
+  const CHUNK_SIZE = 5000;
+
+  const pauseBtn = document.getElementById('pauseBtn');
+  if (pauseBtn) {
+    pauseBtn.innerText = '⏸ Pause';
+    pauseBtn.style.display = 'inline-block';
+  }
+
+  function finishRun(stopReason, cycleCount) {
+    running = false;
+    if (runTimerId) { clearTimeout(runTimerId); runTimerId = null; }
+    assembled = true;
+
+    if (pauseBtn) pauseBtn.style.display = 'none';
+
+    if (cycleCount >= maxCycles) {
+      log('Max cycles reached (possible infinite loop).', 'warn');
+      setStatus('Stopped (max cycles)', 'warn');
+    } else if (stopReason === 'exit' || stopReason === 'bounds') {
+      currentExecLine = -1;
+      log(`Program completed after ${totalCycles} cycles, ${instructionCount} instructions.`, 'success');
+      setStatus('Program finished', 'success');
+    }
+    updateRegisters();
+    updateMemoryView();
+    updateStats();
+    highlightCurrentLine();
+    updateMachineCode();
+    updateDisassembly();
+  }
+
+  function runBatch() {
+    if (!running) {
+      finishRun('paused', count);
+      return;
+    }
+
+    let batchCount = 0;
+    let stopReason = null;
+
+    while (running && count < maxCycles && batchCount < CHUNK_SIZE) {
+      const execAddr = pc;
+      const line = sourceLineForPc(execAddr);
+      currentExecLine = (line >= 1) ? line : -1;
+
+      if (line >= 1 && breakpoints.has(line)) {
+        log(`Breakpoint hit at line ${line}`, 'warn');
+        stopReason = 'breakpoint';
+        running = false;
+        break;
+      }
+
+      try {
+        executeOne();
+      } catch (e) {
+        log(`Error executing at PC 0x${execAddr.toString(16)}: ${e.message}`, 'error');
+        stopReason = 'error';
+        running = false;
+        break;
+      }
+
+      count++;
+      batchCount++;
+
+      if (!running) { stopReason = 'exit'; break; }
+      if (pc < baseAddress || pc >= memory.length) { stopReason = 'bounds'; break; }
+    }
+
+    updatePeripherals();
+
+    if (running && count < maxCycles && !stopReason) {
+      runTimerId = setTimeout(runBatch, 0);
+    } else {
+      finishRun(stopReason, count);
+    }
+  }
+
+  runBatch();
+}
+
+function assembleAndRun() {
+  runProgram();
+}
+
+function togglePause() {
+  if (running) {
+    running = false;
+    if (runTimerId) { clearTimeout(runTimerId); runTimerId = null; }
+    const pauseBtn = document.getElementById('pauseBtn');
+    if (pauseBtn) {
+      pauseBtn.innerText = '▶ Resume';
+      pauseBtn.style.display = 'inline-block';
+    }
+    setStatus('Paused', 'info');
+    log('Execution paused by user.', 'info');
+    updateRegisters();
+    updateMemoryView();
+    updateStats();
+    highlightCurrentLine();
+    updateMachineCode();
+    updateDisassembly();
+  } else {
+    running = true;
+    const pauseBtn = document.getElementById('pauseBtn');
+    if (pauseBtn) pauseBtn.innerText = '⏸ Pause';
+    runProgram();
+  }
+}
+
 function resetAll() {
   resetState();
   clearLog();
   assembled = false;
   setStatus('Reset');
-  // Highlight the first instruction that would be executed from the current editor content.
   let mc = [];
   try { if (editor.value.trim()) mc = assemble(editor.value); } catch (e) {}
   highlightFirstLine(mc);
-}
-
-function togglePause() {
-  running = false;  // This will cause the run loop to exit
-  const pauseBtn = document.getElementById('pauseBtn');
-  pauseBtn.style.display = 'none';
-  setStatus('Paused', 'info');
-  log('Execution paused by user.', 'info');
-  updateRegisters();
-  updateMemoryView();
-  updateStats();
-  highlightCurrentLine();
-  updateMachineCode();
-  updateDisassembly();
 }
 
 function resetState() {

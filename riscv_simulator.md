@@ -1,518 +1,199 @@
-# RISC-V Simulator — Specification Document
+# RISC-V RV32GC Simulator & Assembler — Technical Specification & Architecture Manual
 
-## Project Overview
-A single-file web application (`riscv_simulator.html`) implementing a **RISC-V RV32GC Assembler + Simulator** with an interactive code editor, disassembly view, execution control, and interactive debugging features.
+## 1. Project Overview
 
----
+**RISC-V Simulator** is a high-performance, single-file web application (`riscv_simulator.html`) that delivers a full-featured **RISC-V RV32GC (RV32I + M + A + F + D + C) Assembler, Emulator, and Visual Debugger**. 
 
-## Architecture
-
-### Technology Stack
-- **Platform**: Single HTML file (self-contained web app)
-- **Language**: HTML + CSS + JavaScript (vanilla, no frameworks)
-- **Architecture**: RV32GC (RISC-V 32-bit with Compressed instructions)
-
-### CSS Layout
-- **Flexbox layout**: `.main` uses `flex: 1` with `min-height: 0` to prevent collapse
-- **Editor container**: `min-height: 300px !important` ensures minimum editor height
-- **Disassembly table**: `table-layout: fixed` with `min-width: 30ch` on native/source columns
-- **Mobile responsive**: `@media (max-width: 800px)` sets `overflow: auto` on body and main panel
-
-### Core Components
-1. **Code Editor**: Syntax-aware textarea with line numbers, syntax highlighting layer, scroll synchronization, and **full undo/redo history** (Ctrl+Z/Ctrl+Y)
-2. **Assembler**: Two-pass assembler (label collection → encoding)
-3. **Simulator**: Step-by-step execution engine with cycle counting, **pause capability**, and **100M cycle limit**
-4. **Disassembly View**: Real-time instruction decode display with **fixed-width aligned columns** (table-layout: fixed)
-5. **Memory Viewer**: Code and data segment visualization with **8-byte row wrapping**
-6. **Configuration Panels**: Memory segment addresses, instruction cycle counts
-7. **Debug Features**: Breakpoints (F9), Pause button, invalid breakpoint validation
+Designed for hardware architects, computer architecture students, and embedded software developers, the tool combines a syntax-highlighted assembly code editor, two-pass assembler, non-blocking execution engine, real-time disassembly viewer, step-by-step debugger with back-stepping history, interactive memory explorer, configurable instruction cycle timing, and a hardware-accurate simulation of the **Digilent Nexys 4 FPGA Board**.
 
 ---
 
-## Assembler Specification
+## 2. Architecture & Design System
 
-### Instruction Set Support
+### 2.1 Technology Stack & Core Philosophy
+- **Zero Dependencies**: Pure HTML5, CSS3, and modern Vanilla JavaScript (ES6+). Runs completely client-side in standard web browsers.
+- **Theme & Aesthetics**: Dark mode theme inspired by the *Catppuccin Macchiato/Mocha* palette (`#1e1e2e` base, `#181825` mantle, `#313244` surface, `#cba6f7` mauve primary accents).
+- **Responsive Layout**: Resizable two-pane layout using a custom draggable divider (`.splitter`).
+- **Unified Toolbar Controls**: Every button in the main toolbar is styled with `display: inline-flex; height: 28px; line-height: 28px; box-sizing: border-box;` ensuring perfectly uniform vertical alignment across standard buttons and unicode icon controls.
 
-#### Base RV32I Instructions
-- Load/Store: `lb`, `lh`, `lw`, `sb`, `sh`, `sw`
-- ALU: `add`, `sub`, `sll`, `slt`, `sltu`, `xor`, `srl`, `sra`, `or`, `and`
-- Branch: `beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu`
-- Jump: `j`, `jal`, `jr`, `jalr`
-- System: `ecall`, `ebreak`, `csrrw`, `csrrs`, `csrrc`, `nop`
-- Pseudo: `mv`, `neg`, `ret`, `li`, `la`, `seqz`, `snez`, `sltz`, `sgtz`
+### 2.2 Stacked Code Editor Architecture
+- **Dual-Layer Overlay**: Synchronized line numbers and custom syntax highlighting (`.highlight-layer`) positioned directly beneath a transparent `<textarea>` input layer.
+- **Auto-Formatting**: Handles real-time indentation, line sync, undo/redo history (`editorHistory`), and syntax token highlighting for directives, labels, instructions, registers, numbers, and comments.
 
-#### Compressed (C) Instructions
-- Support for compressed instruction encoding and decoding
-- Pseudo-instruction expansion to 32-bit equivalents
-- Includes: `c.addi`, `c.lw`, `c.sw`, `c.nop`, and other C-extension instructions
-- 16-bit compressed instructions are expanded to their 32-bit equivalents during assembly
+---
 
-#### FENCE Instructions
-- `fence`, `fence.i` support
+## 3. Register Panel & Editing Experience
 
-### Pseudo-Instruction Expansions
+### 3.1 Register Bank Structure
+The simulator models the standard 32 32-bit integer registers (`x0` / `zero` through `x31` / `t6`) plus the Program Counter (`PC`). Register `x0` is hardwired to `0x00000000` (writes are silently discarded).
+
 ```
-li rd, imm     -> lui + addi / auipc + addi (depending on imm)
-la rd, label   -> auipc + addi (label-relative)
-mv rd, rs      -> addi rd, rs, 0
-neg rd, rs     -> sub rd, x0, rs
-ret            -> jr ra / ecall (depending on context)
-call label     -> jal rd, label (expanded to auipc+jalr for far jumps)
++-----+------+-------------------+-------------------+
+|  #  | Name |    Value (Hex)    |    Value (Dec)    |
++-----+------+-------------------+-------------------+
+| x0  | zero | 0x00000000        | 0                 |
+| x1  | ra   | 0x00010040        | 65600             |
+| x2  | sp   | 0x00020200        | 131584            |
+| ... | ...  | ...               | ...               |
++-----+------+-------------------+-------------------+
 ```
 
-### Branch Pseudo-Instructions
-```
-beqz rs, label -> beq rs, x0, label
-bnez rs, label -> bne rs, x0, label
-bgez rs, label -> bge rs, x0, label
-bgezal rs, label -> blt x0, rs, label
-beqz rd, label -> (compressed form support)
-```
+### 3.2 Column Alignment & Spacing Rules
+- **Left-Aligned Headers (`#`, `Name`)**: Left-aligned (`text-align: left; vertical-align: middle`) with compact column width constraints (`table-layout: fixed`). This eliminates dead white space and brings the `Name` column right next to `Value (Hex)`.
+- **Right-Aligned Headers (`Value (Hex)`, `Value (Dec)`)**: Right-aligned (`text-align: right; vertical-align: middle`) with equal wide column allocation for numeric clarity.
+
+### 3.3 Register Interaction & Editing Modes
+| Gesture | Action Mode | Behavioral Description |
+|---------|-------------|------------------------|
+| **Single-Click** | **Localized Inline Edit** | Turns the target table cell into an active `contenteditable` inline input field with auto-selected text for instant localized value edits. |
+| **Double-Click** | **Centered Popup Modal Window** | Opens a modal overlay (`#regEditOverlay`) displaying register index, ABI name, current hex/decimal values, and Enter (commit) / Escape (cancel) key bindings. |
 
 ---
 
-## Directive Support
+## 4. Nexys 4 FPGA Board Simulation
 
-### Section Directives
-| Directive | Description |
-|-----------|-------------|
-| `.text` | Switch to code section |
-| `.data` | Switch to data section |
-| `.section` | Switch to named section |
-| `.rodata` | Read-only data section |
-| `.bss` | Uninitialized data section |
+The **Peripherals Panel** implements an interactive hardware simulation of the **Digilent Nexys 4 FPGA Board**.
 
-### Data Directives
-| Directive | Description | Size |
-|-----------|-------------|------|
-| `.word` | 32-bit values (comma-separated) | 4 bytes each |
-| `.half` | 16-bit values | 2 bytes each |
-| `.byte` | 8-bit values | 1 byte each |
-| `.dword` | 64-bit values | 8 bytes each |
-| `.space` / `.zero` | Reserve/uninitialized bytes | N bytes |
-| `.asciiz` | Null-terminated string | N+1 bytes |
-| `.asciz` | Null-terminated string | N+1 bytes |
-| `.string` | String without null terminator | N bytes |
-| `.ascii` | String without null terminator | N bytes |
-
-### Constant Directives
-| Directive | Syntax | Description |
-|-----------|--------|-------------|
-| `.equ` | `.equ name, value` | Assign constant value |
-| `.eqv` | `.eqv name, value` | Alias (same as `.equ`) |
-| `.set` | `.set name, value` | Symbol substitution |
-
-**Note**: `.equ`/`.eqv`/`.set` are processed in a pre-pass, allowing earlier constants to be used in later ones.
-
-### Alignment Directives
-| Directive | Syntax | Description |
-|-----------|--------|-------------|
-| `.align` | `.align n` | Align to 2^n bytes |
-| `.balign` | `.balign n` | Align to n bytes |
-| `.p2align` | `.p2align n, op, max` | Align to 2^n, fill with op |
-| `.org` | `.org addr` | Set absolute address |
-
----
-
-## Address Resolution
-
-### Label Resolution
-- Labels are collected in Phase 1 (address assignment pass)
-- Resolved in Phase 2 (encoding pass) via `labels` table
-- Case-insensitive matching for label lookups
-
-### Symbol Table (`.equ` constants)
-- Pre-pass collection allows chained definitions
-- Accessible via `symbolTable` lookup
-- Case-sensitive matching
-
-### Memory Operand Syntax
 ```
-offset(reg)      -> load/store with base register + displacement
-(reg)            -> load/store with base register only
-label            -> load/store with label as absolute address
++---------------------------------------------------------------------------------------------------+
+|                                 COMPACT NEXYS 4 FPGA PERIPHERAL BOARD                             |
+|                                                                                                   |
+|  [P8][P7][P6][P5][P4][P3][P2]   [CLK]   [L7][L6][L5][L4][L3][L2][L1][L0]   (16 LEDs)                |
+|  LED15------------------LED9    LED8    LED7----------------------LED0                            |
+|                                                                                                   |
+|  [SW15]--------------[SW9]     [SW8]    [SW7]--------------------[SW0]   (16 Compact DIPs)        |
+|                                                                                                   |
+|  Push Buttons: [L] [C] [R] (Bit 2=BTNL, Bit 1=BTNC, Bit 0=BTNR)  7-Segment: [0 0 0 0 0 0 0 0] |
++---------------------------------------------------------------------------------------------------+
 ```
 
-**Implementation**: `parseMemOp()` handles:
-1. Optional parentheses stripping
-2. `offset(reg)` regex matching
-3. Plain register identification
-4. Label/symbol resolution via `labels` and `symbolTable` tables
+### 4.1 16-LED Output Array (LED[15:0])
+The 16 LEDs are arranged in 3 distinct functional groups with distinct Catppuccin color indicators:
+
+| LED Subset | Color Theme | Drive Source / Function |
+|------------|-------------|--------------------------|
+| **LED[15:9]** (7 bits) | **Vibrant Cyan / Blue** (`#89b4fa`) | Displays lower Program Counter bits `PC[8:2]`. |
+| **LED[8]** (1 bit) | **Vibrant Amber / Orange** (`#fab387`) | **Divided Clock Indicator**. Blinks per instruction cycle during continuous execution; remains lit (ON) when paused. |
+| **LED[7:0]** (8 bits) | **Vibrant Green** (`#a6e3a1`) | **User Output Register**. Driven by the least significant byte written to MMIO at `0xFFFF0060`. |
+
+### 4.2 16-DIP Switch Input Array (SW[15:0])
+- **Alignment**: 16 DIP switches aligned 1-to-1 directly beneath `LED15` through `LED0`.
+- **Compact Sizing**: Switches are styled with compact 16px x 11px bounds and tight 1px gaps (`gap: 1px`), achieving a 319px total board width that fits mobile viewports without horizontal scrolling.
+- **Sublabel Distance**: `.dip-sublabel` (`SW15`..`SW0`) styled with `margin-top: 3px`, matching the exact visual spacing of the LED sublabel circles.
+- **MMIO Access**: Read at address `0xFFFF0064`.
+
+### 4.3 Push Buttons (`PERIPH_PB` at `0xFFFF0068`)
+- **Bit Mapping (`[2:0]`)**:
+  - **Bit 2 (`0x4`)**: **BTNL** (Left Push Button)
+  - **Bit 1 (`0x2`)**: **BTNC** (Center Push Button)
+  - **Bit 0 (`0x1`)**: **BTNR** (Right Push Button)
+- **Toggle Behavior**: Click button element (`L`, `C`, `R`) to toggle active press/release state.
+
+### 4.4 7-Segment Display (`PERIPH_SEVENSEG` at `0xFFFF0080`)
+- **Rendering**: 8-digit hexadecimal display rendered using inline SVG 7-segment digits (`0`–`9`, `A`–`F`).
+- **Alignment**: Centered inside the bounding box (`justify-content: center; gap: 8px; padding: 10px 12px;`) with balanced 8px inter-digit spacing.
 
 ---
 
-## Simulator Specification
+## 5. Memory Model & Segment Mapping
 
-### Execution Model
-- **PC**: Program counter (32-bit, word-aligned)
-- **Registers**: 32 general-purpose registers (x0-x31)
-- **Memory**: Unified address space with separate text/data regions
-- **MMIO**: Memory-mapped I/O for system calls and device interaction
-- **Max Cycles**: 100,000,000 (100 million) before forced stop
-- **Pause**: `running` flag checked each iteration; Pause button sets `running = false`
+### 5.1 Memory Layout & Segment Default Addresses
 
-### System Call Interface (MIPS-style)
-| a7 value | Function | a0 input | Description |
-|----------|----------|----------|-------------|
-| 1 | print_int | integer | Print integer to console |
-| 4 | print_string | pointer | Print null-terminated string |
-| 8 | read_int | - | Read integer from input |
-| 9 | sbrk | size | Allocate heap memory |
-| 10 | exit | - | Terminate program |
-| 30 | exit | code | Exit with status code |
-| 42 | get_time | - | Get cycle count |
-| 43 | get_time_ns | - | Get nanosecond count |
-
-### MMIO Registers
-| Address Offset | Register | Description |
-|---------------|----------|-------------|
-| +0 | `MMIO_GETC` | Read character input |
-| +4 | `MMIO_PUTC` | Write character output |
-| +8 | `MMIO_STATUS` | I/O status flag |
-
-### Cycle Counting
-- Configurable cycles per instruction type
-- Accessed via "Cycles" panel
-- Tracks total, dynamic, and per-type instruction counts
-
----
-
-## Memory Model
-
-### Memory Segments
-| Segment | Default Base | Description |
-|---------|-------------|-------------|
-| Code (text) | `0x10000` | Executable instructions |
-| Data | `0x20000` | Initialized data, constants |
-| Stack | `0x7ffffc` | Grows downward from top |
-| MMIO | `0x10000000` | Memory-mapped I/O region |
-
-### Segment Configuration
-- Configurable via "Segments" panel
-- All bases must be word-aligned (address & ~3)
-- Default values can be restored via "Reset Defaults"
-
-### Memory Layout
 ```
-Low Address -> High Address
-[Code Segment] -> [Data Segment] -> [Stack] -> [MMIO Region]
-(0x10000)       (0x20000)        (0x7ffffc)  (0x10000000)
+0x00000000 +-----------------------------------+
+           | Reserved / Zero Page              |
+0x00010000 +-----------------------------------+
+           | .text (Code Segment)              |  Row Direction: Increasing (+8 B/row)
+0x00020000 +-----------------------------------+
+           | .data (Static Data Segment)       |  Row Direction: Increasing (+8 B/row)
+0x00020200 +-----------------------------------+
+           | .stack (Stack Pointer SP Base)    |  Row Direction: DECREASING (-8 B/row)
+           |   (Grows downwards to lower addrs)|
+0x00400000 +-----------------------------------+
+           | End of RAM Bounds (4 MB)          |
+           +-----------------------------------+
+0xFFFF0000 +-----------------------------------+
+           | MMIO Peripheral Region            |  Row Direction: Increasing (+8 B/row)
+0xFFFF00FF +-----------------------------------+
 ```
 
----
+| Segment | Base Address | Row Direction | Behavioral Notes |
+|---------|--------------|---------------|------------------|
+| **Code (.text)** | `0x00010000` | Increasing (`+8` B/row) | Executable instruction memory stream. |
+| **Data (.data)** | `0x00020000` | Increasing (`+8` B/row) | Initialized static variables, strings, and constants. Steps upwards to higher addresses. |
+| **Stack (.stack)**| `0x00020200` | **Decreasing (`-8` B/row)** | **Stack Region**. Steps downwards to lower addresses matching RISC-V stack push growth. |
+| **MMIO Region** | `0xFFFF0000` | Increasing (`+8` B/row) | Memory-mapped I/O peripherals (`0xFFFF0000`–`0xFFFF00FF`). |
 
-### Memory Viewer Display
-- Displays 8 bytes per row (aligned to 8-byte boundaries)
-- Each row shows: hex address, 8 hex bytes (with word gap after 4th byte), ASCII representation
-- Changed bytes highlighted during execution
-- Click hex byte to edit; double-click to edit as 32-bit word
+### 5.2 Complete MMIO Address Map
+| MMIO Address | Size | Access | Symbol | Description & Row Annotations |
+|--------------|------|--------|--------|-------------------------------|
+| `0xFFFF0000` | 1 B  | Read   | `MMIO_GETC` | Console Input character buffer |
+| `0xFFFF0004` | 1 B  | Write  | `MMIO_PUTC` | Console Output character stream |
+| `0xFFFF0008` | 1 B  | Read   | `MMIO_STATUS` | Console Input Status (Bit 0 = 1 if input available) |
+| `0xFFFF0060` | 4 B  | Write  | `PERIPH_LED` | User Output LEDs (bits `[7:0]`). Row annotation: `[LED WO 0xFFFF0060 · DIP RO 0xFFFF0064]` |
+| `0xFFFF0064` | 4 B  | Read   | `PERIPH_DIP` | 16-bit DIP Switch inputs. Row annotation: `[LED WO 0xFFFF0060 · DIP RO 0xFFFF0064]` |
+| `0xFFFF0068` | 4 B  | Read   | `PERIPH_PB` | Push Buttons (Bit 2=BTNL, Bit 1=BTNC, Bit 0=BTNR). Row annotation: `[PB RO 0xFFFF0068]` |
+| `0xFFFF0080` | 4 B  | Write  | `PERIPH_SEVENSEG` | 32-bit value displayed as 8 hex digits. Row annotation: `[7SEG WO 0xFFFF0080]` |
 
----
-
-## Editor Specification
-
-### Code Editor Features
-- **Line numbers**: Synced with scroll position
-- **Syntax highlighting**: Via overlay layer (`#highlightLayer`)
-- **Scroll sync**: `syncScroll()` function maintains alignment
-- **Input handling**: `oninput="updateEditor()"` for real-time assembly
-- **Breakpoints**: Toggleable per line number with **invalid line validation**
-- **Undo/Redo**: `EditorHistory` class tracking up to 100 states
-
-### Editor History (Undo/Redo)
-```javascript
-class EditorHistory {
-  constructor(editor) {
-    this.editor = editor;
-    this.history = [];        // Array of editor value strings
-    this.currentIndex = -1;   // Position in history stack
-    this.maxHistory = 100;    // Maximum stored states
-    this.ignoreInput = false; // Prevents recursive state pushes
-  }
-  pushState()   // Record current editor state
-  undo()        // Restore previous state, dispatch 'input' event
-  redo()        // Restore next state, dispatch 'input' event
-  initialState() // Initialize history with current editor value
-}
-```
-
-- State is pushed on every `updateEditor()` call
-- Duplicate consecutive states are not recorded
-- Undo/Redo dispatches an `input` event to update syntax highlighting and assembly
-
-### Editor Structure
-```
-.editor-wrapper
-  .line-numbers (scrolling container)
-  .code-area
-    .editor-container
-      .highlight-layer (z-index: 3, overlay)
-      textarea (z-index: 2, input layer)
-.console
-```
-
-### Scroll Synchronization
-```javascript
-function syncScroll() {
-  highlightLayer.scrollTop = editor.scrollTop;
-  highlightLayer.scrollLeft = editor.scrollLeft;
-  lineNumbers.scrollTop = editor.scrollTop;
-}
-```
-
-### Execution Highlight
-- `highlightCurrentLine()` updates execution marker position
-- Marker top: `(currentExecLine - 1) * 20 + 12` pixels
-- Marker class: `.exec-marker`
-
-### Breakpoint Validation
-- `toggleBreakpoint(line)` validates line number before setting
-- Rejects line numbers < 1 or > last non-empty line in editor
-- Invalid lines produce warning: "Invalid breakpoint: line N is beyond code (max: M)"
-- Feedback logged: "Breakpoint set/removed at line N"
+### 5.3 Memory View Edits & Peripheral Synchronization
+- **Unsigned 32-Bit Addressing**: All memory addresses are formatted using `(base >>> 0)` to prevent 32-bit signed bitwise sign-extension (`0xffff0000`).
+- **Read/Write MMIO Persistence**: `handleMMIORead(addr, size)` and `handleMMIOWrite(addr, val, size)` handle single-byte and 4-byte word operations for all peripheral registers (`PERIPH_LED`, `PERIPH_DIP`, `PERIPH_PB`, `PERIPH_SEVENSEG`). Memory cell edits directly in the MMIO tab persist permanently across re-renders and immediately update the Peripherals visualization.
 
 ---
 
-## UI Components
+## 6. Non-Blocking Execution Engine
 
-### Toolbar Buttons
-| Button | Function | Description |
-|--------|----------|-------------|
-| Open | `fileLoader.click()` | Load `.asm`, `.s`, or `.txt` file |
-| Save | `saveFile()` | Save editor content as `.asm` file |
-| Undo | `editorHistory.undo()` | Undo last edit (Ctrl+Z) |
-| Redo | `editorHistory.redo()` | Redo last undone edit (Ctrl+Y / Ctrl+Shift+Z) |
-| Assemble | `assembleOnly()` | Assemble without running |
-| Run | `runProgram()` | Execute from start (F5) |
-| Pause | `togglePause()` | Pause execution (visible during run only) |
-| Step | `stepOnce()` | Single step (F8) |
-| Back | `stepBack()` | Back step (Shift+F8) |
-| Reset | `resetAll()` | Clear state and memory |
-| Cycles | `toggleCyclesPanel()` | Configure instruction cycles |
-| Segments | `toggleMemSegmentsPanel()` | Configure memory addresses |
-
-### Pause Button Behavior
-- **Hidden by default**, shown only during `runProgram()` execution
-- Clicking Pause sets `running = false`, which exits the run loop after the current instruction completes
-- The loop checks `running` on each iteration; since JavaScript is single-threaded, the button is only responsive when the loop yields (at breakpoints, errors, or cycle limit)
-- When paused, registers, memory, stats, and disassembly are updated to reflect current state
-
-### Configuration Panels
-- **Cycles Panel**: Per-instruction-type cycle count configuration
-- **Segments Panel**: Memory region base address configuration
-
-### Status System
-- `setStatus(message, type)`: Info, success, error states
-- Console logging with timestamp and type indication
+To prevent browser freezing or non-responsive script dialogs during long-running programs or infinite loops:
+- **Chunked Batch Execution Engine**: `runProgram()` executes instructions in batches of 5,000 instructions (`CHUNK_SIZE = 5000`) and yields control to the browser event loop using `setTimeout(runBatch, 0)`.
+- **60 FPS Responsive UI**: DOM events, user clicks, tab switching, and window resizing remain completely fluid during program execution.
+- **Responsive Pause & Resume**: The `⏸ Pause` button remains visible and interactive during execution. Clicking `⏸ Pause` pauses execution instantly, updates status to `Paused`, and toggles the button to `▶ Resume`.
 
 ---
 
-## Example Programs
+## 7. Two-Pass Assembler Architecture
 
-### Included Examples
-1. **Basic** — Fundamental instructions and control flow
-2. **Fibonacci** — Iterative fibonacci computation with loop
-3. **Factorial** — Recursive factorial with stack operations
-4. **Loop and Array** — Array processing with memory access
-5. **I/O and M-Ext** — System calls and MMIO operations
+The built-in assembler compiles RISC-V assembly into RV32GC machine code using a strict two-pass pipeline:
 
-### Example Code Patterns
-```asm
-# Fibonacci-like loop
-li x28, 0x20000      # Load immediate (large value)
-la x28, data0        # Load address via label
-sw x2, 0(x28)        # Store word with label base
-lw x1, 0(x28)        # Load word with label base
-addi x3, x3, 1       # Increment register
-j loop               # Unconditional jump
-beqz x1, there       # Branch if zero
-bnez x2, there       # Branch if not zero
-```
+### 7.1 Pre-Pass (.equ Symbol Resolution)
+Scans the source file for `.equ SYMBOL, VALUE` directives and populates the global symbol table before pass 1.
+
+### 7.2 Pass 1: Label Resolution & Sizing
+Scans the text and data segments to record label addresses. Pseudo-instruction expansions (e.g. `la`, `li`, `lw rd, bare_label`) reserve exact instruction slot allocations (e.g. 2 slots / 8 bytes for bare label load expansion `lui` + `load`) to ensure label address offsets remain 100% accurate.
+
+### 7.3 Pass 2: Machine Code Encoding
+Encodes instructions into 32-bit or 16-bit RISC-V machine words:
+- **PC-Relative Jump & Branch Offsets**: Branch (`beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu`) and Jump (`jal`, `j`) offsets are calculated as `targetAddress - instructionPC` per the official RISC-V specification.
+- **Relative Numeric Offsets**: Full support for relative numeric offsets (`+N`, `-N`) in branch and jump targets (e.g., `jal zero, +8`).
 
 ---
 
-## Assembly Process
+## 8. Instruction Set Reference Table
 
-### Two-Pass Assembly
+The simulator supports the complete **RV32GC** instruction set architecture:
 
-#### Phase 1: Address Assignment and Label Collection
-1. Initialize `labels = {}` and `symbolTable = {}`
-2. Process `.equ`/`.eqv`/`.set` directives (pre-pass)
-3. Iterate lines, tracking `section`, `textAddr`, `dataAddr`
-4. Collect labels: `labels[label_name] = getAddr()`
-5. Size directives: `.word`, `.byte`, `.space`, etc.
-
-#### Phase 2: Encoding
-1. Reset `textAddr`, `dataAddr` to base addresses
-2. Encode each instruction: `encodeInstruction(mnemonic, args, address)`
-3. Resolve labels, symbols, and immediates
-4. Handle pseudo-instruction expansion
-5. Output: `machineCode[]` array of `{address, bytes, line, error}`
-
-### Instruction Encoding
-- **Bytes**: Little-endian 4-byte array per instruction
-- **Address**: Absolute word-aligned address
-- **Error**: `null` if valid, string if assembly error
+| Extension | Category | Supported Instructions |
+|-----------|----------|------------------------|
+| **RV32I** | Base Integer | `lui`, `auipc`, `jal`, `jalr`, `beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu`, `lb`, `lh`, `lw`, `lbu`, `lhu`, `sb`, `sh`, `sw`, `addi`, `slti`, `sltiu`, `xori`, `ori`, `andi`, `slli`, `srli`, `srai`, `add`, `sub`, `sll`, `slt`, `sltu`, `xor`, `srl`, `sra`, `or`, `and`, `fence`, `ecall`, `ebreak` |
+| **RV32M** | Multiplication & Division | `mul`, `mulh`, `mulhsu`, `mulhu`, `div`, `divu`, `rem`, `remu` |
+| **RV32A** | Atomic Operations | `lr.w`, `sc.w`, `amoswap.w`, `amoadd.w`, `amoxor.w`, `amoand.w`, `amoor.w`, `amomin.w`, `amomax.w`, `amominu.w`, `amomaxu.w` |
+| **RV32F** | Single-Precision Floating-Point | `flw`, `fsw`, `fmadd.s`, `fmsub.s`, `fnmsub.s`, `fnmadd.s`, `fadd.s`, `fsub.s`, `fmul.s`, `fdiv.s`, `fsqrt.s`, `fsgnj.s`, `fsgnjn.s`, `fsgnjx.s`, `fmin.s`, `fmax.s`, `fcvt.w.s`, `fcvt.wu.s`, `fmv.x.w`, `feq.s`, `flt.s`, `fle.s`, `fclass.s`, `fcvt.s.w`, `fcvt.s.wu`, `fmv.w.x` |
+| **RV32D** | Double-Precision Floating-Point | `fld`, `fsd`, `fmadd.d`, `fmsub.d`, `fnmsub.d`, `fnmadd.d`, `fadd.d`, `fsub.d`, `fmul.d`, `fdiv.d`, `fsqrt.d`, `fsgnj.d`, `fsgnjn.d`, `fsgnjx.d`, `fmin.d`, `fmax.d`, `fcvt.s.d`, `fcvt.d.s`, `feq.d`, `flt.d`, `fle.d`, `fclass.d`, `fcvt.w.d`, `fcvt.wu.d`, `fcvt.d.w`, `fcvt.d.wu` |
+| **RV32C** | Compressed 16-bit Instructions | `c.nop`, `c.addi`, `c.jal`, `c.li`, `c.addi16sp`, `c.lui`, `c.srli`, `c.srai`, `c.andi`, `c.sub`, `c.xor`, `c.or`, `c.and`, `c.j`, `c.beqz`, `c.bnez`, `c.slli`, `c.lwsp`, `c.jr`, `c.mv`, `c.ebreak`, `c.jalr`, `c.add`, `c.swsp`, `c.lw`, `c.sw` |
+| **Directives** | Assembler Directives | `.text`, `.data`, `.globl`, `.equ`, `.byte`, `.half`, `.word`, `.dword`, `.asciz`, `.string`, `.space`, `.align` |
+| **Pseudo-Ops** | Pseudo-Instructions | `nop`, `li`, `la`, `mv`, `not`, `neg`, `seqz`, `snez`, `sltz`, `sgtz`, `j`, `jr`, `jal`, `ret`, `call` |
 
 ---
 
-## Environment and Deployment
+## 9. Version History (v1.0 – v3.7)
 
-### Runtime Requirements
-- **Browser**: Modern browser with ES6+ support
-- **File Format**: Single `.html` file
-- **Dependencies**: None (fully self-contained)
-
-### File I/O
-- **Input**: `<input type="file">` for `.asm`, `.s`, `.txt` files
-- **Output**: Blob API for client-side `.mem` file generation
-- **Download**: Temporary anchor element click simulation
-
-### Keyboard Shortcuts
-| Key | Action |
-|-----|--------|
-| F5 | Run program |
-| F8 | Step forward |
-| Shift+F8 | Back step |
-| F9 | Toggle breakpoint on current line |
-| Ctrl+Enter | Assemble only |
-| Ctrl+S | Save file |
-| Ctrl+Z | Undo (in editor) |
-| Ctrl+Y | Redo (in editor) |
-| Ctrl+Shift+Z | Redo (in editor) |
-| Tab | Insert tab (in editor) |
-
----
-
-## Testing and Validation
-
-### Test Cases
-1. **`lw s3, delay_val`** — Label base register mode
-   - Expected: `{offset: label_address, reg: 0}`
-   
-2. **`lw a0, 0(sp)`** — Offset register mode
-   - Expected: `{offset: 0, reg: 2}` (sp = x2)
-
-3. **`.dword 0x1122334455667788`** — 64-bit directive
-   - Expected: 8 bytes, two little-endian words
-
-4. **`.equ` chaining** — Earlier constants in later definitions
-   - Expected: All symbols resolved correctly
-
-5. **Label resolution** — `delay_val:` defined before `lw`
-   - Expected: `labels['delay_val']` accessible during Phase 2
-
-### Known Issues Addressed
-- `.eqv` comma parsing fix
-- Label support in `parseMemOp` for memory operands
-- Separate text/data `.mem` dump functionality (removed in v2.0)
-- `.dword` directive rendering
-- Base address removal (uses configurable segments)
-- In-place memory editing during assembly
-- **v2.0**: Fixed column alignment, 8-byte memory view, invalid breakpoint handling, mobile scrolling
-
-### Known Issues (Ongoing)
-- **`lw` pseudo-instruction (previously reported)**: When `lw rd, label` is used with a label that resolves to an address outside the 12-bit signed immediate range, the assembler expands it to `lui` + `load` (e.g., `lw` → `lui` + `lw`). **Resolved in v2.4** — the expansion now passes the immediate as a string (no more "s.trim is not a function" crash) and uses the `x5`/t0 temporary register plus the original destination register for correct encoding.
-- **Simulation memory layout (previously reported)**: The default segment bases had been set to `baseAddress = 0x00400000` (equal to the 4 MB array length) and `dataBase = 0x10010000` (beyond it), so no code or data was ever loaded into the simulated RAM — every instruction executed as a no-op and no registers changed. **Resolved in v2.5** — defaults now match the documented layout (`code 0x10000`, `data 0x20000`, `stack 0x7ffffc`, `MMIO 0xFFFF0000`), so programs assemble, load, and execute correctly.
-- **MMIO peripheral access (previously reported)**: `lw`/`sw` to the peripheral board (`0xFFFF00xx`, e.g. DIP at `0xFFFF0064`, LED at `0xFFFF0060`) bypassed the MMIO handlers because the addresses fell outside the simulated memory bounds and were treated as signed. **Resolved in v2.5** — `readMem`/`writeMem` route MMIO/peripheral addresses to `handleMMIORead`/`handleMMIOWrite` before the bounds check, and load/store effective addresses are computed as unsigned so `0xFFFF00xx` work correctly.
-
----
-
-## Future Extensions
-
-### Potential Features
-1. **Memory Viewer**: Interactive hex dump with edit capability (partially implemented)
-2. **Trace Output**: Instruction-by-instruction execution log
-3. **Waveform Viewer**: Signal timing visualization
-4. **Simulation Speed Control**: Adjustable run speed
-
-### Configuration Persistence
-- Save custom cycle counts to localStorage
-- Remember memory segment customizations
-- Persist editor layout preferences
-
----
-
-## Version History
-
-| Version | Changes |
-|---------|---------|
-| 1.0 | Initial implementation: Assembler, simulator, editor |
-| 1.1 | `.eqv` comma fix, base address removal |
-| 1.2 | `parseMemOp` label support, separate `.mem` dumps |
-| 1.3 | `.dword` directive rendering, in-place memory editing |
-| 2.0 | **UI Improvements**: Undo/Redo (Ctrl+Z/Y), fixed column alignment, 8-byte memory view, Pause button, 100M cycle limit, invalid breakpoint handling, mobile scrolling fixes |
-| 2.1 | **Peripherals Tab**: Single-row LED display (8-bit + clock LED + PC[8:2] with dividers), single-row scrollable DIP switches (16), 3x3 grid push buttons (BTNL/BTNC/BTNR/BTND/PAU/RST), SVG-based 7-segment display (hex a-f rendering on 22x40 SVGs) |
-| 2.2 | **Documentation Updates**: Fixed push button layout docs, added lw pseudo-instruction known issue, clarified dump buttons are retained, removed keyboard shortcut duplicates |
-| 2.4 | **`lw rd, label` Fix**: `pushInstr` for the lui+load expansion passes the immediate as a string (fixes "s.trim is not a function" crash) and uses a valid temp register (`x5`/t0) plus the original destination register, so out-of-range label loads assemble and encode correctly. |
-| 2.5 | **Simulation Fix**: Restored default memory layout to the documented values (`code 0x10000`, `data 0x20000`, `stack 0x7ffffc`, `MMIO 0xFFFF0000`) so code/data actually load into the simulated RAM and registers update. Routed `lw`/`sw` to MMIO/peripheral boards (`0xFFFF00xx`) through `handleMMIORead`/`handleMMIOWrite` before the bounds check, and compute load/store addresses as unsigned so peripheral I/O (DIP, PB, LED, 7-segment) works. |
-| 2.6 | **Reset State Fix**: `resetState()` now resets all peripheral variables (`ledState = 0`, `sevsegState = '00000000'`, `dipSwitches = 0`, `pbState = 0`). **Register Editability**: Hex and decimal columns are now double-click editable — Enter commits, Escape cancels, `0x` prefix supported in hex mode. **PC LED Sync**: `updateRegisters()` calls `updatePeripherals()` at the end to keep PC LED display live during simulation. **Memory MMIO View**: `updateMemoryView()` explicitly checks `isMMIO` / `hasPeriph` flags to render MMIO addresses (0xFFFF0000–0xFFFF00FF) as read-only with per-byte descriptors (LED WO, DIP RO, PB RO, 7SEG WO) and periph info; beyond-RAM rows show `[beyond RAM]` marker. |
-| 2.7 | **JAL/Branch Offset Encoding (RISC-V spec)**: Fixed assembler to calculate offsets relative to **next PC** (`targetAddr - (address + 4)`) for both J-type (`jal`) and B-type (`beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu`). Updated simulator to apply offsets to `(addr + 4)`: JAL → `nextPC = (addr + 4) + immJ`, Branch → `nextPC = (addr + 4) + immB` when taken. This matches RISC-V spec which defines J/B immediates as relative to the PC of the J/B instruction itself (i.e., `PC + 4`). |
-| 2.8 | **Reset Highlighting**: `resetAll()` now reassembles from current editor content and calls `highlightFirstLine()` so the code editor execution marker always shows the first instruction. `updateDisassembly()` highlights the line where `item.address === pc` (defaults to base address on reset). **Jump target validation** now checks alignment (`imm & 1`) and range (±4096 for branches, ±1048576 for JAL). |
-
----
-
-## v2.0 UI Improvements
-
-### Editor Enhancements
-- **Undo/Redo System**: Full history management with up to 100 states
-  - `Ctrl+Z` to undo
-  - `Ctrl+Y` or `Ctrl+Shift+Z` to redo
-  - Automatic state tracking on every edit
-  - Duplicate state prevention
-
-### Display Improvements
-- **Fixed Column Alignment**: `table-layout: fixed` ensures consistent column widths in disassembly view
-- **8-byte Memory View**: Memory viewer now displays 8 bytes per row instead of 16 for better readability
-- **Mobile Responsive**: Fixed scrolling issues on mobile devices with proper overflow handling
-
-### Execution Controls
-- **Pause Button**: Appears during execution to allow stopping long-running programs
-- **Increased Cycle Limit**: Maximum cycles increased from 100,000 to 100,000,000
-- **Breakpoint Validation**: Invalid breakpoint line numbers are now detected and reported
-
-### Dump Buttons
-- **"Dump txt"**: Exports code (text) segment to Verilog `$readmemh` format
-- **"Dump data"**: Exports data segment to Verilog `$readmemh` format
-
----
-
-
-## v2.1 Peripherals Tab
-
-### LEDs
-- Single-row LED display with 8 LEDs (bit 7 to bit 0)
-- Clock LED (blinks at divided clock rate)
-- PC[8:2] bits (7 LEDs showing upper PC bits)
-- Dividers between sections for visual clarity
-- CSS: `.led`, `.led-pc`, `.led-clock`, `.led-divider`, `.led-label`
-
-### DIP Switches
-- 16 DIP switches in a single row with horizontal scrolling
-- Click to toggle on/off
-- CSS: `.dip-container`, `.dip-switch`
-
-### Push Buttons
-- Horizontal row layout (32px cells, 4px gap):
-  - BTNL (L) | BTNC (C) | BTNR (R)
-- Click-to-toggle interaction (replaces "hold" behavior)
-- Read at 0xFFFF0068 (3 bits: BTNL, BTNC, BTNR)
-- CSS: `.pb-container`, `.pb-btn`, `.pressed`
-
-### 7-Segment Display
-- Individual box on the same row as Push Buttons
-- SVG-based rendering (22x40 viewBox per digit)
-- Full hex support (0-F) with custom segment paths
-- 7 segments: a(top), b(top-right), c(bottom-right), d(bottom), e(bottom-left), f(top-left), g(middle)
-- CSS: `.sevseg-container`, `.sevseg-digit`, `.sevseg-segment` (lit/unlit)
-
----
-
-
-## Author Notes
-
-- The simulator uses **MIPS-style system calls** (a7 for function code)
-- All addresses are **word-aligned** (address & ~3)
-- Memory dumps use **Verilog `$readmemh`** format for FPGA simulation compatibility
-- The code/data memory separation is configurable but **must maintain order** (code before data)
-- The assembler is **case-insensitive** for mnemonics but **case-sensitive** for labels (with lowercased lookup)
+| Version | Milestone Description & Features Implemented |
+|---------|----------------------------------------------|
+| **v1.0 – v2.8** | Initial RV32GC simulator core, dual-layer syntax editor, `.equ` pre-pass, `.dword` data rendering, and spec-compliant PC-relative jump/branch offset calculations (`targetAddr - address`). |
+| **v3.0** | Nexys 4 FPGA peripheral board simulation with 16 LEDs, 16 DIP switches, 3-color scheme (Cyan, Amber, Green), divided clock blink/pause logic, and 32-bit unsigned MMIO addressing. |
+| **v3.1** | **Register Editing & Non-Blocking Engine**: Single-click localized inline edit, double-click popup modal window (`#regEditOverlay`), non-blocking chunked batch loop (`CHUNK_SIZE = 5000`), and responsive `⏸ Pause` / `▶ Resume` controls. |
+| **v3.2** | **MMIO Address Formatting & Toolbar Polishing**: Fixed 32-bit bitwise sign-extension in memory viewer (`(addr >>> 0) & ~0x7`), rendering MMIO addresses from `0xffff0000` upwards. Enforced 28px uniform toolbar button height. |
+| **v3.3** | **Compact Mobile DIP Switch & LED Layout**: Optimized DIP switch width (16px x 11px) and inter-switch gaps (1px), bringing total board width to 319px so all 16 DIP switches and 16 LEDs fit on mobile viewports without horizontal scrolling. |
+| **v3.4** | **Data Segment Upward Direction & MMIO Sync**: Restricted downward row stepping to Stack exclusively. Data segment (`.data` at `0x00020000`) steps upwards in increasing address order. Updated `handleMMIOWrite` to sync byte/word writes across LED, DIP, Push Buttons, and 7-Segment registers. Added detailed in-memory row annotations (`[LED WO 0xFFFF0060 · DIP RO 0xFFFF0064]`, `[7SEG WO 0xFFFF0080]`). |
+| **v3.5** | **MMIO Read Persistence**: Updated `handleMMIORead(addr, size)` to return stored byte/word values for `PERIPH_LED` (`0xFFFF0060`) and `PERIPH_SEVENSEG` (`0xFFFF0080`), ensuring edited MMIO values persist permanently in the Memory View. Adjusted `.dip-sublabel` `margin-top: 3px` to match LED sublabel spacing. |
+| **v3.6** | **Register Table Column Gap Reduction**: Applied `table-layout: fixed` with compact column width constraints on `Name` to reduce distance between `Name` and `Value (Hex)` while keeping `Value (Hex)` and `Value (Dec)` spacing natural. Centered 7-segment display digits (`justify-content: center`) inside the bounding box and increased inter-digit gap to `8px`. |
+| **v3.7** | **Push Button Bit Mapping Fix**: Corrected Push Button bit mapping `[2:0]` at `0xFFFF0068` so Bit 2 = BTNL (Left), Bit 1 = BTNC (Center), and Bit 0 = BTNR (Right), resolving L and R button bit swapping. |
