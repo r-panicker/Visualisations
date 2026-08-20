@@ -89,6 +89,9 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .reg-table .reg-name { color: #89b4fa; }
 .reg-table .reg-val { color: #a6e3a1; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .reg-table .reg-changed { color: #f9e2af; }
+.reg-table .reg-editable { cursor: pointer; }
+.reg-table .reg-editable:hover { color: #f9e2af; }
+.reg-table .reg-editable.editing { color: #89dceb; text-decoration: underline; }
 
 /* Memory View */
 .mem-toolbar { display: flex; gap: 4px; margin-bottom: 6px; align-items: center; }
@@ -107,6 +110,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .mem-view div { margin: 2px 0; }
 .wordgap { display: inline-block; width: 20px; }
 .mem-legend { font-size: 11px; color: #6c7086; padding: 4px 8px; border-bottom: 1px solid #313244; }
+.mmio-desc { font-size: 11px; color: #7f849c; }
 
 /* Machine / Disassembly views */
 .code-list { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
@@ -917,6 +921,10 @@ let pbState = 0;                 // simulated push button state (3 bits: BTNL, B
 
 function parseReg(s) {
   s = s.toLowerCase().replace(/,/g,' ').trim();
+  if (/^\d+$/.test(s)) {
+    const n = parseInt(s, 10);
+    if (n >= 0 && n <= 31) return n;
+  }
   if (s.startsWith('x')) {
     const n = parseInt(s.substring(1), 10);
     if (n >= 0 && n <= 31) return n;
@@ -1000,10 +1008,12 @@ function resolveAddrRef(s) {
   throw new Error(`Unknown symbol '${s}'`);
 }
 function instructionSlots(mnemonic, args) {
-  // Loads with a bare label operand may expand to lui + load (2 slots)
+  // Loads with a bare label operand expand to lui + load (2 slots)
   if (['lb','lh','lw','lbu','lhu'].includes(mnemonic) && args.length === 2) {
     const mem = parseMemOp(args[1]);
-    if (mem && mem.reg === 0 && (mem.offset > 2047 || mem.offset < -2048)) {
+    if (mem) {
+      if (mem.reg === 0 && (mem.offset > 2047 || mem.offset < -2048)) return 2;
+    } else {
       return 2;
     }
   }
@@ -1064,7 +1074,11 @@ function assemble(source, startAddr) {
   symbolTable = {};
 
   const splitLine = (line) => {
-    const idx = line.indexOf('#');
+    let idx = line.indexOf('#');
+    const idx2 = line.indexOf(';');
+    if (idx < 0 || (idx2 >= 0 && idx2 < idx)) idx = idx2;
+    const idx3 = line.indexOf('//');
+    if (idx < 0 || (idx3 >= 0 && idx3 < idx)) idx = idx3;
     return { main: (idx >= 0 ? line.substring(0, idx) : line).trim(), comment: idx >= 0 ? line.substring(idx) : '' };
   };
   const parseArgs = (s) => {
@@ -1456,15 +1470,28 @@ function encodeInstruction(mnemonic, args, address) {
           }
         }
       } else if (['jalr'].includes(mnemonic)) {
-        rd = parseReg(args[0]);
-        if (args.length >= 2) {
-          const mem = parseMemOp(args[1]);
+        if (args.length === 1) {
+          const mem = parseMemOp(args[0]);
           if (mem) {
+            rd = 1;
             rs1 = mem.reg;
             imm = mem.offset;
           } else {
-            rs1 = parseReg(args[1]);
-            imm = args.length >= 3 ? parseImm(args[2]) : 0;
+            rd = 1;
+            rs1 = parseReg(args[0]);
+            imm = 0;
+          }
+        } else {
+          rd = parseReg(args[0]);
+          if (args.length >= 2) {
+            const mem = parseMemOp(args[1]);
+            if (mem) {
+              rs1 = mem.reg;
+              imm = mem.offset;
+            } else {
+              rs1 = parseReg(args[1]);
+              imm = args.length >= 3 ? parseImm(args[2]) : 0;
+            }
           }
         }
       } else if (['ecall','ebreak'].includes(mnemonic)) {
@@ -1543,9 +1570,16 @@ function encodeInstruction(mnemonic, args, address) {
       let targetAddr;
       if (labels[targetStr] !== undefined) {
         targetAddr = labels[targetStr];
+      } else if (symbolTable[targetStr] !== undefined) {
+        targetAddr = symbolTable[targetStr];
       } else {
-        targetAddr = parseImm(targetStr);
-        if (isNaN(targetAddr)) throw new Error(`Unknown label: ${targetStr}`);
+        const val = parseImm(targetStr);
+        if (isNaN(val)) throw new Error(`Unknown label: ${targetStr}`);
+        if (targetStr.startsWith('+') || targetStr.startsWith('-') || Math.abs(val) < baseAddress) {
+          targetAddr = address + val;
+        } else {
+          targetAddr = val;
+        }
       }
       
       imm = targetAddr - address;
@@ -1584,9 +1618,16 @@ function encodeInstruction(mnemonic, args, address) {
       
       if (labels[targetStr] !== undefined) {
         targetAddr = labels[targetStr];
+      } else if (symbolTable[targetStr] !== undefined) {
+        targetAddr = symbolTable[targetStr];
       } else {
-        targetAddr = parseImm(targetStr);
-        if (isNaN(targetAddr)) throw new Error(`Unknown label: ${targetStr}`);
+        const val = parseImm(targetStr);
+        if (isNaN(val)) throw new Error(`Unknown label: ${targetStr}`);
+        if (targetStr.startsWith('+') || targetStr.startsWith('-') || Math.abs(val) < baseAddress) {
+          targetAddr = address + val;
+        } else {
+          targetAddr = val;
+        }
       }
       
       const imm = targetAddr - address;
@@ -2430,10 +2471,12 @@ function updateRegisters() {
     const isChanged = i === lastChangedReg;
     const valClass = 'reg-val' + (isChanged ? ' reg-changed' : '');
     html += `<tr><td class="reg-name">x${i}</td><td class="reg-name">${name}</td>
-      <td class="${valClass}">0x${uval.toString(16).padStart(8,'0')}</td>
-      <td class="${valClass}">${val}</td></tr>`;
+      <td class="${valClass} reg-editable" data-idx="${i}" data-val="${uval.toString(16).padStart(8,'0')}" data-type="hex" ondblclick="startRegEdit(this)" onclick="selectRegText(this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)">0x${uval.toString(16).padStart(8,'0')}</td>
+      <td class="${valClass} reg-editable" data-idx="${i}" data-val="${val.toString().padStart(11,' ')}" data-type="dec" ondblclick="startRegEdit(this)" onclick="selectRegText(this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)" style="width:120px">${val}</td></tr>`;
   }
   regBody.innerHTML = html;
+  // Also update peripherals (PC LEDs, etc.) when registers are refreshed
+  updatePeripherals();
 }
 
 // ============================================================
@@ -2611,31 +2654,59 @@ function updateMemoryView() {
   let addr = parseInt(addrStr, 16);
   if (isNaN(addr) || addr < 0) addr = baseAddress;
   addr = addr & ~0x7;  // Align to 8-byte boundary
-  
+
   let html = '';
   for (let r = 0; r < rows; r++) {
-    const base = addr + r * 8;  // Changed from 16 to 8 bytes per row
-    if (base >= memory.length) break;
-    
-    let hexVals = '';
-    let asciiVals = '';
-    
-    for (let c = 0; c < 8; c++) {  // Changed from 16 to 8
-      const offset = base + c;
-      if (offset >= memory.length) break;
-      const val = memory[offset];
-      const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
-      const cls = isChanged ? ' changed' : '';
-      // Insert gap after every 4th byte (between words)
-      if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
-      hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2,'0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2,'0')}</span>`;
-      
-      const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-      const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
-      asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+    const base = addr + r * 8;
+
+    // Check if this row is entirely in MMIO range
+    const isMMIO = (base >= mmioBase && base < mmioBase + 256);
+    // Also check peripheral addresses
+    const hasPeriph = (base === PERIPH_LED || base === PERIPH_DIP || base === PERIPH_PB || base === PERIPH_SEVENSEG);
+
+    if (isMMIO || hasPeriph) {
+      // Show MMIO/peripheral addresses as read-only
+      let hexVals = '<span class="mmio-label">[MMIO — read-only]</span>';
+      hexVals += '<span class="wordgap"></span>';
+      const periphInfo = [];
+      for (let p = 0; p < 8; p++) {
+        const paddr = base + p;
+        if (paddr === PERIPH_LED) periphInfo.push('LED WO');
+        else if (paddr === PERIPH_DIP) periphInfo.push('DIP RO');
+        else if (paddr === PERIPH_PB) periphInfo.push('PB RO');
+        else if (paddr === PERIPH_SEVENSEG) periphInfo.push('7SEG WO');
+        else periphInfo.push('MMIO');
+      }
+      hexVals += `<span class="mmio-desc" style="font-size:11px;color:#7f849c">`;
+      hexVals += periphInfo.join(' ');
+      hexVals += `</span>`;
+      html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span> ${hexVals}</div>`;
+    } else if (base >= memory.length) {
+      // Beyond memory range but not MMIO — show a marker
+      html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span> <span class="mmio-desc" style="font-size:11px;color:#7f849c">[beyond RAM]</span></div>`;
+      break;
+    } else {
+      // Normal RAM view
+      let hexVals = '';
+      let asciiVals = '';
+
+      for (let c = 0; c < 8; c++) {
+        const offset = base + c;
+        if (offset >= memory.length) break;
+        const val = memory[offset];
+        const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
+        const cls = isChanged ? ' changed' : '';
+        // Insert gap after every 4th byte (between words)
+        if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
+        hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2,'0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2,'0')}</span>`;
+
+        const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
+        const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
+        asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+      }
+
+      html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span> ${hexVals}  ${asciiVals}</div>`;
     }
-    
-    html += `<div><span class="addr">0x${base.toString(16).padStart(8,'0')}</span> ${hexVals}  ${asciiVals}</div>`;
   }
   memView.innerHTML = html;
 }
@@ -2848,6 +2919,91 @@ function selectElementText(el) {
   const sel = window.getSelection();
   sel.removeAllRanges();
   sel.addRange(range);
+}
+
+function selectRegText(el) {
+  selectElementText(el);
+}
+
+function startRegEdit(el) {
+  el.classList.add('editing');
+  const type = el.dataset.type;
+  if (type === 'hex') {
+    el.dataset.old = el.textContent.trim();
+    el.textContent = '0x';
+  } else {
+    el.dataset.old = el.textContent.trim();
+  }
+  el.focus();
+  if (type === 'hex') {
+    el.setSelectionRange(2, 2);
+  }
+}
+
+function commitRegEdit(el) {
+  if (!el || !el.classList || !el.classList.contains('editing')) return;
+  el.classList.remove('editing');
+  const idx = parseInt(el.dataset.idx, 10);
+  if (isNaN(idx) || idx < 0 || idx > 31) return;
+  const type = el.dataset.type;
+  const text = (el.textContent || '').trim();
+  let newVal;
+  if (type === 'hex') {
+    const hexStr = text.replace(/^0x/i, '');
+    newVal = parseInt(hexStr, 16);
+    if (isNaN(newVal) || newVal > 0xFFFFFFFF) {
+      el.textContent = el.dataset.old;
+      return;
+    }
+  } else {
+    newVal = parseInt(text, 10);
+    if (isNaN(newVal)) {
+      el.textContent = el.dataset.old;
+      return;
+    }
+  }
+  // Update register and re-render
+  if (type === 'hex') {
+    regs[idx] = newVal & 0xFFFFFFFF;
+    if (idx >= 16 && idx < 32) dregs[idx - 16] = new Float64Array([newVal & 0xFFFFFFFF])[0];
+  } else {
+    regs[idx] = newVal;
+    if (idx >= 16 && idx < 32) dregs[idx - 16] = new Float64Array([newVal & 0xFFFFFFFF])[0];
+  }
+  lastChangedReg = idx;
+  updateRegisters();
+  updateMemoryView();
+}
+
+function cancelRegEdit(el) {
+  if (!el || !el.classList || !el.classList.contains('editing')) return;
+  el.classList.remove('editing');
+  el.textContent = el.dataset.old;
+}
+
+function handleRegEditKey(event, el) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    el.blur();
+    return;
+  }
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    cancelRegEdit(el);
+    el.blur();
+    return;
+  }
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.key.length !== 1) return;
+  if (el.dataset.type === 'hex') {
+    if (!/[0-9a-fA-F]/.test(event.key)) {
+      event.preventDefault();
+    }
+  } else {
+    if (!/[-+0-9]/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
 }
 
 function getSelectedTextLength() {
@@ -3630,10 +3786,13 @@ function resetState() {
   initializeState();
   execHistory = [];
   stepWriteLog = [];
+  // Reset all peripheral state
+  ledState = 0;
+  sevsegState = '00000000';
+  dipSwitches = 0;
+  pbState = 0;
   updateRegisters();
   updateMemoryView();
-  machineCode = [];
-  updateMachineCode();
   updateDisassembly();
   updateStats();
   hideExecMarker();

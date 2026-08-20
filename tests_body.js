@@ -112,4 +112,69 @@ console.log('=== mv / ret / jr / nop / neg ===');
 out = assembleok('misc', 'main:\n  mv x10, x11\n  nop\n  ret\n  jr x4\n  neg x5, x6\n');
 out.forEach(i=>console.log(' 0x'+i.address.toString(16)+': '+(i.bytes?i.bytes.map(b=>b.toString(16).padStart(2,'0')).join(' '):'ERR')+' | '+i.text));
 
+console.log('=== jump & branch offset calculation tests ===');
+const jumpBranchCode = [
+  '.text',
+  'main:',
+  '  addi x1, x0, 5',
+  '  addi x2, x0, 5',
+  '  beq  x1, x2, target',  // +12 byte offset (PC 0x10008 to target 0x10014)
+  '  addi x3, x0, 99',
+  '  j    end',             // +16 byte offset (PC 0x10010 to end 0x10020)
+  'target:',
+  '  addi x3, x0, 42',
+  '  j    loop',            // -4 byte offset (PC 0x10018 to loop 0x1001c)
+  'loop:',
+  '  jal  x0, 0',           // 0 byte offset (PC 0x1001c to 0x1001c)
+  'end:',
+  '  jalr x1'
+].join('\n');
+
+const jbOut = assembleok('jump_branch', jumpBranchCode);
+// beq x1, x2, target at 0x10008: offset is 12 (0xC), expect 63 86 20 00
+const beqEnc = jbOut[2].bytes.map(b=>b.toString(16).padStart(2,'0')).join(' ');
+console.log('  beq offset 12 byte encoding:', beqEnc === '63 86 20 00' ? 'PASS' : `FAIL (${beqEnc})`);
+
+// j end at 0x10010: target is end (0x10020), offset is 16 (0x10), expect 6f 00 00 01
+const jEndEnc = jbOut[4].bytes.map(b=>b.toString(16).padStart(2,'0')).join(' ');
+console.log('  j end offset 16 byte encoding:', jEndEnc === '6f 00 00 01' ? 'PASS' : `FAIL (${jEndEnc})`);
+
+// jal x0, 0 (self jump) at 0x1001c (jbOut[7]): offset is 0, expect 6f 00 00 00
+const selfJEnc = jbOut[7].bytes.map(b=>b.toString(16).padStart(2,'0')).join(' ');
+console.log('  self jump (0 offset) encoding:', selfJEnc === '6f 00 00 00' ? 'PASS' : `FAIL (${selfJEnc})`);
+
+// Verify runtime execution of beq branch
+resetAll();
+loadProgram(jbOut);
+pc = 0x10000;
+// Step 1: addi x1, x0, 5 -> pc=0x10004
+// Step 2: addi x2, x0, 5 -> pc=0x10008
+// Step 3: beq x1, x2, target -> pc=0x10014 (target)
+// Step 4: addi x3, x0, 42 -> pc=0x10018, regs[3]=42
+for (let step = 0; step < 4; step++) {
+  pc = decodeAndExecute(fetchInstruction(pc), pc);
+}
+console.log('  beq target execution pc =', hex32(pc), pc === 0x10018 ? 'PASS' : `FAIL (pc=${hex32(pc)})`);
+console.log('  x3 after branch execution =', regs[3], regs[3] === 42 ? 'PASS' : `FAIL (x3=${regs[3]})`);
+
+console.log('=== bare label load offset test (DIP_to_LED pattern) ===');
+const dipCode = [
+  '.text',
+  'main:',
+  '  lw s1, LED_ADDR',
+  '  sw s4, (s1)',
+  'wait:',
+  '  addi s3, s3, -1',
+  '  beq s3, zero, loop',
+  '  jal zero, wait',
+  'loop:',
+  '  j main',
+  '.data',
+  'LED_ADDR: .word 0xFFFF0060'
+].join('\n');
+const dipOut = assembleok('dip_pattern', dipCode);
+// jal zero, wait is at 0x10014; wait: is at 0x1000c (addi s3, s3, -1); offset -8 -> expect 6f f0 9f ff
+const jalWaitEnc = dipOut[5].bytes.map(b=>b.toString(16).padStart(2,'0')).join(' ');
+console.log('  jal zero, wait target (0x1000c addi) encoding:', jalWaitEnc === '6f f0 9f ff' ? 'PASS' : `FAIL (${jalWaitEnc})`);
+
 console.log('DONE');
