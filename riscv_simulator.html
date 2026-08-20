@@ -237,6 +237,93 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   box-sizing: border-box;
 }
 
+/* UART Serial Terminal Styling */
+.uart-terminal {
+  background: #0d0e15;
+  border: 1px solid #313244;
+  border-radius: 4px;
+  padding: 8px 10px;
+  height: 80px;
+  max-height: 110px;
+  overflow-y: auto;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #a6e3a1;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+.uart-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.uart-controls select {
+  background: #313244;
+  border: 1px solid #45475a;
+  color: #cdd6f4;
+  padding: 4px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.uart-controls input[type="text"] {
+  flex: 1;
+  min-width: 140px;
+  background: #313244;
+  border: 1px solid #45475a;
+  color: #cdd6f4;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Courier New', monospace;
+}
+
+.uart-controls input[type="checkbox"] {
+  flex: 0 0 auto;
+  min-width: 0;
+  width: auto;
+  margin: 0 2px 0 0;
+  cursor: pointer;
+}
+
+.uart-controls button {
+  background: #313244;
+  border: none;
+  color: #cdd6f4;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.uart-controls button:hover {
+  background: #45475a;
+}
+
+.uart-controls button.primary {
+  background: #cba6f7;
+  color: #1e1e2e;
+  font-weight: 600;
+}
+
+.uart-controls button.primary:hover {
+  background: #b4befe;
+}
+
+.uart-queue-info {
+  font-size: 11px;
+  color: #a6adc8;
+  margin-top: 4px;
+}
+
 /* Row group that holds two peripheral boxes side-by-side on the same row */
 .periph-pair {
   display: grid;
@@ -269,6 +356,10 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   border: 1px solid #313244;
   border-radius: 6px;
   padding: 6px 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .periph-group-labels {
@@ -288,7 +379,9 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   align-items: center;
   justify-content: space-between;
   gap: 1px;
-  overflow-x: auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* No independent row scrollbars to preserve strict LED alignment */
 }
 
 .led-cell, .dip-cell {
@@ -297,6 +390,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   flex-direction: column;
   align-items: center;
   min-width: 14px;
+  box-sizing: border-box;
 }
 
 .led-sublabel, .dip-sublabel {
@@ -329,46 +423,82 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 }
 
 /* 3 Distinct LED Group Colors */
-/* 1. PC[8:2] LEDs (LED[15:9]) - Vibrant Cyan/Blue */
 .led-pc.on {
   background: #89b4fa;
   border-color: #89b4fa;
   box-shadow: 0 0 5px #89b4fa, 0 0 10px rgba(137, 180, 250, 0.4);
 }
 
-/* 2. Divided Clock LED (LED[8]) - Vibrant Amber/Orange */
 .led-clock.on {
   background: #fab387;
   border-color: #fab387;
   box-shadow: 0 0 5px #fab387, 0 0 10px rgba(250, 179, 135, 0.4);
 }
 
-/* 3. User Controllable Output LED[7:0] - Vibrant Green */
 .led-user.on {
   background: #a6e3a1;
   border-color: #a6e3a1;
   box-shadow: 0 0 5px #a6e3a1, 0 0 10px rgba(166, 227, 161, 0.4);
 }
 
-/* Compact DIP Switch */
+/* Dual-Rectangle 3D Rocker/Slide DIP Switch (Twice the Height: 24px) */
 .dip-switch {
-  width: 16px;
-  height: 11px;
-  border-radius: 2px;
-  background: #2a2a3a;
-  border: 1.5px solid #313244;
+  width: 14px;
+  height: 24px;
+  border-radius: 3px;
+  background: #11111b;
+  border: 1px solid #45475a;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.dip-switch.on {
-  background: #cba6f7;
-  border-color: #cba6f7;
-  box-shadow: 0 0 6px rgba(203, 166, 247, 0.6);
+  display: flex;
+  flex-direction: column;
+  padding: 1px;
+  gap: 1px;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
 }
 
 .dip-switch:hover {
   border-color: #cba6f7;
+}
+
+.dip-rect-top, .dip-rect-bottom {
+  flex: 1;
+  width: 100%;
+  border-radius: 1px;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+/* OFF State (0): Switch DOWN -> Top is dark/recessed, Bottom is raised slider knob */
+.dip-switch .dip-rect-top {
+  background: #181825;
+  border: 1px solid #1e1e2e;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.dip-switch .dip-rect-bottom {
+  background: linear-gradient(180deg, #585b70 0%, #313244 100%);
+  border: 1px solid #6c7086;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* ON State (1): Switch UP -> Top is raised active glowing knob, Bottom is dark/recessed */
+.dip-switch.on {
+  border-color: #cba6f7;
+  box-shadow: 0 0 6px rgba(203, 166, 247, 0.4);
+}
+
+.dip-switch.on .dip-rect-top {
+  background: linear-gradient(180deg, #cba6f7 0%, #a6e3a1 100%);
+  border: 1px solid #cba6f7;
+  box-shadow: 0 1px 3px rgba(203, 166, 247, 0.6);
+}
+
+.dip-switch.on .dip-rect-bottom {
+  background: #181825;
+  border: 1px solid #1e1e2e;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .pb-btn {
@@ -509,6 +639,9 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
         <option value="fact">Factorial</option>
         <option value="loop">Loop &amp; Array</option>
         <option value="io">I/O &amp; M-Ext</option>
+        <option value="dip_led">DIP to LED (DIP_to_LED.asm)</option>
+        <option value="hello_world">Hello World (HelloWorld.asm)</option>
+        <option value="hello_jal">Hello World Subroutine (HelloWorld_jal_jalr.asm)</option>
       </select>
     </label>
     <span class="stats" id="statsBar">Cycles: 0 &nbsp;|&nbsp; Instr: 0</span>
@@ -591,6 +724,39 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       </div>
       <div class="tab-content" id="tab-peripherals">
         <div class="peripherals-grid">
+          <div class="periph-section" id="uartSection">
+            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+              <span>UART Serial Console (115200 8N1) &nbsp;<span class="periph-addr" style="margin-left:4px;">0xFFFF0000–0xFFFF000C</span></span>
+              <span style="font-size:10px;color:#a6adc8;" id="uartStatusBadges">
+                RX_VALID: <span id="badgeRxValid" style="color:#f9e2af;font-weight:bold;">0</span> &nbsp;·&nbsp;
+                TX_READY: <span id="badgeTxReady" style="color:#a6e3a1;font-weight:bold;">1</span>
+              </span>
+            </div>
+            <div class="uart-terminal" id="uartTerminal" title="Terminal Output (0xFFFF000C WO)"></div>
+            <div class="uart-controls">
+              <select id="uartInputMode" title="Input mode: ASCII Text or Comma-separated Hex Bytes">
+                <option value="ascii">ASCII Text</option>
+                <option value="hex">Hex (e.g. 0x48, 0x65, 0x0A)</option>
+              </select>
+              <input type="text" id="uartInputText" placeholder="Type ASCII text or comma-separated hex bytes..." onkeydown="if(event.key==='Enter')sendUartInput()">
+              <button id="uartSendBtn" onclick="sendUartInput()" class="primary">Send</button>
+              <button onclick="clearUartTx()" title="Clear Terminal display output">Clear</button>
+            </div>
+            <div class="uart-controls" style="margin-top:4px;display:flex;align-items:center;gap:4px;font-size:11px;flex-wrap:nowrap;">
+              <label style="font-size:11px;color:#cba6f7;display:inline-flex;align-items:center;gap:2px;cursor:pointer;white-space:nowrap;font-weight:600;" title="Buffer sequence and send automatically with instruction delay between bytes">
+                <input type="checkbox" id="uartAutoSendCheck" style="margin:0 2px 0 0;cursor:pointer;flex:0 0 auto;width:auto;">Buffer
+              </label>
+              <span style="display:inline-flex;align-items:center;gap:4px;margin-left:24px;white-space:nowrap;">
+                <input type="number" id="uartAutoSeqDelay" value="10" min="1" max="99999" style="width:48px;height:24px;padding:2px 4px;font-size:11px;box-sizing:border-box;border-radius:3px;border:1px solid #45475a;background:#313244;color:#cdd6f4;text-align:center;flex:0 0 auto;" title="Number of RISC-V instructions executed between sending each character in the buffered sequence">
+                <span style="color:#a6adc8;" title="Number of RISC-V instructions executed between sending each character in the buffered sequence">instr delay</span>
+              </span>
+              <span style="color:#45475a;margin:0 8px;">·</span>
+              <span class="uart-queue-info" id="uartQueueInfo" style="margin:0;white-space:nowrap;">
+                RX Queue: <span id="uartQueueCount" style="color:#cdd6f4;">0 bytes</span> <span id="uartQueuePreview" style="color:#6c7086;margin-left:4px;">(empty)</span>
+                <span id="uartAutoSendStatus" style="color:#a6e3a1;margin-left:6px;font-weight:600;"></span>
+              </span>
+            </div>
+          </div>
           <div class="periph-section">
             <div class="periph-title">LEDs (LED[15:0]) &amp; DIP Switches (SW[15:0])</div>
             <div class="periph-board">
@@ -619,7 +785,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
           </div>
         </div>
         <div class="periph-legend">
-          <strong>LED[15:9] (Cyan):</strong> Shows PC[8:2] &nbsp;·&nbsp;
+          <strong>UART Console (115200 8N1):</strong> RX_VALID at 0xFFFF0000 (RO) &nbsp;·&nbsp; RX at 0xFFFF0004 (RO) &nbsp;·&nbsp; TX_READY at 0xFFFF0008 (RO) &nbsp;·&nbsp; TX at 0xFFFF000C (WO)
+          <br><strong>LED[15:9] (Cyan):</strong> Shows PC[8:2] &nbsp;·&nbsp;
           <strong>LED[8] (Orange):</strong> Divided Clock (blinks per cycle, lit at pause) &nbsp;·&nbsp;
           <strong>LED[7:0] (Green):</strong> User Output at 0xFFFF0060
           <br><strong>DIP[15:0]:</strong> 16 switches aligned 1-to-1 with LEDs &nbsp;·&nbsp; Read at 0xFFFF0064
@@ -882,11 +1049,17 @@ let stepWriteLog = [];
 let journalEnabled = false;
 
 
-// Memory-mapped I/O: For simulation, we use a 16-byte window at mmioBase.
+// Memory-mapped I/O: Standard 16550/RISC-V UART Serial Console (115200 8N1)
 let MMIO_BASE = mmioBase;
-let MMIO_GETC = mmioBase;       // read: get character from buffer
-let MMIO_PUTC = mmioBase + 4;   // write: put character
-let MMIO_STATUS = mmioBase + 8; // read: bit0=1 if char available
+let UART_RX_VALID = 0xFFFF0000; // RO: Bit 0 = 1 when RX data is valid/available
+let UART_RX       = 0xFFFF0004; // RO: 8-bit character read (pops from queue)
+let UART_TX_READY = 0xFFFF0008; // RO: Bit 0 = 1 when TX is ready to receive data
+let UART_TX       = 0xFFFF000C; // WO: 8-bit character write (outputs to display terminal)
+
+// Legacy aliases for backward compatibility
+let MMIO_GETC   = UART_RX;
+let MMIO_PUTC   = UART_TX;
+let MMIO_STATUS = UART_RX_VALID;
 
 // Peripherals
 let PERIPH_LED = 0xFFFF0060;    // write-only: 8-bit LED display
@@ -894,8 +1067,18 @@ let PERIPH_DIP = 0xFFFF0064;    // read-only: 16-bit DIP switches
 let PERIPH_PB = 0xFFFF0068;     // read-only: 3-bit push buttons
 let PERIPH_SEVENSEG = 0xFFFF0080; // write-only: 7-segment display
 
+// UART & Console State
+let uartRxQueue = [];            // Queue of byte values (numbers 0..255) waiting to be read
+let uartTxBuffer = '';           // Display terminal output string for UART_TX
 let ioInputBuffer = '';
 let ioOutputBuffer = '';
+
+// Automated Delayed Sequence State
+let autoSeqPending = false;      // true when an automated sequence is active
+let autoSeqQueue = [];            // array of byte values to be sent automatically
+let autoSeqDelayInstr = 10;      // default instructions delay between bytes
+let autoSeqNextTargetInstr = 0;  // instructionCount threshold for sending next byte
+let autoSeqTotalBytes = 0;       // initial total bytes in sequence for progress tracking
 
 // Peripheral state
 let ledState = 0;                // current LED display value
@@ -938,6 +1121,33 @@ function parseFReg(s) {
 function parseImm(s) {
   s = s.trim().replace(/,/g,'');
   if (s === '') return NaN;
+
+  // Character literal format: 'c' or '\c' or '\xHH'
+  if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) {
+    const inner = s.substring(1, s.length - 1);
+    if (inner.length === 1) return inner.charCodeAt(0);
+    if (inner.length === 2 && inner[0] === '\\') {
+      switch (inner[1]) {
+        case 'n': return 10;   // LF Line Feed (0x0A)
+        case 'r': return 13;   // CR Carriage Return (0x0D)
+        case 't': return 9;    // TAB Horizontal Tab (0x09)
+        case '0': return 0;    // NUL Null Byte (0x00)
+        case 'b': return 8;    // BS Backspace (0x08)
+        case 'f': return 12;   // FF Form Feed (0x0C)
+        case 'v': return 11;   // VT Vertical Tab (0x0B)
+        case 'e': return 27;   // ESC Escape (0x1B)
+        case '\\': return 92;  // Backslash
+        case "'": return 39;   // Single quote
+        case '"': return 34;   // Double quote
+        default: return inner.charCodeAt(1);
+      }
+    }
+    if (inner.startsWith('\\x') || inner.startsWith('\\X')) {
+      const h = parseInt(inner.substring(2), 16);
+      if (!isNaN(h)) return h;
+    }
+  }
+
   const sign = (s[0] === '-') ? -1 : (s[0] === '+' ? 1 : 1);
   const body = s.replace(/^[+-]/, '');
   const low = body.toLowerCase();
@@ -1680,9 +1890,7 @@ function loadProgram(mc) {
 
 function isMMIOAddr(addr) {
   const u = addr >>> 0;
-  const m = MMIO_BASE >>> 0;
-  return (u >= m && u < m + 16) ||
-    u === (PERIPH_LED >>> 0) || u === (PERIPH_DIP >>> 0) || u === (PERIPH_PB >>> 0) || u === (PERIPH_SEVENSEG >>> 0);
+  return (u >= 0xFFFF0000 && u < 0xFFFF0100);
 }
 
 function readMem(addr, size) {
@@ -1726,17 +1934,28 @@ function writeMem(addr, val, size) {
 
 function handleMMIOWrite(addr, val, size) {
   const u = addr >>> 0;
-  
-  // Console Output (MMIO_PUTC)
-  if (u === (MMIO_PUTC >>> 0)) {
+
+  // UART_TX (0xFFFF000C .. 0xFFFF000F) -> Write byte to UART TX terminal
+  const txBase = UART_TX >>> 0;
+  if (u >= txBase && u < txBase + 4) {
     const ch = val & 0xFF;
-    if (ch >= 32 && ch <= 126) {
-      ioOutputBuffer += String.fromCharCode(ch);
-      log(ch === 10 ? '\n' : String.fromCharCode(ch), 'info');
-    } else if (ch === 10 || ch === 13) {
-      ioOutputBuffer += '\n';
+    uartTxBuffer += String.fromCharCode(ch);
+    if (ch === 10 || ch === 13) {
       log('\n', 'info');
+    } else if (ch >= 32 && ch <= 126) {
+      log(String.fromCharCode(ch), 'info');
     }
+    updatePeripherals();
+    return;
+  }
+
+  // UART_RX (0xFFFF0004 .. 0xFFFF0007) -> Direct memory write pushes byte into RX queue
+  const rxBase = UART_RX >>> 0;
+  if (u >= rxBase && u < rxBase + 4) {
+    const b = val & 0xFF;
+    uartRxQueue.push(b);
+    updatePeripherals();
+    return;
   }
 
   // Peripherals: LED Output (0xFFFF0060 .. 0xFFFF0063)
@@ -1795,14 +2014,40 @@ function handleMMIOWrite(addr, val, size) {
 function handleMMIORead(addr, size) {
   const u = addr >>> 0;
 
-  // Console Input & Status
-  if (u === (MMIO_GETC >>> 0) && ioInputBuffer.length > 0) {
-    const ch = ioInputBuffer.charCodeAt(0);
-    ioInputBuffer = ioInputBuffer.substring(1);
-    return ch;
+  // UART_RX_VALID (0xFFFF0000 .. 0xFFFF0003) -> Bit 0 = 1 if RX queue has data
+  const rxValidBase = UART_RX_VALID >>> 0;
+  if (u >= rxValidBase && u < rxValidBase + 4) {
+    const isVal = uartRxQueue.length > 0 ? 1 : 0;
+    const offset = u - rxValidBase;
+    return (offset === 0) ? isVal : 0;
   }
-  if (u === (MMIO_STATUS >>> 0)) {
-    return ioInputBuffer.length > 0 ? 1 : 0;
+
+  // UART_RX (0xFFFF0004 .. 0xFFFF0007) -> Read next byte from RX queue
+  const rxBase = UART_RX >>> 0;
+  if (u >= rxBase && u < rxBase + 4) {
+    const offset = u - rxBase;
+    if (offset === 0) {
+      if (uartRxQueue.length > 0) {
+        const b = uartRxQueue.shift() & 0xFF;
+        updatePeripherals();
+        return b;
+      }
+      return 0;
+    }
+    return 0;
+  }
+
+  // UART_TX_READY (0xFFFF0008 .. 0xFFFF000B) -> Bit 0 = 1 (always ready for TX)
+  const txReadyBase = UART_TX_READY >>> 0;
+  if (u >= txReadyBase && u < txReadyBase + 4) {
+    const offset = u - txReadyBase;
+    return (offset === 0) ? 1 : 0;
+  }
+
+  // UART_TX (0xFFFF000C .. 0xFFFF000F) -> Write-only
+  const txBase = UART_TX >>> 0;
+  if (u >= txBase && u < txBase + 4) {
+    return 0;
   }
   
   // LED Output (0xFFFF0060 .. 0xFFFF0063)
@@ -2579,7 +2824,10 @@ function initPeripherals() {
     let dipHtml = '';
     for (let i = 15; i >= 0; i--) {
       dipHtml += `<div class="dip-cell">
-        <div class="dip-switch" id="dip${i}" onclick="toggleDip(${i})" title="DIP[${i}] (SW${i})"></div>
+        <div class="dip-switch" id="dip${i}" onclick="toggleDip(${i})" title="DIP[${i}] (SW${i}) — Click to toggle ON/OFF">
+          <div class="dip-rect-top"></div>
+          <div class="dip-rect-bottom"></div>
+        </div>
         <div class="dip-sublabel">SW${i}</div>
       </div>`;
 
@@ -2644,6 +2892,185 @@ function updatePeripherals() {
 
   // Update 7-segment display
   sevsegUpdate();
+
+  // Update UART Status Badges & RX Queue Info
+  const rxValidEl = document.getElementById('badgeRxValid');
+  const txReadyEl = document.getElementById('badgeTxReady');
+  const countEl = document.getElementById('uartQueueCount');
+  const previewEl = document.getElementById('uartQueuePreview');
+  const termEl = document.getElementById('uartTerminal');
+
+  if (rxValidEl) {
+    const isValid = uartRxQueue.length > 0;
+    rxValidEl.innerText = isValid ? '1' : '0';
+    rxValidEl.style.color = isValid ? '#a6e3a1' : '#f9e2af';
+  }
+  if (txReadyEl) {
+    txReadyEl.innerText = '1';
+  }
+  if (countEl) {
+    countEl.innerText = uartRxQueue.length + (uartRxQueue.length === 1 ? ' byte' : ' bytes');
+  }
+  if (previewEl) {
+    if (uartRxQueue.length > 0) {
+      const previewStr = uartRxQueue.slice(0, 10).map(b => {
+        return (b >= 32 && b <= 126) ? `'${String.fromCharCode(b)}'` : '0x' + b.toString(16).padStart(2,'0');
+      }).join(', ');
+      previewEl.innerText = `[${previewStr}${uartRxQueue.length > 10 ? '...' : ''}]`;
+    } else {
+      previewEl.innerText = '(empty)';
+    }
+  }
+  if (termEl) {
+    termEl.innerText = uartTxBuffer || '(Terminal output will appear here...)';
+    termEl.scrollTop = termEl.scrollHeight;
+  }
+
+  // Update Auto-Send status indicator
+  const autoStatusEl = document.getElementById('uartAutoSendStatus');
+  const btnEl = document.getElementById('uartSendBtn');
+  if (autoSeqPending) {
+    const sentCount = autoSeqTotalBytes - autoSeqQueue.length;
+    if (autoStatusEl) autoStatusEl.innerText = `Buffering: ${sentCount}/${autoSeqTotalBytes} (${autoSeqDelayInstr} instr delay)`;
+  } else {
+    if (btnEl && btnEl.innerText === 'Cancel') {
+      btnEl.innerText = 'Send';
+      btnEl.style.background = '';
+    }
+  }
+}
+
+function parseAsciiEscapes(str) {
+  const bytes = [];
+  let i = 0;
+  while (i < str.length) {
+    if (str[i] === '\\' && i + 1 < str.length) {
+      const next = str[i + 1];
+      switch (next) {
+        case 'n': bytes.push(10); i += 2; break;   // LF Line Feed (0x0A)
+        case 'r': bytes.push(13); i += 2; break;   // CR Carriage Return (0x0D)
+        case 't': bytes.push(9);  i += 2; break;   // TAB Horizontal Tab (0x09)
+        case '0': {
+          if (i + 2 < str.length && str[i + 2] === 'x') {
+            const hexMatch = str.slice(i + 3, i + 5);
+            if (/^[0-9a-fA-F]{2}$/.test(hexMatch)) {
+              bytes.push(parseInt(hexMatch, 16));
+              i += 5;
+              break;
+            }
+          }
+          const octalMatch = str.slice(i + 1).match(/^[0-7]{1,3}/);
+          if (octalMatch) {
+            bytes.push(parseInt(octalMatch[0], 8) & 0xFF);
+            i += 1 + octalMatch[0].length;
+            break;
+          }
+          bytes.push(0); i += 2; break;            // NUL Null byte (0x00)
+        }
+        case 'b': bytes.push(8);  i += 2; break;   // BS Backspace (0x08)
+        case 'f': bytes.push(12); i += 2; break;   // FF Form Feed (0x0C)
+        case 'v': bytes.push(11); i += 2; break;   // VT Vertical Tab (0x0B)
+        case 'e': bytes.push(27); i += 2; break;   // ESC Escape (0x1B)
+        case 'x': case 'X': {
+          const hexMatch = str.slice(i + 2, i + 4);
+          if (/^[0-9a-fA-F]{2}$/.test(hexMatch)) {
+            bytes.push(parseInt(hexMatch, 16));
+            i += 4;
+          } else {
+            bytes.push(str.charCodeAt(i) & 0xFF);
+            i++;
+          }
+          break;
+        }
+        case '\\': bytes.push(92); i += 2; break;  // Backslash
+        case '\'': bytes.push(39); i += 2; break;  // Single quote
+        case '"':  bytes.push(34); i += 2; break;  // Double quote
+        default:
+          bytes.push(str.charCodeAt(i + 1) & 0xFF);
+          i += 2;
+          break;
+      }
+    } else {
+      bytes.push(str.charCodeAt(i) & 0xFF);
+      i++;
+    }
+  }
+  return bytes;
+}
+
+function sendUartInput() {
+  const modeEl = document.getElementById('uartInputMode');
+  const textEl = document.getElementById('uartInputText');
+  const checkEl = document.getElementById('uartAutoSendCheck');
+  const delayEl = document.getElementById('uartAutoSeqDelay');
+  const btnEl = document.getElementById('uartSendBtn');
+  const statusEl = document.getElementById('uartAutoSendStatus');
+  if (!modeEl || !textEl) return;
+
+  if (autoSeqPending) {
+    autoSeqPending = false;
+    autoSeqQueue = [];
+    if (btnEl) {
+      btnEl.innerText = 'Send';
+      btnEl.style.background = '';
+    }
+    if (statusEl) statusEl.innerText = '(Buffer cancelled)';
+    updatePeripherals();
+    return;
+  }
+
+  const raw = textEl.value;
+  if (!raw.trim()) return;
+
+  let bytes = [];
+  if (modeEl.value === 'ascii') {
+    bytes = parseAsciiEscapes(raw);
+  } else if (modeEl.value === 'hex') {
+    const tokens = raw.split(',');
+    for (let token of tokens) {
+      token = token.trim();
+      if (!token) continue;
+      let val = NaN;
+      if (token.startsWith('0x') || token.startsWith('0X') || /[a-fA-F]/.test(token)) {
+        val = parseInt(token.replace(/^0x/i, ''), 16);
+      } else {
+        val = parseInt(token, 10);
+      }
+      if (!isNaN(val) && val >= 0 && val <= 255) {
+        bytes.push(val & 0xFF);
+      }
+    }
+  }
+
+  if (bytes.length === 0) return;
+
+  const isBufferMode = checkEl && checkEl.checked;
+  if (isBufferMode) {
+    autoSeqQueue = bytes;
+    autoSeqTotalBytes = bytes.length;
+    autoSeqDelayInstr = Math.max(1, parseInt(delayEl ? delayEl.value : 10, 10) || 10);
+    autoSeqPending = true;
+    autoSeqNextTargetInstr = instructionCount + autoSeqDelayInstr;
+    textEl.value = '';
+    if (btnEl) {
+      btnEl.innerText = 'Cancel';
+      btnEl.style.background = '#f38ba8';
+    }
+    if (statusEl) statusEl.innerText = `Buffered ${autoSeqTotalBytes} bytes (${autoSeqDelayInstr} instr delay)`;
+  } else {
+    // Real hardware UART: strictly 1-character buffer when Buffer/auto-send is unchecked
+    uartRxQueue = [bytes[0]];
+    textEl.value = '';
+    if (statusEl) statusEl.innerText = '';
+  }
+
+  updatePeripherals();
+  updateMemoryView();
+}
+
+function clearUartTx() {
+  uartTxBuffer = '';
+  updatePeripherals();
 }
 
 function toggleDip(idx) {
@@ -2774,7 +3201,11 @@ function updateMemoryView() {
       const descriptors = [];
       for (let p = 0; p < 8; p += 4) {
         const wordAddr = (base + p) >>> 0;
-        if (wordAddr === (PERIPH_LED >>> 0)) descriptors.push('LED WO 0xFFFF0060');
+        if (wordAddr === (UART_RX_VALID >>> 0)) descriptors.push('UART RX VALID RO 0xFFFF0000');
+        else if (wordAddr === (UART_RX >>> 0)) descriptors.push('UART RX RO 0xFFFF0004');
+        else if (wordAddr === (UART_TX_READY >>> 0)) descriptors.push('UART TX READY RO 0xFFFF0008');
+        else if (wordAddr === (UART_TX >>> 0)) descriptors.push('UART TX WO 0xFFFF000C');
+        else if (wordAddr === (PERIPH_LED >>> 0)) descriptors.push('LED WO 0xFFFF0060');
         else if (wordAddr === (PERIPH_DIP >>> 0)) descriptors.push('DIP RO 0xFFFF0064');
         else if (wordAddr === (PERIPH_PB >>> 0)) descriptors.push('PB RO 0xFFFF0068');
         else if (wordAddr === (PERIPH_SEVENSEG >>> 0)) descriptors.push('7SEG WO 0xFFFF0080');
@@ -3389,6 +3820,205 @@ main:
 \tecall
 .data
 results: .word 0, 0, 0
+`,
+
+    dip_led: `#----------------------------------------------------------------------------------
+#-- (c) Rajesh Panicker
+#----------------------------------------------------------------------------------
+.eqv MMIO_BASE 0xFFFF0000
+.eqv LED_OFF   0x60 #WO
+.eqv DIP_OFF   0x64 #RO
+
+.text
+main:
+\tli s0, MMIO_BASE\t\t# MMIO_BASE
+\taddi s1, s0, LED_OFF\t\t# LED address = MMIO_BASE + LED_OFF
+\tli  s2, DIP_OFF
+\tadd s2, s0, s2\t\t\t# DIP address = MMIO_BASE + DIP_OFF
+loop:
+\tlw s3, delay_val\t\t# reading loop counter value
+\tlw s4, (s2)\t\t\t# reading DIPS
+\tsw s4, (s1)\t\t\t# writing to LEDS
+
+wait:
+\taddi s3, s3, -1\t\t# subtract 1
+\tbeq s3, zero, loop\t# exit loop
+\tjal zero, wait\t\t# continue in wait loop
+
+halt:
+\tj halt
+
+.data
+DMEM:
+delay_val: .word 4
+string1: .asciz "\\r\\nWelcome to CG3207..\\r\\n"
+var1: .word 1
+.align 9
+STACK_INIT:
+`,
+
+    hello_world: `#----------------------------------------------------------------------------------
+#-- (c) Rajesh Panicker
+#----------------------------------------------------------------------------------
+.eqv LSB_MASK 0xFF
+.eqv MMIO_BASE 0xFFFF0000
+.eqv UART_RX_VALID_OFF 0x00
+.eqv UART_RX_OFF       0x04
+.eqv UART_TX_READY_OFF 0x08
+.eqv UART_TX_OFF       0x0C
+.eqv DIP_OFF           0x64
+.eqv PB_OFF            0x68
+.eqv LED_OFF           0x60
+.eqv SEVENSEG_OFF      0x80
+
+.text
+main:
+\tli s0, MMIO_BASE
+\tli s6, LSB_MASK
+\taddi s5, s0, SEVENSEG_OFF
+\taddi s7, s0, LED_OFF
+\taddi s8, s0, UART_TX_READY_OFF
+\taddi s9, s0, UART_RX_VALID_OFF
+\taddi s10, s0, UART_RX_OFF
+\taddi s11, s0, UART_TX_OFF
+
+WAIT_A:
+\tlw t1, (s9)
+\tbeq t1, zero, WAIT_A
+\tlw t0, (s10)
+ECHO_A:
+\tlw t1, (s8)
+\tbeqz t1, ECHO_A
+\tsw t0, (s11)
+\tsw t0, (s5)
+\tsw t0, (s7)
+\tli t2, 'A'
+\tbne t0, t2, WAIT_A
+WAIT_CRorLF:
+\tlw t1, (s9)
+\tbeqz t1, WAIT_CRorLF
+\tlw t0, (s10)
+ECHO_CRorLF:
+\tlw t1, (s8)
+\tbeqz t1, ECHO_CRorLF
+\tsw t0, (s11)
+\tsw t0, (s5)
+\tsw t0, (s7)
+\tbeq t0, t2, WAIT_CRorLF
+\tli t1, '\\r'
+\tbeq t0, t1, ACCEPT_CRorLF
+\tli t1, '\\n'
+\tbne t0, t1, WAIT_A
+ACCEPT_CRorLF:
+\tla a0, string1
+PRINT_S:
+\tlw t0, (a0)
+\tli t2, 4
+NEXTCHAR:
+\tlw t1, (s8)
+\tbeqz t1, NEXTCHAR
+\tand t1, t0, s6
+\tbeqz t1, WAIT_A
+\tsw t1, (s11)
+\tsrli t0, t0, 8
+\tli t1, 1
+\tsub t2, t2, t1
+\tbnez t2, NEXTCHAR
+\taddi a0, a0, 4
+\tj PRINT_S
+halt:
+\tj halt
+
+.data
+DMEM:
+string1: .asciz "\\r\\nWelcome to CG3207..\\r\\n"
+.align 9
+STACK_INIT:
+`,
+
+    hello_jal: `#----------------------------------------------------------------------------------
+#-- (c) Rajesh Panicker
+#----------------------------------------------------------------------------------
+.eqv LSB_MASK 0xFF
+.eqv MMIO_BASE 0xFFFF0000
+.eqv UART_RX_VALID_OFF 0x00
+.eqv UART_RX_OFF       0x04
+.eqv UART_TX_READY_OFF 0x08
+.eqv UART_TX_OFF       0x0C
+.eqv DIP_OFF           0x64
+.eqv PB_OFF            0x68
+.eqv LED_OFF           0x60
+.eqv SEVENSEG_OFF      0x80
+
+.text
+main:
+\tli s0, MMIO_BASE
+\tli s6, LSB_MASK
+\taddi s5, s0, SEVENSEG_OFF
+\taddi s7, s0, LED_OFF
+\taddi s8, s0, UART_TX_READY_OFF
+\taddi s9, s0, UART_RX_VALID_OFF
+\taddi s10, s0, UART_RX_OFF
+\taddi s11, s0, UART_TX_OFF
+
+WAIT_A:
+\tlw t1, (s9)
+\tbeq t1, zero, WAIT_A
+\tlw t0, (s10)
+ECHO_A:
+\tlw t1, (s8)
+\tbeqz t1, ECHO_A
+\tsw t0, (s11)
+\tsw t0, (s5)
+\tsw t0, (s7)
+\tli t2, 'A'
+\tbne t0, t2, WAIT_A
+WAIT_CRorLF:
+\tlw t1, (s9)
+\tbeqz t1, WAIT_CRorLF
+\tlw t0, (s10)
+ECHO_CRorLF:
+\tlw t1, (s8)
+\tbeqz t1, ECHO_CRorLF
+\tsw t0, (s11)
+\tsw t0, (s5)
+\tsw t0, (s7)
+\tbeq t0, t2, WAIT_CRorLF
+\tli t1, '\\r'
+\tbeq t0, t1, ACCEPT_CRorLF
+\tli t1, '\\n'
+\tbne t0, t1, WAIT_A
+ACCEPT_CRorLF:
+\tla a0, string1
+\tjal PRINT_S
+\tj WAIT_A
+
+PRINT_S:
+\tlw t0, (a0)
+\tli t2, 4
+NEXTCHAR:
+\tlw t1, (s8)
+\tbeqz t1, NEXTCHAR
+\tand t1, t0, s6
+\tbnez t1, DONT_RETURN
+\tret
+DONT_RETURN:
+\tsw t1, (s11)
+\tsrli t0, t0, 8
+\tli t1, 1
+\tsub t2, t2, t1
+\tbnez t2, NEXTCHAR
+\taddi a0, a0, 4
+\tj PRINT_S
+
+halt:
+\tj halt
+
+.data
+DMEM:
+string1: .asciz "\\r\\nWelcome to CG3207..\\r\\n"
+.align 9
+STACK_INIT:
 `
   };
   
@@ -3769,6 +4399,29 @@ function executeOne() {
   instructionCount++;
   pc = decodeAndExecute(instr32, addr);
   lastChangedReg = lastExecutedRd;
+
+  // Process automated delayed sequence sending if active
+  if (autoSeqPending && autoSeqQueue.length > 0) {
+    if (instructionCount >= autoSeqNextTargetInstr) {
+      const nextByte = autoSeqQueue.shift();
+      uartRxQueue.push(nextByte);
+      if (autoSeqQueue.length > 0) {
+        autoSeqNextTargetInstr = instructionCount + autoSeqDelayInstr;
+      } else {
+        autoSeqPending = false;
+        const btn = document.getElementById('uartSendBtn');
+        const statusEl = document.getElementById('uartAutoSendStatus');
+        if (btn) {
+          btn.innerText = 'Send';
+          btn.style.background = '';
+        }
+        if (statusEl) statusEl.innerText = 'Buffered send complete!';
+      }
+      updatePeripherals();
+      updateMemoryView();
+    }
+  }
+
   return line;
 }
 
@@ -4010,6 +4663,19 @@ function resetState() {
   sevsegState = '00000000';
   dipSwitches = 0;
   pbState = 0;
+  // Reset UART Terminal display & RX queue
+  uartTxBuffer = '';
+  uartRxQueue = [];
+  autoSeqPending = false;
+  autoSeqQueue = [];
+  const btnEl = document.getElementById('uartSendBtn');
+  if (btnEl) {
+    btnEl.innerText = 'Send';
+    btnEl.style.background = '';
+  }
+  const statusEl = document.getElementById('uartAutoSendStatus');
+  if (statusEl) statusEl.innerText = '';
+  updatePeripherals();
   updateRegisters();
   updateMemoryView();
   updateDisassembly();

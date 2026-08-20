@@ -4,7 +4,7 @@
 
 **RISC-V Simulator** is a high-performance, single-file web application (`riscv_simulator.html`) that delivers a full-featured **RISC-V RV32GC (RV32I + M + A + F + D + C) Assembler, Emulator, and Visual Debugger**. 
 
-Designed for hardware architects, computer architecture students, and embedded software developers, the tool combines a syntax-highlighted assembly code editor, two-pass assembler, non-blocking execution engine, real-time disassembly viewer, step-by-step debugger with back-stepping history, interactive memory explorer, configurable instruction cycle timing, and a hardware-accurate simulation of the **Digilent Nexys 4 FPGA Board**.
+Designed for hardware architects, computer architecture students, and embedded software developers, the tool combines a syntax-highlighted assembly code editor, two-pass assembler, non-blocking execution engine, real-time disassembly viewer, step-by-step debugger with back-stepping history, interactive memory explorer, configurable instruction cycle timing, a hardware-accurate simulation of the **Digilent Nexys 4 FPGA Board**, a standard 16550 **UART Serial Console**, and pre-loaded RISC-V assembly example programs (`DIP_to_LED.asm`, `HelloWorld.asm`, `HelloWorld_jal_jalr.asm`).
 
 ---
 
@@ -45,53 +45,63 @@ The simulator models the standard 32 32-bit integer registers (`x0` / `zero` thr
 ### 3.3 Register Interaction & Editing Modes
 | Gesture | Action Mode | Behavioral Description |
 |---------|-------------|------------------------|
-| **Single-Click** | **Localized Inline Edit** | Turns the target table cell into an active `contenteditable` inline input field with auto-selected text for instant localized value edits. |
+| **Single-Click** | **Localized Inline Edit** | Turns the target table cell into an active `contenteditable` inline input field with auto-selected text for quick inline edits. |
 | **Double-Click** | **Centered Popup Modal Window** | Opens a modal overlay (`#regEditOverlay`) displaying register index, ABI name, current hex/decimal values, and Enter (commit) / Escape (cancel) key bindings. |
 
 ---
 
-## 4. Nexys 4 FPGA Board Simulation
+## 4. Peripherals & FPGA Board Simulation
 
-The **Peripherals Panel** implements an interactive hardware simulation of the **Digilent Nexys 4 FPGA Board**.
+The **Peripherals Panel** implements an interactive hardware simulation of the **Digilent Nexys 4 FPGA Board** and a standard 16550 **UART Serial Console**.
 
 ```
 +---------------------------------------------------------------------------------------------------+
 |                                 COMPACT NEXYS 4 FPGA PERIPHERAL BOARD                             |
 |                                                                                                   |
+|  UART Serial Console (115200 8N1) 0xFFFF0000–0xFFFF000C        RX_VALID: 0  ·  TX_READY: 1         |
+|  [Terminal Output Box]                                                                            |
+|  Line 1: [ Mode: ASCII/Hex ] [ Text Box ] [ Send ] [ Clear ]                                      |
+|  Line 2: [☑ Buffer]        [ 10 ▲▼ ] instr delay  ·  RX Queue: 0 bytes (empty)                    |
+|                                                                                                   |
 |  [P8][P7][P6][P5][P4][P3][P2]   [CLK]   [L7][L6][L5][L4][L3][L2][L1][L0]   (16 LEDs)                |
 |  LED15------------------LED9    LED8    LED7----------------------LED0                            |
 |                                                                                                   |
-|  [SW15]--------------[SW9]     [SW8]    [SW7]--------------------[SW0]   (16 Compact DIPs)        |
+|  [SW15]--------------[SW9]     [SW8]    [SW7]--------------------[SW0]   (16 Dual-Rect 24px DIPs)  |
 |                                                                                                   |
 |  Push Buttons: [L] [C] [R] (Bit 2=BTNL, Bit 1=BTNC, Bit 0=BTNR)  7-Segment: [0 0 0 0 0 0 0 0] |
 +---------------------------------------------------------------------------------------------------+
 ```
 
-### 4.1 16-LED Output Array (LED[15:0])
-The 16 LEDs are arranged in 3 distinct functional groups with distinct Catppuccin color indicators:
+### 4.1 UART Serial Console (115200 8N1) & Control Layout
+- **Title Header Layout**: Styled with `display: flex; justify-content: space-between; align-items: center; gap: 8px;`. Ensures clear visual separation between the title, address badge (`0xFFFF0000–0xFFFF000C`), and status indicators (`RX_VALID` / `TX_READY`).
+- **Settings**: 115200 Baud Rate, 8 Data Bits, No Parity, 1 Stop Bit (8N1).
+- **ASCII Mode Escape Sequence Parser (`parseAsciiEscapes`)**:
+  - `\n` -> Line Feed (LF, `0x0A` / 10), `\r` -> Carriage Return (CR, `0x0D` / 13), `\t` -> Tab (TAB, `0x09` / 9), `\0` -> Null (NUL, `0x00` / 0), `\e` -> Escape (ESC, `0x1B` / 27), `\xHH` -> Hex byte value `parseInt(HH, 16)`.
+- **Single-Row Controls Layout**:
+  - **Buffer Checkbox**: Explicitly scoped `input[type="checkbox"]` (`flex: 0 0 auto; margin: 0 2px 0 0;`) positioned immediately next to the text `'Buffer'`.
+  - **Instruction Delay Box (`#uartAutoSeqDelay`)**: 48px wide, 24px tall numeric input with `text-align: center`, horizontally separated by a 28px gap (`margin-left: 24px`) from `'Buffer'`. Includes a mouseover tooltip: `"Number of RISC-V instructions executed between sending each character in the buffered sequence"`.
+  - **RX Queue Status**: Fits on the same single row separated by a dot separator (`·`).
+- **Hardware Single-Character Buffer vs. Buffered Delay Mode**:
+  - **Unbuffered Mode (`Buffer` unchecked)**: Hardware-accurate 1-character UART buffer. Sending multi-character text retains strictly the **first byte** in `UART_RX` (`0xFFFF0004`).
+  - **Buffered Mode (`Buffer` checked)**: Queues the sequence into an instruction-delayed auto-send buffer. Delivers bytes one-by-one every $N$ instructions.
+- **Clear & Reset**: Clicking **Clear** or system **Reset** clears the Terminal output screen and empties all UART queues.
 
-| LED Subset | Color Theme | Drive Source / Function |
-|------------|-------------|--------------------------|
-| **LED[15:9]** (7 bits) | **Vibrant Cyan / Blue** (`#89b4fa`) | Displays lower Program Counter bits `PC[8:2]`. |
-| **LED[8]** (1 bit) | **Vibrant Amber / Orange** (`#fab387`) | **Divided Clock Indicator**. Blinks per instruction cycle during continuous execution; remains lit (ON) when paused. |
-| **LED[7:0]** (8 bits) | **Vibrant Green** (`#a6e3a1`) | **User Output Register**. Driven by the least significant byte written to MMIO at `0xFFFF0060`. |
+### 4.2 FPGA Board Simulation & DIP Switch Architecture
+- **Double-Height Dual-Rectangle 3D DIP Switches**: Each DIP switch is 24px tall (more than double original 11px height) containing two stacked inner rectangles (`.dip-rect-top` & `.dip-rect-bottom`).
+  - **OFF State (0)**: Top rectangle is dark/recessed inset (`#181825`); bottom rectangle is a raised tactile slider knob (`#585b70` -> `#313244` gradient).
+  - **ON State (1)**: Top rectangle is a raised glowing active knob (`#cba6f7` -> `#a6e3a1` gradient); bottom rectangle is dark/recessed inset (`#181825`).
+- **Strict Column-for-Column Vertical Alignment**: Center of LED $k$ is 100% mathematically locked to the center of DIP switch $k$ (`maxCenterDiff: 0px`). Independent row scrollbars are disabled to guarantee zero horizontal alignment dislocation at any window resolution.
 
-### 4.2 16-DIP Switch Input Array (SW[15:0])
-- **Alignment**: 16 DIP switches aligned 1-to-1 directly beneath `LED15` through `LED0`.
-- **Compact Sizing**: Switches are styled with compact 16px x 11px bounds and tight 1px gaps (`gap: 1px`), achieving a 319px total board width that fits mobile viewports without horizontal scrolling.
-- **Sublabel Distance**: `.dip-sublabel` (`SW15`..`SW0`) styled with `margin-top: 3px`, matching the exact visual spacing of the LED sublabel circles.
-- **MMIO Access**: Read at address `0xFFFF0064`.
-
-### 4.3 Push Buttons (`PERIPH_PB` at `0xFFFF0068`)
-- **Bit Mapping (`[2:0]`)**:
-  - **Bit 2 (`0x4`)**: **BTNL** (Left Push Button)
-  - **Bit 1 (`0x2`)**: **BTNC** (Center Push Button)
-  - **Bit 0 (`0x1`)**: **BTNR** (Right Push Button)
-- **Toggle Behavior**: Click button element (`L`, `C`, `R`) to toggle active press/release state.
-
-### 4.4 7-Segment Display (`PERIPH_SEVENSEG` at `0xFFFF0080`)
-- **Rendering**: 8-digit hexadecimal display rendered using inline SVG 7-segment digits (`0`–`9`, `A`–`F`).
-- **Alignment**: Centered inside the bounding box (`justify-content: center; gap: 8px; padding: 10px 12px;`) with balanced 8px inter-digit spacing.
+### 4.3 Built-In Assembly Example Programs
+Selectable directly from the main toolbar dropdown (`#exampleSelect`):
+1. **Basic**: Basic arithmetic sum computation (`a + b + c`).
+2. **Fibonacci**: Computes Fibonacci sequence `fib(10) = 55`.
+3. **Factorial**: Computes `5! = 120`.
+4. **Loop & Array**: Sums an array of 5 integer words in memory.
+5. **I/O & M-Ext**: Demonstrates M-extension `mul`, `div`, `rem` instructions.
+6. **DIP to LED (`DIP_to_LED.asm`)**: Real-time DIP switch polling (`0xFFFF0064`) and LED driving (`0xFFFF0060`) with delay loop.
+7. **Hello World (`HelloWorld.asm`)**: Polled UART RX/TX console program that waits for `A\r` or `A\n` input, updates 7-segment/LED displays, and prints `"\r\nWelcome to CG3207..\r\n"`.
+8. **Hello World Subroutine (`HelloWorld_jal_jalr.asm`)**: Subroutine implementation of `HelloWorld.asm` using RISC-V function calls (`jal PRINT_S` and `ret` / `jalr zero, 0(ra)`).
 
 ---
 
@@ -113,7 +123,7 @@ The 16 LEDs are arranged in 3 distinct functional groups with distinct Catppucci
            | End of RAM Bounds (4 MB)          |
            +-----------------------------------+
 0xFFFF0000 +-----------------------------------+
-           | MMIO Peripheral Region            |  Row Direction: Increasing (+8 B/row)
+           | MMIO Peripheral & UART Region     |  Row Direction: Increasing (+8 B/row)
 0xFFFF00FF +-----------------------------------+
 ```
 
@@ -122,22 +132,19 @@ The 16 LEDs are arranged in 3 distinct functional groups with distinct Catppucci
 | **Code (.text)** | `0x00010000` | Increasing (`+8` B/row) | Executable instruction memory stream. |
 | **Data (.data)** | `0x00020000` | Increasing (`+8` B/row) | Initialized static variables, strings, and constants. Steps upwards to higher addresses. |
 | **Stack (.stack)**| `0x00020200` | **Decreasing (`-8` B/row)** | **Stack Region**. Steps downwards to lower addresses matching RISC-V stack push growth. |
-| **MMIO Region** | `0xFFFF0000` | Increasing (`+8` B/row) | Memory-mapped I/O peripherals (`0xFFFF0000`–`0xFFFF00FF`). |
+| **MMIO Region** | `0xFFFF0000` | Increasing (`+8` B/row) | Memory-mapped I/O peripherals & UART (`0xFFFF0000`–`0xFFFF00FF`). |
 
 ### 5.2 Complete MMIO Address Map
-| MMIO Address | Size | Access | Symbol | Description & Row Annotations |
-|--------------|------|--------|--------|-------------------------------|
-| `0xFFFF0000` | 1 B  | Read   | `MMIO_GETC` | Console Input character buffer |
-| `0xFFFF0004` | 1 B  | Write  | `MMIO_PUTC` | Console Output character stream |
-| `0xFFFF0008` | 1 B  | Read   | `MMIO_STATUS` | Console Input Status (Bit 0 = 1 if input available) |
-| `0xFFFF0060` | 4 B  | Write  | `PERIPH_LED` | User Output LEDs (bits `[7:0]`). Row annotation: `[LED WO 0xFFFF0060 · DIP RO 0xFFFF0064]` |
-| `0xFFFF0064` | 4 B  | Read   | `PERIPH_DIP` | 16-bit DIP Switch inputs. Row annotation: `[LED WO 0xFFFF0060 · DIP RO 0xFFFF0064]` |
-| `0xFFFF0068` | 4 B  | Read   | `PERIPH_PB` | Push Buttons (Bit 2=BTNL, Bit 1=BTNC, Bit 0=BTNR). Row annotation: `[PB RO 0xFFFF0068]` |
-| `0xFFFF0080` | 4 B  | Write  | `PERIPH_SEVENSEG` | 32-bit value displayed as 8 hex digits. Row annotation: `[7SEG WO 0xFFFF0080]` |
-
-### 5.3 Memory View Edits & Peripheral Synchronization
-- **Unsigned 32-Bit Addressing**: All memory addresses are formatted using `(base >>> 0)` to prevent 32-bit signed bitwise sign-extension (`0xffff0000`).
-- **Read/Write MMIO Persistence**: `handleMMIORead(addr, size)` and `handleMMIOWrite(addr, val, size)` handle single-byte and 4-byte word operations for all peripheral registers (`PERIPH_LED`, `PERIPH_DIP`, `PERIPH_PB`, `PERIPH_SEVENSEG`). Memory cell edits directly in the MMIO tab persist permanently across re-renders and immediately update the Peripherals visualization.
+| MMIO Address | Size | Access | Symbol | Description & Behavioral Rules | Row Annotation in Memory View |
+|--------------|------|--------|--------|--------------------------------|-------------------------------|
+| `0xFFFF0000` | 4 B  | Read   | `UART_RX_VALID` | Bit 0 = 1 if data is available in `UART_RX` queue (`uartRxQueue.length > 0`). | `[UART RX VALID RO 0xFFFF0000 · UART RX RO 0xFFFF0004]` |
+| `0xFFFF0004` | 4 B  | Read   | `UART_RX` | Reading returns and pops the next 8-bit character from `uartRxQueue`. | `[UART RX VALID RO 0xFFFF0000 · UART RX RO 0xFFFF0004]` |
+| `0xFFFF0008` | 4 B  | Read   | `UART_TX_READY` | Bit 0 = 1 when `UART_TX` is ready to receive data (always returns `1`). | `[UART TX READY RO 0xFFFF0008 · UART TX WO 0xFFFF000C]` |
+| `0xFFFF000C` | 4 B  | Write  | `UART_TX` | Writing an 8-bit character transmits it to the UART TX output terminal. | `[UART TX READY RO 0xFFFF0008 · UART TX WO 0xFFFF000C]` |
+| `0xFFFF0060` | 4 B  | Write  | `PERIPH_LED` | User Output LEDs (bits `[7:0]`). | `[LED WO 0xFFFF0060 · DIP RO 0xFFFF0064]` |
+| `0xFFFF0064` | 4 B  | Read   | `PERIPH_DIP` | 16-bit DIP Switch inputs (`SW15`..`SW0`). | `[LED WO 0xFFFF0060 · DIP RO 0xFFFF0064]` |
+| `0xFFFF0068` | 4 B  | Read   | `PERIPH_PB` | Push Buttons (Bit 2=BTNL, Bit 1=BTNC, Bit 0=BTNR). | `[PB RO 0xFFFF0068]` |
+| `0xFFFF0080` | 4 B  | Write  | `PERIPH_SEVENSEG` | 32-bit value displayed as 8 hex digits on the 7-Segment display. | `[7SEG WO 0xFFFF0080]` |
 
 ---
 
@@ -175,7 +182,7 @@ The simulator supports the complete **RV32GC** instruction set architecture:
 |-----------|----------|------------------------|
 | **RV32I** | Base Integer | `lui`, `auipc`, `jal`, `jalr`, `beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu`, `lb`, `lh`, `lw`, `lbu`, `lhu`, `sb`, `sh`, `sw`, `addi`, `slti`, `sltiu`, `xori`, `ori`, `andi`, `slli`, `srli`, `srai`, `add`, `sub`, `sll`, `slt`, `sltu`, `xor`, `srl`, `sra`, `or`, `and`, `fence`, `ecall`, `ebreak` |
 | **RV32M** | Multiplication & Division | `mul`, `mulh`, `mulhsu`, `mulhu`, `div`, `divu`, `rem`, `remu` |
-| **RV32A** | Atomic Operations | `lr.w`, `sc.w`, `amoswap.w`, `amoadd.w`, `amoxor.w`, `amoand.w`, `amoor.w`, `amomin.w`, `amomax.w`, `amominu.w`, `amomaxu.w` |
+| **RV32A** | Atomic Operations | `lr.w`, `sc.w`, `amoswap.w`, `amoadd.w`, `amoxor.w`, `amoor.w`, `amomin.w`, `amomax.w`, `amominu.w`, `amomaxu.w` |
 | **RV32F** | Single-Precision Floating-Point | `flw`, `fsw`, `fmadd.s`, `fmsub.s`, `fnmsub.s`, `fnmadd.s`, `fadd.s`, `fsub.s`, `fmul.s`, `fdiv.s`, `fsqrt.s`, `fsgnj.s`, `fsgnjn.s`, `fsgnjx.s`, `fmin.s`, `fmax.s`, `fcvt.w.s`, `fcvt.wu.s`, `fmv.x.w`, `feq.s`, `flt.s`, `fle.s`, `fclass.s`, `fcvt.s.w`, `fcvt.s.wu`, `fmv.w.x` |
 | **RV32D** | Double-Precision Floating-Point | `fld`, `fsd`, `fmadd.d`, `fmsub.d`, `fnmsub.d`, `fnmadd.d`, `fadd.d`, `fsub.d`, `fmul.d`, `fdiv.d`, `fsqrt.d`, `fsgnj.d`, `fsgnjn.d`, `fsgnjx.d`, `fmin.d`, `fmax.d`, `fcvt.s.d`, `fcvt.d.s`, `feq.d`, `flt.d`, `fle.d`, `fclass.d`, `fcvt.w.d`, `fcvt.wu.d`, `fcvt.d.w`, `fcvt.d.wu` |
 | **RV32C** | Compressed 16-bit Instructions | `c.nop`, `c.addi`, `c.jal`, `c.li`, `c.addi16sp`, `c.lui`, `c.srli`, `c.srai`, `c.andi`, `c.sub`, `c.xor`, `c.or`, `c.and`, `c.j`, `c.beqz`, `c.bnez`, `c.slli`, `c.lwsp`, `c.jr`, `c.mv`, `c.ebreak`, `c.jalr`, `c.add`, `c.swsp`, `c.lw`, `c.sw` |
@@ -184,7 +191,7 @@ The simulator supports the complete **RV32GC** instruction set architecture:
 
 ---
 
-## 9. Version History (v1.0 – v3.8)
+## 9. Version History (v1.0 – v6.0)
 
 | Version | Milestone Description & Features Implemented |
 |---------|----------------------------------------------|
@@ -197,4 +204,16 @@ The simulator supports the complete **RV32GC** instruction set architecture:
 | **v3.5** | MMIO read persistence fix, DIP switch sublabel margin adjustment. |
 | **v3.6** | Register column gap reduction, 7-segment display centering and spacing. |
 | **v3.7** | Push Button bit mapping fix (`[2:0] → Bit 2=BTNL, Bit 1=BTNC, Bit 0=BTNR`). |
-| **v3.8** | **Code Base Refactoring & Cleanup**: Removed obsolete duplicate synchronous `runProgram()` definition, formatted line breaks (`function sext`), merged script blocks, and reorganized source codebase into 11 structured sections with comprehensive block comments. |
+| **v3.8** | Code base refactoring and cleanup, unified script blocks, removed duplicate functions. |
+| **v4.0** | Standard 16550 UART Serial Console (115200 8N1) with `UART_RX_VALID`, `UART_RX`, `UART_TX_READY`, and `UART_TX`. |
+| **v4.1** | ASCII Escape Sequence Encoding (`parseAsciiEscapes`) for `\n`, `\r`, `\t`, `\0`, `\b`, `\e`, `\xHH`, octal. |
+| **v4.2** | Automated Delayed Sequence Generator with instruction-accurate delivery integrated in `executeOne()`. |
+| **v4.3** | Unified Auto-Send UI & Default 10-Instruction Delay. |
+| **v4.4** | UART Header Spacing Fix & 3 New Example Programs (`DIP_to_LED.asm`, `HelloWorld.asm`, `HelloWorld_jal_jalr.asm`). |
+| **v4.5** | Assembler Immediate Character Literal Fix (`parseImm`). |
+| **v4.6** | Refined UART Console UI & Single-Character Hardware Buffer Rule. |
+| **v4.7** | Single-Row Control Layout & Delay Spinner Ergonomics. |
+| **v4.8** | Buffer Proximity Fix & 26px Ultra-Compact Delay Box. |
+| **v4.9** | Balanced 38px Instruction Delay Box & 18px Horizontal Separation. |
+| **v5.0** | Spacious 48px Instruction Delay Box & 28px Horizontal Separation. |
+| **v6.0** | **Double-Height Dual-Rectangle 3D DIP Switches & Locked LED Column Alignment**: Doubled DIP switch height to 24px using dual-rectangle 3D rocker switches (`.dip-rect-top` & `.dip-rect-bottom`). OFF state displays dark recessed top and raised tactile bottom slider knob; ON state displays raised glowing active top knob and dark recessed bottom. Eliminated independent row scrollbars so LED $k$ and DIP $k$ maintain 100% mathematical center alignment (`maxCenterDiff: 0px`). |
