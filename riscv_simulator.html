@@ -16,11 +16,15 @@
     }
 
     body {
-      font-family: 'Consolas', 'Courier New', monospace;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 500;
       background: #1e1e2e;
       color: #cdd6f4;
       height: 100vh;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
     }
 
     .container {
@@ -43,25 +47,29 @@
     .header h1 {
       font-size: 16px;
       color: #cba6f7;
-      font-weight: 600;
+      font-weight: 650;
+      letter-spacing: 0.2px;
     }
 
     .header .subtitle {
       font-size: 13px;
-      color: #6c7086;
+      color: #9399b2;
+      font-weight: 500;
     }
 
     .header .header-info {
-      font-size: 12px;
-      color: #a6adc8;
+      font-size: 12.5px;
+      color: #bac2de;
+      font-weight: 500;
       margin-left: auto;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
     }
 
     .header .header-info a {
       color: #89b4fa;
+      font-weight: 550;
       text-decoration: none;
     }
 
@@ -167,35 +175,74 @@
     /* Toolbar */
     .toolbar {
       display: flex;
-      gap: 6px;
+      flex-direction: column;
+      gap: 5px;
       padding: 6px 12px;
       background: #181825;
       border-bottom: 1px solid #313244;
-      flex-wrap: wrap;
+      align-items: stretch;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .toolbar-row {
+      display: flex;
       align-items: center;
+      gap: 6px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .toolbar-row-primary {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-row-secondary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-row-status {
+      display: flex;
+      align-items: center;
+      min-height: 16px;
+    }
+
+    .toolbar-btn-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .toolbar button {
       background: #313244;
       color: #cdd6f4;
-      border: none;
-      padding: 0 12px;
+      border: 1px solid #45475a;
+      padding: 0 10px;
       height: 28px;
-      line-height: 28px;
+      line-height: 26px;
       box-sizing: border-box;
-      font-size: 13px;
+      font-size: 12.5px;
+      font-weight: 550;
       cursor: pointer;
       border-radius: 4px;
       font-family: inherit;
-      transition: background 0.15s;
+      transition: background 0.15s, border-color 0.15s;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 4px;
+      white-space: nowrap;
     }
 
     .toolbar button:hover {
       background: #45475a;
+      border-color: #585b70;
     }
 
     .toolbar button:disabled,
@@ -206,6 +253,7 @@
       cursor: not-allowed !important;
       pointer-events: auto !important;
       box-shadow: none !important;
+      border-color: transparent !important;
     }
 
     .toolbar button:disabled:hover,
@@ -216,7 +264,8 @@
     .toolbar button.primary {
       background: #cba6f7;
       color: #1e1e2e;
-      font-weight: 600;
+      border-color: #b4befe;
+      font-weight: 650;
     }
 
     .toolbar button.primary:hover {
@@ -232,6 +281,8 @@
     .toolbar button.danger {
       background: #f38ba8;
       color: #1e1e2e;
+      border-color: #eba0ac;
+      font-weight: 600;
     }
 
     .toolbar button.danger:hover {
@@ -246,39 +297,47 @@
     }
 
     .toolbar .status {
-      font-size: 13px;
-      color: #a6adc8;
-      margin-left: 6px;
+      font-size: 12px;
+      color: #bac2de;
+      font-weight: 500;
+      line-height: 1.3;
+      word-break: break-word;
     }
 
     .toolbar .stats {
-      font-size: 13px;
+      font-size: 12px;
       color: #a6e3a1;
-      margin-left: auto;
+      font-weight: 600;
       white-space: nowrap;
+      margin-left: auto;
+      margin-right: 12px;
     }
 
     .toolbar #fileLoader {
       display: none;
     }
 
-    .toolbar label {
-      font-size: 13px;
-      color: #a6adc8;
-      display: flex;
+    .example-label {
+      font-size: 12px;
+      font-weight: 550;
+      color: #bac2de;
+      display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
 
     .toolbar select,
-    .toolbar input[type="text"] {
+    #exampleSelect {
       background: #313244;
       border: 1px solid #45475a;
       color: #cdd6f4;
-      padding: 4px 6px;
-      font-size: 13px;
-      font-family: inherit;
+      padding: 3px 6px;
+      font-size: 12px;
+      font-weight: 550;
       border-radius: 4px;
+      height: 28px;
+      font-family: inherit;
+      outline: none;
     }
 
     /* Right Panel Tabs */
@@ -292,9 +351,10 @@
       flex: 1;
       background: none;
       border: none;
-      color: #6c7086;
+      color: #a6adc8;
       padding: 8px 0;
       font-size: 13px;
+      font-weight: 550;
       cursor: pointer;
       font-family: inherit;
       border-bottom: 2px solid transparent;
@@ -303,10 +363,12 @@
 
     .tab-bar button:hover {
       color: #cdd6f4;
+      background: rgba(255, 255, 255, 0.03);
     }
 
     .tab-bar button.active {
       color: #cba6f7;
+      font-weight: 650;
       border-bottom-color: #cba6f7;
     }
 
@@ -331,7 +393,8 @@
 
     .reg-table th {
       padding: 6px 4px;
-      color: #6c7086;
+      color: #bac2de;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-weight: 600;
       border-bottom: 1px solid #313244;
       position: sticky;
@@ -368,6 +431,8 @@
       padding: 4px;
       border-bottom: 1px solid #181825;
       vertical-align: middle;
+      font-family: 'Consolas', 'Roboto Mono', 'SF Mono', monospace;
+      font-weight: 550;
     }
 
     .reg-table tr:hover td {
@@ -376,6 +441,7 @@
 
     .reg-table .reg-name {
       color: #89b4fa;
+      font-weight: 600;
     }
 
     .reg-table .reg-val {
@@ -387,6 +453,7 @@
 
     .reg-table .reg-changed {
       color: #f9e2af;
+      font-weight: 650;
     }
 
     .reg-table .reg-editable {
@@ -408,6 +475,8 @@
       gap: 4px;
       margin-bottom: 6px;
       align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-weight: 500;
     }
 
     .mem-toolbar input {
@@ -415,18 +484,20 @@
       border: 1px solid #45475a;
       color: #cdd6f4;
       padding: 4px 6px;
-      font-size: 13px;
-      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 550;
+      font-family: 'Consolas', 'Roboto Mono', monospace;
       width: 110px;
       border-radius: 3px;
     }
 
     .mem-toolbar button {
       background: #313244;
-      border: none;
+      border: 1px solid #45475a;
       color: #cdd6f4;
       padding: 4px 9px;
-      font-size: 13px;
+      font-size: 12.5px;
+      font-weight: 550;
       cursor: pointer;
       border-radius: 3px;
       font-family: inherit;
@@ -439,7 +510,7 @@
     .mem-toolbar button.gear {
       background: #45475a;
       color: #f5c2e7;
-      font-size: 15px;
+      font-size: 14px;
       padding: 3px 10px;
     }
 
@@ -448,14 +519,17 @@
     }
 
     .mem-view {
+      font-family: 'Consolas', 'Roboto Mono', 'SF Mono', monospace;
       font-size: 13px;
+      font-weight: 550;
       line-height: 1.6;
       overflow-x: auto;
       word-wrap: break-word;
     }
 
     .mem-view .addr {
-      color: #6c7086;
+      color: #9399b2;
+      font-weight: 550;
       white-space: nowrap;
       display: inline-block;
       min-width: 10ch;
@@ -471,7 +545,13 @@
       margin: 0 1px;
     }
 
-    .mem-view span.val:hover {
+    .mem-view span.val.readonly-code {
+      color: #f5c2e7;
+      cursor: default !important;
+      opacity: 0.88;
+    }
+
+    .mem-view span.val:hover:not(.readonly-code) {
       background: rgba(203, 166, 247, 0.2);
     }
 
@@ -501,15 +581,17 @@
     }
 
     .mem-legend {
-      font-size: 11px;
-      color: #6c7086;
-      padding: 4px 8px;
+      font-size: 11.5px;
+      color: #bac2de;
+      font-weight: 500;
+      padding: 5px 8px;
       border-bottom: 1px solid #313244;
     }
 
     .mmio-desc {
-      font-size: 11px;
-      color: #7f849c;
+      font-size: 11.5px;
+      color: #b4befe;
+      font-weight: 500;
     }
 
     /* Machine / Disassembly views */
@@ -518,24 +600,29 @@
       border-collapse: collapse;
       font-size: 13px;
       table-layout: fixed;
+      font-family: 'Consolas', 'Roboto Mono', 'SF Mono', monospace;
+      font-weight: 500;
     }
 
     .code-list th {
       text-align: left;
-      padding: 2px 6px;
-      color: #6c7086;
+      padding: 4px 6px;
+      color: #bac2de;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-weight: 600;
       border-bottom: 1px solid #313244;
+      background: #181825;
     }
 
     .code-list td {
-      padding: 1px 6px;
+      padding: 2px 6px;
       vertical-align: top;
       border-bottom: 1px solid #181825;
     }
 
     .code-list .addr {
-      color: #6c7086;
+      color: #9399b2;
+      font-weight: 550;
       white-space: nowrap;
       min-width: 8ch;
       width: 8ch;
@@ -543,7 +630,7 @@
 
     .code-list .bytes {
       color: #f5c2e7;
-      font-family: 'Consolas', 'Courier New', monospace;
+      font-weight: 550;
       word-break: break-all;
       overflow-wrap: break-word;
       min-width: 10ch;
@@ -1659,25 +1746,118 @@
 
       .toolbar {
         padding: 6px 8px;
-        gap: 4px;
-        font-size: 11px;
+        gap: 6px;
+        font-size: 12px;
         width: 100%;
         max-width: 100vw;
         box-sizing: border-box;
       }
 
-      .toolbar button {
-        padding: 0 6px;
-        height: 26px;
-        font-size: 11px;
+      /* Mobile 4-row layout */
+      .toolbar-row-primary {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        width: 100%;
+      }
+
+      /* Row 1: Open, Save, Undo, Redo, Find */
+      .toolbar-group-file-edit {
+        display: flex;
+        width: 100%;
+        gap: 4px;
+      }
+
+      .toolbar-group-file-edit button {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 0 2px;
+        height: 32px;
+        font-size: 11.5px;
+        font-weight: 550;
+        justify-content: center;
         gap: 2px;
       }
 
-      .toolbar select,
-      #exampleSelect {
-        max-width: 125px;
+      /* Row 2: Assemble, Run/Resume, Step, Back, Reset */
+      .toolbar-group-execution {
+        display: flex;
+        width: 100%;
+        gap: 4px;
+      }
+
+      .toolbar-group-execution button {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 0 2px;
+        height: 32px;
+        font-size: 11.5px;
+        font-weight: 550;
+        justify-content: center;
+        gap: 2px;
+      }
+
+      .toolbar-row-secondary {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        width: 100%;
+      }
+
+      /* Row 3: Example dropdown list, Dump txt, Dump data */
+      .toolbar-group-examples-dumps {
+        display: flex;
+        width: 100%;
+        gap: 4px;
+        align-items: center;
+      }
+
+      .toolbar-group-examples-dumps .example-label {
+        flex: 1.2 1 0;
+        min-width: 0;
+      }
+
+      .toolbar-group-examples-dumps select {
+        width: 100%;
+        max-width: 100%;
+        height: 32px;
+        font-size: 11.5px;
+      }
+
+      .toolbar-group-examples-dumps button {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 0 4px;
+        height: 32px;
+        font-size: 11.5px;
+        justify-content: center;
+      }
+
+      /* Row 4: Cycles & Segments aligned with Cycles and Instructions text */
+      .toolbar-group-config-stats {
+        display: flex;
+        width: 100%;
+        gap: 4px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .toolbar-group-config-stats button {
+        flex: 0 0 auto;
+        padding: 0 8px;
+        height: 32px;
+        font-size: 11.5px;
+      }
+
+      .toolbar .stats {
         font-size: 11px;
-        padding: 2px 4px;
+        margin-left: auto;
+        margin-right: 0;
+        text-align: right;
+      }
+
+      .toolbar .status {
+        font-size: 11.5px;
       }
 
       .editor-wrapper {
@@ -1776,7 +1956,7 @@
       }
 
       .mem-legend {
-        font-size: 10px;
+        font-size: 10.5px;
         line-height: 1.3;
       }
 
@@ -1830,22 +2010,6 @@
 
       .header .subtitle {
         display: none;
-      }
-
-      .toolbar button {
-        padding: 0 5px;
-        height: 24px;
-        font-size: 10.5px;
-      }
-
-      .toolbar select,
-      #exampleSelect {
-        max-width: 110px;
-        font-size: 10.5px;
-      }
-
-      .editor-wrapper {
-        height: 300px;
       }
     }
 
@@ -1918,61 +2082,58 @@
           <span class="header-info"><a href="https://nus-cg3207.github.io/labs" target="_blank"
               rel="noopener noreferrer">https://nus-cg3207.github.io/labs</a> &nbsp;Vibe coded by Rajesh Panicker</span>
         </div>
-        <div class="toolbar" style="flex-direction:column;gap:5px;padding:6px 10px;align-items:stretch;">
+        <div class="toolbar" id="mainToolbar">
           <!-- Row 1: Primary Action Buttons -->
-          <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
-            <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
-            <button id="btnOpen" onclick="document.getElementById('fileLoader').click()">📂 Open</button>
-            <button id="btnSave" onclick="saveFile()" title="Save the edited source code as a .asm file">💾
-              Save</button>
-            <button id="btnUndo" onclick="editorHistory.undo()" title="Undo last edit (Ctrl+Z)">↶ Undo</button>
-            <button id="btnRedo" onclick="editorHistory.redo()" title="Redo last undone edit (Ctrl+Y)">↷ Redo</button>
-            <button id="btnFind" onclick="openFindReplace(false)"
-              title="Find &amp; Replace in code editor (Ctrl+F / Ctrl+H)">🔍 Find</button>
-            <button id="btnAssemble" onclick="assembleOnly()"
-              title="Assemble and load program into memory (Ctrl+Enter)">⚙ Assemble</button>
-            <button id="runPauseBtn" onclick="toggleRunPause()" title="Run the assembled program (F5)">▶ Run</button>
-            <button id="btnStep" onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
-            <button id="btnBack" onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
-            <button id="btnReset" onclick="resetAll()" title="Reset execution state">⟲ Reset</button>
-            <button onclick="toggleCyclesPanel()" title="Configure cycles per instruction type" class="gear">⏱
-              Cycles…</button>
-            <button onclick="toggleMemSegmentsPanel()" title="Configure memory segment addresses" class="gear">🗺
-              Segments…</button>
+          <div class="toolbar-row toolbar-row-primary">
+            <!-- Group 1: File & Edit Operations (Mobile Row 1) -->
+            <div class="toolbar-btn-group toolbar-group-file-edit">
+              <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
+              <button id="btnOpen" onclick="document.getElementById('fileLoader').click()" title="Open RISC-V assembly file">📂 Open</button>
+              <button id="btnSave" onclick="saveFile()" title="Save the edited source code as a .asm file">💾 Save</button>
+              <button id="btnUndo" onclick="editorHistory.undo()" title="Undo last edit (Ctrl+Z)">↶ Undo</button>
+              <button id="btnRedo" onclick="editorHistory.redo()" title="Redo last undone edit (Ctrl+Y)">↷ Redo</button>
+              <button id="btnFind" onclick="openFindReplace(false)" title="Find &amp; Replace in code editor (Ctrl+F / Ctrl+H)">🔍 Find</button>
+            </div>
+            <!-- Group 2: Execution Controls (Mobile Row 2) -->
+            <div class="toolbar-btn-group toolbar-group-execution">
+              <button id="btnAssemble" onclick="assembleOnly()" title="Assemble and load program into memory (Ctrl+Enter)">⚙ Assemble</button>
+              <button id="runPauseBtn" onclick="toggleRunPause()" title="Run the assembled program (F5)">▶ Run</button>
+              <button id="btnStep" onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
+              <button id="btnBack" onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
+              <button id="btnReset" onclick="resetAll()" title="Reset execution state">⟲ Reset</button>
+            </div>
           </div>
-          <!-- Row 2: Example Selector, Dump Buttons, and Performance Stats -->
-          <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
-            <label style="font-size:12px;color:#a6adc8;display:inline-flex;align-items:center;gap:4px;">Example:
-              <select id="exampleSelect" onchange="loadExample(this.value)"
-                style="background:#313244;border:1px solid #45475a;color:#cdd6f4;padding:2px 4px;font-size:12px;border-radius:4px;max-width:130px;text-overflow:ellipsis;"
-                title="Select an example RISC-V program">
-                <option value="basic" title="Basic sum = a + b + c">Basic</option>
-                <option value="rars_syscalls" title="RARS ecall Syscalls Demo (rars_syscalls.asm)">RARS Syscalls
-                </option>
-                <option value="fib" title="Fibonacci sequence">Fibonacci</option>
-                <option value="fact" title="Factorial computation">Factorial</option>
-                <option value="loop" title="Loop & Array">Loop &amp; Array</option>
-                <option value="io" title="I/O & M-Extension">I/O &amp; M-Ext</option>
-                <option value="dip_led" title="DIP to LED (DIP_to_LED.asm)">DIP to LED</option>
-                <option value="hello_world" title="Hello World (HelloWorld.asm)">Hello World</option>
-                <option value="hello_jal" title="Hello World Subroutine (HelloWorld_jal_jalr.asm)">Hello Subroutine
-                </option>
-                <option value="circle_accel" title="Circle & Delay Accel (Circle_delay_accel.asm)">Circle &amp; Accel
-                </option>
-              </select>
-            </label>
-            <button id="btnDumpTxt" onclick="dumpTextSegment()" title="Dump code (text) memory to AA_IROM.mem">💾 Dump
-              txt</button>
-            <button id="btnDumpData" onclick="dumpDataSegment()" title="Dump data memory to AA_DMEM.mem">💾 Dump
-              data</button>
-            <span class="stats" id="statsBar"
-              style="margin-left:auto;font-size:12px;color:#a6e3a1;white-space:nowrap;">Cycles: 0 &nbsp;|&nbsp; Instr:
-              0</span>
+          <!-- Row 2: Example Selector, Dump Buttons, Config & Stats -->
+          <div class="toolbar-row toolbar-row-secondary">
+            <!-- Group 3: Examples & Dumps (Mobile Row 3) -->
+            <div class="toolbar-btn-group toolbar-group-examples-dumps">
+              <label class="example-label" title="Select an example RISC-V program">Example:
+                <select id="exampleSelect" onchange="loadExample(this.value)">
+                  <option value="basic" title="Basic sum = a + b + c">Basic</option>
+                  <option value="rars_syscalls" title="RARS ecall Syscalls Demo (rars_syscalls.asm)">RARS Syscalls</option>
+                  <option value="fib" title="Fibonacci sequence">Fibonacci</option>
+                  <option value="fact" title="Factorial computation">Factorial</option>
+                  <option value="loop" title="Loop & Array">Loop &amp; Array</option>
+                  <option value="io" title="I/O & M-Extension">I/O &amp; M-Ext</option>
+                  <option value="dip_led" title="DIP to LED (DIP_to_LED.asm)">DIP to LED</option>
+                  <option value="hello_world" title="Hello World (HelloWorld.asm)">Hello World</option>
+                  <option value="hello_jal" title="Hello World Subroutine (HelloWorld_jal_jalr.asm)">Hello Subroutine</option>
+                  <option value="circle_accel" title="Circle & Delay Accel (Circle_delay_accel.asm)">Circle &amp; Accel</option>
+                </select>
+              </label>
+              <button id="btnDumpTxt" onclick="dumpTextSegment()" title="Dump code (text) memory to AA_IROM.mem">💾 Dump txt</button>
+              <button id="btnDumpData" onclick="dumpDataSegment()" title="Dump data memory to AA_DMEM.mem">💾 Dump data</button>
+            </div>
+            <!-- Group 4: Timing, Segments & Stats (Mobile Row 4) -->
+            <div class="toolbar-btn-group toolbar-group-config-stats">
+              <button id="btnCycles" onclick="toggleCyclesPanel()" title="Configure cycles per instruction type" class="gear">⏱ Cycles…</button>
+              <button id="btnSegments" onclick="toggleMemSegmentsPanel()" title="Configure memory segment addresses" class="gear">🗺 Segments…</button>
+              <span class="stats" id="statsBar">Cycles: 0 &nbsp;|&nbsp; Instr: 0</span>
+            </div>
           </div>
           <!-- Row 3: Status Message Line -->
-          <div style="display:flex;align-items:center;min-height:16px;">
-            <span class="status" id="statusBar"
-              style="font-size:11px;color:#a6adc8;line-height:1.3;word-break:break-word;">Ready</span>
+          <div class="toolbar-row toolbar-row-status">
+            <span class="status" id="statusBar">Ready</span>
           </div>
         </div>
         <div class="editor-wrapper">
@@ -2048,7 +2209,7 @@
           <div class="mem-legend">
             groups of 4 bytes = one 32-bit word &nbsp;·&nbsp; <span style="color:#cba6f7">label</span> = symbol at row
             &nbsp;·&nbsp;
-            <span style="color:#ffe08f;font-weight:bold">highlighted bytes</span> were written at runtime
+            <span style="color:#ffe08f;font-weight:bold">highlighted bytes</span> were written at runtime &nbsp;·&nbsp; <span style="color:#89b4fa;font-weight:550;">Data/Stack/MMIO: editable</span> (Code: read-only)
           </div>
           <div class="mem-view" id="memView"></div>
         </div>
@@ -6400,6 +6561,10 @@ function updateRegisters() {
 
     let activeMemRegion = 'code';
 
+    function isCodeSegmentAddress(addr) {
+      return (addr >= baseAddress && addr < dataBase) || (activeMemRegion === 'code' && addr < dataBase);
+    }
+
     function updateMemoryView() {
       const addrStr = document.getElementById('memAddr').value;
       const rows = parseInt(document.getElementById('memRows').value) || 16;
@@ -6469,12 +6634,20 @@ function updateRegisters() {
             const val = memory[offset] || 0;
             const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
             const cls = isChanged ? ' changed' : '';
-            if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
-            hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2, '0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2, '0')}</span>`;
+            const isCodeSegment = isCodeSegmentAddress(offset);
 
-            const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-            const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
-            asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+            if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
+
+            if (isCodeSegment) {
+              hexVals += `<span class="val${cls} readonly-code" data-addr="${offset}" data-size="1" style="cursor:default;opacity:0.88;" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${val.toString(16).padStart(2, '0')}</span>`;
+              const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
+              asciiVals += `<span class="ascii${cls}" title="Code segment byte (read-only)">${escapeHtml(ch)}</span>`;
+            } else {
+              hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2, '0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2, '0')}</span>`;
+              const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
+              const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
+              asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+            }
           }
 
           html += `<div><span class="addr">0x${base.toString(16).padStart(8, '0')}</span> ${hexVals}  ${asciiVals}</div>`;
@@ -6484,10 +6657,20 @@ function updateRegisters() {
     }
 
     function editMemByte(addr) {
+      if (isCodeSegmentAddress(addr)) {
+        setStatus('Code segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
+        return;
+      }
       focusMemByte(addr);
     }
 
     function startMemByteEdit(el) {
+      const addr = parseInt(el.dataset.addr, 10);
+      if (isCodeSegmentAddress(addr)) {
+        el.blur();
+        setStatus('Code segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
+        return;
+      }
       el.dataset.old = (el.textContent || '').trim().padStart(2, '0').slice(-2);
       el.classList.add('editing');
       selectElementText(el);
@@ -6517,6 +6700,12 @@ function updateRegisters() {
     function commitMemByteEdit(el) {
       if (!el || !el.classList || !el.classList.contains('editing')) return;
       const addr = parseInt(el.dataset.addr, 10);
+      if (isCodeSegmentAddress(addr)) {
+        el.textContent = el.dataset.old || '00';
+        el.classList.remove('editing');
+        setStatus('Code segment is read-only in Memory View', 'warning');
+        return;
+      }
       const text = (el.textContent || '').trim();
       const normalized = text.replace(/^0x/i, '');
       if (!/^[0-9a-fA-F]{1,2}$/.test(normalized)) {
@@ -6551,6 +6740,10 @@ function updateRegisters() {
     function startMemWordEdit(event, wordStartAddr) {
       event.preventDefault();
       event.stopPropagation();
+      if (isCodeSegmentAddress(wordStartAddr)) {
+        setStatus('Code segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
+        return;
+      }
       // Find the four bytes in this word (aligned to 4-byte boundary)
       const alignedAddr = wordStartAddr & ~0x3;
       // Collect the 4 byte spans
@@ -6624,6 +6817,13 @@ function updateRegisters() {
       const input = document.getElementById('memWordEditInput');
       if (!input) return;
 
+      const addr = overlay._wordAddr;
+      if (isCodeSegmentAddress(addr)) {
+        cancelMemWordEdit(overlay);
+        setStatus('Code segment is read-only in Memory View', 'warning');
+        return;
+      }
+
       const text = input.value.trim();
       const normalized = text.replace(/^0x/i, '');
       let val;
@@ -6643,7 +6843,6 @@ function updateRegisters() {
         return;
       }
 
-      const addr = overlay._wordAddr;
       const spans = overlay._spans;
 
       writeMem(addr, val, 4);

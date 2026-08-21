@@ -176,6 +176,52 @@ setTimeout(() => {
     console.log('Cycle counter readback:', cycles);
     console.log('✅ Peripherals and MMIO verification passed!');
 
+    // 9. Memory View Code Segment Read-Only & Data/Stack/MMIO Editable
+    console.log('\n[9] Testing Memory View Code Segment Read-Only & Data/Stack/MMIO Editable...');
+    const doc = win.document;
+    doc.getElementById('memAddr').value = '0x00010000';
+    win.memGo('code');
+    const codeSpan = doc.getElementById('memView').querySelector(`[data-addr="${0x10000}"]`);
+    if (!codeSpan) throw new Error('Could not find code segment memory span');
+    if (codeSpan.getAttribute('contenteditable') === 'true') {
+      throw new Error('Code segment memory span should NOT be contenteditable');
+    }
+    if (!codeSpan.classList.contains('readonly-code')) {
+      throw new Error('Code segment memory span should have readonly-code class');
+    }
+    console.log('Code segment read-only check passed:', codeSpan.getAttribute('contenteditable') === null || codeSpan.getAttribute('contenteditable') === 'false');
+
+    // Check Data segment is editable
+    doc.getElementById('memAddr').value = '0x00020000';
+    win.memGo('data');
+    const dataSpan = doc.getElementById('memView').querySelector(`[data-addr="${0x20000}"]`);
+    if (!dataSpan) throw new Error('Could not find data segment memory span');
+    if (dataSpan.getAttribute('contenteditable') !== 'true') {
+      throw new Error('Data segment memory span MUST be contenteditable="true"');
+    }
+    console.log('Data segment editable check passed (contenteditable="true")');
+
+    // Check code segment edit prevention functions
+    win.editMemByte(0x10000);
+    const statusText = doc.getElementById('statusBar').textContent;
+    if (!statusText.includes('read-only')) {
+      throw new Error('editMemByte on code segment did not set read-only status warning');
+    }
+    console.log('✅ Memory View read-only code segment & editable data segment verified!');
+
+    // 10. Toolbar Structure Verification
+    console.log('\n[10] Testing Toolbar Structure and Buttons...');
+    const toolbar = doc.getElementById('mainToolbar');
+    if (!toolbar) throw new Error('mainToolbar element not found');
+    const row1Buttons = toolbar.querySelectorAll('.toolbar-row-primary button');
+    const row2Buttons = toolbar.querySelectorAll('.toolbar-row-secondary button');
+    console.log(`Toolbar Row 1 buttons: ${row1Buttons.length} (expected 10)`);
+    console.log(`Toolbar Row 2 buttons: ${row2Buttons.length} (expected 4)`);
+    if (row1Buttons.length < 10 || row2Buttons.length < 4) {
+      throw new Error('Toolbar button structure missing expected controls');
+    }
+    console.log('✅ Toolbar layout structure verified!');
+
     console.log('\n===========================================================');
     console.log('🎉 ALL COMPREHENSIVE TESTS PASSED WITH 100% SUCCESS!');
     console.log('===========================================================');
