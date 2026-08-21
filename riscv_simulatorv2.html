@@ -4683,13 +4683,9 @@
       ".cm-lineNumbers .cm-gutterElement.cm-breakpoint-line-number": {
         color: "#f38ba8 !important",
         fontWeight: "bold !important",
-        backgroundColor: "rgba(243, 139, 168, 0.22) !important",
+        backgroundColor: "rgba(243, 139, 168, 0.25) !important",
         borderRadius: "4px",
         textShadow: "0 0 6px rgba(243, 139, 168, 0.6)"
-      },
-      ".cm-breakpoint-line": {
-        backgroundColor: "rgba(243, 139, 168, 0.08) !important",
-        borderLeft: "2px solid #f38ba8 !important"
       },
       ".cm-tooltip": {
         backgroundColor: "#181825 !important",
@@ -4757,20 +4753,17 @@
       create() {
         return {
           gutter: CM6.RangeSet.empty,
-          lineNumbers: CM6.RangeSet.empty,
-          lines: CM6.Decoration.none
+          lineNumbers: CM6.RangeSet.empty
         };
       },
       update(value, tr) {
         let gutter = value.gutter.map(tr.changes);
         let lineNumbers = value.lineNumbers.map(tr.changes);
-        let lines = value.lines.map(tr.changes);
 
         for (const e of tr.effects) {
           if (e.is(setBreakpointsEffect)) {
             const gutterBuilder = new CM6.RangeSetBuilder();
             const lnBuilder = new CM6.RangeSetBuilder();
-            const lineDecs = [];
 
             const sortedLines = [...e.value].sort((a,b) => a - b);
             for (const lineNo of sortedLines) {
@@ -4778,18 +4771,15 @@
                 const line = tr.state.doc.line(lineNo);
                 gutterBuilder.add(line.from, line.from, breakpointGutterMarker);
                 lnBuilder.add(line.from, line.from, breakpointLineNumberMarker);
-                lineDecs.push(CM6.Decoration.line({ attributes: { class: 'cm-breakpoint-line' } }).range(line.from));
               }
             }
             gutter = gutterBuilder.finish();
             lineNumbers = lnBuilder.finish();
-            lines = CM6.Decoration.set(lineDecs);
           }
         }
-        return { gutter, lineNumbers, lines };
+        return { gutter, lineNumbers };
       },
       provide: f => [
-        CM6.EditorView.decorations.from(f, v => v.lines),
         CM6.lineNumberMarkers.from(f, v => v.lineNumbers)
       ]
     });
