@@ -322,6 +322,33 @@ resetMemSegments();
 const segPass2 = (baseAddress === 0x10000 && dataBase === 0x20000 && labels['mydata'] === 0x20000 && readMem(0x20000, 4) === 0x12345678 && machineCode[0].address === 0x10000 && assembled === true);
 console.log('  resetMemSegments() re-assembles back to default addresses:', segPass2 ? 'PASS' : `FAIL (base=0x${baseAddress.toString(16)}, data=0x${dataBase.toString(16)}, lbl=0x${labels['mydata']?.toString(16)})`);
 
+// 7. Save filename suggestions and memory dump names
+loadExample('circle_accel');
+const namePass1 = (currentFileName === 'Circle_delay_accel.asm');
+loadExample('basic');
+const namePass2 = (currentFileName === 'basic.asm');
+console.log('  Default save filename derived from loaded example/file:', (namePass1 && namePass2) ? 'PASS' : `FAIL (circle=${currentFileName})`);
+
+const memDumpText = buildMemFileText(machineCode.filter(i => !i.error && i.bytes));
+const memCommentPass = memDumpText.includes('// @') && !memDumpText.match(/^@[0-9a-fA-F]+/m);
+console.log('  Memory dump @ address line is commented with //:', memCommentPass ? 'PASS' : 'FAIL');
+
+// 8. Find match highlighting & navigation
+editor.value = 'addi x1, x0, 10\naddi x2, x1, 20\naddi x3, x2, 30';
+updateEditor();
+openFindReplace(false);
+document.getElementById('findInput').value = 'addi';
+updateFindMatches();
+const hlLayer = document.getElementById('highlightLayer');
+const hasActiveMark = hlLayer.innerHTML.includes('hl-find-active') && hlLayer.innerHTML.includes('addi');
+const hasMatchMark = hlLayer.innerHTML.includes('hl-find-match');
+findNext();
+const navigatedActive = (activeFindIndex === 1);
+closeFindReplace();
+const clearedHighlights = !hlLayer.innerHTML.includes('hl-find-active') && !hlLayer.innerHTML.includes('hl-find-match');
+const findHighlightPass = hasActiveMark && hasMatchMark && navigatedActive && clearedHighlights;
+console.log('  In-editor live Find match highlighting & navigation:', findHighlightPass ? 'PASS' : 'FAIL');
+
 console.log('=== Comprehensive Instruction Set Verification (RV32I, RV32M, RV32F, RV32D, RV32A, Pseudo) ===');
 require('./test_all_instructions.js');
 

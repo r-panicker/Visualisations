@@ -1,11 +1,20 @@
 const fs = require('fs');
-function makeEl() {
-  return {
+global.NodeFilter = { SHOW_TEXT: 4 };
+function makeEl(tag = 'div') {
+  const el = {
+    tagName: tag.toUpperCase(),
     value: '', innerHTML: '', textContent: '', style: {}, className: '',
     classList: { add(){}, remove(){}, toggle(){} },
-    addEventListener(){}, appendChild(){}, append(){}, focus(){}, blur(){},
+    addEventListener(){}, appendChild(c){ if(c) el.childNodes.push(c); return c; },
+    insertBefore(n, ref){ const idx = el.childNodes.indexOf(ref); if(idx>=0) el.childNodes.splice(idx,0,n); else el.childNodes.push(n); return n; },
+    removeChild(c){ const idx = el.childNodes.indexOf(c); if(idx>=0) el.childNodes.splice(idx,1); return c; },
+    append(){}, focus(){}, blur(){}, select(){},
+    setSelectionRange(s, e){ this.selectionStart=s; this.selectionEnd=e; },
     setAttribute(){}, getAttribute(){ return null; }, closest(){ return null; },
     scrollTop: 0, scrollLeft: 0, scrollHeight: 0, checked: false, files: [],
+    childNodes: [],
+    parentNode: null,
+    nextSibling: null,
     getContext() {
       return {
         createImageData: () => ({ data: new Uint8ClampedArray(96*64*4) }),
@@ -17,14 +26,31 @@ function makeEl() {
       };
     }
   };
+  return el;
+}
+function makeTextNode(text) {
+  return { nodeValue: text, textContent: text, parentNode: null, nextSibling: null };
 }
 const elements = {};
 global.document = {
   getElementById(id){ if(!elements[id]) elements[id]=makeEl(); return elements[id]; },
   querySelectorAll(){ return []; },
   querySelector(){ return null; },
-  createElement(){ return makeEl(); },
-  createElementNS(){ return makeEl(); },
+  createElement(tag){ return makeEl(tag); },
+  createElementNS(ns, tag){ return makeEl(tag); },
+  createTextNode(text){ return makeTextNode(text); },
+  createTreeWalker(root, filter){
+    let idx = 0;
+    const nodes = [];
+    function scan(node) {
+      if (node && node.nodeValue !== undefined) nodes.push(node);
+      if (node && node.childNodes) node.childNodes.forEach(scan);
+    }
+    scan(root);
+    return {
+      nextNode(){ return nodes[idx++] || null; }
+    };
+  },
   addEventListener(){},
 };
 global.window = global;
