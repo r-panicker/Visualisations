@@ -349,6 +349,73 @@ const clearedHighlights = !hlLayer.innerHTML.includes('hl-find-active') && !hlLa
 const findHighlightPass = hasActiveMark && hasMatchMark && navigatedActive && clearedHighlights;
 console.log('  In-editor live Find match highlighting & navigation:', findHighlightPass ? 'PASS' : 'FAIL');
 
+// 9. ACCEL_DATA packing {temperature, X, Y, Z} MSB down to LSB
+accelTemp = 25; // 0x19
+accelX = 64;    // 0x40
+accelY = -64;   // 0xC0 (-64 in 8-bit = 0xC0)
+accelZ = 127;   // 0x7F
+const packedAccel = readMem(0xFFFF0040, 4);
+const expPacked = (((25 & 0xFF) << 24) | ((64 & 0xFF) << 16) | ((-64 & 0xFF) << 8) | (127 & 0xFF)) >>> 0;
+const accelZByte = readMem(0xFFFF0040, 1);
+const accelYByte = readMem(0xFFFF0041, 1);
+const accelXByte = readMem(0xFFFF0042, 1);
+const accelTByte = readMem(0xFFFF0043, 1);
+const accelPackingPass = (packedAccel === expPacked) && (accelZByte === 127) && (accelYByte === 0xC0) && (accelXByte === 64) && (accelTByte === 25);
+console.log('  ACCEL_DATA packing {temp, X, Y, Z} & byte offsets:', accelPackingPass ? 'PASS' : 'FAIL');
+
+// 10. Tilt preset toggle (+1g / -1g)
+setAccelPreset('flat');
+const flatZ = accelZ === 64 && accelX === 0 && accelY === 0;
+setAccelPreset('tiltX'); // 1st click -> +64 (+1g)
+const tiltX1 = accelX === 64;
+setAccelPreset('tiltX'); // 2nd click -> -64 (-1g)
+const tiltX2 = accelX === -64;
+setAccelPreset('tiltY'); // 1st click -> +64 (+1g)
+const tiltY1 = accelY === 64;
+setAccelPreset('tiltY'); // 2nd click -> -64 (-1g)
+const tiltY2 = accelY === -64;
+const tiltTogglePass = flatZ && tiltX1 && tiltX2 && tiltY1 && tiltY2;
+console.log('  Accelerometer Tilt X/Y toggle between +1g and -1g:', tiltTogglePass ? 'PASS' : 'FAIL');
+
+// 11. RARS Syscall Execution (print_int, print_string, print_hex, print_char, exit)
+resetAll();
+const rarsAsm = [
+  '.text',
+  'main:',
+  '  la a0, msg',
+  '  li a7, 4',     // print_string
+  '  ecall',
+  '  li a0, 42',
+  '  li a7, 1',     // print_int
+  '  ecall',
+  '  li a0, 0x1234',
+  '  li a7, 34',    // print_hex
+  '  ecall',
+  '  li a0, 65',    // 'A'
+  '  li a7, 11',    // print_char
+  '  ecall',
+  '  li a7, 10',    // exit
+  '  ecall',
+  '.data',
+  'msg: .asciz "SyscallTest:"'
+].join('\n');
+editor.value = rarsAsm;
+assembleOnly();
+running = true;
+const logCountBefore = consoleEl.childNodes.length;
+let steps = 0;
+while (running && steps < 30) {
+  executeOne();
+  steps++;
+}
+const logsAfter = consoleEl.childNodes.slice(logCountBefore).map(n => n.textContent);
+const hasStr = logsAfter.includes('SyscallTest:');
+const hasInt = logsAfter.includes('42');
+const hasHex = logsAfter.some(l => l.toLowerCase() === '0x00001234');
+const hasChar = logsAfter.includes('A');
+const rarsPass = hasStr && hasInt && hasHex && hasChar;
+console.log('  RARS ecall syscalls (print_string, int, hex, char, exit):', rarsPass ? 'PASS' : 'FAIL');
+
 console.log('=== Comprehensive Instruction Set Verification (RV32I, RV32M, RV32F, RV32D, RV32A, Pseudo) ===');
 require('./test_all_instructions.js');
 

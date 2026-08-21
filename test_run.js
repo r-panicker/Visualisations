@@ -1,9 +1,12 @@
 const fs = require('fs');
 global.NodeFilter = { SHOW_TEXT: 4 };
 function makeEl(tag = 'div') {
+  let _innerHTML = '';
   const el = {
     tagName: tag.toUpperCase(),
-    value: '', innerHTML: '', textContent: '', style: {}, className: '',
+    value: '', textContent: '', style: {}, className: '',
+    get innerHTML() { return _innerHTML; },
+    set innerHTML(v) { _innerHTML = v; if (v === '') this.childNodes = []; },
     classList: { add(){}, remove(){}, toggle(){} },
     addEventListener(){}, appendChild(c){ if(c) el.childNodes.push(c); return c; },
     insertBefore(n, ref){ const idx = el.childNodes.indexOf(ref); if(idx>=0) el.childNodes.splice(idx,0,n); else el.childNodes.push(n); return n; },

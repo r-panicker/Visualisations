@@ -30,10 +30,12 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .editor-container { position: relative; flex: 1; overflow: hidden; min-height: 0; }
 .editor-container textarea, .editor-container .highlight-layer {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  padding: 12px; font-family: 'Consolas', 'Roboto Mono', 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
-  font-size: 13px; line-height: 20px; tab-size: 4; white-space: pre; overflow: auto;
-  border: none; outline: none; resize: none; box-sizing: border-box;
-  -webkit-text-size-adjust: 100%; text-size-adjust: 100%; font-variant-ligatures: none;
+  padding: 12px 12px 12px 8px !important; font-family: 'Consolas', 'Roboto Mono', 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace !important;
+  font-size: 13px !important; line-height: 20px !important; tab-size: 4; white-space: pre !important;
+  word-wrap: normal !important; overflow-wrap: normal !important; word-break: normal !important;
+  letter-spacing: 0px !important; overflow: auto;
+  border: none; outline: none; resize: none; box-sizing: border-box !important;
+  -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; font-variant-ligatures: none !important;
 }
 .editor-container textarea {
   color: transparent; -webkit-text-fill-color: transparent;
@@ -146,16 +148,18 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 /* Line numbers */
 .editor-wrapper { position: relative; flex: 1; overflow: hidden; display: flex; min-height: 0; }
 .line-numbers {
-  background: #181825; color: #6c7086; padding: 12px 4px 12px 6px;
-  text-align: right; font-size: 13px; line-height: 20px; width: 40px;
+  background: #181825; color: #6c7086; padding: 12px 4px 12px 6px !important;
+  text-align: right; font-size: 13px !important; line-height: 20px !important; width: 40px;
   flex: 0 0 auto; overflow: hidden; user-select: none;
-  font-family: 'Consolas', 'Roboto Mono', 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
-  white-space: pre; box-sizing: border-box;
-  -webkit-text-size-adjust: 100%; text-size-adjust: 100%; font-variant-ligatures: none;
+  font-family: 'Consolas', 'Roboto Mono', 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace !important;
+  white-space: pre !important; box-sizing: border-box !important;
+  letter-spacing: 0px !important;
+  -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; font-variant-ligatures: none !important;
 }
 .line-numbers div {
-  height: 20px; line-height: 20px; font-size: 13px;
-  box-sizing: border-box; display: block; text-align: right;
+  height: 20px !important; line-height: 20px !important; font-size: 13px !important;
+  font-family: 'Consolas', 'Roboto Mono', 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace !important;
+  box-sizing: border-box !important; display: block; text-align: right;
   padding: 0 4px 0 0; margin: 0; overflow: hidden; white-space: nowrap;
 }
 .code-area { position: relative; flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
@@ -722,10 +726,10 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   .toolbar select, #exampleSelect { max-width: 125px; font-size: 11px; padding: 2px 4px; }
   
   .editor-wrapper { height: 360px; min-height: 220px; flex: none; width: 100%; max-width: 100vw; box-sizing: border-box; }
-  .line-numbers { width: 34px; font-size: 13px; line-height: 20px; padding: 12px 2px 12px 4px; box-sizing: border-box; }
-  .line-numbers div { height: 20px; line-height: 20px; font-size: 13px; box-sizing: border-box; }
-  .editor-container textarea, .editor-container .highlight-layer { font-size: 13px; line-height: 20px; padding: 12px 8px; box-sizing: border-box; }
-  .exec-marker { height: 20px; line-height: 20px; }
+  .line-numbers { width: 34px; font-size: 13px !important; line-height: 20px !important; padding: 12px 2px 12px 4px !important; box-sizing: border-box !important; }
+  .line-numbers div { height: 20px !important; line-height: 20px !important; font-size: 13px !important; box-sizing: border-box !important; }
+  .editor-container textarea, .editor-container .highlight-layer { font-size: 13px !important; line-height: 20px !important; padding: 12px 12px 12px 8px !important; box-sizing: border-box !important; }
+  .exec-marker { height: 20px !important; line-height: 20px !important; }
 
   .console { max-height: 110px; font-size: 11px; padding: 6px 8px; width: 100%; max-width: 100vw; box-sizing: border-box; }
   
@@ -824,6 +828,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
           <label style="font-size:12px;color:#a6adc8;display:inline-flex;align-items:center;gap:4px;">Example:
             <select id="exampleSelect" onchange="loadExample(this.value)" style="background:#313244;border:1px solid #45475a;color:#cdd6f4;padding:2px 4px;font-size:12px;border-radius:4px;max-width:130px;text-overflow:ellipsis;" title="Select an example RISC-V program">
               <option value="basic" title="Basic sum = a + b + c">Basic</option>
+              <option value="rars_syscalls" title="RARS ecall Syscalls Demo (rars_syscalls.asm)">RARS Syscalls</option>
               <option value="fib" title="Fibonacci sequence">Fibonacci</option>
               <option value="fact" title="Factorial computation">Factorial</option>
               <option value="loop" title="Loop & Array">Loop &amp; Array</option>
@@ -969,19 +974,21 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
               <button id="uartSendBtn" onclick="sendUartInput()" class="primary">Send</button>
               <button onclick="clearUartTx()" title="Clear Terminal display output">Clear</button>
             </div>
-            <div class="uart-controls" style="margin-top:4px;display:flex;align-items:center;gap:4px;font-size:11px;flex-wrap:nowrap;">
-              <label style="font-size:11px;color:#cba6f7;display:inline-flex;align-items:center;gap:2px;cursor:pointer;white-space:nowrap;font-weight:600;" title="Buffer sequence and send automatically with instruction delay between bytes">
-                <input type="checkbox" id="uartAutoSendCheck" style="margin:0 2px 0 0;cursor:pointer;flex:0 0 auto;width:auto;">Buffer
-              </label>
-              <span style="display:inline-flex;align-items:center;gap:4px;margin-left:24px;white-space:nowrap;">
-                <input type="number" id="uartAutoSeqDelay" value="10" min="1" max="99999" style="width:48px;height:24px;padding:2px 4px;font-size:11px;box-sizing:border-box;border-radius:3px;border:1px solid #45475a;background:#313244;color:#cdd6f4;text-align:center;flex:0 0 auto;" title="Number of RISC-V instructions executed between sending each character in the buffered sequence">
-                <span style="color:#a6adc8;" title="Number of RISC-V instructions executed between sending each character in the buffered sequence">instr delay</span>
-              </span>
-              <span style="color:#45475a;margin:0 8px;">·</span>
-              <span class="uart-queue-info" id="uartQueueInfo" style="margin:0;white-space:nowrap;">
-                RX Queue: <span id="uartQueueCount" style="color:#cdd6f4;">0 bytes</span> <span id="uartQueuePreview" style="color:#6c7086;margin-left:4px;">(empty)</span>
-                <span id="uartAutoSendStatus" style="color:#a6e3a1;margin-left:6px;font-weight:600;"></span>
-              </span>
+            <div class="uart-controls" style="margin-top:4px;display:flex;align-items:center;gap:6px 10px;font-size:11px;flex-wrap:wrap;">
+              <div style="display:inline-flex;align-items:center;gap:6px;">
+                <label style="font-size:11px;color:#cba6f7;display:inline-flex;align-items:center;gap:3px;cursor:pointer;white-space:nowrap;font-weight:600;" title="Buffer sequence and send automatically with instruction delay between bytes">
+                  <input type="checkbox" id="uartAutoSendCheck" style="margin:0;cursor:pointer;flex:0 0 auto;width:auto;">Buffer
+                </label>
+                <span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">
+                  <input type="number" id="uartAutoSeqDelay" value="10" min="1" max="99999" style="width:48px;height:24px;padding:2px 4px;font-size:11px;box-sizing:border-box;border-radius:3px;border:1px solid #45475a;background:#313244;color:#cdd6f4;text-align:center;flex:0 0 auto;" title="Number of RISC-V instructions executed between sending each character in the buffered sequence">
+                  <span style="color:#a6adc8;" title="Number of RISC-V instructions executed between sending each character in the buffered sequence">instr delay</span>
+                </span>
+              </div>
+              <div class="uart-queue-info" id="uartQueueInfo" style="margin:0;display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                <span style="color:#6c7086;">·</span>
+                <span>RX Queue: <span id="uartQueueCount" style="color:#cdd6f4;">0 bytes</span> <span id="uartQueuePreview" style="color:#6c7086;">(empty)</span></span>
+                <span id="uartAutoSendStatus" style="color:#a6e3a1;font-weight:600;"></span>
+              </div>
             </div>
           </div>
 
@@ -1014,10 +1021,10 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
                 <input type="range" id="accelTempSlider" min="-40" max="85" value="25" style="flex:1;accent-color:#f38ba8;cursor:pointer;" oninput="updateAccelValues()">
                 <span id="accelTempVal" style="width:130px;font-family:monospace;color:#cdd6f4;">25°C (0x19)</span>
               </div>
-              <div style="display:flex;gap:6px;margin-top:4px;font-size:10px;">
+              <div style="display:flex;gap:6px;margin-top:4px;font-size:10px;flex-wrap:wrap;">
                 <button onclick="setAccelPreset('flat')" style="padding:2px 6px;font-size:10px;">Flat (Z=+1g)</button>
-                <button onclick="setAccelPreset('tiltX')" style="padding:2px 6px;font-size:10px;">Tilt X (+1g)</button>
-                <button onclick="setAccelPreset('tiltY')" style="padding:2px 6px;font-size:10px;">Tilt Y (+1g)</button>
+                <button onclick="setAccelPreset('tiltX')" id="btnTiltX" style="padding:2px 6px;font-size:10px;" title="Toggle Tilt X (+1g / -1g)">Tilt X (±1g)</button>
+                <button onclick="setAccelPreset('tiltY')" id="btnTiltY" style="padding:2px 6px;font-size:10px;" title="Toggle Tilt Y (+1g / -1g)">Tilt Y (±1g)</button>
                 <button onclick="setAccelPreset('shake')" style="padding:2px 6px;font-size:10px;">Shake (±2g)</button>
                 <button onclick="setAccelPreset('zero')" style="padding:2px 6px;font-size:10px;">Zero All</button>
               </div>
@@ -2007,14 +2014,9 @@ function encodeInstruction(mnemonic, args, address) {
         }
       } else if (['ecall','ebreak'].includes(mnemonic)) {
         rd = 0; rs1 = 0;
-        imm = instr.imm12 || 0;
-        if (mnemonic === 'ecall') {
-          encoding = (0b000000000000 << 20) | (0b000 << 12) | (0b00000 << 7) | (0b1110011);
-          return encoding;
-        } else {
-          encoding = (0b000000000001 << 20) | (0b000 << 12) | (0b00000 << 7) | (0b1110011);
-          return encoding;
-        }
+        imm = (mnemonic === 'ecall') ? 0 : 1;
+        encoding = (imm << 20) | (0b000 << 12) | (0b00000 << 7) | (0b1110011);
+        break;
       } else if (['addi','slti','sltiu','xori','ori','andi','addiw',
                    'slli','srli','srai','slliw','srliw','sraiw'].includes(mnemonic)) {
         rd = parseReg(args[0]);
@@ -2177,6 +2179,7 @@ function initializeState() {
   totalCycles = 0;
   instructionCount = 0;
   currentExecLine = -1;
+  heapPointer = (typeof dataBase !== 'undefined' ? dataBase : 0x20000) + 0x4000;
   // Note: In RISC-V hardware, integer registers (including sp / x2) are initialized to 0 on reset
   oledCol = 0;
   oledRow = 0;
@@ -2268,10 +2271,10 @@ function writeOledPixel(val) {
     r = Math.round((r5 / 31) * 255);
     g = Math.round((g6 / 63) * 255);
     b = Math.round((b5 / 31) * 255);
-  } else { // 24-bit color mode: [7:0] = X Accel (Red), [15:8] = Y Accel (Green), [23:16] = Z Accel (Blue)
-    r = val & 0xFF;
+  } else { // 24-bit color mode: [23:16] = X Accel (Red), [15:8] = Y Accel (Green), [7:0] = Z Accel (Blue)
+    r = (val >>> 16) & 0xFF;
     g = (val >>> 8) & 0xFF;
-    b = (val >>> 16) & 0xFF;
+    b = val & 0xFF;
   }
 
   const c = Math.min(95, Math.max(0, oledCol));
@@ -2291,11 +2294,6 @@ function handleMMIOWrite(addr, val, size) {
   if (u >= txBase && u < txBase + 4) {
     const ch = val & 0xFF;
     uartTxBuffer += String.fromCharCode(ch);
-    if (ch === 10 || ch === 13) {
-      log('\n', 'info');
-    } else if (ch >= 32 && ch <= 126) {
-      log(String.fromCharCode(ch), 'info');
-    }
     updatePeripherals();
     return;
   }
@@ -2492,14 +2490,14 @@ function handleMMIORead(addr, size, peekOnly = false) {
     return (val >> (offset * 8)) & 0xFF;
   }
 
-  // ACCEL_DATA (0xFFFF0040 .. 0xFFFF0043) -> RO: [31:24] Temp, [23:16] Z, [15:8] Y, [7:0] X
+  // ACCEL_DATA (0xFFFF0040 .. 0xFFFF0043) -> RO: [31:24] Temp, [23:16] X, [15:8] Y, [7:0] Z
   const accelDataBase = ACCEL_DATA >>> 0;
   if (u >= accelDataBase && u < accelDataBase + 4) {
     const xByte = accelX & 0xFF;
     const yByte = accelY & 0xFF;
     const zByte = accelZ & 0xFF;
     const tByte = accelTemp & 0xFF;
-    const packed = ((tByte << 24) | (zByte << 16) | (yByte << 8) | xByte) >>> 0;
+    const packed = ((tByte << 24) | (xByte << 16) | (yByte << 8) | zByte) >>> 0;
     if (size === 4) return packed;
     const offset = u - accelDataBase;
     return (packed >> (offset * 8)) & 0xFF;
@@ -2953,35 +2951,130 @@ function executeAtomic(instr32, rd, funct3, rs1, rs2, funct7) {
 }
 
 function handleECall() {
-  // Simple ECALL handling for simulation
-  const a7 = regs[17]; // x17 = a7
+  const a7 = regs[17]; // x17 = a7 service number
+  const a0 = regs[10]; // x10 = a0 argument
+  const a1 = regs[11]; // x11 = a1 argument
+  
   switch (a7) {
-    case 1: // print int (a0)
-      log(`[ECALL] print_int: ${regs[10]}`, 'info');
-      ioOutputBuffer += regs[10];
+    case 1: // print_int (a0)
+      log(`${a0}`, 'info');
       break;
-    case 4: // print string (a0 = address)
+    case 2: // print_float (fa0)
+      log(`${fregs[10]}`, 'info');
+      break;
+    case 3: // print_double (fa0)
+      log(`${dregs[10]}`, 'info');
+      break;
+    case 4: // print_string (a0 = null-terminated string address)
       {
         let s = '';
-        let addr = regs[10];
+        let addr = a0 >>> 0;
         while (addr < memory.length && memory[addr] !== 0) {
           s += String.fromCharCode(memory[addr]);
           addr++;
         }
-        log(`[ECALL] print_str: ${s}`, 'info');
-        ioOutputBuffer += s;
+        log(s, 'info');
       }
       break;
-    case 5: // read int
-      log('[ECALL] read_int', 'warn');
-      regs[10] = 0;
+    case 5: // read_int -> a0
+      {
+        let val = 0;
+        if (typeof prompt === 'function') {
+          const input = prompt('RARS Syscall 5 (read_int): Enter integer:');
+          val = parseInt(input, 10) || 0;
+        }
+        regs[10] = val | 0;
+        log(`[Syscall read_int]: ${val}`, 'info');
+      }
+      break;
+    case 6: // read_float -> fa0
+      {
+        let val = 0.0;
+        if (typeof prompt === 'function') {
+          const input = prompt('RARS Syscall 6 (read_float): Enter float:');
+          val = parseFloat(input) || 0.0;
+        }
+        fregs[10] = val;
+        log(`[Syscall read_float]: ${val}`, 'info');
+      }
+      break;
+    case 7: // read_double -> fa0
+      {
+        let val = 0.0;
+        if (typeof prompt === 'function') {
+          const input = prompt('RARS Syscall 7 (read_double): Enter double:');
+          val = parseFloat(input) || 0.0;
+        }
+        dregs[10] = val;
+        log(`[Syscall read_double]: ${val}`, 'info');
+      }
+      break;
+    case 8: // read_string (a0 = buffer addr, a1 = max length)
+      {
+        const maxLen = Math.max(0, a1);
+        let input = '';
+        if (typeof prompt === 'function') {
+          input = prompt(`RARS Syscall 8 (read_string): Enter string (max ${maxLen} chars):`) || '';
+        }
+        let addr = a0 >>> 0;
+        const copyLen = Math.min(input.length, Math.max(0, maxLen - 1));
+        for (let i = 0; i < copyLen; i++) {
+          if (addr + i < memory.length) memory[addr + i] = input.charCodeAt(i) & 0xFF;
+        }
+        if (addr + copyLen < memory.length) {
+          memory[addr + copyLen] = 0; // null terminator
+        }
+        log(`[Syscall read_string]: "${input.substring(0, copyLen)}"`, 'info');
+      }
+      break;
+    case 9: // sbrk (a0 = n bytes) -> a0 = old heap pointer
+      {
+        const bytes = a0 | 0;
+        const oldHeap = heapPointer;
+        heapPointer += bytes;
+        regs[10] = oldHeap;
+        log(`[Syscall sbrk]: allocated ${bytes} bytes at 0x${oldHeap.toString(16)}`, 'info');
+      }
       break;
     case 10: // exit
-      log('[ECALL] Program exit', 'warn');
+      log('Program exited via ecall 10 (Exit).', 'info');
+      running = false;
+      break;
+    case 11: // print_char (a0 = ASCII char)
+      {
+        const ch = String.fromCharCode(a0 & 0xFF);
+        log(ch, 'info');
+      }
+      break;
+    case 12: // read_char -> a0
+      {
+        let ch = '\0';
+        if (typeof prompt === 'function') {
+          const input = prompt('RARS Syscall 12 (read_char): Enter character:') || '';
+          if (input.length > 0) ch = input[0];
+        }
+        regs[10] = ch.charCodeAt(0) & 0xFF;
+        log(`[Syscall read_char]: '${ch}'`, 'info');
+      }
+      break;
+    case 34: // print_int_hex (a0)
+      log('0x' + (a0 >>> 0).toString(16).padStart(8, '0').toUpperCase(), 'info');
+      break;
+    case 35: // print_int_binary (a0)
+      log('0b' + (a0 >>> 0).toString(2).padStart(32, '0'), 'info');
+      break;
+    case 36: // print_int_unsigned (a0)
+      log(`${a0 >>> 0}`, 'info');
+      break;
+    case 40: // sleep / delay a0 ms
+      log(`[Syscall sleep]: ${a0} ms`, 'info');
+      break;
+    case 93: // exit2 (exit with code in a0)
+      log(`Program exited via ecall 93 (Exit2) with return code ${a0}.`, 'info');
       running = false;
       break;
     default:
-      log(`[ECALL] unhandled ecall #${a7}`, 'warn');
+      log(`[ECALL] Syscall #${a7} (a0=0x${(a0>>>0).toString(16)})`, 'warn');
   }
 }
 
@@ -3005,9 +3098,11 @@ const statusBar = document.getElementById('statusBar');
 
 // Track loaded/active filename for default save name suggestions
 let currentFileName = 'basic.asm';
+let heapPointer = 0x24000;
 
 const EXAMPLE_FILENAMES = {
   basic: 'basic.asm',
+  rars_syscalls: 'rars_syscalls.asm',
   fib: 'fibonacci.asm',
   fact: 'factorial.asm',
   loop: 'loop_array.asm',
@@ -3584,11 +3679,21 @@ function updateAccelValues() {
 }
 
 function setAccelPreset(preset) {
-  if (preset === 'flat') { accelX = 0; accelY = 0; accelZ = 64; }
-  else if (preset === 'tiltX') { accelX = 64; accelY = 0; accelZ = 0; }
-  else if (preset === 'tiltY') { accelX = 0; accelY = 64; accelZ = 0; }
-  else if (preset === 'shake') { accelX = 127; accelY = -128; accelZ = 127; }
-  else if (preset === 'zero') { accelX = 0; accelY = 0; accelZ = 0; }
+  if (preset === 'flat') {
+    accelX = 0; accelY = 0; accelZ = 64;
+  } else if (preset === 'tiltX') {
+    accelX = (accelX === 64) ? -64 : 64;
+    accelY = 0;
+    accelZ = 0;
+  } else if (preset === 'tiltY') {
+    accelY = (accelY === 64) ? -64 : 64;
+    accelX = 0;
+    accelZ = 0;
+  } else if (preset === 'shake') {
+    accelX = 127; accelY = -128; accelZ = 127;
+  } else if (preset === 'zero') {
+    accelX = 0; accelY = 0; accelZ = 0;
+  }
 
   const xS = document.getElementById('accelXSlider');
   const yS = document.getElementById('accelYSlider');
@@ -4398,6 +4503,7 @@ function switchTab(tab, btn) {
 function loadExample(name) {
   const examples = {
     basic: `# Basic RISC-V — compute sum = a + b + c
+# Note: Using ecall for I/O and printing requires hardware and OS/ISR support in practice.
 .text
 main:
 \tli\tx1, 10\t# a = 10
@@ -4407,7 +4513,7 @@ main:
 \tadd\tx5, x4, x3\t# x5 = sum
 \tla\tx28, result
 \tsw\tx5, 0(x28)\t# result = sum
-\tli\ta7, 1\t# print_int
+\tli\ta7, 1\t# print_int (prints to status log)
 \tmv\ta0, x5
 \tecall
 \tli\ta7, 10\t# exit
@@ -4416,7 +4522,58 @@ main:
 result: .word 0
 `,
 
+    rars_syscalls: `# RARS Syscalls Demonstration (print_int, print_string, print_hex, print_char, exit)
+# Note: Using ecall for I/O and printing requires hardware and OS/ISR support in practice.
+.text
+main:
+\t# 1. Print null-terminated string (Syscall 4)
+\tla\ta0, msg_hello
+\tli\ta7, 4
+\tecall
+
+\t# 2. Print integer in decimal (Syscall 1)
+\tli\ta0, 2026
+\tli\ta7, 1
+\tecall
+
+\t# Print newline (Syscall 11)
+\tli\ta0, 10
+\tli\ta7, 11
+\tecall
+
+\t# 3. Print integer in hexadecimal (Syscall 34)
+\tli\ta0, 0xCAFEBABE
+\tli\ta7, 34
+\tecall
+
+\t# Print newline (Syscall 11)
+\tli\ta0, 10
+\tli\ta7, 11
+\tecall
+
+\t# 4. Print single character (Syscall 11)
+\tli\ta0, 82\t# 'R'
+\tli\ta7, 11
+\tecall
+\tli\ta0, 86\t# 'V'
+\tli\ta7, 11
+\tecall
+
+\t# Print newline (Syscall 11)
+\tli\ta0, 10
+\tli\ta7, 11
+\tecall
+
+\t# 5. Program exit (Syscall 10)
+\tli\ta7, 10
+\tecall
+
+.data
+msg_hello: .asciz "RARS ecall demo: Year = "
+`,
+
     fib: `# Fibonacci — compute fib(10) = 55
+# Note: Using ecall for I/O and printing requires hardware and OS/ISR support in practice.
 .text
 main:
 \tli\tx1, 0\t# fib(0)
@@ -4443,6 +4600,7 @@ result: .word 0
 `,
 
     fact: `# Factorial — compute 5! = 120
+# Note: Using ecall for I/O and printing requires hardware and OS/ISR support in practice.
 .text
 main:
 \tli\tx1, 5\t# n
@@ -4466,6 +4624,7 @@ result: .word 0
 `,
 
     loop: `# Sum an array of 5 numbers using memory
+# Note: Using ecall for I/O and printing requires hardware and OS/ISR support in practice.
 .text
 main:
 \tla\tx28, arr\t# pointer to array
@@ -4500,6 +4659,7 @@ arr: .word 0, 0, 0, 0, 0
 `,
 
     io: `# M-extension arithmetic + ecall demo
+# Note: Using ecall for I/O and printing requires hardware and OS/ISR support in practice.
 .text
 main:
 \tli\tx1, 7
