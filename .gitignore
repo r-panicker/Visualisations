@@ -1,2 +1,4 @@
 .aider*
 ImageDisplay_autoadvance_accel.asm
+node_modules/
+package-lock.json

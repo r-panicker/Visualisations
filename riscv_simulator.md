@@ -1,11 +1,11 @@
-# NUS-CG3207 RISC-V Simulator v2 (RV32GC) — Technical Specification & Architecture Manual
+# NUS-CG3207 RISC-V Simulator (RV32GC) — Technical Specification & Architecture Manual
 
 ## 1. Project Overview
 
-**NUS-CG3207 RISC-V Simulator v2** is a next-generation, high-performance, single-file web application (`riscv_simulatorv2.html`) that delivers a full-featured **RISC-V RV32GC (RV32I + M + A + F + D + C) Assembler, Emulator, and Visual Debugger**, powered by **CodeMirror 6** (the latest modern modular code editor engine).
+**NUS-CG3207 RISC-V Simulator** is a high-performance, single-file web application (`riscv_simulator.html`) that delivers a full-featured **RISC-V RV32GC (RV32I + M + A + F + D + C) Assembler, Emulator, and Visual Debugger**, powered by **CodeMirror 6** (the latest modern modular code editor engine).
 Available at [https://nus-cg3207.github.io/labs](https://nus-cg3207.github.io/labs). Vibe coded by Rajesh Panicker.
 
-Designed for computer engineering students, hardware architects, and embedded systems developers, Simulator v2 combines a modern CodeMirror 6 assembly editor with custom RISC-V syntax highlighting, live parameter signature help, hover inspection, breakpoint gutter with highlighted line numbers and smart snapping, two-pass assembler, non-blocking execution engine, real-time disassembly viewer, step-by-step debugger with back-stepping history, interactive memory explorer with custom segment mapping, configurable instruction cycle timing, a hardware-accurate simulation of the **Digilent Nexys 4 FPGA Board**, a standard 16550 **UART Serial Console**, a **96x64 Pixel OLED Display MMIO Peripheral**, a **3-Axis Accelerometer & Temperature Sensor**, a **System Cycle Counter**, support for standard **RARS `ecall` Syscalls**, and pre-loaded RISC-V assembly example programs (`rars_syscalls.asm`, `Circle_delay_accel.asm`, `DIP_to_LED.asm`, `HelloWorld.asm`, `HelloWorld_jal_jalr.asm`, `fibonacci.asm`, `factorial.asm`, `loop_array.asm`, `io_mext.asm`, `basic.asm`).
+Designed for computer engineering students, hardware architects, and embedded systems developers, the simulator combines a modern CodeMirror 6 assembly editor with custom RISC-V syntax highlighting, live parameter signature help, hover inspection, breakpoint gutter with highlighted line numbers alone and smart snapping, two-pass assembler, non-blocking execution engine, real-time disassembly viewer, step-by-step debugger with back-stepping history, interactive memory explorer with custom segment mapping, configurable instruction cycle timing, a hardware-accurate simulation of the **Digilent Nexys 4 FPGA Board**, a standard 16550 **UART Serial Console**, a **96x64 Pixel OLED Display MMIO Peripheral**, a **3-Axis Accelerometer & Temperature Sensor**, a **System Cycle Counter**, support for standard **RARS `ecall` Syscalls**, and pre-loaded RISC-V assembly example programs (`rars_syscalls.asm`, `Circle_delay_accel.asm`, `DIP_to_LED.asm`, `HelloWorld.asm`, `HelloWorld_jal_jalr.asm`, `fibonacci.asm`, `factorial.asm`, `loop_array.asm`, `io_mext.asm`, `basic.asm`).
 
 ---
 
@@ -22,7 +22,7 @@ Designed for computer engineering students, hardware architects, and embedded sy
 
 ### 2.2 CodeMirror 6 Editor Architecture
 
-Simulator v2 replaces the legacy dual-layer stacked textarea with a state-of-the-art **CodeMirror 6** editor architecture mounted directly in `<div id="cmEditorContainer"></div>`:
+The simulator incorporates a state-of-the-art **CodeMirror 6** editor architecture mounted directly in `<div id="cmEditorContainer"></div>`:
 
 #### 1. Embedded Standalone CM6 Bundle (`window.CM6`)
 Contains all necessary CodeMirror 6 and Lezer packages compiled into a single IIFE bundle:
@@ -96,7 +96,7 @@ A specialized `StreamLanguage` tokenizer (`riscvStreamParser`) parses RISC-V ass
 - Real-time search match counter, next/previous navigation (`Enter` / `Shift+Enter`), case-sensitivity toggle (`Alt+C`), single replacement, and replace-all with full undo history tracking.
 
 #### 6. Backward-Compatible Editor Facade
-Provides a drop-in proxy object `window.editor` exposing `.value`, `.selectionStart`, `.selectionEnd`, `.scrollTop`, `.scrollLeft`, `.focus()`, and `.setSelectionRange()`, ensuring 100% backward compatibility with all simulator functions (`loadExample`, `loadFile`, `saveFile`, `assembleOnly`, `updateEditor`).
+Provides a drop-in proxy object `window.editor` exposing `.value`, `.selectionStart`, `.selectionEnd`, `.scrollTop`, `.scrollLeft`, `.focus()`, `.setSelectionRange()`, `.addEventListener()`, and `.removeEventListener()`, ensuring 100% backward compatibility with all simulator functions (`loadExample`, `loadFile`, `saveFile`, `assembleOnly`, `updateEditor`).
 
 ---
 
@@ -261,4 +261,4 @@ Models 32 32-bit integer registers (`x0`–`x31`), 32 floating-point registers (
 | **v1.0 – v6.0** | Basic RV32GC simulator core, two-pass assembler, non-blocking engine, Nexys 4 FPGA LEDs/DIP switches/buttons/7-segment, UART Serial Console, escape sequence parser, and double-height dual-rectangle 3D DIP switches. |
 | **v7.0 – v11.0** | 96x64 Pixel OLED Display MMIO peripheral, 3-Axis Accelerometer & Temperature Sensor `{temp, X, Y, Z}`, System Cycle Counter (`0xFFFF00A0`), RARS `ecall` syscall engine, and mobile viewport enhancements. |
 | **v12.0 – v14.0** | Intelligent UX button state lifecycle management, in-editor IntelliSense autocomplete, extended load/store pseudo-instructions, and 60 FPS visual rendering optimization. |
-| **v2.0 (CodeMirror 6 Upgrade)** | **Major Architecture Overhaul**: Upgraded editor to **CodeMirror 6 (latest version)** with standalone offline bundle (`window.CM6`). Implemented custom RISC-V stream tokenizer & Catppuccin Mocha theme, **interactive breakpoint gutter with highlighted line numbers and line glows**, **smart breakpoint snapping to next valid executable instruction**, **live floating parameter signature helper (`signatureHelpField`)**, **interactive hover tooltips (`riscvHoverTooltip`)**, **active instruction format banner in operand autocompletions**, **precision in-line `\t` Tab key insertion**, native transaction undo/redo history, and complete backward compatibility proxy facade. |
+| **v15.0 (CodeMirror 6 Engine Upgrade)** | **Major Architecture Overhaul**: Upgraded editor to **CodeMirror 6 (latest version)** with standalone offline bundle (`window.CM6`). Implemented custom RISC-V stream tokenizer & Catppuccin Mocha theme, **interactive breakpoint gutter with highlighted line numbers alone**, **smart breakpoint snapping to next valid executable instruction**, **live floating parameter signature helper (`signatureHelpField`)**, **interactive hover tooltips (`riscvHoverTooltip`)**, **active instruction format banner in operand autocompletions**, **precision in-line `\t` Tab key insertion**, native transaction undo/redo history, and complete backward compatibility proxy facade. |
