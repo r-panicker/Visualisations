@@ -60,8 +60,21 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   display: inline-flex; align-items: center; justify-content: center; gap: 4px;
 }
 .toolbar button:hover { background: #45475a; }
+.toolbar button:disabled, .toolbar button.inactive, button:disabled, button.inactive {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+  box-shadow: none !important;
+}
+.toolbar button:disabled:hover, .toolbar button.inactive:hover {
+  background: #313244 !important;
+}
 .toolbar button.primary { background: #cba6f7; color: #1e1e2e; font-weight: 600; }
 .toolbar button.primary:hover { background: #b4befe; }
+.toolbar button.primary:disabled, .toolbar button.primary.inactive {
+  background: #313244 !important;
+  color: #6c7086 !important;
+}
 .toolbar button.danger { background: #f38ba8; color: #1e1e2e; }
 .toolbar button.danger:hover { background: #eba0ac; }
 .toolbar .sep { width: 1px; height: 26px; background: #313244; margin: 0 4px; }
@@ -810,16 +823,16 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
         <!-- Row 1: Primary Action Buttons -->
         <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
           <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
-          <button onclick="document.getElementById('fileLoader').click()">📂 Open</button>
-          <button onclick="saveFile()" title="Save the edited source code as a .asm file">💾 Save</button>
-          <button onclick="editorHistory.undo()" title="Undo last edit (Ctrl+Z)">↶ Undo</button>
-          <button onclick="editorHistory.redo()" title="Redo last undone edit (Ctrl+Y)">↷ Redo</button>
-          <button onclick="openFindReplace(false)" title="Find &amp; Replace in code editor (Ctrl+F / Ctrl+H)">🔍 Find</button>
-          <button onclick="assembleOnly()" title="Assemble and reset state without running (Ctrl+Enter)">⚙ Assemble</button>
-          <button id="runPauseBtn" onclick="toggleRunPause()" class="primary" title="Run the assembled program (F5)">▶ Run</button>
-          <button onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
-          <button onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
-          <button onclick="resetAll()">⟲ Reset</button>
+          <button id="btnOpen" onclick="document.getElementById('fileLoader').click()">📂 Open</button>
+          <button id="btnSave" onclick="saveFile()" title="Save the edited source code as a .asm file">💾 Save</button>
+          <button id="btnUndo" onclick="editorHistory.undo()" title="Undo last edit (Ctrl+Z)">↶ Undo</button>
+          <button id="btnRedo" onclick="editorHistory.redo()" title="Redo last undone edit (Ctrl+Y)">↷ Redo</button>
+          <button id="btnFind" onclick="openFindReplace(false)" title="Find &amp; Replace in code editor (Ctrl+F / Ctrl+H)">🔍 Find</button>
+          <button id="btnAssemble" onclick="assembleOnly()" title="Assemble and load program into memory (Ctrl+Enter)">⚙ Assemble</button>
+          <button id="runPauseBtn" onclick="toggleRunPause()" title="Run the assembled program (F5)">▶ Run</button>
+          <button id="btnStep" onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
+          <button id="btnBack" onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
+          <button id="btnReset" onclick="resetAll()" title="Reset execution state">⟲ Reset</button>
           <button onclick="toggleCyclesPanel()" title="Configure cycles per instruction type" class="gear">⏱ Cycles…</button>
           <button onclick="toggleMemSegmentsPanel()" title="Configure memory segment addresses" class="gear">🗺 Segments…</button>
         </div>
@@ -839,8 +852,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
               <option value="circle_accel" title="Circle & Delay Accel (Circle_delay_accel.asm)">Circle &amp; Accel</option>
             </select>
           </label>
-          <button onclick="dumpTextSegment()" title="Dump code (text) memory to AA_IROM.mem">💾 Dump txt</button>
-          <button onclick="dumpDataSegment()" title="Dump data memory to AA_DMEM.mem">💾 Dump data</button>
+          <button id="btnDumpTxt" onclick="dumpTextSegment()" title="Dump code (text) memory to AA_IROM.mem">💾 Dump txt</button>
+          <button id="btnDumpData" onclick="dumpDataSegment()" title="Dump data memory to AA_DMEM.mem">💾 Dump data</button>
           <span class="stats" id="statsBar" style="margin-left:auto;font-size:12px;color:#a6e3a1;white-space:nowrap;">Cycles: 0 &nbsp;|&nbsp; Instr: 0</span>
         </div>
         <!-- Row 3: Status Message Line -->
@@ -859,12 +872,12 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
               <button class="find-btn" id="findPrevBtn" onclick="findPrev()" title="Previous match (Shift+Enter)">▲</button>
               <button class="find-btn" id="findNextBtn" onclick="findNext()" title="Next match (Enter)">▼</button>
               <button class="find-toggle-btn" id="findCaseBtn" onclick="toggleFindCase()" title="Match case (Alt+C)">Aa</button>
-              <button class="find-btn find-close" onclick="closeFindReplace()" title="Close (Esc)">&times;</button>
+              <button class="find-btn find-close" id="findCloseBtn" onclick="closeFindReplace()" title="Close (Esc)">&times;</button>
             </div>
             <div class="find-row" id="replaceRow">
               <input type="text" id="replaceInput" placeholder="Replace with..." spellcheck="false" onkeydown="if(event.key==='Enter')replaceCurrent()">
-              <button class="find-action-btn" onclick="replaceCurrent()" title="Replace current occurrence">Replace</button>
-              <button class="find-action-btn" onclick="replaceAll()" title="Replace all occurrences">All</button>
+              <button class="find-action-btn" id="findReplaceBtn" onclick="replaceCurrent()" title="Replace current occurrence">Replace</button>
+              <button class="find-action-btn" id="findReplaceAllBtn" onclick="replaceAll()" title="Replace all occurrences">All</button>
             </div>
           </div>
           <div class="editor-container">
@@ -972,7 +985,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
               </select>
               <input type="text" id="uartInputText" placeholder="Type ASCII text or comma-separated hex bytes..." onkeydown="if(event.key==='Enter')sendUartInput()">
               <button id="uartSendBtn" onclick="sendUartInput()" class="primary">Send</button>
-              <button onclick="clearUartTx()" title="Clear Terminal display output">Clear</button>
+              <button id="uartClearBtn" onclick="clearUartTx()" title="Clear Terminal display output">Clear</button>
             </div>
             <div class="uart-controls" style="margin-top:4px;display:flex;align-items:center;gap:6px 10px;font-size:11px;flex-wrap:wrap;">
               <div style="display:inline-flex;align-items:center;gap:6px;">
@@ -2461,9 +2474,42 @@ function handleMMIORead(addr, size, peekOnly = false) {
     return 0;
   }
   
+  // OLED_COL (0xFFFF0020 .. 0xFFFF0023)
+  const oledColBase = OLED_COL >>> 0;
+  if (u >= oledColBase && u < oledColBase + 4) {
+    if (size === 4) return oledCol >>> 0;
+    const offset = u - oledColBase;
+    return (oledCol >> (offset * 8)) & 0xFF;
+  }
+
+  // OLED_ROW (0xFFFF0024 .. 0xFFFF0027)
+  const oledRowBase = OLED_ROW >>> 0;
+  if (u >= oledRowBase && u < oledRowBase + 4) {
+    if (size === 4) return oledRow >>> 0;
+    const offset = u - oledRowBase;
+    return (oledRow >> (offset * 8)) & 0xFF;
+  }
+
+  // OLED_DATA (0xFFFF0028 .. 0xFFFF002B)
+  const oledDataBase = OLED_DATA >>> 0;
+  if (u >= oledDataBase && u < oledDataBase + 4) {
+    if (size === 4) return oledDataVal >>> 0;
+    const offset = u - oledDataBase;
+    return (oledDataVal >> (offset * 8)) & 0xFF;
+  }
+
+  // OLED_CTRL (0xFFFF002C .. 0xFFFF002F)
+  const oledCtrlBase = OLED_CTRL >>> 0;
+  if (u >= oledCtrlBase && u < oledCtrlBase + 4) {
+    if (size === 4) return oledCtrl >>> 0;
+    const offset = u - oledCtrlBase;
+    return (oledCtrl >> (offset * 8)) & 0xFF;
+  }
+
   // LED Output (0xFFFF0060 .. 0xFFFF0063)
   const ledBase = PERIPH_LED >>> 0;
   if (u >= ledBase && u < ledBase + 4) {
+    if (size === 4) return ledState >>> 0;
     const offset = u - ledBase;
     return (ledState >> (offset * 8)) & 0xFF;
   }
@@ -2471,13 +2517,16 @@ function handleMMIORead(addr, size, peekOnly = false) {
   // DIP Switches (0xFFFF0064 .. 0xFFFF0067)
   const dipBase = PERIPH_DIP >>> 0;
   if (u >= dipBase && u < dipBase + 4) {
+    if (size === 4) return dipSwitches >>> 0;
     const offset = u - dipBase;
+    if (size === 2) return (dipSwitches >> (offset * 8)) & 0xFFFF;
     return (dipSwitches >> (offset * 8)) & 0xFF;
   }
 
   // Push Buttons (0xFFFF0068 .. 0xFFFF006B)
   const pbBase = PERIPH_PB >>> 0;
   if (u >= pbBase && u < pbBase + 4) {
+    if (size === 4) return pbState >>> 0;
     const offset = u - pbBase;
     return (pbState >> (offset * 8)) & 0xFF;
   }
@@ -2485,8 +2534,10 @@ function handleMMIORead(addr, size, peekOnly = false) {
   // 7-Segment Display (0xFFFF0080 .. 0xFFFF0083)
   const sevBase = PERIPH_SEVENSEG >>> 0;
   if (u >= sevBase && u < sevBase + 4) {
-    const offset = u - sevBase;
     const val = parseInt(sevsegState, 16) || 0;
+    if (size === 4) return val >>> 0;
+    const offset = u - sevBase;
+    if (size === 2) return (val >> (offset * 8)) & 0xFFFF;
     return (val >> (offset * 8)) & 0xFF;
   }
 
@@ -3098,6 +3149,7 @@ const statusBar = document.getElementById('statusBar');
 
 // Track loaded/active filename for default save name suggestions
 let currentFileName = 'basic.asm';
+let lastAssembledCode = null;
 let heapPointer = 0x24000;
 
 const EXAMPLE_FILENAMES = {
@@ -3150,6 +3202,7 @@ class EditorHistory {
     } else {
       this.currentIndex++;
     }
+    if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
   }
 
   undo() {
@@ -3161,6 +3214,7 @@ class EditorHistory {
       this.editor.selectionStart = this.editor.selectionEnd = item.cursor;
       this.editor.dispatchEvent(new Event('input'));
       this.ignoreInput = false;
+      if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
       return true;
     }
     return false;
@@ -3175,6 +3229,7 @@ class EditorHistory {
       this.editor.selectionStart = this.editor.selectionEnd = item.cursor;
       this.editor.dispatchEvent(new Event('input'));
       this.ignoreInput = false;
+      if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
       return true;
     }
     return false;
@@ -3183,6 +3238,7 @@ class EditorHistory {
   initialState() {
     this.history = [{ value: this.editor.value, cursor: 0 }];
     this.currentIndex = 0;
+    if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
   }
 }
 
@@ -3212,6 +3268,10 @@ function syncScroll() {
 }
 
 function resetExecutionForSourceChange() {
+  if (lastAssembledCode !== null && editor.value === lastAssembledCode) {
+    // Code unchanged or restored via undo/redo back to assembled state
+    return;
+  }
   initializeState();
   execHistory = [];
   stepWriteLog = [];
@@ -3226,7 +3286,7 @@ function resetExecutionForSourceChange() {
   updateDisassembly();
   updateStats();
   hideExecMarker();
-  if (typeof updateRunButtonState === 'function') updateRunButtonState();
+  if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
 }
 
 function initSplitter() {
@@ -5051,6 +5111,8 @@ CYCLECOUNT_ADDR:
 
   currentFileName = EXAMPLE_FILENAMES[name] || (name + '.asm');
   editor.value = examples[name] || examples.basic;
+  lastAssembledCode = null;
+  assembled = false;
   editor.scrollTop = 0;
   editor.scrollLeft = 0;
   breakpoints.clear();
@@ -5061,6 +5123,7 @@ CYCLECOUNT_ADDR:
   clearLog();
   log(`Example loaded: ${name} (${currentFileName})`, 'info');
   setStatus('Example loaded: ' + name);
+  updateToolbarButtonStates();
 }
 window.loadExample = loadExample;
 
@@ -5476,7 +5539,12 @@ function highlightFirstLine(mc) {
 function assembleOnly() {
   clearLog();
   const mc = prepareAssembly();
-  if (!mc) return;
+  if (!mc) {
+    assembled = false;
+    if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
+    return;
+  }
+  lastAssembledCode = editor.value;
   const nInstr = mc.filter(i => !i.error).length;
   log(`Assembly successful. ${nInstr} instructions.`, 'success');
   loadProgram(mc);
@@ -5487,7 +5555,7 @@ function assembleOnly() {
   assembled = true;
   programFinished = false;
   setStatus(`Assembled ${nInstr} instructions. Ready to run.`, 'success');
-  if (typeof updateRunButtonState === 'function') updateRunButtonState();
+  if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
   return mc;
 }
 
@@ -5496,17 +5564,17 @@ function assembleAndRun() {
 }
 
 function stepOnce() {
-  if (!assembled || programFinished) {
-    clearLog();
-    const mc = prepareAssembly();
-    if (!mc) return;
-    loadProgram(mc);
-    updateMachineCode();
-    updateDisassembly();
-    highlightFirstLine(mc);
-    assembled = true;
-    programFinished = false;
-    log('Assembly loaded. Stepping...', 'info');
+  if (!assembled) {
+    setStatus('Please assemble the program first (⚙ Assemble)', 'warn');
+    log('Please assemble the program first.', 'warn');
+    updateToolbarButtonStates();
+    return;
+  }
+  if (running) return;
+  if (programFinished) {
+    setStatus('Program execution finished. Reset (⟲) or Assemble to step again.', 'info');
+    updateToolbarButtonStates();
+    return;
   }
 
   journalEnabled = true;
@@ -5523,6 +5591,7 @@ function stepOnce() {
     log(`Error at PC 0x${prePc.toString(16)}: ${e.message}`, 'error');
     journalEnabled = false;
     updateRegisters(); updateMemoryView(); updateMachineCode(); updateDisassembly(); updateStats();
+    updateToolbarButtonStates();
     return;
   }
   journalEnabled = false;
@@ -5538,11 +5607,19 @@ function stepOnce() {
   updateRegisters(); updateMemoryView(); updateMachineCode(); updateDisassembly(); updateStats();
   setStatus(`Step ${instructionCount}: PC = 0x${pc.toString(16)}`);
   log(`0x${prePc.toString(16)}: executed (next: 0x${pc.toString(16)})`, 'info');
+  updateToolbarButtonStates();
 }
 
 function stepBack() {
+  if (running) return;
+  if (!assembled) {
+    log('Please assemble the program first before stepping.', 'warn');
+    updateToolbarButtonStates();
+    return;
+  }
   if (execHistory.length === 0) {
     log('Nothing to step back to.', 'warn');
+    updateToolbarButtonStates();
     return;
   }
   const st = execHistory.pop();
@@ -5562,62 +5639,191 @@ function stepBack() {
   updateRegisters(); updateMemoryView(); updateMachineCode(); updateDisassembly(); updateStats();
   setStatus(`Back step: PC = 0x${pc.toString(16)}`);
   log(`Back to 0x${st.pc.toString(16)}`, 'info');
+  updateToolbarButtonStates();
 }
 
 let runTimerId = null;
 let programFinished = false;
 
-function updateRunButtonState() {
-  const btn = document.getElementById('runPauseBtn');
-  if (!btn) return;
+function updateToolbarButtonStates() {
+  const isCodeModifiedOrUnassembled = (lastAssembledCode === null || (editor && editor.value !== lastAssembledCode) || !assembled);
 
-  if (running) {
-    btn.innerHTML = '⏸ Pause';
-    btn.title = 'Pause program execution (F5)';
-    btn.classList.remove('primary');
-    btn.classList.add('danger');
-    btn.style.opacity = '1';
-    btn.style.cursor = 'pointer';
-  } else {
-    btn.classList.remove('danger');
-    btn.classList.add('primary');
-
-    if (!assembled) {
-      btn.innerHTML = '▶ Run';
-      btn.title = 'Please assemble the program first (⚙ Assemble or Ctrl+Enter) before running';
-      btn.style.opacity = '0.55';
-      btn.style.cursor = 'not-allowed';
-    } else if (programFinished) {
-      btn.innerHTML = '▶ Run';
-      btn.title = 'Run program from start (F5)';
-      btn.style.opacity = '1';
-      btn.style.cursor = 'pointer';
-    } else if (pc !== baseAddress || instructionCount > 0) {
-      btn.innerHTML = '▶ Resume';
-      btn.title = `Resume execution from line ${currentExecLine > 0 ? currentExecLine : 'current PC'} (F5)`;
-      btn.style.opacity = '1';
-      btn.style.cursor = 'pointer';
+  // 1. Assemble button: enabled ONLY when a program is loaded or modified, disabled once assembled
+  const assembleBtn = document.getElementById('btnAssemble');
+  if (assembleBtn) {
+    const hasCode = !!(editor && editor.value.trim().length > 0);
+    const canAssemble = hasCode && isCodeModifiedOrUnassembled;
+    assembleBtn.disabled = !canAssemble;
+    assembleBtn.classList.toggle('inactive', !canAssemble);
+    if (!hasCode) {
+      assembleBtn.title = 'No assembly code in editor';
+    } else if (canAssemble) {
+      assembleBtn.title = 'Assemble and load program into memory (Ctrl+Enter)';
     } else {
-      btn.innerHTML = '▶ Run';
-      btn.title = 'Run assembled program (F5)';
-      btn.style.opacity = '1';
-      btn.style.cursor = 'pointer';
+      assembleBtn.title = 'Program is already assembled and up to date';
     }
+  }
+
+  // 2. Undo / Redo buttons
+  const undoBtn = document.getElementById('btnUndo');
+  const redoBtn = document.getElementById('btnRedo');
+  if (undoBtn) {
+    const canUndo = !!(editorHistory && editorHistory.currentIndex > 0);
+    undoBtn.disabled = !canUndo;
+    undoBtn.classList.toggle('inactive', !canUndo);
+    undoBtn.title = canUndo ? 'Undo last edit (Ctrl+Z)' : 'Nothing to undo';
+  }
+  if (redoBtn) {
+    const canRedo = !!(editorHistory && editorHistory.currentIndex < editorHistory.history.length - 1);
+    redoBtn.disabled = !canRedo;
+    redoBtn.classList.toggle('inactive', !canRedo);
+    redoBtn.title = canRedo ? 'Redo last undone edit (Ctrl+Y)' : 'Nothing to redo';
+  }
+
+  // 3. Run / Pause button (Standard button styling, not distinct primary color)
+  const runBtn = document.getElementById('runPauseBtn');
+  if (runBtn) {
+    runBtn.classList.remove('primary');
+    runBtn.classList.remove('danger');
+
+    if (running) {
+      runBtn.innerHTML = '⏸ Pause';
+      runBtn.title = 'Pause program execution (F5)';
+      runBtn.disabled = false;
+      runBtn.classList.remove('inactive');
+      runBtn.style.opacity = '1';
+      runBtn.style.cursor = 'pointer';
+    } else {
+      if (!assembled) {
+        runBtn.innerHTML = '▶ Run';
+        runBtn.title = 'Please assemble the program first (⚙ Assemble or Ctrl+Enter) before running';
+        runBtn.disabled = true;
+        runBtn.classList.add('inactive');
+        runBtn.style.opacity = '0.45';
+        runBtn.style.cursor = 'not-allowed';
+      } else if (programFinished) {
+        runBtn.innerHTML = '▶ Run';
+        runBtn.title = 'Run program from start (F5)';
+        runBtn.disabled = false;
+        runBtn.classList.remove('inactive');
+        runBtn.style.opacity = '1';
+        runBtn.style.cursor = 'pointer';
+      } else if (pc !== baseAddress || instructionCount > 0) {
+        runBtn.innerHTML = '▶ Resume';
+        runBtn.title = `Resume execution from line ${currentExecLine > 0 ? currentExecLine : 'current PC'} (F5)`;
+        runBtn.disabled = false;
+        runBtn.classList.remove('inactive');
+        runBtn.style.opacity = '1';
+        runBtn.style.cursor = 'pointer';
+      } else {
+        runBtn.innerHTML = '▶ Run';
+        runBtn.title = 'Run assembled program (F5)';
+        runBtn.disabled = false;
+        runBtn.classList.remove('inactive');
+        runBtn.style.opacity = '1';
+        runBtn.style.cursor = 'pointer';
+      }
+    }
+  }
+
+  // 3. Step forward button
+  const stepBtn = document.getElementById('btnStep');
+  if (stepBtn) {
+    const canStep = (assembled && !running && !programFinished);
+    stepBtn.disabled = !canStep;
+    stepBtn.classList.toggle('inactive', !canStep);
+    if (!assembled) {
+      stepBtn.title = 'Please assemble the program first (⚙ Assemble or Ctrl+Enter) to step (F8)';
+    } else if (running) {
+      stepBtn.title = 'Cannot step while program is running (pause first)';
+    } else if (programFinished) {
+      stepBtn.title = 'Program execution finished. Reset (⟲) or Assemble to step again.';
+    } else {
+      stepBtn.title = 'Single step forward (F8)';
+    }
+  }
+
+  // 4. Step back button
+  const backBtn = document.getElementById('btnBack');
+  if (backBtn) {
+    const canBack = (assembled && !running && execHistory && execHistory.length > 0);
+    backBtn.disabled = !canBack;
+    backBtn.classList.toggle('inactive', !canBack);
+    if (!assembled) {
+      backBtn.title = 'Please assemble the program first before stepping (Shift+F8)';
+    } else if (running) {
+      backBtn.title = 'Cannot step back while program is running';
+    } else if (!execHistory || execHistory.length === 0) {
+      backBtn.title = 'No previous execution history to step back to';
+    } else {
+      backBtn.title = `Step back 1 instruction (${execHistory.length} step${execHistory.length > 1 ? 's' : ''} available) (Shift+F8)`;
+    }
+  }
+
+  // 5. Reset button: active only after starting to Run or Step, or if state is dirty
+  const resetBtn = document.getElementById('btnReset');
+  if (resetBtn) {
+    const isDirty = (instructionCount > 0 || (execHistory && execHistory.length > 0) || running || programFinished || pc !== baseAddress || (typeof ledState !== 'undefined' && ledState !== 0) || (typeof sevsegState !== 'undefined' && parseInt(sevsegState, 16) !== 0) || (typeof uartTxBuffer !== 'undefined' && uartTxBuffer !== '') || (typeof uartRxQueue !== 'undefined' && uartRxQueue.length > 0));
+    resetBtn.disabled = !isDirty;
+    resetBtn.classList.toggle('inactive', !isDirty);
+    resetBtn.title = isDirty ? 'Reset CPU state, registers, memory, and peripherals to initial conditions' : 'Reset becomes active once execution begins (Run or Step)';
+  }
+
+  // 6. Memory Dump buttons
+  const dumpTxtBtn = document.getElementById('btnDumpTxt');
+  const dumpDataBtn = document.getElementById('btnDumpData');
+  if (dumpTxtBtn) {
+    dumpTxtBtn.disabled = !assembled;
+    dumpTxtBtn.classList.toggle('inactive', !assembled);
+    dumpTxtBtn.title = assembled ? 'Dump code (text) memory to AA_IROM.mem' : 'Assemble program first to dump text memory';
+  }
+  if (dumpDataBtn) {
+    dumpDataBtn.disabled = !assembled;
+    dumpDataBtn.classList.toggle('inactive', !assembled);
+    dumpDataBtn.title = assembled ? 'Dump data memory to AA_DMEM.mem' : 'Assemble program first to dump data memory';
+  }
+
+  // 7. Find & Replace action buttons
+  const findPrevBtn = document.getElementById('findPrevBtn');
+  const findNextBtn = document.getElementById('findNextBtn');
+  const replaceBtn = document.getElementById('findReplaceBtn');
+  const replaceAllBtn = document.getElementById('findReplaceAllBtn');
+  const hasMatches = (typeof findMatches !== 'undefined' && findMatches.length > 0);
+  if (findPrevBtn) { findPrevBtn.disabled = !hasMatches; findPrevBtn.classList.toggle('inactive', !hasMatches); }
+  if (findNextBtn) { findNextBtn.disabled = !hasMatches; findNextBtn.classList.toggle('inactive', !hasMatches); }
+  if (replaceBtn) { replaceBtn.disabled = !hasMatches; replaceBtn.classList.toggle('inactive', !hasMatches); }
+  if (replaceAllBtn) { replaceAllBtn.disabled = !hasMatches; replaceAllBtn.classList.toggle('inactive', !hasMatches); }
+
+  // 8. UART Clear button
+  const uartClearBtn = document.getElementById('uartClearBtn');
+  if (uartClearBtn) {
+    const hasUartText = !!(typeof uartTxBuffer !== 'undefined' && uartTxBuffer.length > 0);
+    uartClearBtn.disabled = !hasUartText;
+    uartClearBtn.classList.toggle('inactive', !hasUartText);
+    uartClearBtn.title = hasUartText ? 'Clear Terminal display output' : 'Terminal output is already empty';
   }
 }
 
+function updateRunButtonState() {
+  updateToolbarButtonStates();
+}
+
 function runProgram() {
-  if (!assembled || programFinished) {
+  if (!assembled) {
     clearLog();
     const mc = assembleOnly();
     if (!mc) return;
     programFinished = false;
+  } else if (programFinished) {
+    resetAll();
+    programFinished = false;
+    log(`Running program from start (PC 0x${pc.toString(16)})...`, 'info');
   } else {
     log(`Resuming execution from PC 0x${pc.toString(16)} (line ${sourceLineForPc(pc)})...`, 'info');
   }
 
   running = true;
-  updateRunButtonState();
+  updateToolbarButtonStates();
   let count = 0;
   const maxCycles = 100000000;
   const CHUNK_SIZE = 50000;
@@ -5653,7 +5859,7 @@ function runProgram() {
     highlightCurrentLine();
     updateMachineCode();
     updateDisassembly();
-    updateRunButtonState();
+    updateToolbarButtonStates();
   }
 
   function runBatch() {
@@ -5730,14 +5936,13 @@ function toggleRunPause() {
     highlightCurrentLine();
     updateMachineCode();
     updateDisassembly();
-    updateRunButtonState();
+    updateToolbarButtonStates();
   } else {
     if (!assembled) {
-      const mc = assembleOnly();
-      if (!mc) {
-        setStatus('Please fix assembly errors before running', 'error');
-        return;
-      }
+      setStatus('Please assemble the program first (⚙ Assemble or Ctrl+Enter)', 'warn');
+      log('Please assemble the program first before running.', 'warn');
+      updateToolbarButtonStates();
+      return;
     }
     runProgram();
   }
@@ -5748,17 +5953,27 @@ function togglePause() {
 }
 
 function resetAll() {
+  const wasAssembled = assembled && machineCode && machineCode.length > 0 && (lastAssembledCode !== null && editor.value === lastAssembledCode);
   resetState();
   clearLog();
-  assembled = false;
   programFinished = false;
   currentExecLine = -1;
-  highlightCurrentLine();
-  setStatus('Reset');
-  let mc = [];
-  try { if (editor.value.trim()) mc = assemble(editor.value); } catch (e) {}
-  highlightFirstLine(mc);
-  updateRunButtonState();
+
+  if (wasAssembled) {
+    loadProgram(machineCode);
+    highlightFirstLine(machineCode);
+    assembled = true;
+    setStatus('Reset to start of program. Ready to run or step.');
+    log('Simulator reset to start of program. Ready to run or step.', 'info');
+  } else {
+    assembled = false;
+    highlightCurrentLine();
+    setStatus('Reset');
+    let mc = [];
+    try { if (editor.value.trim()) mc = assemble(editor.value); } catch (e) {}
+    highlightFirstLine(mc);
+  }
+  updateToolbarButtonStates();
 }
 
 function resetState() {
@@ -5820,6 +6035,8 @@ function loadFile(event) {
   reader.onload = function(e) {
     currentFileName = file.name;
     editor.value = e.target.result;
+    lastAssembledCode = null;
+    assembled = false;
     editor.scrollTop = 0;
     editor.scrollLeft = 0;
     breakpoints.clear();
@@ -5830,6 +6047,7 @@ function loadFile(event) {
     clearLog();
     log(`Loaded file: ${file.name}`, 'success');
     setStatus('File loaded: ' + file.name);
+    updateToolbarButtonStates();
 
     // Display loaded filename in example dropdown
     const select = document.getElementById('exampleSelect');
@@ -6381,7 +6599,7 @@ initSplitter();
     else if (e.key === 's' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveFile(); }
   });
 
-  updateRunButtonState();
+  updateToolbarButtonStates();
 
   window.loadExample = loadExample;
   window.assembleOnly = assembleOnly;
@@ -6389,6 +6607,7 @@ initSplitter();
   window.toggleRunPause = toggleRunPause;
   window.togglePause = togglePause;
   window.updateRunButtonState = updateRunButtonState;
+  window.updateToolbarButtonStates = updateToolbarButtonStates;
   window.openFindReplace = openFindReplace;
   window.closeFindReplace = closeFindReplace;
   window.toggleFindCase = toggleFindCase;

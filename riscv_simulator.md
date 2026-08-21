@@ -35,7 +35,37 @@ Designed for computer engineering students, hardware architects, and embedded sy
   - `Alt+Up` / `Alt+Down`: Moves selected line(s) up or down.
   - `Shift+Alt+Down` / `Ctrl+Shift+D`: Duplicates selected line(s).
 - **Bracket & Quote Auto-Closing**: Auto-closes `()`, `[]`, `{}`, `""`, `''`, wraps active selections, steps over closing brackets, and auto-deletes empty pairs on `Backspace`.
-- **Undo / Redo History**: Custom `EditorHistory` stack preserving exact cursor coordinates and selection ranges (`Ctrl+Z` / `Ctrl+Y`).
+
+### 2.4 Intelligent & Logical UX Button State Lifecycle Management
+To ensure a clean, intuitive, and error-proof user experience, all interactive action buttons in the simulator toolbar, floating find panel, and peripheral consoles dynamically track runtime and editor state:
+
+- **Assemble (`#btnAssemble`)**:
+  - **Modified / Freshly Loaded Code**: Active/enabled (`"Assemble and load program into memory (Ctrl+Enter)"`).
+  - **Assembled & Up-to-Date**: Disabled/inactive (`opacity: 0.45; cursor: not-allowed;` with tooltip `"Program is already assembled and up to date"`). Re-enables only when the user edits the source code or loads a different file/example.
+- **Undo (`#btnUndo`) & Redo (`#btnRedo`)**:
+  - **Undo**: Inactive/disabled when `history.currentIndex <= 0` (no edits made or initial state). Active with tooltip `"Undo last edit (Ctrl+Z)"` when undoable edits exist.
+  - **Redo**: Inactive when `history.currentIndex >= history.length - 1` (at newest head). Active with tooltip `"Redo last undone edit (Ctrl+Y)"` when redoable states are available.
+- **Run / Pause / Resume (`#runPauseBtn`)**:
+  - **Standard Harmonious Styling**: Styled identically to all other toolbar buttons (`#313244` background, hover `#45475a`, `#cdd6f4` text), maintaining equal visual hierarchy alongside Step, Back, Reset, and Assemble.
+  - **Unassembled / Modified**: Inactive (`disabled`, `opacity: 0.45`, tooltip: `"Please assemble the program first (⚙ Assemble or Ctrl+Enter) before running"`).
+  - **Assembled & Paused (Initial)**: Active `▶ Run` (tooltip: `"Run assembled program (F5)"`).
+  - **Running**: Active `⏸ Pause` (tooltip: `"Pause program execution (F5)"`).
+  - **Paused Mid-Execution**: Active `▶ Resume` (tooltip: `"Resume execution from line <N> (F5)"`).
+  - **Program Finished**: Active `▶ Run` (tooltip: `"Run program from start (F5)"`).
+- **Step Forward (`#btnStep`)**:
+  - Inactive when not assembled, when running, or when execution has reached `programFinished`. Active with tooltip `"Single step forward (F8)"` when assembled and paused.
+- **Step Back (`#btnBack`)**:
+  - Inactive when not assembled, when running, or when execution history is empty (`execHistory.length === 0`). Active with tooltip `"Step back 1 instruction (<N> step(s) available) (Shift+F8)"` once at least one instruction step has executed.
+- **Reset (`#btnReset`) & Post-Reset Assembled State**:
+  - **Inactive at Origin**: Disabled when at pristine start with 0 instructions executed (`instructionCount === 0 && execHistory.length === 0`).
+  - **Active During Execution**: Enables once execution begins (stepping or running).
+  - **Assembling NOT Required After Reset**: Clicking Reset reloads the compiled machine code into memory, resets registers and peripherals, and maintains `assembled = true`. The user can immediately click `▶ Run` or `⏭ Step` without re-assembling.
+- **Verilog Memory Dumps (`#btnDumpTxt` / `#btnDumpData`)**:
+  - Inactive when not assembled; active once valid machine code and data memory are assembled.
+- **Find & Replace Actions (`#findPrevBtn`, `#findNextBtn`, `#findReplaceBtn`, `#findReplaceAllBtn`)**:
+  - Inactive when there are 0 search matches in the editor; active when 1 or more matches are found.
+- **UART Clear (`#uartClearBtn`)**:
+  - Inactive when serial terminal buffer is empty; active when terminal output is present.
 
 ---
 
@@ -211,7 +241,7 @@ The **Peripherals Panel** implements an interactive hardware simulation of the *
 
 ---
 
-## 7. Version History (v1.0 – v11.0)
+## 7. Version History (v1.0 – v12.0)
 
 | Version | Milestone Description & Features Implemented |
 |---------|----------------------------------------------|
@@ -221,3 +251,4 @@ The **Peripherals Panel** implements an interactive hardware simulation of the *
 | **v9.0** | **Advanced Plain JS Editor & UI Refinements**: In-editor Find & Replace (`Ctrl+F`/`Ctrl+H`) with real-time match counting and token-aware match glow (`<mark>`), smart auto-indent, multi-line Tab/Shift+Tab, comment toggling (`Ctrl+/`), line moving/duplication, bracket auto-closing, and undo/redo history. Re-calibrated peripheral compactness (~10%). |
 | **v10.0** | **Morphing Run/Pause Control, Hardware-Accurate Stack Pointer, & Verilog Dumps**: Unified dynamic `#runPauseBtn` with inactive assemble state, hardware-accurate SP initialization (`x2 = 0x0` on reset), dynamic segment re-assembly, `Circle_delay_accel.asm` example integration, `AA_IROM.mem` / `AA_DMEM.mem` memory dump naming with `// @` address comments, vector SVG microchip branding, and embedded SVG favicon. |
 | **v11.0** | **RARS Syscalls Engine, Corrected Accelerometer Packing `{temp, X, Y, Z}`, & Mobile Polish**: Implemented full RARS `ecall` syscall table (print/read int, float, double, string, char, sbrk, hex, bin, unsigned, sleep, exit/exit2) with status log destination, corrected 32-bit `ACCEL_DATA` packing `{temperature, X, Y, Z}` MSB downto LSB, added toggleable Tilt `±1g` presets, fixed UART TX duplicate logging to status window, standardized mobile line height & font metrics to eliminate baseline drift, and enabled local wrapping for UART RX queue info. |
+| **v12.0** | **Intelligent & Logical UX Button State Lifecycle Management**: Full dynamic active/inactive lifecycle states for Undo, Redo, Run/Pause/Resume, Step forward, Step back, Reset, Memory Dumps (`AA_IROM.mem` / `AA_DMEM.mem`), Find & Replace actions, and UART Clear with informative hover tooltips and accessibility styles (`opacity: 0.45`, `cursor: not-allowed`). Reset becomes active only after execution begins (Run/Step); Back Step activates only when historical states exist; Undo/Redo reflect editor stack depth. |

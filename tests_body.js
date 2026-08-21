@@ -416,6 +416,202 @@ const hasChar = logsAfter.includes('A');
 const rarsPass = hasStr && hasInt && hasHex && hasChar;
 console.log('  RARS ecall syscalls (print_string, int, hex, char, exit):', rarsPass ? 'PASS' : 'FAIL');
 
+console.log('=== Visual Peripheral Status vs MMIO Address Location Contents Verification ===');
+
+// 1. LEDs (0xFFFF0060)
+writeMem(0xFFFF0060, 0x5A, 4);
+updatePeripherals();
+const ledValWord = readMem(0xFFFF0060, 4);
+const ledValByte0 = readMem(0xFFFF0060, 1);
+const ledDomMatch = [0,1,2,3,4,5,6,7].every(i => {
+  const el = document.getElementById('led' + i);
+  const shouldBeOn = !!(0x5A & (1 << i));
+  return el && el.classList.contains('on') === shouldBeOn;
+});
+console.log('  LEDs (0xFFFF0060) MMIO word=0x' + ledValWord.toString(16) + ', byte=0x' + ledValByte0.toString(16) + ' vs DOM state:', (ledValWord === 0x5A && ledValByte0 === 0x5A && ledDomMatch) ? 'PASS' : 'FAIL');
+
+// 2. DIP Switches (0xFFFF0064)
+dipSwitches = 0xA5C3;
+updatePeripherals();
+const dipValWord = readMem(0xFFFF0064, 4);
+const dipValHalf = readMem(0xFFFF0064, 2);
+const dipValByte0 = readMem(0xFFFF0064, 1);
+const dipValByte1 = readMem(0xFFFF0065, 1);
+const dipDomMatch = Array.from({length: 16}, (_, i) => i).every(i => {
+  const el = document.getElementById('dip' + i);
+  const shouldBeOn = !!(0xA5C3 & (1 << i));
+  return el && el.classList.contains('on') === shouldBeOn;
+});
+console.log('  DIP Switches (0xFFFF0064) MMIO word=0x' + dipValWord.toString(16) + ', half=0x' + dipValHalf.toString(16) + ', bytes=(0x' + dipValByte0.toString(16) + ',0x' + dipValByte1.toString(16) + ') vs DOM state:', (dipValWord === 0xA5C3 && dipValHalf === 0xA5C3 && dipValByte0 === 0xC3 && dipValByte1 === 0xA5 && dipDomMatch) ? 'PASS' : 'FAIL');
+
+// 3. Push Buttons (0xFFFF0068)
+pbState = 0b101; // BTNL=1, BTNC=0, BTNR=1
+updatePeripherals();
+const pbValWord = readMem(0xFFFF0068, 4);
+const pbValByte = readMem(0xFFFF0068, 1);
+const pbL = document.getElementById('pbBtnL');
+const pbC = document.getElementById('pbBtnC');
+const pbR = document.getElementById('pbBtnR');
+const pbDomMatch = pbL.classList.contains('pressed') && !pbC.classList.contains('pressed') && pbR.classList.contains('pressed');
+console.log('  Push Buttons (0xFFFF0068) MMIO word=' + pbValWord + ' vs DOM state (L=1,C=0,R=1):', (pbValWord === 5 && pbValByte === 5 && pbDomMatch) ? 'PASS' : 'FAIL');
+
+// 4. 7-Segment Display (0xFFFF0080)
+writeMem(0xFFFF0080, 0x89ABCDEF, 4);
+updatePeripherals();
+const sevValWord = readMem(0xFFFF0080, 4);
+const sevValByte0 = readMem(0xFFFF0080, 1);
+const sevValByte1 = readMem(0xFFFF0081, 1);
+const sevValByte2 = readMem(0xFFFF0082, 1);
+const sevValByte3 = readMem(0xFFFF0083, 1);
+const sevContainer = document.getElementById('sevsegContainer');
+const sevDomMatch = (sevsegState === '89ABCDEF' && sevContainer.childNodes.length === 8);
+console.log('  7-Segment (0xFFFF0080) MMIO word=0x' + sevValWord.toString(16) + ' vs visual state ' + sevsegState + ' (8 digits):', (sevValWord === 0x89ABCDEF && sevValByte0 === 0xEF && sevValByte1 === 0xCD && sevValByte2 === 0xAB && sevValByte3 === 0x89 && sevDomMatch) ? 'PASS' : 'FAIL');
+
+// 5. UART Serial Console (0xFFFF0000 - 0xFFFF000C)
+uartRxQueue = [0x54, 0x45, 0x53, 0x54]; // 'TEST'
+uartTxBuffer = '';
+updatePeripherals();
+const rxValidBefore = readMem(0xFFFF0000, 4);
+const txReadyVal = readMem(0xFFFF0008, 4);
+const rxPeekByte = readMem(0xFFFF0004, 4, true); // peek
+const badgeRxBefore = document.getElementById('badgeRxValid').innerText;
+const queueCountBefore = document.getElementById('uartQueueCount').innerText;
+
+// Consume 1 byte via CPU MMIO read
+const rxReadByte1 = readMem(0xFFFF0004, 1, false);
+// Write 2 bytes to UART_TX (0xFFFF000C)
+writeMem(0xFFFF000C, 0x4F, 1); // 'O'
+writeMem(0xFFFF000C, 0x4B, 1); // 'K'
+updatePeripherals();
+const termOutput = document.getElementById('uartTerminal').innerText;
+const uartPass = (rxValidBefore === 1 && badgeRxBefore === '1' && queueCountBefore.includes('4') && txReadyVal === 1 && rxPeekByte === 0x54 && rxReadByte1 === 0x54 && uartRxQueue.length === 3 && termOutput === 'OK');
+console.log('  UART (0xFFFF0000-0xFFFF000C) RX_VALID/TX_READY/RX Peek/Pop & TX Terminal text ("' + termOutput + '"):', uartPass ? 'PASS' : 'FAIL');
+
+// 6. OLED Display (0xFFFF0020 - 0xFFFF002C)
+writeMem(0xFFFF0020, 48, 4); // COL = 48
+writeMem(0xFFFF0024, 32, 4); // ROW = 32
+writeMem(0xFFFF002C, 0x00, 4); // CTRL = vary_pixel_data 8-bit
+writeMem(0xFFFF0028, 0b11100000, 4); // DATA = Red (3R-3G-2B: 7,0,0 -> 255,0,0)
+updatePeripherals();
+const oledColRead = readMem(0xFFFF0020, 4);
+const oledRowRead = readMem(0xFFFF0024, 4);
+const oledCtrlRead = readMem(0xFFFF002C, 4);
+const oledDataRead = readMem(0xFFFF0028, 4);
+const oledColUI = document.getElementById('oledColVal').innerText;
+const oledRowUI = document.getElementById('oledRowVal').innerText;
+const oledCtrlUI = document.getElementById('oledCtrlVal').innerText;
+const oledModeDesc = document.getElementById('oledModeDesc').innerText;
+const pixelIndex = (32 * 96 + 48) * 4;
+const isPixelRed = (oledBuffer[pixelIndex] === 255 && oledBuffer[pixelIndex+1] === 0 && oledBuffer[pixelIndex+2] === 0);
+const oledPass = (oledColRead === 48 && oledColUI === '48' && oledRowRead === 32 && oledRowUI === '32' && oledCtrlRead === 0 && oledCtrlUI === '0x00' && oledModeDesc.includes('vary_pixel_data_mode') && isPixelRed);
+console.log('  OLED Display (0xFFFF0020-0xFFFF002C) Registers, UI labels & FrameBuffer pixel at (48,32):', oledPass ? 'PASS' : 'FAIL');
+
+// 7. 3-Axis Accelerometer & Temperature Sensor (0xFFFF0040 - 0xFFFF0044)
+accelX = 64;   // +1.00g (0x40)
+accelY = -32;  // -0.50g (0xE0)
+accelZ = 0;    // +0.00g (0x00)
+accelTemp = 28; // 28°C (0x1C)
+accelDready = true;
+updatePeripherals();
+const vm_accelPacked = readMem(0xFFFF0040, 4);
+const vm_accelZByte = readMem(0xFFFF0040, 1);
+const vm_accelYByte = readMem(0xFFFF0041, 1);
+const vm_accelXByte = readMem(0xFFFF0042, 1);
+const vm_accelTempByte = readMem(0xFFFF0043, 1);
+const vm_accelDreadyRead = readMem(0xFFFF0044, 4);
+const vm_badgeDready = document.getElementById('badgeAccelDready').innerText;
+const vm_accelXUI = document.getElementById('accelXVal').innerText;
+const vm_accelYUI = document.getElementById('accelYVal').innerText;
+const vm_accelZUI = document.getElementById('accelZVal').innerText;
+const vm_accelTempUI = document.getElementById('accelTempVal').innerText;
+const vm_expectedPacked = (((28 & 0xFF) << 24) | ((64 & 0xFF) << 16) | ((-32 & 0xFF) << 8) | (0 & 0xFF)) >>> 0;
+const vm_accelPass = (vm_accelPacked === vm_expectedPacked && vm_accelZByte === 0 && vm_accelYByte === (256 - 32) && vm_accelXByte === 64 && vm_accelTempByte === 28 && vm_accelDreadyRead === 1 && vm_badgeDready === '1' && vm_accelXUI.includes('+1.00g') && vm_accelYUI.includes('-0.50g') && vm_accelZUI.includes('+0.00g') && vm_accelTempUI.includes('28°C'));
+console.log('  Accelerometer & Temp (0xFFFF0040-0xFFFF0044) Packed 32-bit {temp,X,Y,Z} (0x' + vm_accelPacked.toString(16) + ') & UI values:', vm_accelPass ? 'PASS' : 'FAIL');
+
+// 8. Cycle Counter (0xFFFF00A0)
+totalCycles = 987654;
+updatePeripherals();
+const vm_cycleRead = readMem(0xFFFF00A0, 4);
+const vm_cycleUI = document.getElementById('badgeCycleCount').innerText;
+const vm_cyclePass = (vm_cycleRead === 987654 && vm_cycleUI === '987654');
+console.log('  Cycle Counter (0xFFFF00A0) MMIO word=' + vm_cycleRead + ' vs UI Badge=' + vm_cycleUI + ':', vm_cyclePass ? 'PASS' : 'FAIL');
+
+// 9. Memory View Table HTML Rendering for MMIO Window
+document.getElementById('memAddr').value = '0xFFFF0000';
+document.getElementById('memRows').value = '24';
+updateMemoryView();
+const vm_memHtml = document.getElementById('memView').innerHTML;
+const vm_memViewHasUart = vm_memHtml.includes('UART RX VALID RO 0xFFFF0000') && vm_memHtml.includes('UART RX RO 0xFFFF0004');
+const vm_memViewHasOled = vm_memHtml.includes('OLED COL WO 0xFFFF0020') && vm_memHtml.includes('OLED ROW WO 0xFFFF0024');
+const vm_memViewHasAccel = vm_memHtml.includes('ACCEL DATA RO 0xFFFF0040') && vm_memHtml.includes('ACCEL DREADY RO 0xFFFF0044');
+const vm_memViewHasLeds = vm_memHtml.includes('LED WO 0xFFFF0060') && vm_memHtml.includes('DIP RO 0xFFFF0064');
+const vm_memViewHasPB = vm_memHtml.includes('PB RO 0xFFFF0068');
+const vm_memViewHas7Seg = vm_memHtml.includes('7SEG WO 0xFFFF0080');
+const vm_memViewHasCycles = vm_memHtml.includes('CYCLECOUNT RO 0xFFFF00A0');
+const vm_memViewPass = vm_memViewHasUart && vm_memViewHasOled && vm_memViewHasAccel && vm_memViewHasLeds && vm_memViewHasPB && vm_memViewHas7Seg && vm_memViewHasCycles;
+console.log('  Memory View Window (0xFFFF0000) Annotation Descriptors & Table rendering:', vm_memViewPass ? 'PASS' : 'FAIL');
+
+console.log('=== UI Button Inactive / Active Lifecycle & UX Verification ===');
+
+// 1. Pristine / Unassembled State (e.g. fresh example loaded)
+lastAssembledCode = null;
+assembled = false;
+resetAll();
+editorHistory.initialState();
+updateToolbarButtonStates();
+
+const b_assemble = document.getElementById('btnAssemble');
+const b_undo = document.getElementById('btnUndo');
+const b_redo = document.getElementById('btnRedo');
+const b_run = document.getElementById('runPauseBtn');
+const b_step = document.getElementById('btnStep');
+const b_back = document.getElementById('btnBack');
+const b_reset = document.getElementById('btnReset');
+const b_dumptxt = document.getElementById('btnDumpTxt');
+const b_dumpdata = document.getElementById('btnDumpData');
+
+const s1_pass = (b_assemble.disabled === false && b_undo.disabled === true && b_redo.disabled === true && b_run.disabled === true && b_step.disabled === true && b_back.disabled === true && b_reset.disabled === true && b_dumptxt.disabled === true && b_dumpdata.disabled === true);
+console.log('  Unassembled / Fresh state (Assemble enabled; Run, Step, Back, Reset, Dumps disabled):', s1_pass ? 'PASS' : `FAIL (assemble=${b_assemble.disabled}, undo=${b_undo.disabled}, redo=${b_redo.disabled}, run=${b_run.disabled}, step=${b_step.disabled}, back=${b_back.disabled}, reset=${b_reset.disabled})`);
+
+// 2. Undo / Redo Lifecycle
+editor.value = 'main:\n  li x1, 10\n';
+editorHistory.pushState();
+updateToolbarButtonStates();
+const undoCan_pass = (b_undo.disabled === false && b_redo.disabled === true);
+editorHistory.undo();
+const undoDone_pass = (b_undo.disabled === true && b_redo.disabled === false);
+editorHistory.redo();
+const redoDone_pass = (b_undo.disabled === false && b_redo.disabled === true);
+console.log('  Undo / Redo dynamic enable/disable lifecycle:', (undoCan_pass && undoDone_pass && redoDone_pass) ? 'PASS' : 'FAIL');
+
+// 3. Assemble Only -> Assemble becomes DISABLED (already assembled); Run & Step become enabled; Back & Reset remain disabled; Dumps become enabled
+editor.value = 'main:\n  addi x1, zero, 10\n  addi x2, zero, 20\n  add x3, x1, x2\n';
+assembleOnly();
+const s2_pass = (b_assemble.disabled === true && b_run.disabled === false && b_step.disabled === false && b_back.disabled === true && b_reset.disabled === true && b_dumptxt.disabled === false && b_dumpdata.disabled === false);
+console.log('  Assembled state (Assemble disabled; Run/Step/Dumps enabled; Back/Reset disabled):', s2_pass ? 'PASS' : `FAIL (assemble=${b_assemble.disabled}, run=${b_run.disabled}, step=${b_step.disabled}, back=${b_back.disabled}, reset=${b_reset.disabled})`);
+
+// 4. Step 1 Instruction -> Back & Reset become enabled; Run becomes 'Resume'; Assemble remains disabled
+stepOnce();
+const s3_pass = (b_assemble.disabled === true && b_back.disabled === false && b_reset.disabled === false && b_run.disabled === false && b_run.innerText.includes('Resume'));
+console.log('  After Step 1 (Back enabled, Reset enabled, Run morphs to Resume, Assemble disabled):', s3_pass ? 'PASS' : `FAIL (assemble=${b_assemble.disabled}, back=${b_back.disabled}, reset=${b_reset.disabled}, runText=${b_run.innerText})`);
+
+// 5. Step Back -> History emptied, Back becomes disabled again
+stepBack();
+const s4_pass = (b_back.disabled === true && execHistory.length === 0);
+console.log('  After Step Back to origin (Back disabled again):', s4_pass ? 'PASS' : `FAIL (back=${b_back.disabled}, histLen=${execHistory.length})`);
+
+// 6. Reset All -> Preserves assembled state! Assembling is NOT required. Run & Step remain enabled, Reset disabled, Assemble disabled
+stepOnce();
+resetAll();
+const s5_pass = (b_reset.disabled === true && b_assemble.disabled === true && b_run.disabled === false && b_step.disabled === false);
+console.log('  After Reset (Assembling NOT required; Run/Step enabled; Reset/Assemble disabled):', s5_pass ? 'PASS' : `FAIL (assemble=${b_assemble.disabled}, reset=${b_reset.disabled}, run=${b_run.disabled}, step=${b_step.disabled})`);
+
+// 7. Modifying code -> Assembling required again! (Assemble enabled; Run/Step disabled)
+editor.value += '  addi x4, zero, 40\n';
+updateEditor();
+const s6_pass = (b_assemble.disabled === false && b_run.disabled === true && b_step.disabled === true);
+console.log('  After Code Modified (Assemble enabled; Run/Step disabled until assembled):', s6_pass ? 'PASS' : `FAIL (assemble=${b_assemble.disabled}, run=${b_run.disabled}, step=${b_step.disabled})`);
+
 console.log('=== Comprehensive Instruction Set Verification (RV32I, RV32M, RV32F, RV32D, RV32A, Pseudo) ===');
 require('./test_all_instructions.js');
 
