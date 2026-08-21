@@ -224,7 +224,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .peripherals-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 10px;
   font-size: 13px;
 }
 
@@ -232,7 +232,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   background: #1e1e2e;
   border: 1px solid #313244;
   border-radius: 6px;
-  padding: 10px;
+  padding: 9px 10px;
   min-width: 0;
   box-sizing: border-box;
 }
@@ -242,9 +242,9 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   background: #0d0e15;
   border: 1px solid #313244;
   border-radius: 4px;
-  padding: 8px 10px;
-  height: 80px;
-  max-height: 110px;
+  padding: 6px 8px;
+  height: 72px;
+  max-height: 95px;
   overflow-y: auto;
   font-family: 'Consolas', 'Courier New', monospace;
   font-size: 12px;
@@ -252,13 +252,13 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   color: #a6e3a1;
   white-space: pre-wrap;
   word-break: break-all;
-  margin-top: 4px;
-  margin-bottom: 6px;
+  margin-top: 3px;
+  margin-bottom: 5px;
 }
 
 .uart-controls {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -267,21 +267,24 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   background: #313244;
   border: 1px solid #45475a;
   color: #cdd6f4;
-  padding: 4px 6px;
+  padding: 3px 6px;
   font-size: 12px;
   border-radius: 4px;
+  height: 26px;
 }
 
 .uart-controls input[type="text"] {
   flex: 1;
-  min-width: 140px;
+  min-width: 130px;
   background: #313244;
   border: 1px solid #45475a;
   color: #cdd6f4;
-  padding: 4px 8px;
+  padding: 3px 8px;
   font-size: 12px;
   border-radius: 4px;
   font-family: 'Consolas', 'Courier New', monospace;
+  height: 26px;
+  box-sizing: border-box;
 }
 
 .uart-controls input[type="checkbox"] {
@@ -296,12 +299,13 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   background: #313244;
   border: none;
   color: #cdd6f4;
-  padding: 4px 10px;
+  padding: 3px 10px;
   font-size: 12px;
   cursor: pointer;
   border-radius: 4px;
   font-family: inherit;
   white-space: nowrap;
+  height: 26px;
 }
 
 .uart-controls button:hover {
@@ -321,25 +325,25 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .uart-queue-info {
   font-size: 11px;
   color: #a6adc8;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 /* Row group that holds two peripheral boxes side-by-side on the same row */
 .periph-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
 .periph-title {
   font-weight: 600;
   color: #a6adc8;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  cursor: help;
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path d="M1 1l4.2 10.2 1.7-3.2 3.4 3.4 1.3-1.3-3.4-3.4 3.2-1.7L1 1z" fill="%23cdd6f4" stroke="%23181825" stroke-width="0.8"/><circle cx="12" cy="4" r="3.2" fill="%2389b4fa" stroke="%23181825" stroke-width="0.6"/><text x="12" y="6" font-size="5" font-weight="bold" fill="%23181825" text-anchor="middle" font-family="sans-serif">?</text></svg>') 1 1, help;
   transition: color 0.15s ease;
 }
 .periph-title:hover {
@@ -356,11 +360,11 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .periph-board {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   background: #181825;
   border: 1px solid #313244;
-  border-radius: 6px;
-  padding: 6px 8px;
+  border-radius: 5px;
+  padding: 5px 8px;
   overflow-x: auto;
   overflow-y: hidden;
   width: 100%;
@@ -446,10 +450,10 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   box-shadow: 0 0 5px #a6e3a1, 0 0 10px rgba(166, 227, 161, 0.4);
 }
 
-/* Dual-Rectangle 3D Rocker/Slide DIP Switch (Twice the Height: 24px) */
+/* Dual-Rectangle 3D Rocker/Slide DIP Switch (Balanced Height: 22px) */
 .dip-switch {
   width: 14px;
-  height: 24px;
+  height: 22px;
   border-radius: 3px;
   background: #11111b;
   border: 1px solid #45475a;
@@ -507,8 +511,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 }
 
 .pb-btn {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: #2a2a3a;
   border: 2px solid #313244;
@@ -548,24 +552,24 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 #pbContainer {
   display: flex;
   justify-content: center;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .sevseg-container {
   display: flex;
-  gap: 8px;
+  gap: 7px;
   align-items: center;
   justify-content: center;
   background: #0a0a1a;
   border: 1px solid #313244;
-  border-radius: 6px;
-  padding: 10px 12px;
+  border-radius: 5px;
+  padding: 8px 10px;
   overflow-x: auto;
 }
 
 .sevseg-digit {
-  width: 22px;
-  height: 40px;
+  width: 20px;
+  height: 36px;
   flex-shrink: 0;
 }
 
@@ -581,13 +585,13 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 
 /* Peripherals Legend */
 .periph-legend {
-  margin-top: 12px;
-  padding: 8px 10px;
+  margin-top: 8px;
+  padding: 6px 8px;
   background: #181825;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10.5px;
   color: #585b70;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .periph-legend strong {
@@ -614,10 +618,10 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
   .toolbar select, #exampleSelect { max-width: 125px; font-size: 11px; padding: 2px 4px; }
   
   .editor-wrapper { height: 360px; min-height: 220px; flex: none; width: 100%; max-width: 100vw; box-sizing: border-box; }
-  .line-numbers { width: 32px; font-size: 12px; line-height: 18px; padding: 10px 2px 10px 4px; }
-  .line-numbers div { height: 18px; }
-  .editor-container textarea, .editor-container .highlight-layer { font-size: 12px; line-height: 18px; padding: 10px 6px; }
-  .exec-marker { height: 18px; line-height: 18px; }
+  .line-numbers { width: 34px; font-size: 13px; line-height: 20px; padding: 12px 2px 12px 4px; }
+  .line-numbers div { height: 20px; }
+  .editor-container textarea, .editor-container .highlight-layer { font-size: 13px; line-height: 20px; padding: 12px 8px; }
+  .exec-marker { height: 20px; line-height: 20px; }
 
   .console { max-height: 110px; font-size: 11px; padding: 6px 8px; width: 100%; max-width: 100vw; box-sizing: border-box; }
   
@@ -817,8 +821,8 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
           </div>
 
           <!-- Cycle Counter Standalone Peripheral Section -->
-          <div class="periph-section" id="cycleSection">
-            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;" title="Cycle Counter: 32-bit elapsed CPU clock cycles since system reset (0xFFFF00A0 RO).">
+          <div class="periph-section" id="cycleSection" style="padding:7px 10px;">
+            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:0;" title="Cycle Counter: 32-bit elapsed CPU clock cycles since system reset (0xFFFF00A0 RO).">
               <span>Cycle Counter &nbsp;<span class="periph-addr" style="margin-left:4px;">0xFFFF00A0 RO</span></span>
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style="font-size:11px;color:#a6adc8;">Total Cycles: <span id="badgeCycleCount" style="color:#89b4fa;font-family:'Consolas','Courier New',monospace;font-weight:bold;font-size:12px;background:#181825;padding:2px 8px;border-radius:4px;border:1px solid #313244;">0</span></span>
@@ -863,13 +867,13 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 
           <!-- 3-Axis Accelerometer & Temp Sensor Section -->
           <div class="periph-section" id="accelSection">
-            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;" title="3-Axis Accelerometer &amp; Temp: 0xFFFF0040 ACCEL_DATA RO ([31:24] Temp, [23:16] Z, [15:8] Y, [7:0] X), 0xFFFF0044 ACCEL_DREADY RO (Bit 0).">
+            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;" title="3-Axis Accelerometer &amp; Temp: 0xFFFF0040 ACCEL_DATA RO ([31:24] Temp, [23:16] Z, [15:8] Y, [7:0] X), 0xFFFF0044 ACCEL_DREADY RO (Bit 0).">
               <span>3-Axis Accelerometer &amp; Temp &nbsp;<span class="periph-addr" style="margin-left:4px;">0xFFFF0040–0xFFFF0044</span></span>
               <span style="font-size:10px;color:#a6adc8;">
                 DREADY: <span id="badgeAccelDready" style="color:#a6e3a1;font-weight:bold;">1</span>
               </span>
             </div>
-            <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;font-size:11px;">
+            <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px;font-size:11px;">
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style="width:50px;color:#89b4fa;font-weight:bold;">X Axis:</span>
                 <input type="range" id="accelXSlider" min="-128" max="127" value="0" style="flex:1;accent-color:#89b4fa;cursor:pointer;" oninput="updateAccelValues()">
@@ -902,22 +906,22 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 
           <!-- OLED 96x64 Pixel Display Section (Absolute Bottom) -->
           <div class="periph-section" id="oledSection">
-            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;" title="OLED 96x64 Display: 0xFFFF0020 OLED_COL WO (0-95), 0xFFFF0024 OLED_ROW WO (0-63), 0xFFFF0028 OLED_DATA WO, 0xFFFF002C OLED_CTRL WO.">
+            <div class="periph-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;" title="OLED 96x64 Display: 0xFFFF0020 OLED_COL WO (0-95), 0xFFFF0024 OLED_ROW WO (0-63), 0xFFFF0028 OLED_DATA WO, 0xFFFF002C OLED_CTRL WO.">
               <span>OLED 96x64 Pixel Display &nbsp;<span class="periph-addr" style="margin-left:4px;">0xFFFF0020–0xFFFF002C</span></span>
               <button onclick="clearOledDisplay()" title="Clear OLED Frame Buffer" style="font-size:10px;padding:2px 8px;">Clear Display</button>
             </div>
-            <div style="display:flex;gap:12px;align-items:flex-start;margin-top:6px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;margin-top:4px;">
               <div style="background:#09090d;border:2px solid #313244;border-radius:6px;padding:4px;display:inline-block;box-shadow:0 0 10px rgba(0,0,0,0.5);">
                 <canvas id="oledCanvas" width="96" height="64" style="width:192px;height:128px;display:block;image-rendering:pixelated;background:#000;border-radius:2px;"></canvas>
               </div>
-              <div style="font-size:11px;color:#a6adc8;line-height:1.6;flex:1;">
+              <div style="font-size:11px;color:#a6adc8;line-height:1.5;flex:1;">
                 <div><strong>OLED_COL:</strong> <span id="oledColVal" style="color:#f9e2af;font-family:monospace;font-weight:bold;">0</span> (0–95)</div>
                 <div><strong>OLED_ROW:</strong> <span id="oledRowVal" style="color:#f9e2af;font-family:monospace;font-weight:bold;">0</span> (0–63)</div>
                 <div><strong>OLED_CTRL:</strong> <span id="oledCtrlVal" style="color:#89b4fa;font-family:monospace;font-weight:bold;">0x00</span></div>
-                <div style="font-size:10px;color:#6c7086;margin-top:4px;" id="oledModeDesc">
+                <div style="font-size:10px;color:#6c7086;margin-top:3px;" id="oledModeDesc">
                   Mode: vary_pixel_data_mode &nbsp;·&nbsp; Format: 8-bit (3R-3G-2B)
                 </div>
-                <div style="font-size:9.5px;color:#f38ba8;margin-top:6px;font-style:italic;">
+                <div style="font-size:9.5px;color:#f38ba8;margin-top:4px;font-style:italic;">
                   ⚠️ Caution: Do not leave OLED on unnecessarily long with static frames to prevent burn-in.
                 </div>
               </div>
@@ -4973,8 +4977,17 @@ function highlightCurrentLine() {
   }
   if (currentExecLine < 1) { marker.style.display = 'none'; return; }
   marker.style.display = 'block';
-  // +12 accounts for the 12px padding on the highlight-layer
-  marker.style.top = (12 + (currentExecLine - 1) * 20) + 'px';
+
+  // Measure exact DOM line element position for 100% pixel-perfection across all devices and zoom levels
+  const ln = document.getElementById('lineNumbers');
+  if (ln && ln.children && ln.children[currentExecLine - 1]) {
+    const lineEl = ln.children[currentExecLine - 1];
+    marker.style.top = lineEl.offsetTop + 'px';
+    marker.style.height = (lineEl.offsetHeight || 20) + 'px';
+  } else {
+    marker.style.top = (12 + (currentExecLine - 1) * 20) + 'px';
+    marker.style.height = '20px';
+  }
 }
 
 function toggleBreakpoint(line) {
