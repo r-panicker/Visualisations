@@ -612,6 +612,21 @@ updateEditor();
 const s6_pass = (b_assemble.disabled === false && b_run.disabled === true && b_step.disabled === true);
 console.log('  After Code Modified (Assemble enabled; Run/Step disabled until assembled):', s6_pass ? 'PASS' : `FAIL (assemble=${b_assemble.disabled}, run=${b_run.disabled}, step=${b_step.disabled})`);
 
+// 8. Line Numbers & Highlight Layer Bottom Spacer Alignment Verification
+loadExample('circle_accel');
+const lineNumHtml = document.getElementById('lineNumbers').innerHTML;
+const hlLayerHtml = document.getElementById('highlightLayer').innerHTML;
+const hasLineNumSpacer = lineNumHtml.includes('height:120px');
+const hasHlLayerSpacer = hlLayerHtml.includes('height:120px');
+
+// Test scrolling sync
+editor.scrollTop = 1450;
+editor.scrollLeft = 40;
+syncScroll();
+const scrollSyncPass = (highlightLayer.scrollTop === 1450 && highlightLayer.scrollLeft === 40 && lineNumbers.scrollTop === 1450);
+const bottomAlignmentPass = hasLineNumSpacer && hasHlLayerSpacer && scrollSyncPass;
+console.log('  Line Numbers & Highlight Layer Bottom Spacer & Scroll Alignment:', bottomAlignmentPass ? 'PASS' : `FAIL (lineSpacer=${hasLineNumSpacer}, hlSpacer=${hasHlLayerSpacer}, sync=${scrollSyncPass})`);
+
 console.log('=== Comprehensive Instruction Set Verification (RV32I, RV32M, RV32F, RV32D, RV32A, Pseudo) ===');
 require('./test_all_instructions.js');
 

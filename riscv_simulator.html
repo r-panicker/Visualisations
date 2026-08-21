@@ -3326,6 +3326,8 @@ function updateLineNumbers() {
     const cls = breakpoints.has(i) ? 'bp-line' : '';
     html += `<div class="${cls}" onclick="toggleBreakpoint(${i})" title="Click to toggle breakpoint">${i}</div>`;
   }
+  // Bottom spacer to ensure line numbers container scrollHeight can never clamp before textarea
+  html += '<div style="height:120px;pointer-events:none;" aria-hidden="true"></div>';
   lineNumbers.innerHTML = html;
 }
 
@@ -3444,6 +3446,8 @@ function highlightSyntax() {
     html += '\n';
     html += '<span style="display:inline-block;width:0;height:20px;overflow:hidden;"></span>';
   }
+  // Bottom spacer to ensure highlight layer scrollHeight can never clamp before textarea
+  html += '<div style="height:120px;pointer-events:none;" aria-hidden="true"></div>';
   
   highlightLayer.innerHTML = html;
 }

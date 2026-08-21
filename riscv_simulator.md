@@ -19,7 +19,7 @@ Designed for computer engineering students, hardware architects, and embedded sy
 
 ### 2.2 Stacked Code Editor Architecture
 - **Dual-Layer Overlay**: Synchronized line numbers and custom syntax highlighting (`.highlight-layer`) positioned directly beneath a transparent `<textarea>` input layer.
-- **Pixel-Perfect Line Gutter Alignment**: Standardized block rendering (`display: block; height: 20px !important; line-height: 20px !important; box-sizing: border-box !important;`) with `-webkit-text-size-adjust: 100% !important`, `tab-size: 4`, `white-space: pre !important`, `word-wrap: normal !important`, and `font-variant-ligatures: none !important` preventing vertical baseline drift across hundreds of lines on desktop, high-DPI, and mobile touch screens.
+- **Pixel-Perfect Line Gutter & Bottom Scroll Alignment**: Standardized block rendering (`display: block; height: 20px !important; line-height: 20px !important; box-sizing: border-box !important;`) with `-webkit-text-size-adjust: 100% !important`, `tab-size: 4`, `white-space: pre !important`, `word-wrap: normal !important`, and `font-variant-ligatures: none !important`. Both the line-numbers container and the syntax highlight layer include bottom scroll headroom spacers (`height: 120px`), preventing early browser scroll clamping when the `<textarea>` has horizontal scrollbars or bottom clearance margins, ensuring 1:1 pixel alignment across top, middle, and bottom lines.
 - **CSS Breakpoint Badges**: High-visibility 6px circular pink badges (`.bp-line::after`) indicating active line breakpoints without inflating font metrics.
 
 ### 2.3 Advanced Plain JavaScript Editor Features
