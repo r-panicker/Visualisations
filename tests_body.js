@@ -627,6 +627,165 @@ const scrollSyncPass = (highlightLayer.scrollTop === 1450 && highlightLayer.scro
 const bottomAlignmentPass = hasLineNumSpacer && hasHlLayerSpacer && scrollSyncPass;
 console.log('  Line Numbers & Highlight Layer Bottom Spacer & Scroll Alignment:', bottomAlignmentPass ? 'PASS' : `FAIL (lineSpacer=${hasLineNumSpacer}, hlSpacer=${hasHlLayerSpacer}, sync=${scrollSyncPass})`);
 
+// 9. In-Editor Autocomplete & RARS-Style Live Guidance Verification
+console.log('=== In-Editor Autocomplete & Live Guidance (RARS-Style IntelliSense) Verification ===');
+
+// Dynamic label and equate extraction
+const testSource = `.equ LED_BASE, 0xFFFF0060
+BUFFER_SIZE = 256
+
+.text
+main:
+  li a0, 10
+loop_target:
+  addi a0, a0, -1
+  bnez a0, loop_target
+  ret
+`;
+const symbols = extractEditorSymbols(testSource);
+const hasLedEqu = symbols.some(s => s.name === 'LED_BASE' && s.type === 'equ');
+const hasBufEqu = symbols.some(s => s.name === 'BUFFER_SIZE' && s.type === 'equ');
+const hasMainLbl = symbols.some(s => s.name === 'main' && s.type === 'label');
+const hasLoopLbl = symbols.some(s => s.name === 'loop_target' && s.type === 'label');
+const symbolExtractionPass = hasLedEqu && hasBufEqu && hasMainLbl && hasLoopLbl;
+console.log('  Dynamic Symbol Extraction (Labels & Equates):', symbolExtractionPass ? 'PASS' : `FAIL (LED_BASE=${hasLedEqu}, BUFFER_SIZE=${hasBufEqu}, main=${hasMainLbl}, loop_target=${hasLoopLbl})`);
+
+// Instruction & pseudo-instruction typing trigger
+editor.value = testSource + '  ad';
+editor.selectionStart = editor.selectionEnd = editor.value.length;
+updateAutocomplete();
+const hasAdd = acMatches.some(m => m.name === 'add');
+const hasAddi = acMatches.some(m => m.name === 'addi');
+const hasAddDoc = acMatches.find(m => m.name === 'addi')?.format.includes('addi rd, rs1, imm');
+const acInstPass = acActive && hasAdd && hasAddi && hasAddDoc;
+console.log('  Instruction Mnemonic Autocomplete & Format Guidance (typing "ad"):', acInstPass ? 'PASS' : `FAIL (active=${acActive}, hasAdd=${hasAdd}, hasAddi=${hasAddi}, hasDoc=${hasAddDoc})`);
+
+// Directive autocomplete trigger
+editor.value = testSource + '  .w';
+editor.selectionStart = editor.selectionEnd = editor.value.length;
+updateAutocomplete();
+const hasWordDir = acMatches.some(m => m.name === '.word' && m.type === 'directive');
+console.log('  Directive Autocomplete (typing ".w"):', (acActive && hasWordDir) ? 'PASS' : 'FAIL');
+
+// Context-Aware Operand & Register Filtering (typing "sw x" -> registers x0..x31, NOT xor!)
+editor.value = testSource + '  sw x';
+editor.selectionStart = editor.selectionEnd = editor.value.length;
+updateAutocomplete();
+const hasX1Reg = acMatches.some(m => m.name === 'x1' && m.type === 'register');
+const hasNoXor = !acMatches.some(m => m.name === 'xor' || m.name === 'xori');
+const isInstLockedToSw = (acActiveInstDoc && acActiveInstDoc.name === 'sw' && acActiveInstDoc.format.includes('sw rs2, offset(rs1)'));
+const swOperandPass = acActive && hasX1Reg && hasNoXor && isInstLockedToSw;
+console.log('  Context-Aware Register Autocomplete & Instruction Lock (typing "sw x" -> x0..x31, excludes "xor"):', swOperandPass ? 'PASS' : `FAIL (hasX1=${hasX1Reg}, hasNoXor=${hasNoXor}, isSwLocked=${!!isInstLockedToSw})`);
+
+// Context-Aware Mnemonic position (typing "xo" at line start -> "xor", "xori")
+editor.value = testSource + '  xo';
+editor.selectionStart = editor.selectionEnd = editor.value.length;
+updateAutocomplete();
+const hasXorMnemonic = acMatches.some(m => m.name === 'xor' && m.type === 'inst');
+const hasNoRegistersAtStart = !acMatches.some(m => m.type === 'register');
+const mnemonicPass = acActive && hasXorMnemonic && hasNoRegistersAtStart;
+console.log('  Mnemonic Context at Line Start (typing "xo" -> "xor", excludes registers):', mnemonicPass ? 'PASS' : 'FAIL');
+
+// User label autocomplete trigger
+editor.value = testSource + '  j loop_';
+editor.selectionStart = editor.selectionEnd = editor.value.length;
+updateAutocomplete();
+const hasLoopMatch = acMatches.some(m => m.name === 'loop_target' && m.type === 'label');
+console.log('  User Label Autocomplete (typing "loop_"):', (acActive && hasLoopMatch) ? 'PASS' : 'FAIL');
+
+// Select item insertion test
+selectAutocomplete(0);
+const insertionPass = editor.value.endsWith('loop_target');
+console.log('  Autocomplete Item Selection & Replacement Insertion:', insertionPass ? 'PASS' : 'FAIL');
+
+// Keyboard navigation & dismissal
+editor.value = testSource + '  ad';
+editor.selectionStart = editor.selectionEnd = editor.value.length;
+updateAutocomplete();
+const initialSel = acSelectedIndex;
+handleAutocompleteKeydown({ key: 'ArrowDown', preventDefault(){} });
+const nextSel = acSelectedIndex;
+handleAutocompleteKeydown({ key: 'Escape', preventDefault(){} });
+const dismissPass = (!acActive && initialSel === 0 && nextSel === 1);
+console.log('  Keyboard Navigation (ArrowDown) & Dismissal (Escape):', dismissPass ? 'PASS' : 'FAIL');
+
+// Comment and string guard test (no autocomplete popup inside comments)
+editor.value = testSource + '  # addi x1, ';
+editor.selectionStart = editor.selectionEnd = editor.value.length;
+updateAutocomplete();
+const commentGuardPass = (!acActive && acMatches.length === 0);
+console.log('  Comment Guard (no popup inside # comments):', commentGuardPass ? 'PASS' : 'FAIL');
+
+// 10. Load & Store Pseudo-Instructions Assembler & Execution Verification (sw, lw, sb, sh, lla, lga, FP pseudos)
+console.log('=== Load & Store Pseudo-Instructions (sw, lw, sb, sh, lla, lga) Verification ===');
+
+// Check editor documentation shows both native and pseudo formats for lw and sw
+const lwDoc = RISCV_AUTOCOMPLETE_DOCS.find(d => d.name === 'lw');
+const swDoc = RISCV_AUTOCOMPLETE_DOCS.find(d => d.name === 'sw');
+const lwDocPass = lwDoc && lwDoc.format.includes('lw rd, symbol') && lwDoc.format.includes('offset(rs1)');
+const swDocPass = swDoc && swDoc.format.includes('sw rs2, symbol') && swDoc.format.includes('offset(rs1)');
+console.log('  Editor Guidance Format for lw (native + pseudo):', lwDocPass ? 'PASS' : 'FAIL');
+console.log('  Editor Guidance Format for sw (native + pseudo):', swDocPass ? 'PASS' : 'FAIL');
+
+// Test sw rs2, symbol (2-operand store pseudo) and sw rs2, symbol, rt (3-operand store pseudo)
+const storePseudoProg = `.data
+  .word 0
+my_store_var: .word 0
+my_store_byte: .byte 0
+my_store_half: .half 0
+
+.text
+main:
+  li x10, 0x12345678
+  sw x10, my_store_var       # 2-operand sw pseudo (auto temp reg)
+  
+  li x11, 0xDEADBEEF
+  sw x11, my_store_var, x7   # 3-operand sw pseudo (explicit temp reg x7 / t2)
+  
+  li x12, 0x5A
+  sb x12, my_store_byte      # 2-operand sb pseudo
+  
+  li x13, 0x7654
+  sh x13, my_store_half      # 2-operand sh pseudo
+  
+  lw x14, my_store_var, x28  # 3-operand lw pseudo (explicit temp reg x28)
+  lla x15, my_store_var      # lla pseudo
+  
+  ret
+`;
+
+// Assemble and execute
+resetAll();
+const storeProg = assemble(storePseudoProg);
+loadProgram(storeProg);
+pc = 0x10000;
+for (let s = 0; s < 30; s++) {
+  if (pc < 0x10000 || pc >= 0x10000 + storeProg.length * 4) break;
+  pc = decodeAndExecute(fetchInstruction(pc), pc);
+}
+
+// Verify memory and registers
+const varAddr = labels['my_store_var'];
+const byteAddr = labels['my_store_byte'];
+const halfAddr = labels['my_store_half'];
+
+const readWordVal = (readMem(varAddr, 4) >>> 0);
+const readByteVal = readMem(byteAddr, 1);
+const readHalfVal = readMem(halfAddr, 2);
+const x14Val = (regs[14] >>> 0);
+const x15Val = regs[15];
+
+const swExecPass = (readWordVal === 0xDEADBEEF);
+const sbExecPass = (readByteVal === 0x5A);
+const shExecPass = (readHalfVal === 0x7654);
+const lw3ArgPass = (x14Val === 0xDEADBEEF);
+const llaPass = (x15Val === varAddr);
+
+console.log('  sw rs2, symbol (2-arg & 3-arg store pseudo execution):', swExecPass ? 'PASS' : `FAIL (val=0x${(readWordVal>>>0).toString(16)})`);
+console.log('  sb & sh pseudo-instructions execution:', (sbExecPass && shExecPass) ? 'PASS' : `FAIL (byte=0x${readByteVal.toString(16)}, half=0x${readHalfVal.toString(16)})`);
+console.log('  lw rd, symbol, rt (3-arg load pseudo execution):', lw3ArgPass ? 'PASS' : `FAIL (x14=0x${(x14Val>>>0).toString(16)})`);
+console.log('  lla rd, symbol (Load Local Address pseudo):', llaPass ? 'PASS' : `FAIL (x15=0x${(x15Val>>>0).toString(16)})`);
+
 console.log('=== Comprehensive Instruction Set Verification (RV32I, RV32M, RV32F, RV32D, RV32A, Pseudo) ===');
 require('./test_all_instructions.js');
 

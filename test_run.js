@@ -37,6 +37,7 @@ function makeEl(tag = 'div') {
     append(){}, focus(){}, blur(){}, select(){},
     setSelectionRange(s, e){ this.selectionStart=s; this.selectionEnd=e; },
     setAttribute(){}, getAttribute(){ return null; }, closest(){ return null; },
+    querySelector(){ return null; }, querySelectorAll(){ return []; }, scrollIntoView(){},
     scrollTop: 0, scrollLeft: 0, scrollHeight: 0, checked: false, files: [],
     childNodes: [],
     parentNode: null,

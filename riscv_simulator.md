@@ -3,6 +3,7 @@
 ## 1. Project Overview
 
 **NUS-CG3207 RISC-V Simulator** is a high-performance, single-file web application (`riscv_simulator.html`) that delivers a full-featured **RISC-V RV32GC (RV32I + M + A + F + D + C) Assembler, Emulator, and Visual Debugger**.
+Available at [https://nus-cg3207.github.io/labs](https://nus-cg3207.github.io/labs). Vibe coded by Rajesh Panicker.
 
 Designed for computer engineering students, hardware architects, and embedded systems developers, the tool combines a syntax-highlighted assembly code editor with advanced plain-JS editing capabilities, two-pass assembler, non-blocking execution engine, real-time disassembly viewer, step-by-step debugger with back-stepping history, interactive memory explorer with custom segment mapping, configurable instruction cycle timing, a hardware-accurate simulation of the **Digilent Nexys 4 FPGA Board**, a standard 16550 **UART Serial Console**, a **96x64 Pixel OLED Display MMIO Peripheral**, a **3-Axis Accelerometer & Temperature Sensor**, a **System Cycle Counter**, support for standard **RARS `ecall` Syscalls**, and pre-loaded RISC-V assembly example programs (`rars_syscalls.asm`, `Circle_delay_accel.asm`, `DIP_to_LED.asm`, `HelloWorld.asm`, `HelloWorld_jal_jalr.asm`, etc.).
 
@@ -23,6 +24,22 @@ Designed for computer engineering students, hardware architects, and embedded sy
 - **CSS Breakpoint Badges**: High-visibility 6px circular pink badges (`.bp-line::after`) indicating active line breakpoints without inflating font metrics.
 
 ### 2.3 Advanced Plain JavaScript Editor Features
+- **In-Editor Floating Autocomplete & Live Guidance (RARS-Style IntelliSense)**:
+  - **Context-Aware Grammar Position Detection**:
+    - **Mnemonic Position**: When starting a line or statement (e.g. `sw`, `addi`, `j`, `.word`), autocomplete prioritizes and offers matching RV32I/M/F/D/A instructions, pseudo-instructions, and assembler directives with full syntax signatures and operation descriptions.
+    - **Operand Position & Active Instruction Locking**: Once a mnemonic is established on the line (e.g. after typing `sw ` or `addi `), autocomplete automatically locks to the active instruction (e.g. displaying `sw rs2, offset(rs1) | sw rs2, symbol[, rt]`) and exclusively filters suggestions to **Registers** (`x0`–`x31`, `f0`–`f31`, `zero`, `ra`, `sp`, `gp`, `tp`, `t0`–`t6`, `s0`–`s11`, `a0`–`a7`), **Labels**, and **Equates**. When typing `sw x`, it accurately matches `x0`, `x1`, `x2`, etc., and completely suppresses unrelated mnemonics like `xor`.
+    - **Load & Store Pseudo-Instruction Support**: Comprehensive guidance and full assembler execution support for:
+      - `lw rd, symbol` and `lw rd, symbol, rt` (expands to `lui` + `lw`)
+      - `sw rs2, symbol` and `sw rs2, symbol, rt` (expands to `lui` + `sw` using auto or explicit temporary register)
+      - `lb rd, symbol`, `lh rd, symbol`, `lbu rd, symbol`, `lhu rd, symbol`
+      - `sb rs2, symbol[, rt]`, `sh rs2, symbol[, rt]`
+      - Address pseudos: `la rd, symbol`, `lla rd, symbol`, `lga rd, symbol`
+      - Floating-point pseudos: `fmv.s`, `fneg.s`, `fabs.s`, `fmv.d`, `fneg.d`, `fabs.d`
+      - Integer pseudos: `li`, `mv`, `not`, `neg`, `negw`, `sext.w`, `seqz`, `snez`, `sltz`, `sgtz`, `j`, `jr`, `ret`, `call`, `tail`, `beqz`, `bnez`, `blez`, `bgez`, `bltz`, `bgtz`, `bgt`, `ble`, `bgtu`, `bleu`, `nop`
+    - **Branch & Jump Label Prioritization**: For control flow instructions (`j`, `jal`, `beq`, `bne`, `la`, `call`), user-defined labels and equates are given priority.
+  - **Live Label & Equate Autocomplete**: Dynamically scans user code for declared labels (`main:`, `loop:`, `delay:`) and symbolic equates (`.equ LED_ADDR, 0xFFFF0060`, `N = 10`), offering them as completion items with dedicated badges (`[label]`, `[equ]`, `[inst]`, `[pseudo]`, `[dir]`, `[reg]`).
+  - **Full Keyboard Navigation**: `ArrowDown` / `ArrowUp` to navigate suggestions, `Enter` / `Tab` to insert the selected item, `Escape` to dismiss, and `Ctrl+Space` to manually invoke completion anywhere.
+  - **Context-Aware Guards**: Autocomplete is intelligently suppressed inside comments (`# ...`) and quoted strings (`"..."`).
 - **In-Editor Floating Find & Replace Panel (`Ctrl+F` / `Ctrl+H` / `🔍 Find`)**:
   - Live token-aware search match highlighting directly in the syntax layer (`<mark class="hl-find-match">` for all occurrences, `<mark class="hl-find-active">` for active focus).
   - Real-time match counter (`1/5 matches`), next/previous navigation (`Enter` / `Shift+Enter` / `▲` / `▼`), and case-sensitivity toggle (`Aa` / `Alt+C`).
@@ -241,7 +258,7 @@ The **Peripherals Panel** implements an interactive hardware simulation of the *
 
 ---
 
-## 7. Version History (v1.0 – v12.0)
+## 7. Version History (v1.0 – v13.0)
 
 | Version | Milestone Description & Features Implemented |
 |---------|----------------------------------------------|
@@ -252,3 +269,4 @@ The **Peripherals Panel** implements an interactive hardware simulation of the *
 | **v10.0** | **Morphing Run/Pause Control, Hardware-Accurate Stack Pointer, & Verilog Dumps**: Unified dynamic `#runPauseBtn` with inactive assemble state, hardware-accurate SP initialization (`x2 = 0x0` on reset), dynamic segment re-assembly, `Circle_delay_accel.asm` example integration, `AA_IROM.mem` / `AA_DMEM.mem` memory dump naming with `// @` address comments, vector SVG microchip branding, and embedded SVG favicon. |
 | **v11.0** | **RARS Syscalls Engine, Corrected Accelerometer Packing `{temp, X, Y, Z}`, & Mobile Polish**: Implemented full RARS `ecall` syscall table (print/read int, float, double, string, char, sbrk, hex, bin, unsigned, sleep, exit/exit2) with status log destination, corrected 32-bit `ACCEL_DATA` packing `{temperature, X, Y, Z}` MSB downto LSB, added toggleable Tilt `±1g` presets, fixed UART TX duplicate logging to status window, standardized mobile line height & font metrics to eliminate baseline drift, and enabled local wrapping for UART RX queue info. |
 | **v12.0** | **Intelligent & Logical UX Button State Lifecycle Management**: Full dynamic active/inactive lifecycle states for Undo, Redo, Run/Pause/Resume, Step forward, Step back, Reset, Memory Dumps (`AA_IROM.mem` / `AA_DMEM.mem`), Find & Replace actions, and UART Clear with informative hover tooltips and accessibility styles (`opacity: 0.45`, `cursor: not-allowed`). Reset becomes active only after execution begins (Run/Step); Back Step activates only when historical states exist; Undo/Redo reflect editor stack depth. |
+| **v13.0** | **In-Editor IntelliSense Autocomplete, Extended Pseudo-Instructions (`lw`/`sw`/`lla`/`lga`/FP), & Header Banner Attribution**: Context-aware grammar position detection (Mnemonic vs Operand), active instruction locking on operands (e.g. `sw rs2, offset(rs1)` pinned at top while typing registers, suppressing false mnemonic matches), full 32-register completion, user-defined labels/equates autocomplete, multi-line load/store pseudo-instruction expansion (`lw rd, symbol[, rt]`, `sw rs2, symbol[, rt]`, `sb`, `sh`, `sd`, `lb`, `lh`, `lbu`, `lhu`, `lla`, `lga`, FP pseudos `fmv.s`/`fneg.s`/`fabs.s`/`fmv.d`/`fneg.d`/`fabs.d`), bottom scroll headroom spacer (120px) preventing line gutter clamping, and top header banner attribution (`https://nus-cg3207.github.io/labs. Vibe coded by Rajesh Panicker.`). |

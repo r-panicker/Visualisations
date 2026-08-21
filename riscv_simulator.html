@@ -12,9 +12,12 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .container { display: flex; flex-direction: column; height: 100vh; }
 
 /* Header */
-.header { background: #181825; padding: 8px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #313244; }
+.header { background: #181825; padding: 8px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #313244; flex-wrap: wrap; }
 .header h1 { font-size: 16px; color: #cba6f7; font-weight: 600; }
 .header .subtitle { font-size: 13px; color: #6c7086; }
+.header .header-info { font-size: 12px; color: #a6adc8; margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
+.header .header-info a { color: #89b4fa; text-decoration: none; }
+.header .header-info a:hover { text-decoration: underline; color: #b4befe; }
 
 /* Main Layout */
 .main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
@@ -289,6 +292,163 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
 .find-toggle-btn.active { background: #cba6f7; color: #1e1e2e; font-weight: bold; }
 .find-close { color: #f38ba8; font-size: 14px; font-weight: bold; }
 .find-close:hover { background: rgba(243, 139, 168, 0.2); }
+
+/* In-Editor Autocomplete & Guidance Widget */
+.autocomplete-popup {
+  position: absolute;
+  z-index: 100;
+  background: #181825;
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  box-shadow: 0 8px 26px rgba(0,0,0,0.75);
+  display: flex;
+  max-width: 530px;
+  max-height: 230px;
+  overflow: hidden;
+  font-family: 'Consolas', 'Roboto Mono', 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  pointer-events: auto;
+}
+.ac-list {
+  width: 230px;
+  max-height: 230px;
+  overflow-y: auto;
+  background: #1e1e2e;
+  border-right: 1px solid #313244;
+  flex-shrink: 0;
+}
+.ac-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: #cdd6f4;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  border-left: 2px solid transparent;
+  user-select: none;
+}
+.ac-item:hover {
+  background: #28293d;
+}
+.ac-item.selected {
+  background: #313244;
+  color: #cdd6f4;
+  border-left: 2px solid #cba6f7;
+}
+.ac-badge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+.ac-badge-inst { background: rgba(137, 180, 250, 0.2); color: #89b4fa; }
+.ac-badge-pseudo { background: rgba(203, 166, 247, 0.2); color: #cba6f7; }
+.ac-badge-label { background: rgba(250, 179, 135, 0.2); color: #fab387; }
+.ac-badge-equ { background: rgba(249, 226, 175, 0.2); color: #f9e2af; }
+.ac-badge-directive { background: rgba(245, 194, 231, 0.2); color: #f5c2e7; }
+.ac-badge-register { background: rgba(166, 227, 161, 0.2); color: #a6e3a1; }
+
+.ac-name {
+  font-weight: 600;
+  color: #cdd6f4;
+  flex: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.ac-match {
+  color: #fab387;
+  text-decoration: underline;
+}
+.ac-type-hint {
+  font-size: 10px;
+  color: #6c7086;
+  margin-left: auto;
+}
+.ac-doc {
+  width: 270px;
+  padding: 8px 10px;
+  background: #181825;
+  color: #cdd6f4;
+  overflow-y: auto;
+  font-size: 11.5px;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ac-doc-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #313244;
+  padding-bottom: 4px;
+}
+.ac-doc-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #cba6f7;
+}
+.ac-doc-format {
+  background: #11111b;
+  border: 1px solid #313244;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  color: #89b4fa;
+  font-weight: 600;
+  word-break: break-all;
+}
+.ac-doc-desc {
+  color: #bac2de;
+  font-size: 11px;
+}
+.ac-doc-active-inst {
+  background: #11111b;
+  border: 1px solid #313244;
+  border-radius: 4px;
+  padding: 5px 7px;
+  margin-bottom: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ac-doc-inst-label {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  color: #cba6f7;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.ac-doc-meta {
+  color: #6c7086;
+  font-size: 10px;
+  margin-top: auto;
+  border-top: 1px solid #28293d;
+  padding-top: 4px;
+}
+@media (max-width: 600px) {
+  .autocomplete-popup {
+    flex-direction: column;
+    max-width: 90vw;
+    max-height: 280px;
+  }
+  .ac-list {
+    width: 100%;
+    max-height: 140px;
+    border-right: none;
+    border-bottom: 1px solid #313244;
+  }
+  .ac-doc {
+    width: 100%;
+    max-height: 140px;
+  }
+}
 
 /* Settings / cycles overlay panel */
 .cycles-overlay {
@@ -818,6 +978,7 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
       <div class="header">
         <h1 style="display:flex;align-items:center;gap:8px;"><svg viewBox="0 0 32 32" width="20" height="20" style="flex-shrink:0;"><rect x="6" y="6" width="20" height="20" rx="3.5" fill="#181825" stroke="#89b4fa" stroke-width="1.5"/><rect x="11" y="11" width="10" height="10" rx="1.5" fill="#313244" stroke="#cba6f7" stroke-width="1"/><path d="M2 11h4M2 16h4M2 21h4 M26 11h4M26 16h4M26 21h4 M11 2v4M16 2v4M21 2v4 M11 26v4M16 26v4M21 26v4" stroke="#f9e2af" stroke-width="1.5" stroke-linecap="round"/><text x="16" y="18.5" font-family="monospace" font-size="6.5" font-weight="bold" fill="#89b4fa" text-anchor="middle">RV</text></svg>NUS-CG3207 RISC-V Simulator</h1>
         <span class="subtitle">RV32GC — Assembler + Simulator</span>
+        <span class="header-info"><a href="https://nus-cg3207.github.io/labs" target="_blank" rel="noopener noreferrer">https://nus-cg3207.github.io/labs</a>. &nbsp;Vibe coded by Rajesh Panicker.</span>
       </div>
       <div class="toolbar" style="flex-direction:column;gap:5px;padding:6px 10px;align-items:stretch;">
         <!-- Row 1: Primary Action Buttons -->
@@ -880,9 +1041,14 @@ body { font-family: 'Consolas', 'Courier New', monospace; background: #1e1e2e; c
               <button class="find-action-btn" id="findReplaceAllBtn" onclick="replaceAll()" title="Replace all occurrences">All</button>
             </div>
           </div>
+          <!-- In-Editor Autocomplete & Guidance Popup -->
+          <div class="autocomplete-popup" id="editorAutocomplete" style="display:none;">
+            <div class="ac-list" id="acList"></div>
+            <div class="ac-doc" id="acDoc"></div>
+          </div>
           <div class="editor-container">
             <div class="highlight-layer" id="highlightLayer"></div>
-            <textarea id="asmEditor" spellcheck="false" onscroll="syncScroll()" oninput="updateEditor()" placeholder="Write RISC-V assembly here..."></textarea>
+            <textarea id="asmEditor" spellcheck="false" onscroll="syncScroll(); if(typeof positionAutocomplete==='function')positionAutocomplete();" oninput="updateEditor()" placeholder="Write RISC-V assembly here..."></textarea>
           </div>
         </div>
       </div>
@@ -1248,6 +1414,14 @@ const PSEUDO_INSTRUCTIONS = {
   'call':   ['auipc x6, %0', 'jalr x1, x6, %1'],
   'tail':   ['auipc x6, %0', 'jalr x0, x6, %1'],
   'la':     [],
+  'lla':    [],
+  'lga':    [],
+  'fmv.s':  ['fsgnj.s %0, %1, %1'],
+  'fneg.s': ['fsgnjn.s %0, %1, %1'],
+  'fabs.s': ['fsgnjx.s %0, %1, %1'],
+  'fmv.d':  ['fsgnj.d %0, %1, %1'],
+  'fneg.d': ['fsgnjn.d %0, %1, %1'],
+  'fabs.d': ['fsgnjx.d %0, %1, %1'],
   'li':     function(rd, imm) {
     const parsed = parseImm(String(imm));
     imm = isNaN(parsed) ? Number(imm) : parsed;
@@ -1534,19 +1708,35 @@ function resolveAddrRef(s, allowForward = false) {
   throw new Error(`Unknown symbol '${s}'`);
 }
 function instructionSlots(mnemonic, args) {
-  // Loads with a bare label operand expand to lui + load (2 slots)
-  if (['lb','lh','lw','lbu','lhu'].includes(mnemonic) && args.length === 2) {
-    if (!args[1].includes('(')) return 2;
-    const mem = parseMemOp(args[1], true);
-    if (mem) {
-      if (mem.reg === 0 && (mem.offset > 2047 || mem.offset < -2048)) return 2;
-    } else {
-      return 2;
+  // Loads with a bare label operand or 3 args (rd, symbol, rt) expand to lui + load (2 slots)
+  if (['lb','lh','lw','lbu','lhu','lwu','ld','flw','fld'].includes(mnemonic)) {
+    if (args.length === 3) return 2;
+    if (args.length === 2) {
+      if (!args[1].includes('(')) return 2;
+      const mem = parseMemOp(args[1], true);
+      if (mem) {
+        if (mem.reg === 0 && (mem.offset > 2047 || mem.offset < -2048)) return 2;
+      } else {
+        return 2;
+      }
+    }
+  }
+  // Stores with a bare label operand or 3 args (rs2, symbol, rt) expand to lui + store (2 slots)
+  if (['sb','sh','sw','sd','fsw','fsd'].includes(mnemonic)) {
+    if (args.length === 3) return 2;
+    if (args.length === 2) {
+      if (!args[1].includes('(')) return 2;
+      const mem = parseMemOp(args[1], true);
+      if (mem) {
+        if (mem.reg === 0 && (mem.offset > 2047 || mem.offset < -2048)) return 2;
+      } else {
+        return 2;
+      }
     }
   }
   if (INSTRUCTIONS[mnemonic]) return 1;
   switch (mnemonic) {
-    case 'la': case 'call': case 'tail': return 2;
+    case 'la': case 'lla': case 'lga': case 'call': case 'tail': return 2;
     case 'li': {
       const imm = parseImm(args[1]);
       return (!isNaN(imm) && imm >= -2048 && imm <= 2047) ? 1 : 2;
@@ -1696,11 +1886,11 @@ function assemble(source, startAddr) {
   };
 
   const emitPseudo = (mn, args, address, lineNo, asmText) => {
-    if (mn === 'la' || mn === 'call' || mn === 'tail') {
+    if (mn === 'la' || mn === 'lla' || mn === 'lga' || mn === 'call' || mn === 'tail') {
       // figure registers & second instruction depending on pseudo
       let target, rdA, rdJ, rsJ, second;
-      if (mn === 'la') {
-        // la rd, symbol  =>  auipc rd, %pcrel_hi ; addi rd, rd, %pcrel_lo
+      if (mn === 'la' || mn === 'lla' || mn === 'lga') {
+        // la/lla/lga rd, symbol => auipc rd, %pcrel_hi ; addi rd, rd, %pcrel_lo
         const rd = parseReg(args[0]);
         rdA = rd; rdJ = rd; rsJ = rd;
         target = args[1];
@@ -1748,24 +1938,70 @@ function assemble(source, startAddr) {
     const args = parseArgs(main);
     try {
       if (INSTRUCTIONS[mn]) {
-        // Special: lw/lb/lh/lbu/lhu rd, label  -> expand to lui + load when label is out of 12-bit range
-        if (['lb','lh','lw','lbu','lhu'].includes(mn) && args.length === 2) {
-          const rd = parseReg(args[0]);
-          const mem = parseMemOp(args[1]);
-          if (rd >= 0 && rd <= 31 && mem && mem.reg === 0) {
-            const addr = mem.offset;
-            if (addr > 2047 || addr < -2048) {
-              let upper = addr >>> 12;
-              let lower = addr & 0xFFF;
-              if (lower & 0x800) { upper = (upper + 1) & 0xFFFFF; }
-              const loSigned = (lower & 0x800) ? (lower - 0x1000) : lower;
-              // Use x5 (t0) as temp register for address construction, then load into rd
-              pushInstr('lui', ['x5', String(upper)], getAddr(), lineNo, asmText, true);
-              pushInstr(mn, [args[0], String(loSigned) + '(x5)'], getAddr(), lineNo, asmText, true);
-              return;
+        // Special: Load pseudo-instructions: lb/lh/lw/lbu/lhu/lwu/ld/flw/fld rd, label[, rt]
+        if (['lb','lh','lw','lbu','lhu','lwu','ld','flw','fld'].includes(mn)) {
+          if (args.length === 3) {
+            const target = resolveAddrRef(args[1]);
+            const rt = args[2];
+            let upper = target >>> 12;
+            let lower = target & 0xFFF;
+            if (lower & 0x800) { upper = (upper + 1) & 0xFFFFF; }
+            const loSigned = (lower & 0x800) ? (lower - 0x1000) : lower;
+            pushInstr('lui', [rt, String(upper)], getAddr(), lineNo, asmText, true);
+            pushInstr(mn, [args[0], String(loSigned) + `(${rt})`], getAddr(), lineNo, asmText, true);
+            return;
+          }
+          if (args.length === 2) {
+            const mem = parseMemOp(args[1]);
+            if (mem && mem.reg === 0) {
+              const addr = mem.offset;
+              if (addr > 2047 || addr < -2048) {
+                let upper = addr >>> 12;
+                let lower = addr & 0xFFF;
+                if (lower & 0x800) { upper = (upper + 1) & 0xFFFFF; }
+                const loSigned = (lower & 0x800) ? (lower - 0x1000) : lower;
+                const rd = parseReg(args[0]);
+                const tmpReg = (rd === 5 ? 'x6' : 'x5');
+                pushInstr('lui', [tmpReg, String(upper)], getAddr(), lineNo, asmText, true);
+                pushInstr(mn, [args[0], String(loSigned) + `(${tmpReg})`], getAddr(), lineNo, asmText, true);
+                return;
+              }
             }
           }
         }
+
+        // Special: Store pseudo-instructions: sb/sh/sw/sd/fsw/fsd rs2, label[, rt]
+        if (['sb','sh','sw','sd','fsw','fsd'].includes(mn)) {
+          if (args.length === 3) {
+            const target = resolveAddrRef(args[1]);
+            const rt = args[2];
+            let upper = target >>> 12;
+            let lower = target & 0xFFF;
+            if (lower & 0x800) { upper = (upper + 1) & 0xFFFFF; }
+            const loSigned = (lower & 0x800) ? (lower - 0x1000) : lower;
+            pushInstr('lui', [rt, String(upper)], getAddr(), lineNo, asmText, true);
+            pushInstr(mn, [args[0], String(loSigned) + `(${rt})`], getAddr(), lineNo, asmText, true);
+            return;
+          }
+          if (args.length === 2) {
+            const mem = parseMemOp(args[1]);
+            if (mem && mem.reg === 0) {
+              const addr = mem.offset;
+              if (addr > 2047 || addr < -2048) {
+                let upper = addr >>> 12;
+                let lower = addr & 0xFFF;
+                if (lower & 0x800) { upper = (upper + 1) & 0xFFFFF; }
+                const loSigned = (lower & 0x800) ? (lower - 0x1000) : lower;
+                const rs2 = parseReg(args[0]);
+                const tmpReg = (rs2 === 5) ? 'x6' : 'x5';
+                pushInstr('lui', [tmpReg, String(upper)], getAddr(), lineNo, asmText, true);
+                pushInstr(mn, [args[0], String(loSigned) + `(${tmpReg})`], getAddr(), lineNo, asmText, true);
+                return;
+              }
+            }
+          }
+        }
+
         pushInstr(mn, args, getAddr(), lineNo, asmText);
       } else if (PSEUDO_INSTRUCTIONS[mn]) {
         emitPseudo(mn, args, getAddr(), lineNo, asmText);
@@ -3502,6 +3738,615 @@ function updateEditor() {
     } catch(e) {}
   }
   syncScroll();
+  if (typeof updateAutocomplete === 'function') {
+    updateAutocomplete();
+  }
+}
+
+// ============================================================
+// IN-EDITOR AUTOCOMPLETE & LIVE GUIDANCE (RARS-Style IntelliSense)
+// ============================================================
+
+const RISCV_AUTOCOMPLETE_DOCS = [
+  // --- RV32I Arithmetic & Logical ---
+  { name: 'add', type: 'inst', format: 'add rd, rs1, rs2', desc: 'Addition: rd = rs1 + rs2', meta: 'R-Type | Opcode: 0x33, Funct3: 0, Funct7: 0x00' },
+  { name: 'addi', type: 'inst', format: 'addi rd, rs1, imm', desc: 'Add Immediate: rd = rs1 + sign_extend(imm12)', meta: 'I-Type | Opcode: 0x13, Funct3: 0' },
+  { name: 'sub', type: 'inst', format: 'sub rd, rs1, rs2', desc: 'Subtraction: rd = rs1 - rs2', meta: 'R-Type | Opcode: 0x33, Funct3: 0, Funct7: 0x20' },
+  { name: 'lui', type: 'inst', format: 'lui rd, imm20', desc: 'Load Upper Immediate: rd = imm20 << 12', meta: 'U-Type | Opcode: 0x37' },
+  { name: 'auipc', type: 'inst', format: 'auipc rd, imm20', desc: 'Add Upper Immediate to PC: rd = PC + (imm20 << 12)', meta: 'U-Type | Opcode: 0x17' },
+  { name: 'and', type: 'inst', format: 'and rd, rs1, rs2', desc: 'Bitwise AND: rd = rs1 & rs2', meta: 'R-Type | Opcode: 0x33, Funct3: 7, Funct7: 0x00' },
+  { name: 'andi', type: 'inst', format: 'andi rd, rs1, imm', desc: 'Bitwise AND Immediate: rd = rs1 & sign_extend(imm12)', meta: 'I-Type | Opcode: 0x13, Funct3: 7' },
+  { name: 'or', type: 'inst', format: 'or rd, rs1, rs2', desc: 'Bitwise OR: rd = rs1 | rs2', meta: 'R-Type | Opcode: 0x33, Funct3: 6, Funct7: 0x00' },
+  { name: 'ori', type: 'inst', format: 'ori rd, rs1, imm', desc: 'Bitwise OR Immediate: rd = rs1 | sign_extend(imm12)', meta: 'I-Type | Opcode: 0x13, Funct3: 6' },
+  { name: 'xor', type: 'inst', format: 'xor rd, rs1, rs2', desc: 'Bitwise XOR: rd = rs1 ^ rs2', meta: 'R-Type | Opcode: 0x33, Funct3: 4, Funct7: 0x00' },
+  { name: 'xori', type: 'inst', format: 'xori rd, rs1, imm', desc: 'Bitwise XOR Immediate: rd = rs1 ^ sign_extend(imm12)', meta: 'I-Type | Opcode: 0x13, Funct3: 4' },
+  { name: 'sll', type: 'inst', format: 'sll rd, rs1, rs2', desc: 'Shift Left Logical: rd = rs1 << (rs2 & 0x1F)', meta: 'R-Type | Opcode: 0x33, Funct3: 1, Funct7: 0x00' },
+  { name: 'slli', type: 'inst', format: 'slli rd, rs1, shamt', desc: 'Shift Left Logical Immediate: rd = rs1 << shamt', meta: 'I-Type | Opcode: 0x13, Funct3: 1' },
+  { name: 'srl', type: 'inst', format: 'srl rd, rs1, rs2', desc: 'Shift Right Logical: rd = (unsigned)rs1 >>> (rs2 & 0x1F)', meta: 'R-Type | Opcode: 0x33, Funct3: 5, Funct7: 0x00' },
+  { name: 'srli', type: 'inst', format: 'srli rd, rs1, shamt', desc: 'Shift Right Logical Immediate: rd = (unsigned)rs1 >>> shamt', meta: 'I-Type | Opcode: 0x13, Funct3: 5' },
+  { name: 'sra', type: 'inst', format: 'sra rd, rs1, rs2', desc: 'Shift Right Arithmetic: rd = rs1 >> (rs2 & 0x1F)', meta: 'R-Type | Opcode: 0x33, Funct3: 5, Funct7: 0x20' },
+  { name: 'srai', type: 'inst', format: 'srai rd, rs1, shamt', desc: 'Shift Right Arithmetic Immediate: rd = rs1 >> shamt', meta: 'I-Type | Opcode: 0x13, Funct3: 5, Funct7: 0x20' },
+  { name: 'slt', type: 'inst', format: 'slt rd, rs1, rs2', desc: 'Set Less Than (signed): rd = (rs1 < rs2) ? 1 : 0', meta: 'R-Type | Opcode: 0x33, Funct3: 2, Funct7: 0x00' },
+  { name: 'slti', type: 'inst', format: 'slti rd, rs1, imm', desc: 'Set Less Than Immediate (signed): rd = (rs1 < imm) ? 1 : 0', meta: 'I-Type | Opcode: 0x13, Funct3: 2' },
+  { name: 'sltu', type: 'inst', format: 'sltu rd, rs1, rs2', desc: 'Set Less Than Unsigned: rd = (unsigned)rs1 < (unsigned)rs2 ? 1 : 0', meta: 'R-Type | Opcode: 0x33, Funct3: 3, Funct7: 0x00' },
+  { name: 'sltiu', type: 'inst', format: 'sltiu rd, rs1, imm', desc: 'Set Less Than Unsigned Immediate: rd = (unsigned)rs1 < (unsigned)imm ? 1 : 0', meta: 'I-Type | Opcode: 0x13, Funct3: 3' },
+
+  // --- RV32I Loads & Stores (Native & Pseudo) ---
+  { name: 'lb', type: 'inst', format: 'lb rd, offset(rs1) | lb rd, symbol', desc: 'Load Byte (signed): rd = sign_extend(M[rs1 + offset][7:0]) (Pseudo: loads from symbol address via lui + lb)', meta: 'I-Type / Pseudo | Opcode: 0x03, Funct3: 0' },
+  { name: 'lbu', type: 'inst', format: 'lbu rd, offset(rs1) | lbu rd, symbol', desc: 'Load Byte Unsigned: rd = zero_extend(M[rs1 + offset][7:0]) (Pseudo: loads from symbol address via lui + lbu)', meta: 'I-Type / Pseudo | Opcode: 0x03, Funct3: 4' },
+  { name: 'lh', type: 'inst', format: 'lh rd, offset(rs1) | lh rd, symbol', desc: 'Load Halfword (signed): rd = sign_extend(M[rs1 + offset][15:0]) (Pseudo: loads from symbol address via lui + lh)', meta: 'I-Type / Pseudo | Opcode: 0x03, Funct3: 1' },
+  { name: 'lhu', type: 'inst', format: 'lhu rd, offset(rs1) | lhu rd, symbol', desc: 'Load Halfword Unsigned: rd = zero_extend(M[rs1 + offset][15:0]) (Pseudo: loads from symbol address via lui + lhu)', meta: 'I-Type / Pseudo | Opcode: 0x03, Funct3: 5' },
+  { name: 'lw', type: 'inst', format: 'lw rd, offset(rs1) | lw rd, symbol', desc: 'Load Word: rd = M[rs1 + offset][31:0] (Pseudo: loads 32-bit word from symbol address via lui + lw)', meta: 'I-Type / Pseudo | Opcode: 0x03, Funct3: 2' },
+  { name: 'sb', type: 'inst', format: 'sb rs2, offset(rs1) | sb rs2, symbol[, rt]', desc: 'Store Byte: M[rs1 + offset][7:0] = rs2[7:0] (Pseudo: stores byte to symbol address via lui + sb)', meta: 'S-Type / Pseudo | Opcode: 0x23, Funct3: 0' },
+  { name: 'sh', type: 'inst', format: 'sh rs2, offset(rs1) | sh rs2, symbol[, rt]', desc: 'Store Halfword: M[rs1 + offset][15:0] = rs2[15:0] (Pseudo: stores halfword to symbol address via lui + sh)', meta: 'S-Type / Pseudo | Opcode: 0x23, Funct3: 1' },
+  { name: 'sw', type: 'inst', format: 'sw rs2, offset(rs1) | sw rs2, symbol[, rt]', desc: 'Store Word: M[rs1 + offset][31:0] = rs2[31:0] (Pseudo: stores 32-bit word to symbol address via lui + sw)', meta: 'S-Type / Pseudo | Opcode: 0x23, Funct3: 2' },
+
+  // --- RV32I Branches & Jumps ---
+  { name: 'beq', type: 'inst', format: 'beq rs1, rs2, label', desc: 'Branch if Equal: if (rs1 == rs2) PC += offset', meta: 'B-Type | Opcode: 0x63, Funct3: 0' },
+  { name: 'bne', type: 'inst', format: 'bne rs1, rs2, label', desc: 'Branch if Not Equal: if (rs1 != rs2) PC += offset', meta: 'B-Type | Opcode: 0x63, Funct3: 1' },
+  { name: 'blt', type: 'inst', format: 'blt rs1, rs2, label', desc: 'Branch if Less Than (signed): if (rs1 < rs2) PC += offset', meta: 'B-Type | Opcode: 0x63, Funct3: 4' },
+  { name: 'bge', type: 'inst', format: 'bge rs1, rs2, label', desc: 'Branch if Greater or Equal (signed): if (rs1 >= rs2) PC += offset', meta: 'B-Type | Opcode: 0x63, Funct3: 5' },
+  { name: 'bltu', type: 'inst', format: 'bltu rs1, rs2, label', desc: 'Branch if Less Than Unsigned: if ((unsigned)rs1 < (unsigned)rs2) PC += offset', meta: 'B-Type | Opcode: 0x63, Funct3: 6' },
+  { name: 'bgeu', type: 'inst', format: 'bgeu rs1, rs2, label', desc: 'Branch if Greater or Equal Unsigned: if ((unsigned)rs1 >= (unsigned)rs2) PC += offset', meta: 'B-Type | Opcode: 0x63, Funct3: 7' },
+  { name: 'jal', type: 'inst', format: 'jal rd, label', desc: 'Jump and Link: rd = PC + 4; PC += offset', meta: 'J-Type | Opcode: 0x6F' },
+  { name: 'jalr', type: 'inst', format: 'jalr rd, offset(rs1)', desc: 'Jump and Link Register: rd = PC + 4; PC = (rs1 + offset) & ~1', meta: 'I-Type | Opcode: 0x67, Funct3: 0' },
+
+  // --- Environment & System ---
+  { name: 'ecall', type: 'inst', format: 'ecall', desc: 'Environment Call: Invokes OS / RARS Syscall (a7 = service ID)', meta: 'I-Type | Opcode: 0x73 | RARS Syscalls: 1=print_int, 4=print_str, 10=exit, 34=print_hex' },
+  { name: 'ebreak', type: 'inst', format: 'ebreak', desc: 'Environment Breakpoint: Triggers debugger halt', meta: 'I-Type | Opcode: 0x73' },
+  { name: 'fence', type: 'inst', format: 'fence', desc: 'Device / Memory Barrier Fence', meta: 'I-Type | Opcode: 0x0F' },
+
+  // --- RV32M Standard Extension (Multiply / Divide) ---
+  { name: 'mul', type: 'inst', format: 'mul rd, rs1, rs2', desc: 'Multiply (lower 32-bits): rd = (rs1 * rs2)[31:0]', meta: 'RV32M | Opcode: 0x33, Funct7: 0x01, Funct3: 0' },
+  { name: 'mulh', type: 'inst', format: 'mulh rd, rs1, rs2', desc: 'Multiply High Signed: rd = (rs1 * rs2)[63:32]', meta: 'RV32M | Opcode: 0x33, Funct7: 0x01, Funct3: 1' },
+  { name: 'mulhsu', type: 'inst', format: 'mulhsu rd, rs1, rs2', desc: 'Multiply High Signed x Unsigned: rd = (signed rs1 * unsigned rs2)[63:32]', meta: 'RV32M | Opcode: 0x33, Funct7: 0x01, Funct3: 2' },
+  { name: 'mulhu', type: 'inst', format: 'mulhu rd, rs1, rs2', desc: 'Multiply High Unsigned: rd = (unsigned rs1 * unsigned rs2)[63:32]', meta: 'RV32M | Opcode: 0x33, Funct7: 0x01, Funct3: 3' },
+  { name: 'div', type: 'inst', format: 'div rd, rs1, rs2', desc: 'Division (signed): rd = rs1 / rs2', meta: 'RV32M | Opcode: 0x33, Funct7: 0x01, Funct3: 4' },
+  { name: 'divu', type: 'inst', format: 'divu rd, rs1, rs2', desc: 'Division Unsigned: rd = (unsigned)rs1 / (unsigned)rs2', meta: 'RV32M | Opcode: 0x33, Funct7: 0x01, Funct3: 5' },
+  { name: 'rem', type: 'inst', format: 'rem rd, rs1, rs2', desc: 'Remainder (signed): rd = rs1 % rs2', meta: 'RV32M | Opcode: 0x33, Funct7: 0x01, Funct3: 6' },
+  { name: 'remu', type: 'inst', format: 'remu rd, rs1, rs2', desc: 'Remainder Unsigned: rd = (unsigned)rs1 % (unsigned)rs2', meta: 'RV32M | Opcode: 0x33, Funct7: 0x01, Funct3: 7' },
+
+  // --- Pseudo-Instructions ---
+  { name: 'li', type: 'pseudo', format: 'li rd, immediate', desc: 'Load Immediate: Loads 32-bit constant into rd (expands to addi / lui+addi)', meta: 'Pseudo-instruction -> addi or lui + addi' },
+  { name: 'la', type: 'pseudo', format: 'la rd, label', desc: 'Load Address: Loads memory address of symbol/label into rd (auipc + addi / lui + addi)', meta: 'Pseudo-instruction -> auipc + addi' },
+  { name: 'lla', type: 'pseudo', format: 'lla rd, label', desc: 'Load Local Address: Loads position-independent PC-relative address of symbol into rd', meta: 'Pseudo-instruction -> auipc + addi' },
+  { name: 'lga', type: 'pseudo', format: 'lga rd, label', desc: 'Load Global Address: Loads global address of symbol into rd', meta: 'Pseudo-instruction -> auipc + addi' },
+  { name: 'mv', type: 'pseudo', format: 'mv rd, rs', desc: 'Move Register: Copies rs into rd (addi rd, rs, 0)', meta: 'Pseudo-instruction -> addi rd, rs, 0' },
+  { name: 'not', type: 'pseudo', format: 'not rd, rs', desc: 'Bitwise NOT: rd = ~rs (xori rd, rs, -1)', meta: 'Pseudo-instruction -> xori rd, rs, -1' },
+  { name: 'neg', type: 'pseudo', format: 'neg rd, rs', desc: 'Negate (two\'s complement): rd = -rs (sub rd, x0, rs)', meta: 'Pseudo-instruction -> sub rd, x0, rs' },
+  { name: 'negw', type: 'pseudo', format: 'negw rd, rs', desc: 'Negate Word (64-bit): rd = sext(-rs[31:0]) (subw rd, x0, rs)', meta: 'Pseudo-instruction -> subw rd, x0, rs' },
+  { name: 'sext.w', type: 'pseudo', format: 'sext.w rd, rs', desc: 'Sign-extend Word: rd = sext(rs[31:0]) (addiw rd, rs, 0)', meta: 'Pseudo-instruction -> addiw rd, rs, 0' },
+  { name: 'nop', type: 'pseudo', format: 'nop', desc: 'No Operation (addi x0, x0, 0)', meta: 'Pseudo-instruction -> addi x0, x0, 0' },
+  { name: 'j', type: 'pseudo', format: 'j label', desc: 'Unconditional Jump: PC = label (jal x0, label)', meta: 'Pseudo-instruction -> jal x0, label' },
+  { name: 'jr', type: 'pseudo', format: 'jr rs', desc: 'Jump Register: PC = rs (jalr x0, rs, 0)', meta: 'Pseudo-instruction -> jalr x0, rs, 0' },
+  { name: 'ret', type: 'pseudo', format: 'ret', desc: 'Return from Subroutine: PC = ra (jalr x0, x1, 0)', meta: 'Pseudo-instruction -> jalr x0, x1, 0' },
+  { name: 'call', type: 'pseudo', format: 'call symbol', desc: 'Call Far Subroutine: Link ra and jump to symbol (auipc + jalr)', meta: 'Pseudo-instruction -> auipc x6, hi + jalr x1, x6, lo' },
+  { name: 'tail', type: 'pseudo', format: 'tail symbol', desc: 'Tail Call Subroutine: Jump without linking (auipc + jalr)', meta: 'Pseudo-instruction -> auipc x6, hi + jalr x0, x6, lo' },
+  { name: 'beqz', type: 'pseudo', format: 'beqz rs, label', desc: 'Branch if Zero: if (rs == 0) PC = label (beq rs, x0, label)', meta: 'Pseudo-instruction -> beq rs, x0, label' },
+  { name: 'bnez', type: 'pseudo', format: 'bnez rs, label', desc: 'Branch if Not Zero: if (rs != 0) PC = label (bne rs, x0, label)', meta: 'Pseudo-instruction -> bne rs, x0, label' },
+  { name: 'blez', type: 'pseudo', format: 'blez rs, label', desc: 'Branch if <= Zero: if (rs <= 0) PC = label (bge x0, rs, label)', meta: 'Pseudo-instruction -> bge x0, rs, label' },
+  { name: 'bgez', type: 'pseudo', format: 'bgez rs, label', desc: 'Branch if >= Zero: if (rs >= 0) PC = label (bge rs, x0, label)', meta: 'Pseudo-instruction -> bge rs, x0, label' },
+  { name: 'bltz', type: 'pseudo', format: 'bltz rs, label', desc: 'Branch if < Zero: if (rs < 0) PC = label (blt rs, x0, label)', meta: 'Pseudo-instruction -> blt rs, x0, label' },
+  { name: 'bgtz', type: 'pseudo', format: 'bgtz rs, label', desc: 'Branch if > Zero: if (rs > 0) PC = label (blt x0, rs, label)', meta: 'Pseudo-instruction -> blt x0, rs, label' },
+  { name: 'bgt', type: 'pseudo', format: 'bgt rs1, rs2, label', desc: 'Branch if Greater Than (signed): if (rs1 > rs2) PC = label (blt rs2, rs1, label)', meta: 'Pseudo-instruction -> blt rs2, rs1, label' },
+  { name: 'ble', type: 'pseudo', format: 'ble rs1, rs2, label', desc: 'Branch if Less or Equal (signed): if (rs1 <= rs2) PC = label (bge rs2, rs1, label)', meta: 'Pseudo-instruction -> bge rs2, rs1, label' },
+  { name: 'bgtu', type: 'pseudo', format: 'bgtu rs1, rs2, label', desc: 'Branch if Greater Than Unsigned: if (rs1 > rs2) PC = label', meta: 'Pseudo-instruction -> bltu rs2, rs1, label' },
+  { name: 'bleu', type: 'pseudo', format: 'bleu rs1, rs2, label', desc: 'Branch if Less or Equal Unsigned: if (rs1 <= rs2) PC = label', meta: 'Pseudo-instruction -> bgeu rs2, rs1, label' },
+  { name: 'seqz', type: 'pseudo', format: 'seqz rd, rs', desc: 'Set if Equal to Zero: rd = (rs == 0) ? 1 : 0', meta: 'Pseudo-instruction -> sltiu rd, rs, 1' },
+  { name: 'snez', type: 'pseudo', format: 'snez rd, rs', desc: 'Set if Not Equal to Zero: rd = (rs != 0) ? 1 : 0', meta: 'Pseudo-instruction -> sltu rd, x0, rs' },
+  { name: 'sltz', type: 'pseudo', format: 'sltz rd, rs', desc: 'Set if < Zero: rd = (rs < 0) ? 1 : 0', meta: 'Pseudo-instruction -> slt rd, rs, x0' },
+  { name: 'sgtz', type: 'pseudo', format: 'sgtz rd, rs', desc: 'Set if > Zero: rd = (rs > 0) ? 1 : 0', meta: 'Pseudo-instruction -> slt rd, x0, rs' },
+  { name: 'fmv.s', type: 'pseudo', format: 'fmv.s frd, frs', desc: 'Move Single Float: Copies frs to frd (fsgnj.s frd, frs, frs)', meta: 'Pseudo-instruction -> fsgnj.s frd, frs, frs' },
+  { name: 'fneg.s', type: 'pseudo', format: 'fneg.s frd, frs', desc: 'Negate Single Float: frd = -frs (fsgnjn.s frd, frs, frs)', meta: 'Pseudo-instruction -> fsgnjn.s frd, frs, frs' },
+  { name: 'fabs.s', type: 'pseudo', format: 'fabs.s frd, frs', desc: 'Absolute Single Float: frd = |frs| (fsgnjx.s frd, frs, frs)', meta: 'Pseudo-instruction -> fsgnjx.s frd, frs, frs' },
+  { name: 'fmv.d', type: 'pseudo', format: 'fmv.d frd, frs', desc: 'Move Double Float: Copies frs to frd (fsgnj.d frd, frs, frs)', meta: 'Pseudo-instruction -> fsgnj.d frd, frs, frs' },
+  { name: 'fneg.d', type: 'pseudo', format: 'fneg.d frd, frs', desc: 'Negate Double Float: frd = -frs (fsgnjn.d frd, frs, frs)', meta: 'Pseudo-instruction -> fsgnjn.d frd, frs, frs' },
+  { name: 'fabs.d', type: 'pseudo', format: 'fabs.d frd, frs', desc: 'Absolute Double Float: frd = |frs| (fsgnjx.d frd, frs, frs)', meta: 'Pseudo-instruction -> fsgnjx.d frd, frs, frs' },
+
+  // --- Assembler Directives ---
+  { name: '.text', type: 'directive', format: '.text [address]', desc: 'Text Section: Declares subsequent code segment (default: 0x10000)', meta: 'Assembler Directive' },
+  { name: '.data', type: 'directive', format: '.data [address]', desc: 'Data Section: Declares subsequent initialized data segment (default: 0x20000)', meta: 'Assembler Directive' },
+  { name: '.word', type: 'directive', format: '.word val1, val2, ...', desc: 'Store 32-bit Words: Allocates 4 bytes per integer', meta: 'Assembler Directive' },
+  { name: '.half', type: 'directive', format: '.half val1, val2, ...', desc: 'Store 16-bit Halfwords: Allocates 2 bytes per integer', meta: 'Assembler Directive' },
+  { name: '.byte', type: 'directive', format: '.byte val1, val2, ...', desc: 'Store 8-bit Bytes: Allocates 1 byte per value', meta: 'Assembler Directive' },
+  { name: '.dword', type: 'directive', format: '.dword val1, val2, ...', desc: 'Store 64-bit Doublewords: Allocates 8 bytes per value', meta: 'Assembler Directive' },
+  { name: '.asciiz', type: 'directive', format: '.asciiz "string"', desc: 'Store Null-Terminated ASCII String', meta: 'Assembler Directive' },
+  { name: '.ascii', type: 'directive', format: '.ascii "string"', desc: 'Store ASCII String (without trailing null terminator)', meta: 'Assembler Directive' },
+  { name: '.string', type: 'directive', format: '.string "string"', desc: 'Store Null-Terminated String (synonym of .asciiz)', meta: 'Assembler Directive' },
+  { name: '.space', type: 'directive', format: '.space bytes', desc: 'Reserve Uninitialized Bytes: Allocates N zero bytes', meta: 'Assembler Directive' },
+  { name: '.align', type: 'directive', format: '.align n', desc: 'Align Location Counter to 2^n bytes boundary', meta: 'Assembler Directive' },
+  { name: '.equ', type: 'directive', format: '.equ SYMBOL, value', desc: 'Equate Constant: Defines symbolic constant for immediate/address', meta: 'Assembler Directive' },
+  { name: '.set', type: 'directive', format: '.set SYMBOL, value', desc: 'Set Constant: Defines symbolic constant (synonym of .equ)', meta: 'Assembler Directive' },
+  { name: '.globl', type: 'directive', format: '.globl symbol', desc: 'Declare Global Symbol (e.g. .globl main)', meta: 'Assembler Directive' },
+  { name: '.global', type: 'directive', format: '.global symbol', desc: 'Declare Global Symbol (synonym of .globl)', meta: 'Assembler Directive' },
+
+  // --- All 32 Integer Registers (ABI & Hardware Names) ---
+  { name: 'zero', type: 'register', format: 'zero (x0)', desc: 'Constant Zero (Hardware hardwired to 0)', meta: 'ABI Register x0' },
+  { name: 'ra', type: 'register', format: 'ra (x1)', desc: 'Return Address (Caller-saved)', meta: 'ABI Register x1' },
+  { name: 'sp', type: 'register', format: 'sp (x2)', desc: 'Stack Pointer (Callee-saved)', meta: 'ABI Register x2' },
+  { name: 'gp', type: 'register', format: 'gp (x3)', desc: 'Global Pointer', meta: 'ABI Register x3' },
+  { name: 'tp', type: 'register', format: 'tp (x4)', desc: 'Thread Pointer', meta: 'ABI Register x4' },
+  { name: 't0', type: 'register', format: 't0 (x5)', desc: 'Temporary 0 / Alternate Link (Caller-saved)', meta: 'ABI Register x5' },
+  { name: 't1', type: 'register', format: 't1 (x6)', desc: 'Temporary 1 (Caller-saved)', meta: 'ABI Register x6' },
+  { name: 't2', type: 'register', format: 't2 (x7)', desc: 'Temporary 2 (Caller-saved)', meta: 'ABI Register x7' },
+  { name: 's0', type: 'register', format: 's0 / fp (x8)', desc: 'Saved Register 0 / Frame Pointer (Callee-saved)', meta: 'ABI Register x8' },
+  { name: 'fp', type: 'register', format: 'fp (x8)', desc: 'Frame Pointer / Saved Register 0 (Callee-saved)', meta: 'ABI Register x8' },
+  { name: 's1', type: 'register', format: 's1 (x9)', desc: 'Saved Register 1 (Callee-saved)', meta: 'ABI Register x9' },
+  { name: 'a0', type: 'register', format: 'a0 (x10)', desc: 'Function Arg 0 / Return Value 0 (Caller-saved)', meta: 'ABI Register x10' },
+  { name: 'a1', type: 'register', format: 'a1 (x11)', desc: 'Function Arg 1 / Return Value 1 (Caller-saved)', meta: 'ABI Register x11' },
+  { name: 'a2', type: 'register', format: 'a2 (x12)', desc: 'Function Arg 2 (Caller-saved)', meta: 'ABI Register x12' },
+  { name: 'a3', type: 'register', format: 'a3 (x13)', desc: 'Function Arg 3 (Caller-saved)', meta: 'ABI Register x13' },
+  { name: 'a4', type: 'register', format: 'a4 (x14)', desc: 'Function Arg 4 (Caller-saved)', meta: 'ABI Register x14' },
+  { name: 'a5', type: 'register', format: 'a5 (x15)', desc: 'Function Arg 5 (Caller-saved)', meta: 'ABI Register x15' },
+  { name: 'a6', type: 'register', format: 'a6 (x16)', desc: 'Function Arg 6 (Caller-saved)', meta: 'ABI Register x16' },
+  { name: 'a7', type: 'register', format: 'a7 (x17)', desc: 'Function Arg 7 / Syscall Number (Caller-saved)', meta: 'ABI Register x17' },
+  { name: 's2', type: 'register', format: 's2 (x18)', desc: 'Saved Register 2 (Callee-saved)', meta: 'ABI Register x18' },
+  { name: 's3', type: 'register', format: 's3 (x19)', desc: 'Saved Register 3 (Callee-saved)', meta: 'ABI Register x19' },
+  { name: 's4', type: 'register', format: 's4 (x20)', desc: 'Saved Register 4 (Callee-saved)', meta: 'ABI Register x20' },
+  { name: 's5', type: 'register', format: 's5 (x21)', desc: 'Saved Register 5 (Callee-saved)', meta: 'ABI Register x21' },
+  { name: 's6', type: 'register', format: 's6 (x22)', desc: 'Saved Register 6 (Callee-saved)', meta: 'ABI Register x22' },
+  { name: 's7', type: 'register', format: 's7 (x23)', desc: 'Saved Register 7 (Callee-saved)', meta: 'ABI Register x23' },
+  { name: 's8', type: 'register', format: 's8 (x24)', desc: 'Saved Register 8 (Callee-saved)', meta: 'ABI Register x24' },
+  { name: 's9', type: 'register', format: 's9 (x25)', desc: 'Saved Register 9 (Callee-saved)', meta: 'ABI Register x25' },
+  { name: 's10', type: 'register', format: 's10 (x26)', desc: 'Saved Register 10 (Callee-saved)', meta: 'ABI Register x26' },
+  { name: 's11', type: 'register', format: 's11 (x27)', desc: 'Saved Register 11 (Callee-saved)', meta: 'ABI Register x27' },
+  { name: 't3', type: 'register', format: 't3 (x28)', desc: 'Temporary Register 3 (Caller-saved)', meta: 'ABI Register x28' },
+  { name: 't4', type: 'register', format: 't4 (x29)', desc: 'Temporary Register 4 (Caller-saved)', meta: 'ABI Register x29' },
+  { name: 't5', type: 'register', format: 't5 (x30)', desc: 'Temporary Register 5 (Caller-saved)', meta: 'ABI Register x30' },
+  { name: 't6', type: 'register', format: 't6 (x31)', desc: 'Temporary Register 6 (Caller-saved)', meta: 'ABI Register x31' },
+
+  // --- Hardware Registers (x0 to x31) ---
+  { name: 'x0', type: 'register', format: 'x0 (zero)', desc: 'Constant Zero (Hardware hardwired to 0)', meta: 'Hardware Register x0' },
+  { name: 'x1', type: 'register', format: 'x1 (ra)', desc: 'Return Address (Caller-saved)', meta: 'Hardware Register x1' },
+  { name: 'x2', type: 'register', format: 'x2 (sp)', desc: 'Stack Pointer (Callee-saved)', meta: 'Hardware Register x2' },
+  { name: 'x3', type: 'register', format: 'x3 (gp)', desc: 'Global Pointer', meta: 'Hardware Register x3' },
+  { name: 'x4', type: 'register', format: 'x4 (tp)', desc: 'Thread Pointer', meta: 'Hardware Register x4' },
+  { name: 'x5', type: 'register', format: 'x5 (t0)', desc: 'Temporary 0 / Alternate Link (Caller-saved)', meta: 'Hardware Register x5' },
+  { name: 'x6', type: 'register', format: 'x6 (t1)', desc: 'Temporary 1 (Caller-saved)', meta: 'Hardware Register x6' },
+  { name: 'x7', type: 'register', format: 'x7 (t2)', desc: 'Temporary 2 (Caller-saved)', meta: 'Hardware Register x7' },
+  { name: 'x8', type: 'register', format: 'x8 (s0/fp)', desc: 'Saved Register 0 / Frame Pointer (Callee-saved)', meta: 'Hardware Register x8' },
+  { name: 'x9', type: 'register', format: 'x9 (s1)', desc: 'Saved Register 1 (Callee-saved)', meta: 'Hardware Register x9' },
+  { name: 'x10', type: 'register', format: 'x10 (a0)', desc: 'Function Arg 0 / Return Value 0 (Caller-saved)', meta: 'Hardware Register x10' },
+  { name: 'x11', type: 'register', format: 'x11 (a1)', desc: 'Function Arg 1 / Return Value 1 (Caller-saved)', meta: 'Hardware Register x11' },
+  { name: 'x12', type: 'register', format: 'x12 (a2)', desc: 'Function Arg 2 (Caller-saved)', meta: 'Hardware Register x12' },
+  { name: 'x13', type: 'register', format: 'x13 (a3)', desc: 'Function Arg 3 (Caller-saved)', meta: 'Hardware Register x13' },
+  { name: 'x14', type: 'register', format: 'x14 (a4)', desc: 'Function Arg 4 (Caller-saved)', meta: 'Hardware Register x14' },
+  { name: 'x15', type: 'register', format: 'x15 (a5)', desc: 'Function Arg 5 (Caller-saved)', meta: 'Hardware Register x15' },
+  { name: 'x16', type: 'register', format: 'x16 (a6)', desc: 'Function Arg 6 (Caller-saved)', meta: 'Hardware Register x16' },
+  { name: 'x17', type: 'register', format: 'x17 (a7)', desc: 'Function Arg 7 / Syscall Number (Caller-saved)', meta: 'Hardware Register x17' },
+  { name: 'x18', type: 'register', format: 'x18 (s2)', desc: 'Saved Register 2 (Callee-saved)', meta: 'Hardware Register x18' },
+  { name: 'x19', type: 'register', format: 'x19 (s3)', desc: 'Saved Register 3 (Callee-saved)', meta: 'Hardware Register x19' },
+  { name: 'x20', type: 'register', format: 'x20 (s4)', desc: 'Saved Register 4 (Callee-saved)', meta: 'Hardware Register x20' },
+  { name: 'x21', type: 'register', format: 'x21 (s5)', desc: 'Saved Register 5 (Callee-saved)', meta: 'Hardware Register x21' },
+  { name: 'x22', type: 'register', format: 'x22 (s6)', desc: 'Saved Register 6 (Callee-saved)', meta: 'Hardware Register x22' },
+  { name: 'x23', type: 'register', format: 'x23 (s7)', desc: 'Saved Register 7 (Callee-saved)', meta: 'Hardware Register x23' },
+  { name: 'x24', type: 'register', format: 'x24 (s8)', desc: 'Saved Register 8 (Callee-saved)', meta: 'Hardware Register x24' },
+  { name: 'x25', type: 'register', format: 'x25 (s9)', desc: 'Saved Register 9 (Callee-saved)', meta: 'Hardware Register x25' },
+  { name: 'x26', type: 'register', format: 'x26 (s10)', desc: 'Saved Register 10 (Callee-saved)', meta: 'Hardware Register x26' },
+  { name: 'x27', type: 'register', format: 'x27 (s11)', desc: 'Saved Register 11 (Callee-saved)', meta: 'Hardware Register x27' },
+  { name: 'x28', type: 'register', format: 'x28 (t3)', desc: 'Temporary Register 3 (Caller-saved)', meta: 'Hardware Register x28' },
+  { name: 'x29', type: 'register', format: 'x29 (t4)', desc: 'Temporary Register 4 (Caller-saved)', meta: 'Hardware Register x29' },
+  { name: 'x30', type: 'register', format: 'x30 (t5)', desc: 'Temporary Register 5 (Caller-saved)', meta: 'Hardware Register x30' },
+  { name: 'x31', type: 'register', format: 'x31 (t6)', desc: 'Temporary Register 6 (Caller-saved)', meta: 'Hardware Register x31' },
+
+  // --- Floating Point Registers (f0 to f31 & ABI names) ---
+  { name: 'ft0', type: 'register', format: 'ft0 (f0)', desc: 'FP Temporary 0', meta: 'FP Register f0' },
+  { name: 'ft1', type: 'register', format: 'ft1 (f1)', desc: 'FP Temporary 1', meta: 'FP Register f1' },
+  { name: 'ft2', type: 'register', format: 'ft2 (f2)', desc: 'FP Temporary 2', meta: 'FP Register f2' },
+  { name: 'ft3', type: 'register', format: 'ft3 (f3)', desc: 'FP Temporary 3', meta: 'FP Register f3' },
+  { name: 'ft4', type: 'register', format: 'ft4 (f4)', desc: 'FP Temporary 4', meta: 'FP Register f4' },
+  { name: 'ft5', type: 'register', format: 'ft5 (f5)', desc: 'FP Temporary 5', meta: 'FP Register f5' },
+  { name: 'ft6', type: 'register', format: 'ft6 (f6)', desc: 'FP Temporary 6', meta: 'FP Register f6' },
+  { name: 'ft7', type: 'register', format: 'ft7 (f7)', desc: 'FP Temporary 7', meta: 'FP Register f7' },
+  { name: 'fs0', type: 'register', format: 'fs0 (f8)', desc: 'FP Saved Register 0', meta: 'FP Register f8' },
+  { name: 'fs1', type: 'register', format: 'fs1 (f9)', desc: 'FP Saved Register 1', meta: 'FP Register f9' },
+  { name: 'fa0', type: 'register', format: 'fa0 (f10)', desc: 'FP Argument 0 / Return 0', meta: 'FP Register f10' },
+  { name: 'fa1', type: 'register', format: 'fa1 (f11)', desc: 'FP Argument 1 / Return 1', meta: 'FP Register f11' },
+  { name: 'f0', type: 'register', format: 'f0 (ft0)', desc: 'FP Temporary 0', meta: 'FP Register f0' },
+  { name: 'f1', type: 'register', format: 'f1 (ft1)', desc: 'FP Temporary 1', meta: 'FP Register f1' },
+  { name: 'f2', type: 'register', format: 'f2 (ft2)', desc: 'FP Temporary 2', meta: 'FP Register f2' }
+];
+
+let acActive = false;
+let acMatches = [];
+let acSelectedIndex = 0;
+let acCurrentWord = '';
+let acWordStart = 0;
+let acWordEnd = 0;
+let acActiveInstDoc = null;
+
+function getAssemblyLineContext(currentLine) {
+  // Strip comments
+  let codeOnly = currentLine.split('#')[0];
+
+  // Strip leading label declaration if present (e.g. "main:  sw x" or "loop: addi a0, ")
+  const labelMatch = codeOnly.match(/^(\s*[a-zA-Z_]\w*\s*:\s*)(.*)$/);
+  if (labelMatch) {
+    codeOnly = labelMatch[2];
+  }
+
+  // Check if we are typing the mnemonic or already in operands
+  const trimmedStart = codeOnly.trimStart();
+  if (!trimmedStart) {
+    return { context: 'MNEMONIC', activeMnemonic: null, operandIndex: 0 };
+  }
+
+  // Extract first word (mnemonic or directive)
+  const firstWordMatch = trimmedStart.match(/^([.\w]+)/);
+  if (!firstWordMatch) {
+    return { context: 'MNEMONIC', activeMnemonic: null, operandIndex: 0 };
+  }
+
+  const firstWord = firstWordMatch[1];
+  const afterFirstWord = trimmedStart.slice(firstWord.length);
+
+  // If there is no whitespace or delimiter after the first word, we are currently typing that first word (the mnemonic)
+  if (!afterFirstWord) {
+    return { context: 'MNEMONIC', activeMnemonic: firstWord.toLowerCase(), operandIndex: 0 };
+  }
+
+  // If whitespace or punctuation follows, the first word is established as the active mnemonic!
+  const commaCount = (afterFirstWord.match(/,/g) || []).length;
+  return { context: 'OPERAND', activeMnemonic: firstWord.toLowerCase(), operandIndex: commaCount };
+}
+
+function extractEditorSymbols(code) {
+  const symbols = [];
+  const seen = new Set();
+  const lines = code.split('\n');
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const lineNum = i + 1;
+    // Strip comments
+    const line = rawLine.split('#')[0].trim();
+    if (!line) continue;
+
+    // 1. Check for label declarations: label:
+    const labelMatch = line.match(/^([a-zA-Z_]\w*)\s*:/);
+    if (labelMatch) {
+      const name = labelMatch[1];
+      const nameLower = name.toLowerCase();
+      if (!seen.has(nameLower) && !INSTRUCTIONS[nameLower] && !PSEUDO_INSTRUCTIONS[nameLower]) {
+        seen.add(nameLower);
+        symbols.push({
+          name: name,
+          type: 'label',
+          format: `${name} (line ${lineNum})`,
+          desc: `Declared at line ${lineNum}: "${rawLine.trim()}"`,
+          meta: `User-defined code/data label`
+        });
+      }
+    }
+
+    // 2. Check for .equ / .set: .equ SYMBOL, val
+    const equMatch = line.match(/^\.(?:equ|set)\s+([a-zA-Z_]\w*)\s*,\s*([^#]+)/i);
+    if (equMatch) {
+      const name = equMatch[1];
+      const val = equMatch[2].trim();
+      const nameLower = name.toLowerCase();
+      if (!seen.has(nameLower)) {
+        seen.add(nameLower);
+        symbols.push({
+          name: name,
+          type: 'equ',
+          format: `.equ ${name}, ${val}`,
+          desc: `Equate constant defined at line ${lineNum}: ${name} = ${val}`,
+          meta: `User-defined equate constant`
+        });
+      }
+    }
+
+    // 3. Direct assignment: SYMBOL = val
+    const assignMatch = line.match(/^([a-zA-Z_]\w*)\s*=\s*([^#]+)/);
+    if (assignMatch) {
+      const name = assignMatch[1];
+      const val = assignMatch[2].trim();
+      const nameLower = name.toLowerCase();
+      if (!seen.has(nameLower)) {
+        seen.add(nameLower);
+        symbols.push({
+          name: name,
+          type: 'equ',
+          format: `${name} = ${val}`,
+          desc: `Constant defined at line ${lineNum}: ${name} = ${val}`,
+          meta: `User-defined constant`
+        });
+      }
+    }
+  }
+
+  return symbols;
+}
+
+function updateAutocomplete(forceOpen = false) {
+  if (!editor || typeof document === 'undefined') return;
+  const cursorPos = editor.selectionStart;
+  if (cursorPos === undefined || cursorPos === null) {
+    hideAutocomplete();
+    return;
+  }
+  const text = editor.value;
+  const textBefore = text.slice(0, cursorPos);
+  const currentLine = textBefore.split('\n').pop();
+
+  // Do not trigger inside comments (# ...)
+  const commentIdx = currentLine.indexOf('#');
+  if (commentIdx !== -1) {
+    hideAutocomplete();
+    return;
+  }
+
+  // Do not trigger inside strings ("...")
+  const quoteCount = (currentLine.match(/"/g) || []).length;
+  if (quoteCount % 2 !== 0) {
+    hideAutocomplete();
+    return;
+  }
+
+  // Extract current word prefix (supports '.', alphanumeric, '_')
+  const wordMatch = textBefore.match(/([.\w]+)$/);
+  if (!wordMatch && !forceOpen) {
+    hideAutocomplete();
+    return;
+  }
+
+  const word = wordMatch ? wordMatch[1] : '';
+  acCurrentWord = word;
+  acWordStart = cursorPos - word.length;
+  acWordEnd = cursorPos;
+
+  // Minimum trigger threshold: 1 character or if explicitly forced
+  if (word.length < 1 && !forceOpen) {
+    hideAutocomplete();
+    return;
+  }
+
+  const lineCtx = getAssemblyLineContext(currentLine);
+  const wordLower = word.toLowerCase();
+  const userSymbols = extractEditorSymbols(text);
+  const allCandidates = [...userSymbols, ...RISCV_AUTOCOMPLETE_DOCS];
+
+  // Resolve active instruction doc if in OPERAND context
+  acActiveInstDoc = null;
+  if (lineCtx.context === 'OPERAND' && lineCtx.activeMnemonic) {
+    acActiveInstDoc = RISCV_AUTOCOMPLETE_DOCS.find(
+      d => (d.type === 'inst' || d.type === 'pseudo' || d.type === 'directive') && d.name.toLowerCase() === lineCtx.activeMnemonic
+    ) || null;
+  }
+
+  const filtered = [];
+  const seenNames = new Set();
+
+  for (const cand of allCandidates) {
+    const nameLower = cand.name.toLowerCase();
+    if (seenNames.has(nameLower)) continue;
+
+    // Filter by statement context:
+    if (lineCtx.context === 'MNEMONIC') {
+      // In mnemonic position, only show instructions, pseudo-instructions, directives, and user labels
+      // Do NOT show bare registers (e.g. x0..x31, zero, ra, sp) as line-starting mnemonics
+      if (cand.type === 'register') continue;
+    } else if (lineCtx.context === 'OPERAND') {
+      // In operand position, only show registers, user labels, and equates/constants
+      // Do NOT show other instruction mnemonics (e.g. typing "sw x" must NEVER show "xor")!
+      if (cand.type === 'inst' || cand.type === 'pseudo' || cand.type === 'directive') continue;
+    }
+
+    if (!wordLower || nameLower.startsWith(wordLower)) {
+      seenNames.add(nameLower);
+      let score = (nameLower === wordLower ? 100 : 50) + (10 - nameLower.length * 0.1);
+
+      if (lineCtx.context === 'OPERAND') {
+        const isJumpOrBranch = lineCtx.activeMnemonic && /^(j|jal|jalr|beq|bne|blt|bge|bltu|bgeu|beqz|bnez|blez|bgez|bltz|bgtz|bgt|ble|bgtu|bleu|call|tail|la)$/i.test(lineCtx.activeMnemonic);
+        if (isJumpOrBranch && (cand.type === 'label' || cand.type === 'equ')) {
+          score += 40; // Prioritize labels/equates for jump/branch targets
+        } else if (cand.type === 'register') {
+          score += 30; // Prioritize registers for standard ALU / load / store operands
+        }
+      }
+      filtered.push({ cand, score });
+    } else if (wordLower.length >= 2 && nameLower.includes(wordLower)) {
+      seenNames.add(nameLower);
+      let score = 20 + (10 - nameLower.indexOf(wordLower));
+      if (cand.type === 'register') score += 10;
+      filtered.push({ cand, score });
+    }
+  }
+
+  if (filtered.length === 0) {
+    hideAutocomplete();
+    return;
+  }
+
+  filtered.sort((a, b) => b.score - a.score);
+  acMatches = filtered.slice(0, 14).map(f => f.cand);
+  acSelectedIndex = 0;
+
+  renderAutocomplete();
+  positionAutocomplete();
+  showAutocomplete();
+}
+
+function renderAutocomplete() {
+  if (typeof document === 'undefined') return;
+  const listEl = document.getElementById('acList');
+  const docEl = document.getElementById('acDoc');
+  if (!listEl || !docEl) return;
+
+  let listHtml = '';
+  for (let i = 0; i < acMatches.length; i++) {
+    const item = acMatches[i];
+    const isSel = (i === acSelectedIndex);
+    const selClass = isSel ? ' selected' : '';
+
+    let displayName = escapeHtml(item.name);
+    const matchIdx = item.name.toLowerCase().indexOf(acCurrentWord.toLowerCase());
+    if (matchIdx !== -1 && acCurrentWord.length > 0) {
+      const matchLen = acCurrentWord.length;
+      displayName = escapeHtml(item.name.slice(0, matchIdx)) +
+        `<span class="ac-match">${escapeHtml(item.name.slice(matchIdx, matchIdx + matchLen))}</span>` +
+        escapeHtml(item.name.slice(matchIdx + matchLen));
+    }
+
+    const badgeClass = `ac-badge ac-badge-${item.type}`;
+    const badgeLabel = item.type === 'directive' ? 'dir' : item.type === 'register' ? 'reg' : item.type;
+
+    listHtml += `<div class="ac-item${selClass}" data-idx="${i}" onclick="selectAutocomplete(${i})" onmouseenter="highlightAutocompleteIndex(${i})">
+      <span class="${badgeClass}">${badgeLabel}</span>
+      <span class="ac-name">${displayName}</span>
+    </div>`;
+  }
+  listEl.innerHTML = listHtml;
+
+  // Scroll active item into view
+  const selectedItem = (typeof listEl.querySelector === 'function') ? listEl.querySelector('.ac-item.selected') : null;
+  if (selectedItem && typeof selectedItem.scrollIntoView === 'function') {
+    selectedItem.scrollIntoView({ block: 'nearest' });
+  }
+
+  // Render doc view
+  const currentItem = acMatches[acSelectedIndex];
+  let docHtml = '';
+
+  // If in OPERAND context and we have an active instruction, show the active instruction signature at the top of the guidance box
+  if (acActiveInstDoc) {
+    docHtml += `
+      <div class="ac-doc-active-inst">
+        <span class="ac-doc-inst-label">Active Instruction Format</span>
+        <code class="ac-doc-format">${escapeHtml(acActiveInstDoc.format)}</code>
+        <div class="ac-doc-desc" style="margin-top:2px;">${escapeHtml(acActiveInstDoc.desc)}</div>
+      </div>
+    `;
+  }
+
+  if (currentItem) {
+    const badgeClass = `ac-badge ac-badge-${currentItem.type}`;
+    const badgeLabel = currentItem.type === 'directive' ? 'dir' : currentItem.type === 'register' ? 'reg' : currentItem.type;
+    docHtml += `
+      <div class="ac-doc-header">
+        <span class="${badgeClass}">${badgeLabel}</span>
+        <span class="ac-doc-title">${escapeHtml(currentItem.name)}</span>
+      </div>
+      <div class="ac-doc-format">${escapeHtml(currentItem.format)}</div>
+      <div class="ac-doc-desc">${escapeHtml(currentItem.desc)}</div>
+      ${currentItem.meta ? `<div class="ac-doc-meta">${escapeHtml(currentItem.meta)}</div>` : ''}
+    `;
+  }
+
+  docEl.innerHTML = docHtml;
+}
+
+function highlightAutocompleteIndex(index) {
+  if (index >= 0 && index < acMatches.length && index !== acSelectedIndex) {
+    acSelectedIndex = index;
+    renderAutocomplete();
+  }
+}
+
+function positionAutocomplete() {
+  if (typeof document === 'undefined') return;
+  const popup = document.getElementById('editorAutocomplete');
+  if (!popup || !editor) return;
+
+  const textBefore = editor.value.slice(0, acWordStart);
+  const lines = textBefore.split('\n');
+  const lineIdx = lines.length - 1;
+  const colIdx = lines[lineIdx].length;
+
+  const charWidth = 7.82;
+  const lineHeight = 20;
+  const padTop = 12;
+  const padLeft = 8;
+
+  const codeArea = document.querySelector('.code-area');
+  const codeAreaWidth = codeArea ? codeArea.clientWidth : 600;
+  const codeAreaHeight = codeArea ? codeArea.clientHeight : 400;
+
+  let left = padLeft + (colIdx * charWidth) - editor.scrollLeft;
+  let top = padTop + (lineIdx * lineHeight) - editor.scrollTop + lineHeight + 4;
+
+  const popupHeight = 230;
+  const popupWidth = Math.min(530, codeAreaWidth - 20);
+
+  if (top + popupHeight > codeAreaHeight - 10) {
+    top = padTop + (lineIdx * lineHeight) - editor.scrollTop - popupHeight - 4;
+  }
+
+  left = Math.max(8, Math.min(left, codeAreaWidth - popupWidth - 10));
+  top = Math.max(8, top);
+
+  popup.style.left = `${Math.round(left)}px`;
+  popup.style.top = `${Math.round(top)}px`;
+}
+
+function showAutocomplete() {
+  if (typeof document === 'undefined') return;
+  const popup = document.getElementById('editorAutocomplete');
+  if (popup) {
+    popup.style.display = 'flex';
+    acActive = true;
+  }
+}
+
+function hideAutocomplete() {
+  if (typeof document === 'undefined') return;
+  const popup = document.getElementById('editorAutocomplete');
+  if (popup) {
+    popup.style.display = 'none';
+  }
+  acActive = false;
+  acMatches = [];
+}
+
+function selectAutocomplete(index) {
+  if (index < 0 || index >= acMatches.length || !editor) return;
+  const item = acMatches[index];
+  const before = editor.value.slice(0, acWordStart);
+  const after = editor.value.slice(acWordEnd);
+
+  const insertText = item.name;
+  editor.value = before + insertText + after;
+  const newCaretPos = acWordStart + insertText.length;
+  editor.selectionStart = newCaretPos;
+  editor.selectionEnd = newCaretPos;
+
+  hideAutocomplete();
+  updateEditor();
+  editor.focus();
+}
+
+function handleAutocompleteKeydown(e) {
+  if (e.key === ' ' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    updateAutocomplete(true);
+    return true;
+  }
+  if (!acActive) return false;
+
+  if (e.key === 'ArrowDown' || e.key === 'Down') {
+    e.preventDefault();
+    acSelectedIndex = (acSelectedIndex + 1) % acMatches.length;
+    renderAutocomplete();
+    return true;
+  }
+  if (e.key === 'ArrowUp' || e.key === 'Up') {
+    e.preventDefault();
+    acSelectedIndex = (acSelectedIndex - 1 + acMatches.length) % acMatches.length;
+    renderAutocomplete();
+    return true;
+  }
+  if (e.key === 'Enter' || e.key === 'Tab') {
+    e.preventDefault();
+    selectAutocomplete(acSelectedIndex);
+    return true;
+  }
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    hideAutocomplete();
+    return true;
+  }
+  return false;
 }
 
 function updateRegisters() {
@@ -6551,6 +7396,9 @@ initSplitter();
     }
 
     if (e.target && e.target.id === 'asmEditor') {
+      if (typeof handleAutocompleteKeydown === 'function' && handleAutocompleteKeydown(e)) {
+        return;
+      }
       if (e.key === 'Tab') {
         handleEditorTab(e);
         return;
@@ -6603,6 +7451,13 @@ initSplitter();
     else if (e.key === 's' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveFile(); }
   });
 
+  document.addEventListener('click', (e) => {
+    const ac = document.getElementById('editorAutocomplete');
+    if (ac && acActive && !ac.contains(e.target) && e.target !== editor) {
+      hideAutocomplete();
+    }
+  });
+
   updateToolbarButtonStates();
 
   window.loadExample = loadExample;
@@ -6621,6 +7476,16 @@ initSplitter();
   window.handleFindKey = handleFindKey;
   window.replaceCurrent = replaceCurrent;
   window.replaceAll = replaceAll;
+  window.updateAutocomplete = updateAutocomplete;
+  window.renderAutocomplete = renderAutocomplete;
+  window.selectAutocomplete = selectAutocomplete;
+  window.hideAutocomplete = hideAutocomplete;
+  window.showAutocomplete = showAutocomplete;
+  window.extractEditorSymbols = extractEditorSymbols;
+  window.getAssemblyLineContext = getAssemblyLineContext;
+  window.RISCV_AUTOCOMPLETE_DOCS = RISCV_AUTOCOMPLETE_DOCS;
+  window.highlightAutocompleteIndex = highlightAutocompleteIndex;
+  window.handleAutocompleteKeydown = handleAutocompleteKeydown;
   </script>
   </body>
 </html>
