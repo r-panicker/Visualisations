@@ -10,8 +10,11 @@ main:
         lui     a1, %hi(KarunaNew1)
         addi    a1, a1, %lo(KarunaNew1)
         li      a7, 64
-        lui     a2, 244
-        addi    a6, a2, 576
+# Original hardware delay: 1,000,000 cycles (~10ms at 100MHz)
+#       lui     a2, 244
+#       addi    a6, a2, 576
+# Reduced delay value for high-speed real-time simulation:
+        li      a6, 50                  # Reduced delay value for high-speed simulation
 .LBB0_1:
         li      a2, 0
         li      t2, 0
