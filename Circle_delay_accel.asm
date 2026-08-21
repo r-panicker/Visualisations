@@ -22,8 +22,11 @@ main:
         li      s2, 24
         lui     s1, 1044480
         lui     s3, %hi(CYCLECOUNT_ADDR)
-        lui     a0, 244
-        addi    s4, a0, 576
+# Original hardware delay: 1,000,000 cycles (~10ms at 100MHz)
+#       lui     a0, 244
+#       addi    s4, a0, 576
+# Reduced delay value for high-speed real-time simulation:
+        li      s4, 50                  # Reduced delay value for high-speed simulation
 .LBB0_1:
         li      a3, 0
         lw      a0, 64(s0)
@@ -31,14 +34,14 @@ main:
         li      a2, 24
 .LBB0_2:
         mv      a1, a2
-.LBB0_3:
-        lw      a2, 8(s0)
-        beqz    a2, .LBB0_3
-        srl     a2, a0, a1
-        sw      a2, 12(s0)
-.LBB0_5:
-        lw      a2, 8(s0)
-        beqz    a2, .LBB0_5
+#.LBB0_3:
+#       lw      a2, 8(s0)
+#       beqz    a2, .LBB0_3
+#       srl     a2, a0, a1
+#       sw      a2, 12(s0)              # Commented out UART printing for simulation speed
+#.LBB0_5:
+#       lw      a2, 8(s0)
+#       beqz    a2, .LBB0_5
         sub     a2, s2, a1
         sll     a5, a0, a2
         and     a4, a5, s1
@@ -48,7 +51,7 @@ main:
         srl     a2, a4, a2
         srli    a4, a4, 24
         add     a3, a3, a2
-        sw      a4, 12(s0)
+#       sw      a4, 12(s0)              # Commented out UART printing for simulation speed
         addi    a2, a1, -8
         bnez    a1, .LBB0_2
         slli    a3, a3, 1
