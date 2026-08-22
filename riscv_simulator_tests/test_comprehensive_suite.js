@@ -215,9 +215,9 @@ setTimeout(() => {
     if (!toolbar) throw new Error('mainToolbar element not found');
     const sourceRowButtons = toolbar.querySelectorAll('.toolbar-row-source button');
     const simRowButtons = toolbar.querySelectorAll('.toolbar-row-simulation button');
-    console.log(`Toolbar Row 1 (Source & Editing) buttons: ${sourceRowButtons.length} (expected >= 9)`);
-    console.log(`Toolbar Row 2 (Simulation & Controls) buttons: ${simRowButtons.length} (expected >= 6)`);
-    if (sourceRowButtons.length < 9 || simRowButtons.length < 6) {
+    console.log(`Toolbar Row 1 (Source & Editing) buttons: ${sourceRowButtons.length} (expected >= 7)`);
+    console.log(`Toolbar Row 2 (Simulation & Controls) buttons: ${simRowButtons.length} (expected >= 8)`);
+    if (sourceRowButtons.length < 7 || simRowButtons.length < 8) {
       throw new Error('Toolbar button structure missing expected controls');
     }
     console.log('✅ Toolbar layout structure verified!');
