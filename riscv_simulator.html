@@ -3663,8 +3663,13 @@
         emitOne(main, lineNo, asmText);
       }
 
+      const totalCodeBytes = Math.max(0, textAddr - base);
+      if (totalCodeBytes > codeSize) {
+        log(`⚠️ WARNING: Program code section (0x${totalCodeBytes.toString(16)} / ${totalCodeBytes} bytes) exceeds configured Linker Code Segment size (0x${codeSize.toString(16)} / ${codeSize} bytes)! On physical FPGA hardware with fixed instruction memory (IROM), memory overflow or wrap-around will occur.`, 'warn');
+      }
+
       const totalDataBytes = Math.max(0, dataAddr - dataBase);
-      if (totalDataBytes > dataSize) {
+      if (totalDataBytes > dataSize && editorLanguageMode !== 'c') {
         log(`⚠️ WARNING: Program data section (0x${totalDataBytes.toString(16)} / ${totalDataBytes} bytes) exceeds configured Linker Data Segment size (0x${dataSize.toString(16)} / ${dataSize} bytes)! On physical FPGA hardware with fixed block RAM, memory overflow or wrap-around will occur.`, 'warn');
       }
 

@@ -236,6 +236,10 @@ The simulator consolidates Compiler options, Memory layout / Linker settings, an
 - **Tabbed Navigation**: `[ Code | Data | Stack | MMIO ]`.
 - **Read-Only Code Protection**: The **Code (.text)** segment in the Memory View is strictly read-only to prevent accidental program corruption during inspection, while **Data**, **Stack**, and **MMIO** regions retain full interactive byte- and word-level editing.
 - **Downward Decreasing Stack View**: The **Stack** tab renders addresses in **downward decreasing order** (`0x20200`, `0x201F8`, `0x201F0`...) to accurately visualize the downward growth of the RISC-V stack.
+- **Hardware Boundary Checks & Warnings**:
+  - **Code Segment Overflow**: Emits a warning if assembled instructions exceed configured `codeSize` (default `0x200` / 512 B / 128 instructions).
+  - **Data Segment Overflow**: Emits a warning and safely adjusts the startup stack pointer if data allocations exceed configured `dataSize` (default `0x200` / 512 B).
+  - Alerts users of potential memory wrap-around on fixed-size physical FPGA block RAM (IROM/DMEM).
 - **Verilog Memory Dumps**:
   - Code segment $\rightarrow$ **`AA_IROM.mem`** (`💾 Dump txt`).
   - Data segment $\rightarrow$ **`AA_DMEM.mem`** (`💾 Dump data`).
