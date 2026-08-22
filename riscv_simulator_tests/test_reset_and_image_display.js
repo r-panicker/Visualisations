@@ -112,52 +112,45 @@ async function runTests() {
   }
   console.log('✅ ImageDisplay in Assembly Mode verified successfully!');
 
-  // --- Test 2: ImageDisplay_autoadvance_accel.c in C Mode ---
-  console.log('\n[2] Testing ImageDisplay_autoadvance_accel.c in C Mode via Clang 20.1 compilation...');
+  // --- Test 2: ImageDisplay_autoadvance_accel.c in C Mode via compileAndAssembleC ---
+  console.log('\n[2] Testing ImageDisplay_autoadvance_accel.c in C Mode via GCC 14.2 compilation...');
   const imgCSource = fs.readFileSync(path.resolve(__dirname, '../ImageDisplay_autoadvance_accel.c'), 'utf8');
-  const compileRes = await compileGodbolt(imgCSource, 'rv32-cclang2010', '-Os');
+  const compileRes = await compileGodbolt(imgCSource, 'rv32-cgcc1420', '-O0');
   if (compileRes.code !== 0 || !compileRes.asm) {
     throw new Error(`Failed to compile ImageDisplay C: ${JSON.stringify(compileRes)}`);
   }
 
-  const asmLines = compileRes.asm.map(a => a.text).join('\n');
-  win.setLanguageMode('asm');
-  win.cmEditor.dispatch({
-    changes: { from: 0, to: win.cmEditor.state.doc.length, insert: asmLines }
-  });
-  const mcC = await win.assembleOnly();
+  win.__mockGodboltResponse = compileRes;
+  win.setLanguageMode('c');
+  const mcC = await win.compileAndAssembleC(imgCSource);
   console.log(`  - Compiled & Assembled C output: ${mcC.length} instructions.`);
 
   win.clearOledDisplay();
   if (xSlider) xSlider.value = 64;
   win.updateAccelValues();
 
-  for (let s = 0; s < 60000; s++) {
+  for (let s = 0; s < 500000; s++) {
     win.executeOne();
-    if (win.oledCol === 0 && win.oledRow === 0 && s > 40000) break;
+    if (win.oledCol === 0 && win.oledRow === 0 && s > 50000) break;
   }
 
   const cBuffer = new Uint8Array(win.oledBuffer);
-  let cNonZero = 0;
+  let cNonWhite = 0;
   for (let i = 0; i < cBuffer.length; i += 4) {
-    if (cBuffer[i] > 0 || cBuffer[i+1] > 0 || cBuffer[i+2] > 0) cNonZero++;
+    if (cBuffer[i] !== 255 || cBuffer[i+1] !== 255 || cBuffer[i+2] !== 255) cNonWhite++;
   }
-  console.log(`  - C rendered non-zero pixels: ${cNonZero} on 96x64 display (expected > 5000)`);
-  if (cNonZero < 5000) {
-    throw new Error(`Expected at least 5000 non-zero pixels in C mode, got ${cNonZero}`);
-  }
+  console.log(`  - C rendered non-white pixels: ${cNonWhite} on 96x64 display`);
 
   // Compare buffers between ASM and C
-  let matchCount = 0;
+  let diffCount = 0;
   for (let i = 0; i < 96 * 64 * 4; i++) {
-    if (asmBuffer[i] === cBuffer[i]) matchCount++;
+    if (asmBuffer[i] !== cBuffer[i]) diffCount++;
   }
-  const matchPct = ((matchCount / (96 * 64 * 4)) * 100).toFixed(1);
-  console.log(`  - ASM vs C Pixel Match Fidelity: ${matchPct}%`);
-  if (parseFloat(matchPct) < 99) {
-    throw new Error(`Pixel match fidelity too low between ASM and C: ${matchPct}%`);
+  console.log(`  - ASM vs C Total Pixel Byte Diffs: ${diffCount}`);
+  if (diffCount !== 0) {
+    throw new Error(`Pixel mismatch between ASM and C: ${diffCount} byte diffs!`);
   }
-  console.log('✅ ImageDisplay in C Mode matches Assembly Mode with 100% fidelity!');
+  console.log('✅ ImageDisplay in C Mode matches Assembly Mode with 100% pixel-perfect fidelity (0 diffs)!');
 
   // --- Test 3: Reset Button Override & Wait Behavior ---
   console.log('\n[3] Testing Reset Button Override & Wait Behavior...');

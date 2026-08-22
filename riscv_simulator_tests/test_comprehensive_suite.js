@@ -213,11 +213,11 @@ setTimeout(() => {
     console.log('\n[10] Testing Toolbar Structure and Buttons...');
     const toolbar = doc.getElementById('mainToolbar');
     if (!toolbar) throw new Error('mainToolbar element not found');
-    const row1Buttons = toolbar.querySelectorAll('.toolbar-row-primary button');
-    const row2Buttons = toolbar.querySelectorAll('.toolbar-row-secondary button');
-    console.log(`Toolbar Row 1 buttons: ${row1Buttons.length} (expected 10)`);
-    console.log(`Toolbar Row 2 buttons: ${row2Buttons.length} (expected 3)`);
-    if (row1Buttons.length < 10 || row2Buttons.length < 3) {
+    const sourceRowButtons = toolbar.querySelectorAll('.toolbar-row-source button');
+    const simRowButtons = toolbar.querySelectorAll('.toolbar-row-simulation button');
+    console.log(`Toolbar Row 1 (Source & Editing) buttons: ${sourceRowButtons.length} (expected >= 9)`);
+    console.log(`Toolbar Row 2 (Simulation & Controls) buttons: ${simRowButtons.length} (expected >= 6)`);
+    if (sourceRowButtons.length < 9 || simRowButtons.length < 6) {
       throw new Error('Toolbar button structure missing expected controls');
     }
     console.log('✅ Toolbar layout structure verified!');

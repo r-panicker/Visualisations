@@ -263,10 +263,7 @@ int main()
         }        
         // 1000000 for ~1/3 sec at CLK_DIV_BITS = 5.
         // Original hardware delay: 1,000,000 cycles (~10ms at 100MHz)
-        // // Original hardware delay: 1,000,000 cycles (~10ms at 100MHz)
         // delay(1000000);
-        // Reduced delay value for high-speed real-time simulation:
-        delay(50); // Reduced delay value for high-speed simulation
         // Reduced delay value for high-speed real-time simulation:
         delay(50); // Reduced delay value for high-speed simulation
     }
