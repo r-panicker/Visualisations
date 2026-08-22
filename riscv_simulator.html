@@ -2311,14 +2311,14 @@
           </div>
           <div style="background:#11111b;border:1px solid #313244;border-radius:6px;padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:column;gap:6px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <label for="simMaxInstrPerCycle" style="font-weight:600;color:#cba6f7;font-size:13px;">
-                Max Instructions / Cycle (Batch Chunk)
+              <label for="simMaxInstrPerRun" style="font-weight:600;color:#cba6f7;font-size:13px;">
+                Max Instructions Per Run
               </label>
-              <input id="simMaxInstrPerCycle" type="number" min="1" max="10000000" step="10000" value="100000"
+              <input id="simMaxInstrPerRun" type="number" min="1" max="10000000" step="10000" value="100000"
                 style="width:110px;padding:4px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;font-family:inherit;font-size:12px;text-align:right;">
             </div>
             <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
-              Maximum number of instructions executed per simulation chunk / UI cycle before yielding to update peripherals and the event loop. Default: <strong>100,000</strong>.
+              Maximum number of instructions executed per simulation run before pausing. Default: <strong>100,000</strong>.
             </span>
           </div>
           <div class="cycle-hint" style="margin-bottom:12px;">Cycles consumed per instruction category for CPI and runtime estimation.</div>
@@ -2976,7 +2976,7 @@
     let statementStepping = false;
 
     // Maximum number of instructions executed per simulation chunk / batch before yielding to UI
-    let maxInstructionsPerCycle = 100000;
+    let maxInstructionsPerRun = 100000;
 
     // Step history for "back step". Each entry stores CPU state + memory writes for one executed instruction.
     let execHistory = [];       // stack of {pc, regs, fregs, dregs, writes, line}
@@ -8493,8 +8493,8 @@ STACK_INIT:
       const stmtEl = document.getElementById('simStatementStep');
       if (stmtEl) stmtEl.checked = !!statementStepping;
 
-      const maxInstrEl = document.getElementById('simMaxInstrPerCycle');
-      if (maxInstrEl) maxInstrEl.value = (typeof maxInstructionsPerCycle === 'number' && maxInstructionsPerCycle > 0) ? maxInstructionsPerCycle : 100000;
+      const maxInstrEl = document.getElementById('simMaxInstrPerRun');
+      if (maxInstrEl) maxInstrEl.value = (typeof maxInstructionsPerRun === 'number' && maxInstructionsPerRun > 0) ? maxInstructionsPerRun : 100000;
 
       const body = document.getElementById('cyclesConfigBody');
       let html = '<div class="cycle-hint">Applied live — changes take effect on the next instruction executed.</div>';
@@ -8539,7 +8539,7 @@ STACK_INIT:
       cycleConfig.fp = 4;
       cycleConfig.system = 1;
       statementStepping = false;
-      maxInstructionsPerCycle = 100000;
+      maxInstructionsPerRun = 100000;
       buildCyclesPanel();
       setStatus('Simulator settings reset to defaults', 'success');
     }
@@ -8642,16 +8642,16 @@ STACK_INIT:
       const memAddrEl = document.getElementById('memAddr');
       if (memAddrEl) memAddrEl.value = '0x' + (baseAddress >>> 0).toString(16);
 
-      // 2. Apply Simulator CPI, Statement Stepping & Max Instructions/Cycle
+      // 2. Apply Simulator CPI, Statement Stepping & Max Instructions
       getCyclesFromPanel();
       const stmtEl = document.getElementById('simStatementStep');
       if (stmtEl) statementStepping = stmtEl.checked;
 
-      const maxInstrEl = document.getElementById('simMaxInstrPerCycle');
+      const maxInstrEl = document.getElementById('simMaxInstrPerRun');
       if (maxInstrEl) {
         const v = parseInt(maxInstrEl.value, 10);
-        maxInstructionsPerCycle = (v > 0) ? v : 100000;
-        maxInstrEl.value = maxInstructionsPerCycle;
+        maxInstructionsPerRun = (v > 0) ? v : 100000;
+        maxInstrEl.value = maxInstructionsPerRun;
       }
 
       closeSettingsModal();
@@ -9613,7 +9613,7 @@ STACK_INIT:
       updateToolbarButtonStates();
       let count = 0;
       const maxCycles = 100000000;
-      const CHUNK_SIZE = (typeof maxInstructionsPerCycle === 'number' && maxInstructionsPerCycle > 0) ? maxInstructionsPerCycle : 100000;
+      const CHUNK_SIZE = (typeof maxInstructionsPerRun === 'number' && maxInstructionsPerRun > 0) ? maxInstructionsPerRun : 100000;
       const initialLine = sourceLineForPc(pc);
       let resumeLine = (initialLine >= 1 && breakpoints.has(initialLine)) ? initialLine : -1;
 
@@ -10617,7 +10617,7 @@ result: .word 0
       Object.defineProperty(window, 'accelZ', { get: () => accelZ, set: v => { accelZ = v; }, configurable: true });
       Object.defineProperty(window, 'accelTemp', { get: () => accelTemp, set: v => { accelTemp = v; }, configurable: true });
       Object.defineProperty(window, 'statementStepping', { get: () => statementStepping, set: v => { statementStepping = !!v; }, configurable: true });
-      Object.defineProperty(window, 'maxInstructionsPerCycle', { get: () => maxInstructionsPerCycle, set: v => { maxInstructionsPerCycle = (typeof v === 'number' && v > 0) ? v : 100000; }, configurable: true });
+      Object.defineProperty(window, 'maxInstructionsPerRun', { get: () => maxInstructionsPerRun, set: v => { maxInstructionsPerRun = (typeof v === 'number' && v > 0) ? v : 100000; }, configurable: true });
       Object.defineProperty(window, 'execHistory', { get: () => execHistory, configurable: true });
     } catch (e) {}
 
