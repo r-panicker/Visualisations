@@ -20,7 +20,7 @@ async function compileGodbolt(sourceCode, compilerId = 'rv32-cgcc1420', optLevel
       options: {
         userArguments: `${optLevel} -march=rv32im -mabi=ilp32 -fno-pic -fno-pie`,
         compilerOptions: { skipAsm: false, executorRequest: false },
-        filters: { binary: false, commentOnly: true, demangle: true, directives: true, execute: false, intel: false, labels: true, libraryCode: false, trim: true }
+        filters: { binary: false, commentOnly: true, demangle: true, directives: false, execute: false, intel: false, labels: true, libraryCode: false, trim: false }
       }
     });
 
@@ -67,8 +67,8 @@ async function runNewCTest() {
       window.Element.prototype.getBoundingClientRect = () => ({ top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 });
       window.HTMLCanvasElement.prototype.getContext = () => ({
         fillRect: () => {},
-        getImageData: () => ({ data: new Uint8ClampedArray(128 * 64 * 4) }),
-        createImageData: (w, h) => ({ data: new Uint8ClampedArray((w || 128) * (h || 64) * 4) }),
+        getImageData: (sx, sy, sw, sh) => ({ width: sw || 96, height: sh || 64, data: new Uint8ClampedArray((sw || 96) * (sh || 64) * 4) }),
+        createImageData: (w, h) => ({ width: w || 96, height: h || 64, data: new Uint8ClampedArray((w || 96) * (h || 64) * 4) }),
         putImageData: () => {},
         clearRect: () => {},
         createPattern: () => {},
@@ -78,15 +78,20 @@ async function runNewCTest() {
   });
   const win = dom.window;
 
-  await new Promise(r => setTimeout(r, 200));
+  await new Promise(r => setTimeout(r, 400));
 
   // --- Test 1: Circle_delay_accel.c Simulation ---
   console.log('\n[1] Testing Circle_delay_accel.c Simulation...');
-  win.setLanguageMode('c');
-  win.loadExample('circle_accel_c');
+  const circleCSource = fs.readFileSync(path.resolve(__dirname, '../Circle_delay_accel.c'), 'utf8');
+  console.log('  - Compiling Circle C via Godbolt...');
+  const circleCompileRes = await compileGodbolt(circleCSource, 'rv32-cgcc1420', '-O0');
+  if (circleCompileRes.code !== 0 || !circleCompileRes.asm) {
+    throw new Error(`Failed to compile Circle C: ${JSON.stringify(circleCompileRes)}`);
+  }
 
-  // Verify compilation & assembly
-  const circleMc = await win.assembleOnly();
+  win.__mockGodboltResponse = circleCompileRes;
+  win.setLanguageMode('c');
+  const circleMc = await win.compileAndAssembleC(circleCSource);
   console.log(`  - Circle C compiled: ${circleMc.length} instructions.`);
 
   // Set MMIO Accel reading (temp=25, x=0x40 = +1g, y=0, z=0x40 = 1g gravity)
@@ -96,9 +101,16 @@ async function runNewCTest() {
   if (tempSlider) tempSlider.value = 25;
   win.updateAccelValues();
 
-  // Execute 600 steps
-  for (let s = 0; s < 600; s++) {
+  // Execute 6000 steps to send greeting message, update 7-seg, and draw initial circle
+  for (let s = 0; s < 6000; s++) {
     win.executeOne();
+  }
+
+  const term1 = win.document.getElementById('uartTerminal');
+  const uartText1 = term1 ? term1.innerText : '';
+  console.log(`  - Circle UART terminal output: ${JSON.stringify(uartText1)}`);
+  if (!uartText1.includes('Tilt in various directions to see the colour change')) {
+    throw new Error(`Expected UART output to contain "Tilt in various directions to see the colour change", got: ${JSON.stringify(uartText1)}`);
   }
 
   const sevSegVal = win.readMem(0xFFFF0080, 4);
@@ -125,46 +137,44 @@ async function runNewCTest() {
   const imgCSource = fs.readFileSync(path.resolve(__dirname, '../ImageDisplay_autoadvance_accel.c'), 'utf8');
 
   console.log('  - Compiling ImageDisplay C via Godbolt...');
-  const compileRes = await compileGodbolt(imgCSource, 'rv32-cgcc1420', '-Os');
+  const compileRes = await compileGodbolt(imgCSource, 'rv32-cgcc1420', '-O0');
   if (compileRes.code !== 0 || !compileRes.asm) {
     throw new Error(`Failed to compile ImageDisplay C: ${JSON.stringify(compileRes)}`);
   }
 
-  // Assemble the generated assembly
-  const asmLines = compileRes.asm.map(a => a.text).join('\n');
-  win.setLanguageMode('asm');
-  win.cmEditor.dispatch({
-    changes: { from: 0, to: win.cmEditor.state.doc.length, insert: asmLines }
-  });
-  const imgMc = await win.assembleOnly();
+  win.__mockGodboltResponse = compileRes;
+  win.setLanguageMode('c');
+  const imgMc = await win.compileAndAssembleC(imgCSource);
   console.log(`  - ImageDisplay assembled: ${imgMc.length} instructions.`);
 
-  // Clear display
   win.clearOledDisplay();
-
-  // Set accel data to tilt +X (+1g)
   if (xSlider) xSlider.value = 64;
-  if (tempSlider) tempSlider.value = 25;
   win.updateAccelValues();
 
-  // Run steps through 1 frame (6144 pixels)
+  // Run steps through 1 frame (~175,000 steps for 6144 pixels + UART print)
   console.log('  - Executing simulation steps for ImageDisplay (Mode 5 Autoadvance)...');
-  for (let s = 0; s < 10000; s++) {
+  for (let s = 0; s < 400000; s++) {
     win.executeOne();
-    if (win.oledCol === 0 && win.oledRow === 0 && s > 6144) {
-      break;
-    }
+    if (win.oledCol === 0 && win.oledRow === 0 && s > 150000) break;
   }
 
+  const cBuffer = new Uint8Array(win.oledBuffer);
   let imgColoredPixels = 0;
-  for (let i = 0; i < win.oledBuffer.length; i += 4) {
-    if (win.oledBuffer[i] > 0 || win.oledBuffer[i+1] > 0 || win.oledBuffer[i+2] > 0) {
+  for (let i = 0; i < cBuffer.length; i += 4) {
+    if (cBuffer[i] > 0 || cBuffer[i+1] > 0 || cBuffer[i+2] > 0) {
       imgColoredPixels++;
     }
   }
   console.log(`  - ImageDisplay rendered pixels: ${imgColoredPixels} pixels.`);
-  if (imgColoredPixels < 1000) {
-    throw new Error(`Expected at least 1000 pixels drawn, got ${imgColoredPixels}`);
+  if (imgColoredPixels < 5000) {
+    throw new Error(`Expected at least 5000 pixels drawn, got ${imgColoredPixels}`);
+  }
+
+  const term = win.document.getElementById('uartTerminal');
+  const uartText = term ? term.innerText : '';
+  console.log(`  - UART terminal output: ${JSON.stringify(uartText)}`);
+  if (!uartText.includes('Tilt X to observe the effect')) {
+    throw new Error(`Expected UART output to contain "Tilt X to observe the effect", got: ${JSON.stringify(uartText)}`);
   }
   console.log('✅ ImageDisplay_autoadvance_accel.c simulation verified successfully!');
 

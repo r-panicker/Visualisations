@@ -36,6 +36,11 @@ int main()
     volatile unsigned int* UART_TX_ready_ADDR = (unsigned int*) (MMIO_BASE+UART_TX_READY_OFF);
     volatile unsigned int* UART_TX_ADDR = (unsigned int*) (MMIO_BASE+UART_TX_OFF);
     volatile unsigned int* SEVENSEG_ADDR = (unsigned int*) (MMIO_BASE+SEVENSEG_OFF);
+    const char *msg = "Tilt in various directions to see the colour change\r\n";
+    for (int k = 0; msg[k] != '\0'; k++) {
+        while (!(*UART_TX_ready_ADDR)); // wait for UART to be ready
+        *UART_TX_ADDR = msg[k];
+    }
 
     while(1)
     {
@@ -46,15 +51,9 @@ int main()
         // display the magnitude on seven segment display
         *SEVENSEG_ADDR = accel_reading;
 
-        // Print the raw binary value and magnitude directly. Configure serial terminal app to display as hex. 
-        // If you need to print properly formatted text, the characters sent to UART should be printable (ASCII)
+        // Calculate magnitude
         for(int i=24; i>=0; i-=8) 
         {
-            // print the raw binary value
-            while(!(*UART_TX_ready_ADDR)); // wait for UART to be ready
-            // no need to mask it as UART ignores all excel LSByte
-            *UART_TX_ADDR = accel_reading >> i;
-
             accel_reading_mag_byte = ( accel_reading << (24-i) ) & 0xFF000000;
             if(accel_reading_mag_byte<0)    // find magnitude
             {
@@ -62,22 +61,13 @@ int main()
             }
             // accel_reading_mag_byte is +ve at this point. Right shift logical = arith
             accel_reading_mag += ( accel_reading_mag_byte >> (24-i) );
-
-            // print the magnitude
-            // while(!(*UART_TX_ready_ADDR));
-            // *UART_TX_ADDR = accel_reading_mag_byte >> 24; // Commented out UART printing for simulation speed
         }
-        // Sending to UART and abs() is easier if there is byte addressability
 
         // using accel value directly. 2g+-2g range, so multiply mag by 2 (<<1) to have full brightness at 1g
         drawFilledMidpointCircleSinglePixelVisit(48, 32, 28, accel_reading_mag << 1); 
         
-        // 1000000 for ~1/3 sec at CLK_DIV_BITS = 5.
         // Original hardware delay: 1,000,000 cycles (~10ms at 100MHz)
-        // // Original hardware delay: 1,000,000 cycles (~10ms at 100MHz)
         // delay(1000000);
-        // Reduced delay value for high-speed real-time simulation:
-        delay(50); // Reduced delay value for high-speed simulation
         // Reduced delay value for high-speed real-time simulation:
         delay(50); // Reduced delay value for high-speed simulation
     }

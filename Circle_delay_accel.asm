@@ -4,8 +4,8 @@
 
 # Assemble this using RARS. Dump memory => .txt as AA_IROM.mem and .data as AA_DMEM.mem, in hexadecimal text format.
 
-# Important note: This program requires more than 128 instructions. The IROM_DEPTH_BITS has to be adjusted accordingly.
-# DMEM_DEPTH_BITS need not be changed, as the program uses only 1 word in data memory for storing a constant. No variables at all!
+# **** Warning: This program requires more than 128 instructions. The IROM_DEPTH_BITS has to be adjusted accordingly.****
+# DMEM_DEPTH_BITS need not be changed, as the program uses very low data memory for storing constants. No variables at all!
 
 main:
         addi    sp, sp, -32
@@ -14,46 +14,40 @@ main:
         sw      s1, 20(sp)
         sw      s2, 16(sp)
         sw      s3, 12(sp)
-        sw      s4, 8(sp)
-# The previous 7 instructions can be deleted safely. There is no caller for main() here
-        lui     s0, 1048560
+        li      a0, 0
+        lui     s2, 1048560
         lui     sp, 65552
         addi    sp, sp, 512
-        li      s2, 24
-        lui     s1, 1044480
-        lui     s3, %hi(CYCLECOUNT_ADDR)
-# Original hardware delay: 1,000,000 cycles (~10ms at 100MHz)
-#       lui     a0, 244
-#       addi    s4, a0, 576
-# Reduced delay value for high-speed real-time simulation:
-        li      s4, 50                  # Reduced delay value for high-speed simulation
+        li      a3, 84
+        lui     a1, %hi(.L.str)
+        addi    a1, a1, %lo(.L.str)
+        li      a2, 53
 .LBB0_1:
+        lw      a4, 8(s2)
+        beqz    a4, .LBB0_1
+        sw      a3, 12(s2)
+        addi    a0, a0, 1
+        add     a3, a1, a0
+        lbu     a3, 0(a3)
+        bne     a0, a2, .LBB0_1
+        lui     s1, 1044480
+        li      s0, 32
+        lui     s3, %hi(CYCLECOUNT_ADDR)
+.LBB0_4:
+        li      a0, 0
         li      a3, 0
-        lw      a0, 64(s0)
-        sw      a0, 128(s0)
-        li      a2, 24
-.LBB0_2:
-        mv      a1, a2
-#.LBB0_3:
-#       lw      a2, 8(s0)
-#       beqz    a2, .LBB0_3
-#       srl     a2, a0, a1
-#       sw      a2, 12(s0)              # Commented out UART printing for simulation speed
-#.LBB0_5:
-#       lw      a2, 8(s0)
-#       beqz    a2, .LBB0_5
-        sub     a2, s2, a1
-        sll     a5, a0, a2
-        and     a4, a5, s1
-        bgez    a5, .LBB0_8
-        neg     a4, a4
-.LBB0_8:
-        srl     a2, a4, a2
-        srli    a4, a4, 24
+        lw      a1, 64(s2)
+        sw      a1, 128(s2)
+.LBB0_5:
+        sll     a4, a1, a0
+        and     a2, a4, s1
+        bgez    a4, .LBB0_7
+        neg     a2, a2
+.LBB0_7:
+        srl     a2, a2, a0
+        addi    a0, a0, 8
         add     a3, a3, a2
-#       sw      a4, 12(s0)              # Commented out UART printing for simulation speed
-        addi    a2, a1, -8
-        bnez    a1, .LBB0_2
+        bne     a0, s0, .LBB0_5
         slli    a3, a3, 1
         li      a0, 48
         li      a1, 32
@@ -61,11 +55,11 @@ main:
         call    drawFilledMidpointCircleSinglePixelVisit
         lw      a0, %lo(CYCLECOUNT_ADDR)(s3)
         lw      a1, 0(a0)
-        add     a1, a1, s4
-.LBB0_10:
+        addi    a1, a1, 50
+.LBB0_9:
         lw      a2, 0(a0)
-        bltu    a2, a1, .LBB0_10
-        j       .LBB0_1
+        bltu    a2, a1, .LBB0_9
+        j       .LBB0_4
 
 drawFilledMidpointCircleSinglePixelVisit:
         bltz    a2, .LBB1_19
@@ -180,10 +174,6 @@ drawHorizontalLine:
 CYCLECOUNT_ADDR:
         .word   4294901920
 
-# The following lines can be deleted
-.Ldebug_list_header_start0:
-        .half   5
-        .byte   4
-        .byte   0
-        .word   33
-.Ldebug_list_header_end0:
+.L.str:
+        .asciz  "Tilt in various directions to see the colour change\r\n"
+
