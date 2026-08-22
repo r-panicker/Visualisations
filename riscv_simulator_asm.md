@@ -2,33 +2,29 @@
 
 ## 1. Project Overview
 
-**NUS-CG3207 RISC-V Simulator** is a high-performance, single-file web application (`riscv_simulator.html`) that delivers a full-featured **RISC-V RV32GC (RV32I + M + A + F + D + C) Assembler, C Compiler, Emulator, and Visual Debugger**, powered by **CodeMirror 6** (the latest modern modular code editor engine) and **Compiler Explorer (Godbolt) REST API**.
+**NUS-CG3207 RISC-V Simulator** is a high-performance, single-file web application (`riscv_simulator.html`) that delivers a full-featured **RISC-V RV32GC (RV32I + M + A + F + D + C) Assembler, Emulator, and Visual Debugger**, powered by **CodeMirror 6** (the latest modern modular code editor engine).
 Available at [https://nus-cg3207.github.io/labs](https://nus-cg3207.github.io/labs). Vibe coded by Rajesh Panicker.
 
-Designed for computer engineering students, hardware architects, and embedded systems developers, the simulator combines a modern CodeMirror 6 code editor supporting both **RISC-V Assembly** and **C Code**, custom syntax highlighting, live parameter signature help, hover inspection, breakpoint gutter with highlighted line numbers and smart snapping, two-pass assembler, non-blocking execution engine, real-time disassembly viewer with C source line annotations, step-by-step debugger with back-stepping history, interactive memory explorer with custom segment mapping, configurable instruction cycle timing, a hardware-accurate simulation of the **Digilent Nexys 4 FPGA Board**, a standard 16550 **UART Serial Console**, a **96x64 Pixel OLED Display MMIO Peripheral**, a **3-Axis Accelerometer & Temperature Sensor**, a **System Cycle Counter**, support for standard **RARS `ecall` Syscalls**, and rich pre-loaded assembly & C example programs (`basic_c`, `factorial_c`, `fibonacci_c`, `loop_c`, `matrix_c`, `peripherals_c`, `rars_syscalls.asm`, `Circle_delay_accel.asm`, `DIP_to_LED.asm`, `HelloWorld.asm`, `HelloWorld_jal_jalr.asm`, `fibonacci.asm`, `factorial.asm`, `loop_array.asm`, `io_mext.asm`, `basic.asm`).
+Designed for computer engineering students, hardware architects, and embedded systems developers, the simulator combines a modern CodeMirror 6 assembly editor with custom RISC-V syntax highlighting, live parameter signature help, hover inspection, breakpoint gutter with highlighted line numbers alone and smart snapping, two-pass assembler, non-blocking execution engine, real-time disassembly viewer, step-by-step debugger with back-stepping history, interactive memory explorer with custom segment mapping, configurable instruction cycle timing, a hardware-accurate simulation of the **Digilent Nexys 4 FPGA Board**, a standard 16550 **UART Serial Console**, a **96x64 Pixel OLED Display MMIO Peripheral**, a **3-Axis Accelerometer & Temperature Sensor**, a **System Cycle Counter**, support for standard **RARS `ecall` Syscalls**, and pre-loaded RISC-V assembly example programs (`rars_syscalls.asm`, `Circle_delay_accel.asm`, `DIP_to_LED.asm`, `HelloWorld.asm`, `HelloWorld_jal_jalr.asm`, `fibonacci.asm`, `factorial.asm`, `loop_array.asm`, `io_mext.asm`, `basic.asm`).
 
 ---
 
 ## 2. Architecture & Design System
 
 ### 2.1 Technology Stack & Core Philosophy
-- **Zero External Dependencies / 100% Offline with Cloud Compilation Option**: Pure HTML5, CSS3, and modern Vanilla JavaScript (ES6+) with an embedded, self-contained CodeMirror 6 bundle (`window.CM6`). Supports offline execution with built-in precompiled C mappings and online C compilation via Godbolt API.
-- **Theme & Aesthetics**: Dark mode theme inspired by the *Catppuccin Mocha* palette (`#1e1e2e` base, `#181825` mantle, `#313244` surface, `#cba6f7` mauve primary accents, `#89b4fa` blue keywords, `#a6e3a1` green registers/strings, `#f5c2e7` pink directives/types, `#fab387` peach labels, `#f9e2af` yellow immediates, `#6c7086` gray comments).
+- **Zero External Dependencies / 100% Offline**: Pure HTML5, CSS3, and modern Vanilla JavaScript (ES6+) with an embedded, self-contained CodeMirror 6 bundle (`window.CM6`). Runs completely client-side in all modern web browsers without internet access or external CDNs.
+- **Theme & Aesthetics**: Dark mode theme inspired by the *Catppuccin Mocha* palette (`#1e1e2e` base, `#181825` mantle, `#313244` surface, `#cba6f7` mauve primary accents, `#89b4fa` blue keywords, `#a6e3a1` green registers/strings, `#f5c2e7` pink directives, `#fab387` peach labels, `#f9e2af` yellow immediates, `#6c7086` gray comments).
 - **Responsive Layout**: Resizable two-pane layout using a custom draggable divider (`.splitter`). Optimized for desktop, tablet, and mobile viewports.
 - **Embedded Favicon & Microchip Branding**: Custom vector SVG microchip architecture icon and embedded data URI SVG favicon in `<head>`, displaying an integrated circuit package with central silicon die, gold bonding I/O pins, and central `RV` (RISC-V) core logo.
 - **Unified Toolbar Controls**: Uniform button heights (`28px`) and vertical alignment across standard buttons, icon controls, and dropdown selectors.
 
 ---
 
-### 2.2 Dual-Language Architecture & CodeMirror 6 Engine
+### 2.2 CodeMirror 6 Editor Architecture
 
-The simulator incorporates a state-of-the-art **CodeMirror 6** editor architecture mounted in `<div id="cmEditorContainer"></div>` with dynamic language reconfiguration via a `CM6.Compartment`:
+The simulator incorporates a state-of-the-art **CodeMirror 6** editor architecture mounted directly in `<div id="cmEditorContainer"></div>`:
 
-#### 1. Language Mode Switcher (`[ RV32 ASM | C Code ]`)
-- **Assembly Mode**: Activates `riscvStreamParser` with RISC-V instruction/register autocomplete and assembly example programs.
-- **C Code Mode**: Activates `cStreamParser` with C keyword/type autocomplete, `#define` MMIO macros (`LEDS`, `SWITCHES`, `BUTTONS`, `SEVSEG`, `UART_TX`, `ACCEL_DATA`), Godbolt compiler configuration modal, and C example programs.
-
-#### 2. Embedded Standalone CM6 Bundle (`window.CM6`)
+#### 1. Embedded Standalone CM6 Bundle (`window.CM6`)
 Contains all necessary CodeMirror 6 and Lezer packages compiled into a single IIFE bundle:
 - `@codemirror/state`: `EditorState`, `StateField`, `StateEffect`, `RangeSet`, `RangeSetBuilder`, `EditorSelection`, `Transaction`, `Facet`, `Compartment`.
 - `@codemirror/view`: `EditorView`, `GutterMarker`, `gutter`, `lineNumbers`, `lineNumberMarkers`, `highlightActiveLine`, `highlightActiveLineGutter`, `showTooltip`, `hoverTooltip`, `drawSelection`, `dropCursor`.
@@ -36,77 +32,22 @@ Contains all necessary CodeMirror 6 and Lezer packages compiled into a single II
 - `@codemirror/commands`: `history`, `historyKeymap`, `defaultKeymap`, `indentWithTab`, `indentMore`, `indentLess`, `undo`, `redo`.
 - `@codemirror/search`: `openSearchPanel`, `closeSearchPanel`, `findNext`, `findPrevious`, `replaceNext`, `replaceAll`.
 - `@codemirror/autocomplete`: `autocompletion`, `completionKeymap`, `startCompletion`, `closeCompletion`, `acceptCompletion`.
-- `@lezer/highlight`: `tags` (keyword, typeName, variableName, meta, labelName, comment, number, string, punctuation, operator, propertyName).
+- `@lezer/highlight`: `tags` (keyword, variableName, meta, labelName, comment, number, string, punctuation, operator, propertyName).
 
-#### 3. Custom Syntax Highlighters
-- **RISC-V Assembly Tokenizer (`riscvStreamParser`)**: Instructions (`#89b4fa`), Registers (`#a6e3a1`), Directives (`#f5c2e7`), Labels (`#fab387`), Numbers (`#f9e2af`), Comments (`#6c7086`), Relocation Macros (`#89dceb`), CSRs (`#cba6f7`).
-- **C Language Tokenizer (`cStreamParser`)**: Types (`#f5c2e7`), Keywords (`#89b4fa`), Preprocessor Directives (`#f5c2e7`), Strings/Chars (`#a6e3a1`), Numbers/Hex/Binary (`#f9e2af`), Operators (`#89dceb`), Macros/Properties (`#cba6f7`), Comments (`#6c7086`).
-
----
-
-### 2.3 C Language Support & Godbolt Compiler Integration
-
-#### 1. REST API Compilation Pipeline
-- Compiles C code via `POST https://godbolt.org/api/compiler/<id>/compile` targeting RV32 GCC / Clang (`rv32-cgcc1420`, `rv32-cgcc1320`, `rv32-cclang1810`, etc.).
-- Passes configurable optimization levels (`-O0 (Debug, Recommended)`, `-O1`, `-O2`, `-Os`, `-O3`) and ABI flags (`-march=rv32im -mabi=ilp32 -fno-pic -fno-pie`).
-- Automatically prepends a dynamic baremetal CRT0 startup shim that sets the stack pointer `sp` to the configured Stack Top (`dataBase + dataSize`):
-  ```assembly
-  .text
-  .globl _start
-  _start:
-      li sp, 0x20200       # Set sp to Data Base + Data Size
-      call main            # Call C main()
-      li a7, 10            # Exit syscall
-      ecall
-  __halt:
-      j __halt
-  ```
-
-#### 2. Source-to-Assembly Bidirectional Line Mapping
-- Parses Godbolt's emitted assembly array (`res.asm[i].source.line`) and establishes bidirectional mappings:
-  - `pcToCLineMap`: Maps execution address $PC \rightarrow \text{C Line}$
-  - `cLineToPcsMap`: Maps $\text{C Line} \rightarrow [PC_1, PC_2, \dots]$
-  - `cLineToFirstPcMap`: Maps $\text{C Line} \rightarrow \text{First } PC$
-- Maps startup preamble (`_start` to `call main`) to the `main()` function entry line.
-
-#### 3. C Source-Level Debugging & Disassembly Auto-Scrolling
-- **Single Stepping (`F8` / `⏭ Step`)**: Highlights the active C source statement in CodeMirror 6 while advancing the underlying RV32 machine code.
-- **Step Back (`Shift+F8` / `⏮ Back`)**: Restores CPU registers, memory, and active C line highlighting.
-- **Breakpoints in C**: Click on C source lines to toggle breakpoints with smart line snapping; `▶ Run` (`F5`) halts on active C lines.
-- **Disassembly Tab & Auto-Scroll**: Displays native RV32 instructions with C line tags (e.g. `[Line 8: total += i;]`), and automatically scrolls the highlighted execution instruction into view during stepping and debugging.
+#### 2. Custom RISC-V Assembly Syntax Tokenizer & Highlight Style
+A specialized `StreamLanguage` tokenizer (`riscvStreamParser`) parses RISC-V assembly code token-by-token:
+- **Instructions**: RV32I base, RV32M multiply/divide, RV32A atomic, RV32F single-float, RV32D double-float, and standard pseudo-instructions (`li`, `la`, `mv`, `not`, `neg`, `j`, `jr`, `ret`, `call`, `tail`, `beqz`, `bnez`, etc.) $\rightarrow$ `#89b4fa` (Blue, font weight 600).
+- **Registers**: Hardware (`x0`–`x31`, `f0`–`f31`) and ABI names (`zero`, `ra`, `sp`, `gp`, `tp`, `t0`–`t6`, `s0`–`s11`, `a0`–`a7`, `ft0`–`ft11`, `fs0`–`fs11`, `fa0`–`fa7`) $\rightarrow$ `#a6e3a1` (Green).
+- **Assembler Directives**: `.text`, `.data`, `.globl`, `.word`, `.byte`, `.half`, `.ascii`, `.asciiz`, `.space`, `.align`, `.equ`, `.set`, `.bss` $\rightarrow$ `#f5c2e7` (Pink, font weight 600).
+- **Labels**: Label definitions (`main:`, `.LBB0_1:`, `loop:`) $\rightarrow$ `#fab387` (Peach, bold).
+- **Numbers / Immediates**: Hexadecimal (`0x...`, `0X...`) and decimal/signed integers $\rightarrow$ `#f9e2af` (Yellow).
+- **Comments**: `# ...` and `; ...` $\rightarrow$ `#6c7086` (Italic gray).
+- **Operators & Macros**: `%hi(...)`, `%lo(...)`, `%pcrel_hi(...)`, `%pcrel_lo(...)` $\rightarrow$ `#89dceb` (Cyan).
+- **CSRs**: `mstatus`, `mie`, `mtvec`, `mepc`, `mcause`, `mtval`, `mip`, `cycle`, `time`, `instret` $\rightarrow$ `#cba6f7` (Mauve).
 
 ---
 
-### 2.4 Unified Settings & Linker Architecture
-
-The simulator consolidates Compiler options, Memory layout / Linker settings, and Simulator timing into a single **`⚙ Settings…`** button opening a 3-tab modal dialog:
-
-1. **⚡ Compiler Tab**:
-   - Compiler selection: RV32 GCC 14.2, GCC 13.2, GCC 12.2, Clang 18.1, GCC trunk.
-   - Optimization levels: `-O0 (Debug)`, `-O1`, `-O2`, `-Os`, `-O3`.
-   - Target architecture & ABI flags: `-march=rv32im -mabi=ilp32`.
-
-2. **🗺 Linker Tab**:
-   - **Code (.text) Base Address** (default `0x10000`) and **Code Size** (default `0x200` / 512 bytes).
-   - **Data (.data) Base Address** (default `0x20000`) and **Data Size** (default `0x200` / 512 bytes).
-   - **Stack Top (sp)**: Initialized by default to $\text{Data Base} + \text{Data Size}$ (default `0x20200`) with dynamic preview when Data Base/Size change, and fully customizable by the user to any custom hex address.
-   - **MMIO Base Address** (default `0xFFFF0000`).
-
-3. **⏱ Simulator Tab**:
-   - Configurable Cycles Per Instruction (CPI) categories: ALU/Basic, Multiply/Divide, Load, Store, Branch, Jump, Floating Point, System/Syscall.
-
----
-
-### 2.5 Tabbed Memory View Navigation
-
-- **Code**: Jumps to `.text` segment (`0x10000`) in increasing address order (`+8` bytes per row).
-- **Data**: Jumps to `.data` segment (`0x20000`) in increasing address order (`+8` bytes per row).
-- **Stack**: Jumps to the configured Stack Top (`0x20200` or custom `stackBase`), rendering addresses in **decreasing order** (`-8` bytes per row: `0x20200`, `0x201F8`, `0x201F0`...) to accurately visualize the downward-growing stack.
-- **MMIO**: Jumps to peripheral memory space (`0xFFFF0000`) with 24 rows displaying LED, DIP switch, 7-Segment, and UART registers in increasing address order.
-
----
-
-### 2.6 Visual Debugging & Breakpoint System
+### 2.3 Visual Debugging & Breakpoint System
 
 #### 1. Interactive Breakpoint Gutter with Drop-Shadow Glow
 - Clickable breakpoint gutter (`.cm-breakpoint-gutter`) and line numbers margin.
@@ -118,8 +59,10 @@ The simulator consolidates Compiler options, Memory layout / Linker settings, an
 - The code line itself remains un-tinted while editing/waiting so that there is no visual ambiguity, leaving full line highlighting exclusively for the active execution line when execution reaches or stops at that point.
 
 #### 3. Smart Breakpoint Snapping to Next Valid Instruction
-- If a user clicks or sets a breakpoint on a line that does not contain an executable instruction (e.g. comments, directives, blank lines, closing braces `}`, or bare function signatures):
-  - The simulator automatically resolves the line and **moves the breakpoint to the next valid executable instruction/statement line**.
+- If a user clicks or sets a breakpoint on a line that does not contain an executable instruction (e.g. comment lines `# ...`, directives like `.text`/`.data`/`.word`, blank lines, or bare labels `main:` without an instruction on the same line):
+  - The simulator automatically resolves the line and **moves the breakpoint to the next valid executable instruction line**.
+  - If the program is already assembled, it uses the exact assembler line-to-instruction mapping.
+  - If not yet assembled, it parses source lines downwards to locate the next valid instruction.
   - The console status log provides clear feedback: `Breakpoint set at line X (moved from line Y to next valid instruction).`
 
 #### 4. Unambiguous Execution Line Tracking (`cm-execLine`)
@@ -127,12 +70,16 @@ The simulator consolidates Compiler options, Memory layout / Linker settings, an
 
 ---
 
-### 2.7 Advanced Editing, IntelliSense & Guidance Features
+### 2.4 Advanced Editing, IntelliSense & Guidance Features
 
 #### 1. Context-Aware IntelliSense Autocomplete (`riscvAutocomplete`)
-- **Mnemonic Position**: At the start of a statement, completions offer matching RV32I/M/A/F/D instructions, pseudo-instructions, and directives with full syntax formats and descriptions.
-- **Operand Position & Active Instruction Locking**: Once a mnemonic is established on the line (e.g. after typing `addi ` or `sw `), completions filter to Registers (`x0`–`x31`), Labels, and Equates, and show active instruction operand parameter highlights (e.g. `PARAM 1: rd`, `PARAM 2: rs1`, `PARAM 3: imm`).
-- **C Autocomplete**: Suggests standard C types (`int`, `uint32_t`, `size_t`), keywords (`return`, `if`, `while`, `struct`), preprocessor directives (`#include`, `#define`), and FPGA MMIO macros (`LEDS`, `SWITCHES`, `BUTTONS`, `SEVSEG`, `UART_TX`, `ACCEL_DATA`).
+- **Mnemonic Position**: At the start of a statement, completions offer matching RV32I/M/A/F/D instructions, pseudo-instructions, and directives with full syntax formats and descriptions. Bare registers are suppressed.
+- **Operand Position & Active Instruction Locking**: Once a mnemonic is established on the line (e.g. after typing `addi ` or `sw `):
+  - Completions exclusively filter to **Registers** (`x0`–`x31`, `zero`, `ra`, `sp`, `a0`–`a7`), **Labels**, and **Equates**. Unrelated instruction mnemonics (like `xor` when typing `sw x`) are completely suppressed.
+  - **Active Instruction Format Banner**: Every candidate's documentation panel features an active instruction header showing the parent instruction's format (e.g. `addi rd, rs1, imm`), description, and metadata, with the **active operand parameter highlighted** (e.g. `PARAM 1: rd`, `PARAM 2: rs1`, `PARAM 3: imm`).
+  - **Jump/Branch Prioritization**: For control flow instructions (`j`, `jal`, `beq`, `bne`, `la`, `call`), user-defined labels and equates are boosted to the top of the completion list.
+- **Automatic Triggering**: Automatically triggers while typing (`activateOnTyping: true`), or manually via `Ctrl+Space`.
+- **Comment/String Guard**: Autocomplete is suppressed inside comments (`# ...`) and double-quoted strings (`"..."`).
 
 #### 2. Live Signature Helper Floating Tooltip (`signatureHelpField`)
 - While the cursor is in the operand section of any instruction (e.g. `addi |` or `sw x1, 4(|)`), a floating tooltip appears above the cursor displaying the instruction's signature with the **active parameter dynamically highlighted** in bold peach/cyan with an underline.
@@ -141,18 +88,19 @@ The simulator consolidates Compiler options, Memory layout / Linker settings, an
 - Hovering the mouse over any instruction mnemonic, register name, directive, or declared label displays a styled documentation card with its syntax format, description, and encoding/line metadata.
 
 #### 4. Precision Tab & Indentation Engine
-- **In-line Tab Insertion**: When the cursor is collapsed, pressing `Tab` inserts a literal `\t` at the cursor position without shifting or auto-indenting the whole line.
+- **In-line Tab Insertion**: When the cursor is collapsed (single cursor, normal typing, e.g. after a label `main:` or instruction `addi`), pressing `Tab` inserts a literal `\t` at the cursor position without shifting or auto-indenting the whole line.
 - **Block Indentation**: When a block of text is selected, `Tab` indents the entire selection (`indentMore`), and `Shift+Tab` unindents (`indentLess`).
+- **Completion Acceptance**: When the autocompletion dropdown is open, pressing `Tab` or `Enter` accepts the selected completion.
 
 #### 5. Floating Find & Replace Panel (`Ctrl+F` / `Ctrl+H`)
 - Real-time search match counter, next/previous navigation (`Enter` / `Shift+Enter`), case-sensitivity toggle (`Alt+C`), single replacement, and replace-all with full undo history tracking.
 
 #### 6. Backward-Compatible Editor Facade
-- Provides a drop-in proxy object `window.editor` exposing `.value`, `.selectionStart`, `.selectionEnd`, `.scrollTop`, `.scrollLeft`, `.focus()`, `.setSelectionRange()`, `.addEventListener()`, and `.removeEventListener()`.
+Provides a drop-in proxy object `window.editor` exposing `.value`, `.selectionStart`, `.selectionEnd`, `.scrollTop`, `.scrollLeft`, `.focus()`, `.setSelectionRange()`, `.addEventListener()`, and `.removeEventListener()`, ensuring 100% backward compatibility with all simulator functions (`loadExample`, `loadFile`, `saveFile`, `assembleOnly`, `updateEditor`).
 
 ---
 
-### 2.8 Intelligent UX Button State Lifecycle Management
+### 2.5 Intelligent UX Button State Lifecycle Management
 
 All toolbar action buttons dynamically track runtime and editor state:
 - **Assemble (`#btnAssemble`)**: Active when code is newly loaded or modified; inactive (`disabled`, tooltip: `"Program is already assembled and up to date"`) once assembled.
@@ -315,4 +263,3 @@ Models 32 32-bit integer registers (`x0`–`x31`), 32 floating-point registers (
 | **v12.0 – v14.0** | Intelligent UX button state lifecycle management, in-editor IntelliSense autocomplete, extended load/store pseudo-instructions, and 60 FPS visual rendering optimization. |
 | **v15.0 (CodeMirror 6 Engine Upgrade)** | **Major Architecture Overhaul**: Upgraded editor to **CodeMirror 6 (latest version)** with standalone offline bundle (`window.CM6`). Implemented custom RISC-V stream tokenizer & Catppuccin Mocha theme, **interactive breakpoint gutter with highlighted line numbers alone**, **smart breakpoint snapping to next valid executable instruction**, **live floating parameter signature helper (`signatureHelpField`)**, **interactive hover tooltips (`riscvHoverTooltip`)**, **active instruction format banner in operand autocompletions**, **precision in-line `\t` Tab key insertion**, native transaction undo/redo history, and complete backward compatibility proxy facade. |
 | **v16.0 (Typography Contrast, 4-Row Mobile Toolbar & Read-Only Memory Code Segment)** | Upgraded UI typography stack from thin monospace to modern system UI (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`) with enhanced font weights (`500`–`650`) and crisp contrast. Restructured desktop toolbar into 2 clean rows with `⏱ CPI` and `🗺 Segments…` aligned with Stats on row 2. Restructured mobile toolbar into **4 dedicated rows** with larger touch targets (`32px` height) that never overflow when Run toggles to Resume. Enforced **read-only protection on Code segment in Memory View** while maintaining full byte and word editing on Data, Stack, and MMIO regions. |
-| **v17.0 (C Compilation via Godbolt, Unified Settings, & Advanced Visual Memory View)** | Integrated full C language simulation via **Compiler Explorer (Godbolt) REST API** (RV32 GCC & Clang) with bidirectional line mapping, C source-level stepping, step back, and C breakpoints. Consolidated settings into a unified 3-tab modal (**Compiler**, **Linker**, **Simulator**) with settable segment sizes (Code & Data sizes default `0x200`) and user-customizable Stack Top ($\text{Data Base} + \text{Data Size}$). Added Disassembly view auto-scroll on stepping, tabbed Memory navigation (`[ Code | Data | Stack | MMIO ]`) with **downward decreasing address ordering for the Stack tab**, and pre-loaded C examples including `Circle_delay_accel.c` (OLED circle drawing, Accelerometer MMIO, and 7-segment display). |

@@ -326,59 +326,6 @@
       gap: 4px;
     }
 
-    /* Language Toggle Switcher */
-    .lang-toggle-group {
-      display: inline-flex;
-      background: #11111b;
-      padding: 2px;
-      border-radius: 6px;
-      border: 1px solid #313244;
-      align-items: center;
-      gap: 2px;
-      margin-right: 2px;
-    }
-
-    .lang-btn {
-      background: transparent !important;
-      color: #9399b2 !important;
-      border: 1px solid transparent !important;
-      padding: 0 9px !important;
-      height: 24px !important;
-      line-height: 22px !important;
-      font-size: 11.5px !important;
-      font-weight: 650 !important;
-      border-radius: 4px !important;
-      cursor: pointer !important;
-      transition: all 0.15s ease !important;
-      box-shadow: none !important;
-      opacity: 1 !important;
-    }
-
-    .lang-btn.active {
-      background: #313244 !important;
-      color: #cba6f7 !important;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
-      border-color: #45475a !important;
-    }
-
-    .lang-btn:hover:not(.active) {
-      color: #cdd6f4 !important;
-      background: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    .disasm-cline-tag {
-      display: inline-block;
-      margin-left: 8px;
-      padding: 1px 6px;
-      background: rgba(203, 166, 247, 0.15);
-      border: 1px solid rgba(203, 166, 247, 0.35);
-      border-radius: 3px;
-      color: #cba6f7;
-      font-size: 11px;
-      font-weight: 500;
-      font-style: normal;
-    }
-
     .toolbar select,
     #exampleSelect {
       background: #313244;
@@ -391,102 +338,6 @@
       height: 28px;
       font-family: inherit;
       outline: none;
-    }
-
-    /* Unified Settings Modal & Tab Bar */
-    .settings-modal {
-      max-width: 520px !important;
-      padding: 0 !important;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .settings-tab-bar {
-      display: flex;
-      background: #181825;
-      border-bottom: 1px solid #313244;
-      padding: 0 12px;
-      gap: 6px;
-    }
-
-    .settings-tab-btn {
-      background: transparent !important;
-      color: #a6adc8 !important;
-      border: none !important;
-      border-bottom: 2px solid transparent !important;
-      padding: 9px 14px !important;
-      font-size: 12.5px !important;
-      font-weight: 600 !important;
-      cursor: pointer !important;
-      border-radius: 0 !important;
-      transition: all 0.15s ease !important;
-      font-family: inherit !important;
-      box-shadow: none !important;
-      height: auto !important;
-    }
-
-    .settings-tab-btn:hover {
-      color: #cdd6f4 !important;
-      background: rgba(255, 255, 255, 0.04) !important;
-    }
-
-    .settings-tab-btn.active {
-      color: #cba6f7 !important;
-      border-bottom-color: #cba6f7 !important;
-      background: transparent !important;
-      font-weight: 700 !important;
-    }
-
-    .settings-tab-content {
-      display: none;
-      padding: 16px 20px;
-      max-height: 420px;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-
-    .settings-tab-content.active {
-      display: block;
-    }
-
-    .mem-subtabs {
-      display: inline-flex;
-      background: #181825;
-      border-radius: 6px;
-      padding: 2px;
-      border: 1px solid #313244;
-      gap: 2px;
-      align-items: center;
-    }
-
-    .mem-subtab-btn {
-      background: transparent !important;
-      color: #a6adc8 !important;
-      border: 1px solid transparent !important;
-      border-radius: 4px !important;
-      padding: 0 10px !important;
-      height: 24px !important;
-      line-height: 22px !important;
-      font-size: 11.5px !important;
-      font-weight: 600 !important;
-      cursor: pointer !important;
-      transition: all 0.15s ease !important;
-      box-shadow: none !important;
-      font-family: inherit !important;
-    }
-
-    .mem-subtab-btn:hover:not(.active) {
-      background: rgba(255, 255, 255, 0.06) !important;
-      color: #cdd6f4 !important;
-    }
-
-    .mem-subtab-btn.active {
-      background: #313244 !important;
-      color: #cba6f7 !important;
-      border-color: #45475a !important;
-      font-weight: 700 !important;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
     }
 
     /* Right Panel Tabs */
@@ -2185,76 +2036,37 @@
 
 <body id="simulatorBody">
   <div class="container">
-    <!-- Unified Settings Overlay (Compiler, Linker, Simulator) -->
-    <div class="cycles-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettingsModal()">
-      <div class="cycles-panel settings-modal">
-        <div class="c-head" style="margin-bottom:0;border-bottom:1px solid #313244;">
-          <span style="font-size:14px;font-weight:700;color:#cdd6f4;">⚙ Settings &amp; Configuration</span>
-          <button onclick="closeSettingsModal()" title="Close">&times;</button>
+    <!-- Cycle configuration overlay -->
+    <div class="cycles-overlay" id="cyclesOverlay" onclick="if(event.target===this)closeCyclesPanel()">
+      <div class="cycles-panel">
+        <div class="c-head">
+          <span>⏱ Cycle Configuration <span style="font-size:12px;color:#a6adc8;font-weight:400;margin-left:6px;">cycles
+              consumed per instruction class</span></span>
+          <button onclick="closeCyclesPanel()" title="Close">&times;</button>
         </div>
-        <!-- Settings Tab Navigation Bar -->
-        <div class="settings-tab-bar">
-          <button class="settings-tab-btn active" id="settingsTabBtn-compiler" onclick="switchSettingsTab('compiler')">⚡ Compiler</button>
-          <button class="settings-tab-btn" id="settingsTabBtn-linker" onclick="switchSettingsTab('linker')">🗺 Linker</button>
-          <button class="settings-tab-btn" id="settingsTabBtn-simulator" onclick="switchSettingsTab('simulator')">⏱ Simulator</button>
-        </div>
-        <!-- Tab 1: Compiler -->
-        <div class="settings-tab-content active" id="settingsContent-compiler">
-          <div style="display:flex;flex-direction:column;gap:12px;font-size:12.5px;">
-            <div>
-              <label style="font-weight:600;display:block;margin-bottom:4px;color:#cba6f7;">RISC-V 32-bit Compiler:</label>
-              <select id="godboltCompilerSelect" style="width:100%;padding:5px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;font-family:inherit;">
-                <option value="rv32-cgcc1420" selected>RISC-V (32-bit) GCC 14.2.0 (Recommended)</option>
-                <option value="rv32-cgcc1320">RISC-V (32-bit) GCC 13.2.0</option>
-                <option value="rv32-cgcc1220">RISC-V (32-bit) GCC 12.2.0</option>
-                <option value="rv32-cclang1810">RISC-V (32-bit) Clang 18.1.0</option>
-                <option value="rv32-cgcctrunk">RISC-V (32-bit) GCC (trunk)</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-weight:600;display:block;margin-bottom:4px;color:#cba6f7;">Optimization Level:</label>
-              <select id="godboltOptSelect" style="width:100%;padding:5px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;font-family:inherit;">
-                <option value="-O0" selected>-O0 (Debug — Precise 1:1 C Source Line Mappings)</option>
-                <option value="-O1">-O1 (Basic Optimization)</option>
-                <option value="-O2">-O2 (Speed Optimization)</option>
-                <option value="-Os">-Os (Size Optimization)</option>
-                <option value="-O3">-O3 (Aggressive Optimization)</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-weight:600;display:block;margin-bottom:4px;color:#cba6f7;">Architecture &amp; ABI Flags:</label>
-              <input type="text" id="godboltArchFlags" value="-march=rv32im -mabi=ilp32" style="width:100%;padding:5px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;box-sizing:border-box;font-family:monospace;">
-            </div>
-            <div style="font-size:11px;color:#9399b2;line-height:1.4;background:#11111b;padding:8px;border-radius:4px;border:1px solid #313244;">
-              💡 <strong>Note:</strong> C source code is compiled via Compiler Explorer (Godbolt) REST API into native RV32 instructions with exact source-to-assembly line correspondence. Breakpoints and stepping execute in real time on the simulated RV32 core.
-            </div>
-          </div>
-        </div>
-        <!-- Tab 2: Linker -->
-        <div class="settings-tab-content" id="settingsContent-linker">
-          <div class="cycle-hint" style="margin-bottom:12px;">Base addresses and segment sizes (hex). Stack top (sp) defaults to Data Base + Data Size, but can be customized. Applying reloads the program with the new layout.</div>
-          <div id="memSegmentsConfigBody">
-            <div class="cycle-field"><label for="ms-code">Code (.text) base</label><input id="ms-code" type="text" value="0x10000" oninput="updateLinkerStackPreview()"></div>
-            <div class="cycle-field"><label for="ms-codesize">Code (.text) size</label><input id="ms-codesize" type="text" value="0x200" oninput="updateLinkerStackPreview()"></div>
-            <div class="cycle-field"><label for="ms-data">Data (.data) base</label><input id="ms-data" type="text" value="0x20000" oninput="updateLinkerStackPreview()"></div>
-            <div class="cycle-field"><label for="ms-datasize">Data (.data) size</label><input id="ms-datasize" type="text" value="0x200" oninput="updateLinkerStackPreview()"></div>
-            <div class="cycle-field"><label for="ms-stack">Stack top (sp)</label><input id="ms-stack" type="text" value="0x20200" title="Initial stack pointer address (defaults to Data Base + Data Size; user overridable)"></div>
-            <div class="cycle-field"><label for="ms-mmio">MMIO base</label><input id="ms-mmio" type="text" value="0xFFFF0000"></div>
-          </div>
-        </div>
-        <!-- Tab 3: Simulator -->
-        <div class="settings-tab-content" id="settingsContent-simulator">
-          <div class="cycle-hint" style="margin-bottom:12px;">Cycles consumed per instruction category for CPI and runtime estimation.</div>
-          <div class="c-body" id="cyclesConfigBody" style="padding:0;"></div>
-        </div>
-        <!-- Footer -->
-        <div class="c-foot" style="margin-top:0;border-top:1px solid #313244;padding:12px 20px;">
-          <button onclick="resetCurrentSettingsTab()">Reset Defaults</button>
-          <button class="primary" onclick="applyAndCloseSettings()">Apply &amp; Close</button>
+        <div class="c-body" id="cyclesConfigBody"></div>
+        <div class="c-foot">
+          <button onclick="resetCyclesConfig()">Reset Defaults</button>
+          <button class="primary" onclick="closeCyclesPanel()">Done</button>
         </div>
       </div>
     </div>
 
+    <!-- Memory segments configuration overlay -->
+    <div class="cycles-overlay" id="memSegmentsOverlay" onclick="if(event.target===this)closeMemSegmentsPanel()">
+      <div class="cycles-panel">
+        <div class="c-head">
+          <span>🗺 Memory Segments <span style="font-size:12px;color:#a6adc8;font-weight:400;margin-left:6px;">base
+              address of each region</span></span>
+          <button onclick="closeMemSegmentsPanel()" title="Close">&times;</button>
+        </div>
+        <div class="c-body" id="memSegmentsConfigBody"></div>
+        <div class="c-foot">
+          <button onclick="resetMemSegments()">Reset Defaults</button>
+          <button class="primary" onclick="applyMemSegments()">Apply</button>
+        </div>
+      </div>
+    </div>
     <div class="main">
       <div class="left-panel">
         <div class="header">
@@ -2275,20 +2087,16 @@
           <div class="toolbar-row toolbar-row-primary">
             <!-- Group 1: File & Edit Operations (Mobile Row 1) -->
             <div class="toolbar-btn-group toolbar-group-file-edit">
-              <div class="lang-toggle-group" id="langToggleGroup" title="Toggle between RISC-V Assembly and C Programming Language">
-                <button type="button" id="langBtnAsm" class="lang-btn active" onclick="setLanguageMode('asm')">RV32 ASM</button>
-                <button type="button" id="langBtnC" class="lang-btn" onclick="setLanguageMode('c')">C Code</button>
-              </div>
-              <input type="file" id="fileLoader" accept=".asm,.s,.c,.h,.txt" onchange="loadFile(event)">
-              <button id="btnOpen" onclick="document.getElementById('fileLoader').click()" title="Open RISC-V assembly or C source file">📂 Open</button>
-              <button id="btnSave" onclick="saveFile()" title="Save source code to file">💾 Save</button>
+              <input type="file" id="fileLoader" accept=".asm,.s,.txt" onchange="loadFile(event)">
+              <button id="btnOpen" onclick="document.getElementById('fileLoader').click()" title="Open RISC-V assembly file">📂 Open</button>
+              <button id="btnSave" onclick="saveFile()" title="Save the edited source code as a .asm file">💾 Save</button>
               <button id="btnUndo" onclick="editorHistory.undo()" title="Undo last edit (Ctrl+Z)">↶ Undo</button>
               <button id="btnRedo" onclick="editorHistory.redo()" title="Redo last undone edit (Ctrl+Y)">↷ Redo</button>
               <button id="btnFind" onclick="openFindReplace(false)" title="Find &amp; Replace in code editor (Ctrl+F / Ctrl+H)">🔍 Find</button>
             </div>
             <!-- Group 2: Execution Controls (Mobile Row 2) -->
             <div class="toolbar-btn-group toolbar-group-execution">
-              <button id="btnAssemble" onclick="assembleOnly()" title="Assemble / Compile and load program into memory (Ctrl+Enter)">⚙ Assemble</button>
+              <button id="btnAssemble" onclick="assembleOnly()" title="Assemble and load program into memory (Ctrl+Enter)">⚙ Assemble</button>
               <button id="runPauseBtn" onclick="toggleRunPause()" title="Run the assembled program (F5)">▶ Run</button>
               <button id="btnStep" onclick="stepOnce()" title="Step (F8)">⏭ Step</button>
               <button id="btnBack" onclick="stepBack()" title="Back step (Shift+F8)">⏮ Back</button>
@@ -2299,7 +2107,7 @@
           <div class="toolbar-row toolbar-row-secondary">
             <!-- Group 3: Examples & Dumps (Mobile Row 3) -->
             <div class="toolbar-btn-group toolbar-group-examples-dumps">
-              <label class="example-label" title="Select an example program">Example:
+              <label class="example-label" title="Select an example RISC-V program">Example:
                 <select id="exampleSelect" onchange="loadExample(this.value)">
                   <option value="basic" title="Basic sum = a + b + c">Basic</option>
                   <option value="rars_syscalls" title="RARS ecall Syscalls Demo (rars_syscalls.asm)">RARS Syscalls</option>
@@ -2318,7 +2126,8 @@
             </div>
             <!-- Group 4: Timing, Segments & Stats (Mobile Row 4) -->
             <div class="toolbar-btn-group toolbar-group-config-stats">
-              <button id="btnSettings" onclick="openSettingsModal()" title="Configure Compiler, Linker segments, and Simulator CPI settings" class="gear">⚙ Settings…</button>
+              <button id="btnCycles" onclick="toggleCyclesPanel()" title="Configure cycles per instruction (CPI)" class="gear">⏱ CPI</button>
+              <button id="btnSegments" onclick="toggleMemSegmentsPanel()" title="Configure memory segment addresses" class="gear">🗺 Segments…</button>
               <span class="stats" id="statsBar">Cycles: 0 &nbsp;|&nbsp; Instr: 0</span>
             </div>
           </div>
@@ -2391,12 +2200,10 @@
             <span style="color:#6c7086;font-size:13px;">Rows</span>
             <input type="number" id="memRows" value="64" min="1" max="128" style="width:50px;"
               onchange="updateMemoryView()">
-            <div class="mem-subtabs">
-              <button class="mem-subtab-btn active" id="memTabBtn-code" onclick="memGo('code')" title="Program / code segment">Code</button>
-              <button class="mem-subtab-btn" id="memTabBtn-data" onclick="memGo('data')" title="Data / static segment (writes land here)">Data</button>
-              <button class="mem-subtab-btn" id="memTabBtn-stack" onclick="memGo('stack')" title="Stack region near the stack pointer">Stack</button>
-              <button class="mem-subtab-btn" id="memTabBtn-mmio" onclick="memGo('mmio')" title="Memory-mapped I/O region">MMIO</button>
-            </div>
+            <button onclick="memGo('code')" title="Program / code segment">Code</button>
+            <button onclick="memGo('data')" title="Data / static segment (writes land here)">Data</button>
+            <button onclick="memGo('stack')" title="Stack region near the stack pointer">Stack</button>
+            <button onclick="memGo('mmio')" title="Memory-mapped I/O region">MMIO</button>
             <button onclick="updateMemoryView()">&#x21bb;</button>
           </div>
           <div class="mem-legend">
@@ -2852,23 +2659,15 @@
     let regs = new Int32Array(32);
     let fregs = new Float32Array(32);
     let dregs = new Float64Array(32);
-    const PAGE_BITS = 16; // 64 KB sparse memory pages
-    const PAGE_SIZE = 1 << PAGE_BITS; // 65536
-    const PAGE_MASK = PAGE_SIZE - 1; // 0xFFFF
-    let memoryPages = new Map();
-    let memory = new Uint8Array(4 * 1024 * 1024); // 4 MB memory compatibility buffer
+    let memory = new Uint8Array(4 * 1024 * 1024); // 4 MB memory
     // Configurable memory segment addresses. Defaults match the documented layout:
     //   code .text = 0x10000, data = 0x20000, stack = 0x7ffffc, MMIO = 0xFFFF0000
     const DEFAULT_BASE = 0x00010000;
     const DEFAULT_DATA_OFFSET = 0x00010000;
     let baseAddress = DEFAULT_BASE;                    // .text base
-    let codeSize = 0x00000200;                         // .text size (default 0x200 / 512 bytes)
     let dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET; // .data base = 0x20000
-    let dataSize = 0x00000200;                         // .data size (default 0x200 / 512 bytes)
-    let stackBase = 0x00020200;                        // stack top = dataBase + dataSize
+    let stackBase = 0x00020200;                          // stack top
     let mmioBase = 0xFFFF0000;                         // MMIO base
-    let currentMemSegment = 'code';
-    let currentSettingsTab = 'compiler';
     let pc = baseAddress;
     let machineCode = []; // array of {address, bytes, instruction, line}
     let labels = {};
@@ -3173,17 +2972,14 @@
     const DIRECTIVE_NOOP = new Set([
       '.globl', '.global', '.type', '.size', '.option', '.macro', '.endm', '.end',
       '.file', '.ident', '.comm', '.lcomm', '.pushsection', '.popsection',
-      '.altmacro', '.noaltmacro', '.weak', '.local', '.extern', '.hidden', '.protected',
-      '.attribute', '.cfi_sections', '.cfi_startproc', '.cfi_endproc', '.cfi_def_cfa_offset',
-      '.cfi_offset', '.cfi_restore', '.cfi_def_cfa_register', '.cfi_def_cfa',
-      '.loc', '.addrsig', '.addrsig_sym', '.line', '.custom'
+      '.altmacro', '.noaltmacro', '.weak', '.local', '.extern', '.hidden', '.protected'
     ]);
 
     // Map a section name (possibly quoted / dot-prefixed) to 'text' or 'data'.
     function setSection(name) {
-      const raw = String(name || '').split(',')[0].replace(/["']/g, '').replace(/^\./, '').trim().toLowerCase();
-      if (raw === 'text' || raw.startsWith('text')) return 'text';
-      if (raw === 'data' || raw === 'bss' || raw === 'rodata' || raw === 'sdata' || raw === 'sbss' || raw.startsWith('rodata') || raw.startsWith('data') || raw.startsWith('bss')) return 'data';
+      const n = String(name || '').replace(/["']/g, '').replace(/^\./, '').toLowerCase();
+      if (n === 'text') return 'text';
+      if (n === 'data' || n === 'bss' || n === 'rodata' || n === 'sdata' || n === 'sbss') return 'data';
       return null;
     }
 
@@ -3228,21 +3024,12 @@
       const sizeLine = (main) => {
         const toks = main.split(/\s+/);
         const mn = toks[0].toLowerCase();
-        if (mn === '.text') { section = 'text'; activeDataDirPass1 = null; return; }
-        if (mn === '.data') { section = 'data'; activeDataDirPass1 = null; return; }
-        if (mn === '.section' || mn === '.rodata' || mn === '.bss') {
-          const s = setSection(toks[1] || mn);
-          section = s || 'ignore';
-          activeDataDirPass1 = null;
-          return;
-        }
-        if (section === 'ignore') return;
         switch (mn) {
           case '.text': section = 'text'; activeDataDirPass1 = null; break;
           case '.data': section = 'data'; activeDataDirPass1 = null; break;
           case '.section': case '.rodata': case '.bss': {
             const s = setSection(toks[1] || mn);
-            section = s || 'ignore';
+            if (s) section = s;
             activeDataDirPass1 = null;
             break;
           }
@@ -3494,7 +3281,9 @@
               }
               case '.asciiz': case '.asciz': case '.string': case '.ascii': {
                 const s = main.slice(main.indexOf(' ')).trim();
-                const bytes = parseStringLiteral(s);
+                const strVal = parseStringLiteral(s);
+                const bytes = [];
+                for (let c = 0; c < strVal.length; c++) bytes.push(strVal.charCodeAt(c) & 0xFF);
                 if (mn !== '.ascii') bytes.push(0);
                 push({ address: getAddr(), bytes: bytes, text: asmText, line: lineNo, asmLine: main }); bump(bytes.length);
                 break;
@@ -3521,16 +3310,9 @@
         let first = main.split(/\s+/)[0];
         const mnLow = first.toLowerCase();
         if (mnLow === '.text' || mnLow === '.data' || mnLow === '.section' || mnLow === '.rodata' || mnLow === '.bss') {
-          if (mnLow === '.text') section = 'text';
-          else if (mnLow === '.data') section = 'data';
-          else {
-            const s = setSection(main.split(/\s+/)[1] || mnLow);
-            section = s || 'ignore';
-          }
+          section = (mnLow === '.text') ? 'text' : 'data';
           activeDataDirPass2 = null;
-          continue;
-        }
-        if (section === 'ignore') continue; else if (['.byte', '.word', '.half', '.dword'].includes(mnLow)) {
+        } else if (['.byte', '.word', '.half', '.dword'].includes(mnLow)) {
           activeDataDirPass2 = mnLow;
         } else if (section === 'data' && activeDataDirPass2 && !first.endsWith(':') && !first.startsWith('.') && !INSTRUCTIONS[mnLow] && !PSEUDO_INSTRUCTIONS[mnLow]) {
           main = activeDataDirPass2 + ' ' + main;
@@ -3555,40 +3337,22 @@
       if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
         s = s.substring(1, s.length - 1);
       }
-      let result = [];
+      let result = '';
       for (let i = 0; i < s.length; i++) {
         if (s[i] === '\\' && i + 1 < s.length) {
-          const octMatch = s.slice(i + 1).match(/^[0-7]{1,3}/);
-          if (octMatch) {
-            const octVal = parseInt(octMatch[0], 8);
-            result.push(octVal & 0xFF);
-            i += octMatch[0].length;
-            continue;
-          }
-          const hexMatch = s.slice(i + 1).match(/^x[0-9a-fA-F]{1,2}/i);
-          if (hexMatch) {
-            const hexVal = parseInt(hexMatch[0].slice(1), 16);
-            result.push(hexVal & 0xFF);
-            i += hexMatch[0].length;
-            continue;
-          }
           switch (s[i + 1]) {
-            case 'n': result.push(10); break;
-            case 't': result.push(9); break;
-            case 'r': result.push(13); break;
-            case '0': result.push(0); break;
-            case 'a': result.push(7); break;
-            case 'b': result.push(8); break;
-            case 'f': result.push(12); break;
-            case 'v': result.push(11); break;
-            case '\\': result.push(92); break;
-            case '"': result.push(34); break;
-            case "'": result.push(39); break;
-            default: result.push(s.charCodeAt(i + 1) & 0xFF);
+            case 'n': result += '\n'; break;
+            case 't': result += '\t'; break;
+            case 'r': result += '\r'; break;
+            case '0': result += '\0'; break;
+            case '\\': result += '\\'; break;
+            case '"': result += '"'; break;
+            case "'": result += "'"; break;
+            default: result += s[i + 1];
           }
           i++;
         } else {
-          result.push(s.charCodeAt(i) & 0xFF);
+          result += s[i];
         }
       }
       return result;
@@ -3852,33 +3616,10 @@
     // 5. SIMULATOR
     // ============================================================
 
-    function getMemByte(addr) {
-      const u = addr >>> 0;
-      if (isMMIOAddr(u)) return handleMMIORead(u, 1);
-      const p = memoryPages.get(u >>> PAGE_BITS);
-      return p ? p[u & PAGE_MASK] : 0;
-    }
-
-    function setMemByte(addr, val) {
-      const u = addr >>> 0;
-      if (isMMIOAddr(u)) {
-        handleMMIOWrite(u, val & 0xFF, 1);
-        return;
-      }
-      const pageIdx = u >>> PAGE_BITS;
-      let p = memoryPages.get(pageIdx);
-      if (!p) {
-        p = new Uint8Array(PAGE_SIZE);
-        memoryPages.set(pageIdx, p);
-      }
-      p[u & PAGE_MASK] = val & 0xFF;
-    }
-
     function initializeState() {
       regs = new Int32Array(32);
       fregs = new Float32Array(32);
       dregs = new Float64Array(32);
-      memoryPages = new Map();
       memory = new Uint8Array(4 * 1024 * 1024);
       pc = baseAddress;
       lastChangedReg = -1;
@@ -3923,17 +3664,13 @@
         if (item.bytes && !item.error) {
           const addr = item.address;
           for (let i = 0; i < item.bytes.length; i++) {
-            setMemByte(addr + i, item.bytes[i]);
+            if (addr + i < memory.length) {
+              memory[addr + i] = item.bytes[i];
+            }
           }
         }
       }
-      if (labels['_start'] !== undefined) {
-        pc = labels['_start'];
-      } else if (labels['main'] !== undefined) {
-        pc = labels['main'];
-      } else {
-        pc = baseAddress;
-      }
+      pc = baseAddress;
     }
 
     function isMMIOAddr(addr) {
@@ -3944,30 +3681,17 @@
     function readMem(addr, size, peekOnly = false) {
       const uaddr = addr >>> 0;
       if (isMMIOAddr(uaddr)) return handleMMIORead(uaddr, size, peekOnly);
-      const pageIdx = uaddr >>> PAGE_BITS;
-      const offset = uaddr & PAGE_MASK;
-      const page = memoryPages.get(pageIdx);
-      if (offset + size <= PAGE_SIZE) {
-        if (!page) return 0;
-        if (size === 4) {
-          return ((page[offset] | (page[offset + 1] << 8) | (page[offset + 2] << 16) | (page[offset + 3] << 24)) >>> 0);
-        } else if (size === 1) {
-          return page[offset];
-        } else if (size === 2) {
-          return page[offset] | (page[offset + 1] << 8);
-        }
-        let val = 0;
-        for (let i = 0; i < size; i++) {
-          val |= (page[offset + i] << (i * 8));
-        }
-        return val >>> 0;
+      if (uaddr + size > memory.length) return 0;
+      if (size === 4) {
+        return ((memory[uaddr] | (memory[uaddr + 1] << 8) | (memory[uaddr + 2] << 16) | (memory[uaddr + 3] << 24)) >>> 0);
+      } else if (size === 1) {
+        return memory[uaddr];
+      } else if (size === 2) {
+        return memory[uaddr] | (memory[uaddr + 1] << 8);
       }
       let val = 0;
       for (let i = 0; i < size; i++) {
-        const a = (uaddr + i) >>> 0;
-        const p = memoryPages.get(a >>> PAGE_BITS);
-        const b = p ? p[a & PAGE_MASK] : 0;
-        val |= (b << (i * 8));
+        val |= (memory[uaddr + i] << (i * 8));
       }
       return val >>> 0;
     }
@@ -3981,10 +3705,19 @@
         if (val & signBit) val -= (1 << (size * 8));
         return val;
       }
-      const val = readMem(addr, size, peekOnly);
-      if (size === 4) return val | 0;
+      if (uaddr + size > memory.length) return 0;
+      if (size === 4) {
+        return (memory[uaddr] | (memory[uaddr + 1] << 8) | (memory[uaddr + 2] << 16) | (memory[uaddr + 3] << 24)) | 0;
+      } else if (size === 1) {
+        const b = memory[uaddr];
+        return (b & 0x80) ? (b - 0x100) : b;
+      } else if (size === 2) {
+        const h = memory[uaddr] | (memory[uaddr + 1] << 8);
+        return (h & 0x8000) ? (h - 0x10000) : h;
+      }
+      let val = readMem(addr, size, peekOnly);
       const signBit = 1 << (size * 8 - 1);
-      if (val & signBit) return (val - (1 << (size * 8))) | 0;
+      if (val & signBit) val -= (1 << (size * 8));
       return val;
     }
 
@@ -3995,48 +3728,26 @@
         lastChangedMem = [{ addr: uaddr, size }];
         return;
       }
+      if (uaddr + size > memory.length) return;
       // Journal old bytes for back-step (only during single-stepping execution)
       if (journalEnabled) {
         for (let i = 0; i < size; i++) {
-          const a = (uaddr + i) >>> 0;
-          const p = memoryPages.get(a >>> PAGE_BITS);
-          const old = p ? p[a & PAGE_MASK] : 0;
-          stepWriteLog.push({ addr: a, old });
+          stepWriteLog.push({ addr: uaddr + i, old: memory[uaddr + i] });
         }
       }
-      const pageIdx = uaddr >>> PAGE_BITS;
-      const offset = uaddr & PAGE_MASK;
-      if (offset + size <= PAGE_SIZE) {
-        let page = memoryPages.get(pageIdx);
-        if (!page) {
-          page = new Uint8Array(PAGE_SIZE);
-          memoryPages.set(pageIdx, page);
-        }
-        if (size === 4) {
-          page[offset] = val & 0xFF;
-          page[offset + 1] = (val >> 8) & 0xFF;
-          page[offset + 2] = (val >> 16) & 0xFF;
-          page[offset + 3] = (val >> 24) & 0xFF;
-        } else if (size === 1) {
-          page[offset] = val & 0xFF;
-        } else if (size === 2) {
-          page[offset] = val & 0xFF;
-          page[offset + 1] = (val >> 8) & 0xFF;
-        } else {
-          for (let i = 0; i < size; i++) {
-            page[offset + i] = (val >> (i * 8)) & 0xFF;
-          }
-        }
+      if (size === 4) {
+        memory[uaddr] = val & 0xFF;
+        memory[uaddr + 1] = (val >> 8) & 0xFF;
+        memory[uaddr + 2] = (val >> 16) & 0xFF;
+        memory[uaddr + 3] = (val >> 24) & 0xFF;
+      } else if (size === 1) {
+        memory[uaddr] = val & 0xFF;
+      } else if (size === 2) {
+        memory[uaddr] = val & 0xFF;
+        memory[uaddr + 1] = (val >> 8) & 0xFF;
       } else {
         for (let i = 0; i < size; i++) {
-          const a = (uaddr + i) >>> 0;
-          const pIdx = a >>> PAGE_BITS;
-          let page = memoryPages.get(pIdx);
-          if (!page) {
-            page = new Uint8Array(PAGE_SIZE);
-            memoryPages.set(pIdx, page);
-          }
-          page[a & PAGE_MASK] = (val >> (i * 8)) & 0xFF;
+          memory[uaddr + i] = (val >> (i * 8)) & 0xFF;
         }
       }
       lastChangedMem = [{ addr: uaddr, size }];
@@ -4806,8 +4517,8 @@
           {
             let s = '';
             let addr = a0 >>> 0;
-            while (getMemByte(addr) !== 0 && s.length < 65536) {
-              s += String.fromCharCode(getMemByte(addr));
+            while (addr < memory.length && memory[addr] !== 0) {
+              s += String.fromCharCode(memory[addr]);
               addr++;
             }
             log(s, 'info');
@@ -4856,9 +4567,11 @@
             let addr = a0 >>> 0;
             const copyLen = Math.min(input.length, Math.max(0, maxLen - 1));
             for (let i = 0; i < copyLen; i++) {
-              setMemByte(addr + i, input.charCodeAt(i) & 0xFF);
+              if (addr + i < memory.length) memory[addr + i] = input.charCodeAt(i) & 0xFF;
             }
-            setMemByte(addr + copyLen, 0); // null terminator
+            if (addr + copyLen < memory.length) {
+              memory[addr + copyLen] = 0; // null terminator
+            }
             log(`[Syscall read_string]: "${input.substring(0, copyLen)}"`, 'info');
           }
           break;
@@ -4944,8 +4657,7 @@
       dip_led: 'DIP_to_LED.asm',
       hello_world: 'HelloWorld.asm',
       hello_jal: 'HelloWorld_jal_jalr.asm',
-      circle_accel: 'Circle_delay_accel.asm',
-      circle_accel_c: 'Circle_delay_accel.c'
+      circle_accel: 'Circle_delay_accel.asm'
     };
 
     // In-Editor Find & Replace state globals
@@ -5063,119 +4775,17 @@
 
     const riscvLanguage = CM6.StreamLanguage.define(riscvStreamParser);
 
-    // C Language Stream Parser for CodeMirror 6
-    const C_KEYWORDS_SET = new Set([
-      'if', 'else', 'while', 'for', 'do', 'switch', 'case', 'default', 'break', 'continue',
-      'return', 'goto', 'sizeof', 'typedef', 'struct', 'union', 'enum', 'static', 'extern',
-      'const', 'volatile', 'register', 'auto', 'inline', 'restrict', 'asm', '__asm__', '__volatile__'
-    ]);
-
-    const C_TYPES_SET = new Set([
-      'void', 'char', 'short', 'int', 'long', 'float', 'double', 'signed', 'unsigned', 'bool',
-      'int8_t', 'int16_t', 'int32_t', 'int64_t', 'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t',
-      'size_t', 'ssize_t', 'intptr_t', 'uintptr_t', 'ptrdiff_t', 'wchar_t'
-    ]);
-
-    const cStreamParser = {
-      startState() {
-        return { inBlockComment: false };
-      },
-      token(stream, state) {
-        if (state.inBlockComment) {
-          if (stream.match(/^.*?\*\//)) {
-            state.inBlockComment = false;
-            return 'comment';
-          }
-          stream.skipToEnd();
-          return 'comment';
-        }
-
-        if (stream.eatSpace()) return null;
-
-        // Single line comments
-        if (stream.match(/^\/\/.*/)) {
-          return 'comment';
-        }
-
-        // Block comments
-        if (stream.match(/^\/\*/)) {
-          if (stream.match(/^.*?\*\//)) {
-            return 'comment';
-          }
-          state.inBlockComment = true;
-          stream.skipToEnd();
-          return 'comment';
-        }
-
-        // Preprocessor directives (#include, #define, #ifdef, etc.)
-        if (stream.match(/^#[a-zA-Z_]\w*/)) {
-          return 'meta';
-        }
-
-        // Strings
-        if (stream.match(/^"([^"\\]|\\.)*"/)) {
-          return 'string';
-        }
-        // Characters
-        if (stream.match(/^'([^'\\]|\\.)*'/)) {
-          return 'string';
-        }
-
-        // Numbers (Hex, Binary, Floats, Decimals)
-        if (stream.match(/^0x[0-9a-fA-F]+[uUlL]*/i) ||
-            stream.match(/^0b[01]+[uUlL]*/i) ||
-            stream.match(/^\d+(\.\d+)?([eE][+-]?\d+)?[fFlLuU]*/)) {
-          return 'number';
-        }
-
-        // Multi-character and single-character operators
-        if (stream.match(/^(?:->|<<|>>|<=|>=|==|!=|&&|\|\||\+\+|--|\+=|-=|\*=|(?:\/)=|%=|&=|\|=|\^=|[-+*\/%&|^!~=<>?:])/)) {
-          return 'operator';
-        }
-
-        // Identifiers, Keywords, Types
-        const wordMatch = stream.match(/^[a-zA-Z_]\w*/);
-        if (wordMatch) {
-          const word = wordMatch[0];
-          if (C_KEYWORDS_SET.has(word)) {
-            return 'keyword';
-          }
-          if (C_TYPES_SET.has(word)) {
-            return 'typeName';
-          }
-          if (/^[A-Z_][A-Z0-9_]*$/.test(word)) {
-            return 'propertyName';
-          }
-          return 'variableName';
-        }
-
-        // Punctuation
-        if (stream.eat(/^[{}\[\](),;.]/)) {
-          return 'punctuation';
-        }
-
-        stream.next();
-        return null;
-      }
-    };
-
-    const cLanguage = CM6.StreamLanguage.define(cStreamParser);
-
-    let editorLanguageMode = 'asm';
-    let languageCompartment = null;
-
     const riscvHighlightStyle = CM6.HighlightStyle.define([
-      { tag: CM6.tags.keyword, color: '#89b4fa', fontWeight: '600' },          // RV Instructions / C Keywords (Blue)
-      { tag: CM6.tags.typeName, color: '#f5c2e7', fontWeight: '600' },         // C Types (Pink)
-      { tag: CM6.tags.variableName, color: '#a6e3a1' },                        // Registers / Variables (Green)
+      { tag: CM6.tags.keyword, color: '#89b4fa', fontWeight: '600' },          // RV Instructions (Blue)
+      { tag: CM6.tags.variableName, color: '#a6e3a1' },                        // Registers (Green)
       { tag: CM6.tags.meta, color: '#f5c2e7', fontWeight: '600' },             // Directives (Pink)
       { tag: CM6.tags.labelName, color: '#fab387', fontWeight: 'bold' },       // Labels (Peach)
       { tag: CM6.tags.comment, color: '#6c7086', fontStyle: 'italic' },        // Comments (Gray)
       { tag: CM6.tags.number, color: '#f9e2af' },                               // Numbers/Immediates (Yellow)
       { tag: CM6.tags.string, color: '#a6e3a1' },                               // Strings (Green)
       { tag: CM6.tags.punctuation, color: '#cdd6f4' },                          // Punctuation (Lavender/White)
-      { tag: CM6.tags.operator, color: '#89dceb', fontWeight: '600' },         // %hi, %lo macros / C operators (Cyan)
-      { tag: CM6.tags.propertyName, color: '#cba6f7' }                         // CSRs / Macros (Mauve)
+      { tag: CM6.tags.operator, color: '#89dceb', fontWeight: '600' },         // %hi, %lo macros (Cyan)
+      { tag: CM6.tags.propertyName, color: '#cba6f7' }                         // CSRs (Mauve)
     ]);
 
     const riscvEditorTheme = CM6.EditorView.theme({
@@ -5519,101 +5129,8 @@
       };
     });
 
-    // Autocomplete Source for C Language in CodeMirror 6
-    function cAutocomplete(context) {
-      const line = context.state.doc.lineAt(context.pos);
-      const textBefore = line.text.slice(0, context.pos - line.from);
-
-      if (textBefore.includes('//')) return null;
-      const quoteCount = (textBefore.match(/"/g) || []).length;
-      if (quoteCount % 2 !== 0) return null;
-
-      const word = context.matchBefore(/[\w#]+/);
-      if (!word && !context.explicit) return null;
-
-      const wordStr = word ? word.text.toLowerCase() : '';
-      const options = [];
-
-      const types = [
-        { name: 'int', desc: '32-bit signed integer' },
-        { name: 'char', desc: '8-bit character / byte' },
-        { name: 'void', desc: 'Empty / return type' },
-        { name: 'float', desc: '32-bit IEEE 754 float' },
-        { name: 'double', desc: '64-bit IEEE 754 float' },
-        { name: 'short', desc: '16-bit integer' },
-        { name: 'long', desc: 'Long integer' },
-        { name: 'unsigned', desc: 'Unsigned type modifier' },
-        { name: 'signed', desc: 'Signed type modifier' },
-        { name: 'bool', desc: 'Boolean type' },
-        { name: 'int8_t', desc: '8-bit signed int' },
-        { name: 'int16_t', desc: '16-bit signed int' },
-        { name: 'int32_t', desc: '32-bit signed int' },
-        { name: 'uint8_t', desc: '8-bit unsigned int' },
-        { name: 'uint16_t', desc: '16-bit unsigned int' },
-        { name: 'uint32_t', desc: '32-bit unsigned int' },
-        { name: 'size_t', desc: 'Unsigned size type' },
-        { name: 'uintptr_t', desc: 'Pointer-sized unsigned int' }
-      ];
-
-      const keywords = [
-        { name: 'return', desc: 'Return from function' },
-        { name: 'if', desc: 'Conditional branch' },
-        { name: 'else', desc: 'Else branch' },
-        { name: 'for', desc: 'For loop' },
-        { name: 'while', desc: 'While loop' },
-        { name: 'do', desc: 'Do-while loop' },
-        { name: 'switch', desc: 'Switch statement' },
-        { name: 'case', desc: 'Switch case' },
-        { name: 'default', desc: 'Default case' },
-        { name: 'break', desc: 'Break loop/switch' },
-        { name: 'continue', desc: 'Continue next iteration' },
-        { name: 'struct', desc: 'Structure definition' },
-        { name: 'typedef', desc: 'Type alias' },
-        { name: 'const', desc: 'Constant qualifier' },
-        { name: 'volatile', desc: 'Volatile MMIO qualifier' },
-        { name: 'static', desc: 'Static storage duration' },
-        { name: 'sizeof', desc: 'Size of type or variable' }
-      ];
-
-      const macros = [
-        { name: 'LEDS', desc: '(*(volatile unsigned int*)0xFFFF0060) - Nexys 4 LEDs' },
-        { name: 'SWITCHES', desc: '(*(volatile unsigned int*)0xFFFF0064) - Nexys 4 DIP Switches' },
-        { name: 'BUTTONS', desc: '(*(volatile unsigned int*)0xFFFF0068) - Nexys 4 Push Buttons' },
-        { name: 'SEVSEG', desc: '(*(volatile unsigned int*)0xFFFF0080) - Nexys 4 7-Segment Display' },
-        { name: 'UART_TX', desc: '(*(volatile unsigned int*)0xFFFF000C) - UART Transmit Register' },
-        { name: 'ACCEL_DATA', desc: '(*(volatile unsigned int*)0xFFFF0040) - 3-Axis Accelerometer' },
-        { name: '#include', desc: 'Preprocessor include header' },
-        { name: '#define', desc: 'Preprocessor define macro' },
-        { name: '#ifdef', desc: 'Preprocessor conditional' },
-        { name: '#ifndef', desc: 'Preprocessor conditional' },
-        { name: '#endif', desc: 'Preprocessor end conditional' }
-      ];
-
-      for (const item of [...types, ...keywords, ...macros]) {
-        const nameLower = item.name.toLowerCase();
-        if (!wordStr || nameLower.startsWith(wordStr) || (wordStr.startsWith('#') && nameLower.startsWith(wordStr))) {
-          options.push({
-            label: item.name,
-            type: item.name.startsWith('#') ? 'namespace' : (types.includes(item) ? 'type' : (keywords.includes(item) ? 'keyword' : 'constant')),
-            detail: item.desc,
-            boost: (nameLower === wordStr) ? 100 : (nameLower.startsWith(wordStr) ? 50 : 10)
-          });
-        }
-      }
-
-      return {
-        from: word ? word.from : context.pos,
-        options: options,
-        validFor: /^[\w#]*$/
-      };
-    }
-
     // Autocomplete Source for CodeMirror 6 with Active Instruction Format Info
     function riscvAutocomplete(context) {
-      if (editorLanguageMode === 'c') {
-        return cAutocomplete(context);
-      }
-
       const line = context.state.doc.lineAt(context.pos);
       const textBefore = line.text.slice(0, context.pos - line.from);
 
@@ -6795,10 +6312,8 @@ function updateRegisters() {
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      if (!oledImageData || oledImageData.width !== 96 || oledImageData.height !== 64) {
-        oledImageData = ctx.createImageData(96, 64);
-      }
-      oledImageData.data.set(oledBuffer.subarray(0, 96 * 64 * 4));
+      if (!oledImageData) oledImageData = ctx.createImageData(96, 64);
+      oledImageData.data.set(oledBuffer);
       ctx.putImageData(oledImageData, 0, 0);
     }
 
@@ -7054,14 +6569,13 @@ function updateRegisters() {
       const addrStr = document.getElementById('memAddr').value;
       const rows = parseInt(document.getElementById('memRows').value) || 16;
       let addr = parseInt(addrStr, 16);
-      if (isNaN(addr)) addr = (activeMemRegion === 'stack' || currentMemSegment === 'stack') ? stackBase : baseAddress;
+      if (isNaN(addr)) addr = baseAddress;
       addr = (addr >>> 0) & ~0x7;  // Align to 8-byte boundary unsigned
 
-      const isStackView = (activeMemRegion === 'stack' || currentMemSegment === 'stack');
+      const isStackView = (activeMemRegion === 'stack');
 
       let html = '';
       for (let r = 0; r < rows; r++) {
-        if (isStackView && addr < r * 8) break;
         // Stack grows downwards -> rows step downwards by 8 bytes; all other regions step upwards
         const base = isStackView ? ((addr - r * 8) >>> 0) : ((addr + r * 8) >>> 0);
 
@@ -7107,13 +6621,17 @@ function updateRegisters() {
           let desc = descriptors.length ? `[${descriptors.join(' · ')}]` : '[MMIO]';
 
           html += `<div><span class="addr">0x${base.toString(16).padStart(8, '0')}</span> ${hexVals}  ${asciiVals} <span class="mmio-desc" style="font-size:10px;color:#cba6f7;">${desc}</span></div>`;
+        } else if (base >= memory.length) {
+          html += `<div><span class="addr">0x${base.toString(16).padStart(8, '0')}</span> <span class="mmio-desc" style="font-size:11px;color:#7f849c">[beyond RAM]</span></div>`;
+          if (!isStackView) break;
         } else {
           let hexVals = '';
           let asciiVals = '';
 
           for (let c = 0; c < 8; c++) {
-            const offset = isStackView ? ((base - c) >>> 0) : ((base + c) >>> 0);
-            const val = getMemByte(offset);
+            const offset = (base + c) >>> 0;
+            if (offset >= memory.length) break;
+            const val = memory[offset] || 0;
             const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
             const cls = isChanged ? ' changed' : '';
             const isCodeSegment = isCodeSegmentAddress(offset);
@@ -7547,27 +7065,15 @@ function updateRegisters() {
     }
 
     function memGo(region) {
-      currentMemSegment = region;
       activeMemRegion = region;
       const el = document.getElementById('memAddr');
       const rowsEl = document.getElementById('memRows');
-      if (region === 'code') { if (el) el.value = '0x' + (baseAddress >>> 0).toString(16); }
-      else if (region === 'data') { if (el) el.value = '0x' + (dataBase >>> 0).toString(16); }
-      else if (region === 'stack') { if (el) el.value = '0x' + (stackBase >>> 0).toString(16); }
-      else if (region === 'mmio') { if (el) el.value = '0x' + (mmioBase >>> 0).toString(16); if (rowsEl) rowsEl.value = '24'; }
-      updateMemSubTabs();
+      if (rowsEl && region !== 'mmio') rowsEl.value = '64';
+      if (region === 'code') { el.value = '0x' + (baseAddress >>> 0).toString(16); }
+      else if (region === 'data') { el.value = '0x' + (dataBase >>> 0).toString(16); }
+      else if (region === 'stack') { el.value = '0x' + (stackBase >>> 0).toString(16); }
+      else if (region === 'mmio') { el.value = '0x' + (mmioBase >>> 0).toString(16); if (rowsEl) rowsEl.value = '24'; }
       updateMemoryView();
-    }
-
-    function updateMemSubTabs() {
-      const tabs = ['code', 'data', 'stack', 'mmio'];
-      tabs.forEach(t => {
-        const btn = document.getElementById('memTabBtn-' + t);
-        if (btn) {
-          if (t === currentMemSegment) btn.classList.add('active');
-          else btn.classList.remove('active');
-        }
-      });
     }
 
     function updateMachineCode() {
@@ -7587,13 +7093,6 @@ function updateRegisters() {
         const native = item.native || source;
         const expanded = !!item.isPseudo;
         const rowClass = item.address === pc ? 'current-native' : '';
-
-        let cSrcTag = '';
-        if (item.cLine && editorLanguageMode === 'c') {
-          const cLines = editor ? editor.value.split('\n') : [];
-          const cText = (item.cLine >= 1 && item.cLine <= cLines.length) ? cLines[item.cLine - 1].trim() : '';
-          cSrcTag = `<span class="disasm-cline-tag" title="C source line ${item.cLine}">Line ${item.cLine}${cText ? ': ' + escapeHtml(cText) : ''}</span>`;
-        }
 
         let bytesStr = '';
         if (showHex) {
@@ -7624,242 +7123,21 @@ function updateRegisters() {
       <td class="addr">0x${item.address.toString(16).padStart(8, '0')}</td>
       <td class="bytes">${bytesStr}</td>
       <td class="native ${expanded ? 'native-expanded' : ''}">${escapeHtml(native)}</td>
-      <td class="source ${expanded ? 'pseudo' : ''}">${escapeHtml(source)}${cSrcTag}</td>
+      <td class="source ${expanded ? 'pseudo' : ''}">${escapeHtml(source)}</td>
     </tr>`;
       }
       html += '</table>';
       disassemblyDisplay.innerHTML = html;
-
-      // Autoscroll active execution instruction into view if Disassembly tab is active
-      const tabDisasm = document.getElementById('tab-disassembly');
-      if (tabDisasm && tabDisasm.classList.contains('active')) {
-        const curRow = disassemblyDisplay.querySelector('.current-native');
-        if (curRow) {
-          curRow.scrollIntoView({ block: 'nearest', behavior: 'auto' });
-        }
-      }
     }
 
     function switchTab(tab, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-bar button').forEach(el => el.classList.remove('active'));
       document.getElementById('tab-' + tab).classList.add('active');
-      if (btn) btn.classList.add('active');
-      if (tab === 'memory') { updateMemSubTabs(); updateMemoryView(); }
+      btn.classList.add('active');
+      if (tab === 'memory') updateMemoryView();
       if (tab === 'peripherals') { initPeripherals(); }
-      if (tab === 'disassembly') { updateDisassembly(); }
-    }
-
-    const cExamples = {
-      basic_c: `// Basic arithmetic and functions in C
-int sum(int a, int b, int c) {
-    int result = a + b + c;
-    return result;
-}
-
-int main() {
-    int a = 10;
-    int b = 20;
-    int c = 30;
-    int total = sum(a, b, c);
-    return total; // 60 in a0
-}
-`,
-
-      factorial_c: `// Recursive Factorial: 5! = 120
-int factorial(int n) {
-    if (n <= 1) {
-        return 1;
-    }
-    return n * factorial(n - 1);
-}
-
-int main() {
-    int num = 5;
-    int result = factorial(num);
-    return result; // 120 in a0
-}
-`,
-
-      fibonacci_c: `// Fibonacci Series Generator
-int fib[10];
-
-int compute_fib(int n) {
-    if (n <= 0) return 0;
-    fib[0] = 0;
-    fib[1] = 1;
-    for (int i = 2; i < n; i++) {
-        fib[i] = fib[i - 1] + fib[i - 2];
-    }
-    return fib[n - 1];
-}
-
-int main() {
-    int last = compute_fib(10);
-    return last; // 34 in a0
-}
-`,
-
-      loop_c: `// Array Search & Accumulation
-int arr[] = { 12, 45, 7, 23, 89, 54, 31, 68 };
-int size = 8;
-
-int find_max(int *data, int len) {
-    int max = data[0];
-    for (int i = 1; i < len; i++) {
-        if (data[i] > max) {
-            max = data[i];
-        }
-    }
-    return max;
-}
-
-int main() {
-    int max_val = find_max(arr, size);
-    return max_val; // 89 in a0
-}
-`,
-
-      matrix_c: `// 2x2 Matrix Multiplication
-int A[2][2] = {{1, 2}, {3, 4}};
-int B[2][2] = {{5, 6}, {7, 8}};
-int C[2][2];
-
-void matmul() {
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            C[i][j] = 0;
-            for (int k = 0; k < 2; k++) {
-                C[i][j] += A[i][k] * B[k][j];
-            }
-        }
-    }
-}
-
-int main() {
-    matmul();
-    return C[1][1]; // 50 in a0
-}
-`,
-
-      circle_accel_c: "// Circle & Delay Accel Demonstration\n// Real-time OLED display drawing, Accelerometer MMIO reading & 7-Segment display output\n#define IROM_BASE 0x00400000\n#define DMEM_BASE 0x10010000\n#define DMEM_SIZE 0x200\n#define MMIO_BASE 0xFFFF0000\n#define STACK_INIT DMEM_BASE + DMEM_SIZE\n\n// Memory-mapped peripheral register offsets\n#define UART_RX_VALID_OFF 0x00\n#define UART_RX_OFF       0x04\n#define UART_TX_READY_OFF 0x08\n#define UART_TX_OFF       0x0C\n#define OLED_COL_OFF      0x20\n#define OLED_ROW_OFF      0x24\n#define OLED_DATA_OFF     0x28\n#define OLED_CTRL_OFF     0x2C\n#define ACCEL_DATA_OFF    0x40\n#define ACCEL_DREADY_OFF  0x44\n#define LED_OFF           0x60\n#define DIP_OFF           0x64\n#define PB_OFF            0x68\n#define SEVENSEG_OFF      0x80\n#define CYCLECOUNT_OFF    0xA0\n\nvoid drawFilledMidpointCircleSinglePixelVisit(int centerX, int centerY, int radius, unsigned int colour);\nvoid drawHorizontalLine(int startX, int endX, int Y, unsigned int colour);\nvoid delay(unsigned int cycles);\nvolatile unsigned int* CYCLECOUNT_ADDR = (unsigned int*) (MMIO_BASE+CYCLECOUNT_OFF);\n\nint main()\n{\n    asm volatile(\"li sp, %0\" : : \"i\" (STACK_INIT));\n    volatile unsigned int* ACCEL_Data_ADDR = (unsigned int*) (MMIO_BASE+ACCEL_DATA_OFF);\n    volatile unsigned int* UART_TX_ready_ADDR = (unsigned int*) (MMIO_BASE+UART_TX_READY_OFF);\n    volatile unsigned int* UART_TX_ADDR = (unsigned int*) (MMIO_BASE+UART_TX_OFF);\n    volatile unsigned int* SEVENSEG_ADDR = (unsigned int*) (MMIO_BASE+SEVENSEG_OFF);\n\n    while(1)\n    {\n        unsigned int accel_reading = *ACCEL_Data_ADDR;\n        unsigned int accel_reading_mag = 0;\n        int accel_reading_mag_byte = 0;\n\n        // display the magnitude on seven segment display\n        *SEVENSEG_ADDR = accel_reading;\n\n        // Print the raw binary value and magnitude directly\n        for(int i=24; i>=0; i-=8)\n        {\n            while(!(*UART_TX_ready_ADDR));\n            *UART_TX_ADDR = accel_reading >> i;\n\n            accel_reading_mag_byte = ( accel_reading << (24-i) ) & 0xFF000000;\n            if(accel_reading_mag_byte<0)\n            {\n                accel_reading_mag_byte = -accel_reading_mag_byte;\n            }\n            accel_reading_mag += ( accel_reading_mag_byte >> (24-i) );\n\n            while(!(*UART_TX_ready_ADDR));\n            *UART_TX_ADDR = accel_reading_mag_byte >> 24;\n        }\n\n        // using accel value directly: draw circle on OLED display\n        drawFilledMidpointCircleSinglePixelVisit(48, 32, 28, accel_reading_mag << 1);\n\n        // Original hardware delay: 1,000,000 cycles (~10ms at 100MHz)\n        // delay(1000000);\n        // Reduced delay value for high-speed real-time simulation:\n        delay(50); // Reduced delay value for high-speed simulation\n    }\n    return 0;\n}\n\nvoid drawFilledMidpointCircleSinglePixelVisit(int centerX, int centerY, int radius, unsigned int colour)\n{\n    int x = radius;\n    int y = 0;\n    int radiusError = 1 - x;\n\n    while (x >= y)\n    {\n        int startX = -x + centerX;\n        int endX = x + centerX;\n        drawHorizontalLine( startX, endX, y + centerY, colour );\n        if (y != 0)\n        {\n            drawHorizontalLine( startX, endX, -y + centerY, colour );\n        }\n\n        y++;\n\n        if (radiusError<0)\n        {\n            radiusError += 2 * y + 1;\n        }\n        else \n        {\n            if (x >= y)\n            {\n                startX = -y + 1 + centerX;\n                endX = y - 1 + centerX;\n                drawHorizontalLine( startX, endX,  x + centerY, colour);\n                drawHorizontalLine( startX, endX, -x + centerY, colour );\n            }\n            x--;\n            radiusError += 2 * (y - x + 1);\n        }\n    }\n}\n\nvoid drawHorizontalLine(int startX, int endX, int Y, unsigned int colour)\n{\n    volatile unsigned int* OLED_ROW_ADDR = (unsigned int*) (MMIO_BASE + OLED_ROW_OFF);\n    volatile unsigned int* OLED_COL_ADDR = (unsigned int*) (MMIO_BASE + OLED_COL_OFF);\n    volatile unsigned int* OLED_DATA_ADDR = (unsigned int*) (MMIO_BASE + OLED_DATA_OFF);\n    volatile unsigned int* OLED_CTRL_ADDR = (unsigned int*) (MMIO_BASE + OLED_CTRL_OFF);\n\n    *OLED_ROW_ADDR = Y;\n    *OLED_CTRL_ADDR = 0x21;\n    *OLED_DATA_ADDR = colour;\n    for(int i=startX; i<=endX; i++)\n    {\n        *OLED_COL_ADDR = i;\n    }\n}\n\nvoid delay(unsigned int cycles)\n{\n    unsigned int starting_count = *CYCLECOUNT_ADDR;\n    while(*CYCLECOUNT_ADDR < starting_count + cycles);\n}\n",
-
-      peripherals_c: `// Nexys 4 MMIO Peripherals Control
-#define LEDS        (*(volatile unsigned int*)0xFFFF0060)
-#define SWITCHES    (*(volatile unsigned int*)0xFFFF0064)
-#define BUTTONS     (*(volatile unsigned int*)0xFFFF0068)
-#define SEVSEG      (*(volatile unsigned int*)0xFFFF0080)
-#define UART_TX     (*(volatile unsigned int*)0xFFFF000C)
-#define ACCEL_DATA  (*(volatile unsigned int*)0xFFFF0040)
-
-void uart_print(const char *str) {
-    while (*str) {
-        UART_TX = *str++;
-    }
-}
-
-int main() {
-    // 1. Output hex pattern to 7-segment display
-    SEVSEG = 0x12345678;
-
-    // 2. Set user LEDs
-    LEDS = 0x55;
-
-    // 3. Read switches and mirror to LEDs
-    unsigned int sw = SWITCHES;
-    LEDS = sw & 0xFF;
-
-    // 4. Send greeting over UART
-    uart_print("Hello from RISC-V C!\\n");
-
-    return 0;
-}
-`
-    };
-
-    const cPrecompiled = {"circle_accel_c":{"code":0,"asm":[{"text":"CYCLECOUNT_ADDR:","source":null,"labels":[]},{"text":"  .word -65376","source":null,"labels":[]},{"text":"main:","source":null,"labels":[]},{"text":"  addi sp,sp,-48","source":{"file":null,"line":33,"column":1},"labels":[]},{"text":"  sw ra,44(sp)","source":{"file":null,"line":33,"column":1},"labels":[]},{"text":"  sw s0,40(sp)","source":{"file":null,"line":33,"column":1},"labels":[]},{"text":"  addi s0,sp,48","source":{"file":null,"line":33,"column":1},"labels":[]},{"text":"  li sp, 268501504","source":{"file":null,"line":34,"column":5},"labels":[]},{"text":"  li a5,-65536","source":{"file":null,"line":35,"column":28},"labels":[]},{"text":"  addi a5,a5,64","source":{"file":null,"line":35,"column":28},"labels":[]},{"text":"  sw a5,-32(s0)","source":{"file":null,"line":35,"column":28},"labels":[]},{"text":"  li a5,-65536","source":{"file":null,"line":36,"column":28},"labels":[]},{"text":"  addi a5,a5,8","source":{"file":null,"line":36,"column":28},"labels":[]},{"text":"  sw a5,-36(s0)","source":{"file":null,"line":36,"column":28},"labels":[]},{"text":"  li a5,-65536","source":{"file":null,"line":37,"column":28},"labels":[]},{"text":"  addi a5,a5,12","source":{"file":null,"line":37,"column":28},"labels":[]},{"text":"  sw a5,-40(s0)","source":{"file":null,"line":37,"column":28},"labels":[]},{"text":"  li a5,-65536","source":{"file":null,"line":38,"column":28},"labels":[]},{"text":"  addi a5,a5,128","source":{"file":null,"line":38,"column":28},"labels":[]},{"text":"  sw a5,-44(s0)","source":{"file":null,"line":38,"column":28},"labels":[]},{"text":".L6:","source":null,"labels":[]},{"text":"  lw a5,-32(s0)","source":{"file":null,"line":42,"column":22},"labels":[]},{"text":"  lw a5,0(a5)","source":{"file":null,"line":42,"column":22},"labels":[]},{"text":"  sw a5,-48(s0)","source":{"file":null,"line":42,"column":22},"labels":[]},{"text":"  sw zero,-20(s0)","source":{"file":null,"line":43,"column":22},"labels":[]},{"text":"  sw zero,-24(s0)","source":{"file":null,"line":44,"column":13},"labels":[]},{"text":"  lw a5,-44(s0)","source":{"file":null,"line":47,"column":24},"labels":[]},{"text":"  lw a4,-48(s0)","source":{"file":null,"line":47,"column":24},"labels":[]},{"text":"  sw a4,0(a5)","source":{"file":null,"line":47,"column":24},"labels":[]},{"text":"  li a5,24","source":{"file":null,"line":51,"column":17},"labels":[]},{"text":"  sw a5,-28(s0)","source":{"file":null,"line":51,"column":17},"labels":[]},{"text":"  j .L2","source":{"file":null,"line":51,"column":9},"labels":[{"name":".L2","range":{"startCol":5,"endCol":8}}]},{"text":".L5:","source":null,"labels":[]},{"text":"  nop","source":{"file":null,"line":54,"column":18},"labels":[]},{"text":".L3:","source":null,"labels":[]},{"text":"  lw a5,-36(s0)","source":{"file":null,"line":54,"column":21},"labels":[]},{"text":"  lw a5,0(a5)","source":{"file":null,"line":54,"column":21},"labels":[]},{"text":"  beq a5,zero,.L3","source":{"file":null,"line":54,"column":19},"labels":[{"name":".L3","range":{"startCol":15,"endCol":18}}]},{"text":"  lw a5,-28(s0)","source":{"file":null,"line":56,"column":43},"labels":[]},{"text":"  lw a4,-48(s0)","source":{"file":null,"line":56,"column":43},"labels":[]},{"text":"  srl a4,a4,a5","source":{"file":null,"line":56,"column":43},"labels":[]},{"text":"  lw a5,-40(s0)","source":{"file":null,"line":56,"column":27},"labels":[]},{"text":"  sw a4,0(a5)","source":{"file":null,"line":56,"column":27},"labels":[]},{"text":"  li a4,24","source":{"file":null,"line":58,"column":60},"labels":[]},{"text":"  lw a5,-28(s0)","source":{"file":null,"line":58,"column":60},"labels":[]},{"text":"  sub a5,a4,a5","source":{"file":null,"line":58,"column":60},"labels":[]},{"text":"  lw a4,-48(s0)","source":{"file":null,"line":58,"column":54},"labels":[]},{"text":"  sll a5,a4,a5","source":{"file":null,"line":58,"column":54},"labels":[]},{"text":"  mv a4,a5","source":{"file":null,"line":58,"column":66},"labels":[]},{"text":"  li a5,-16777216","source":{"file":null,"line":58,"column":36},"labels":[]},{"text":"  and a5,a4,a5","source":{"file":null,"line":58,"column":36},"labels":[]},{"text":"  sw a5,-24(s0)","source":{"file":null,"line":58,"column":36},"labels":[]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":59,"column":15},"labels":[]},{"text":"  bge a5,zero,.L4","source":{"file":null,"line":59,"column":15},"labels":[{"name":".L4","range":{"startCol":15,"endCol":18}}]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":61,"column":40},"labels":[]},{"text":"  neg a5,a5","source":{"file":null,"line":61,"column":40},"labels":[]},{"text":"  sw a5,-24(s0)","source":{"file":null,"line":61,"column":40},"labels":[]},{"text":".L4:","source":null,"labels":[]},{"text":"  li a4,24","source":{"file":null,"line":64,"column":65},"labels":[]},{"text":"  lw a5,-28(s0)","source":{"file":null,"line":64,"column":65},"labels":[]},{"text":"  sub a5,a4,a5","source":{"file":null,"line":64,"column":65},"labels":[]},{"text":"  lw a4,-24(s0)","source":{"file":null,"line":64,"column":59},"labels":[]},{"text":"  sra a5,a4,a5","source":{"file":null,"line":64,"column":59},"labels":[]},{"text":"  mv a4,a5","source":{"file":null,"line":64,"column":59},"labels":[]},{"text":"  lw a5,-20(s0)","source":{"file":null,"line":64,"column":31},"labels":[]},{"text":"  add a5,a5,a4","source":{"file":null,"line":64,"column":31},"labels":[]},{"text":"  sw a5,-20(s0)","source":{"file":null,"line":64,"column":31},"labels":[]},{"text":"  lw a5,-28(s0)","source":{"file":null,"line":51,"column":30},"labels":[]},{"text":"  addi a5,a5,-8","source":{"file":null,"line":51,"column":30},"labels":[]},{"text":"  sw a5,-28(s0)","source":{"file":null,"line":51,"column":30},"labels":[]},{"text":".L2:","source":null,"labels":[]},{"text":"  lw a5,-28(s0)","source":{"file":null,"line":51,"column":24},"labels":[]},{"text":"  bge a5,zero,.L5","source":{"file":null,"line":51,"column":24},"labels":[{"name":".L5","range":{"startCol":15,"endCol":18}}]},{"text":"  lw a5,-20(s0)","source":{"file":null,"line":73,"column":9},"labels":[]},{"text":"  slli a5,a5,1","source":{"file":null,"line":73,"column":9},"labels":[]},{"text":"  mv a3,a5","source":{"file":null,"line":73,"column":9},"labels":[]},{"text":"  li a2,28","source":{"file":null,"line":73,"column":9},"labels":[]},{"text":"  li a1,32","source":{"file":null,"line":73,"column":9},"labels":[]},{"text":"  li a0,48","source":{"file":null,"line":73,"column":9},"labels":[]},{"text":"  call drawFilledMidpointCircleSinglePixelVisit","source":{"file":null,"line":73,"column":9},"labels":[{"name":"drawFilledMidpointCircleSinglePixelVisit","range":{"startCol":8,"endCol":48}}]},{"text":"  li a0,50","source":{"file":null,"line":80,"column":9},"labels":[]},{"text":"  call delay","source":{"file":null,"line":80,"column":9},"labels":[{"name":"delay","range":{"startCol":8,"endCol":13}}]},{"text":"  li a0,50","source":{"file":null,"line":82,"column":9},"labels":[]},{"text":"  call delay","source":{"file":null,"line":82,"column":9},"labels":[{"name":"delay","range":{"startCol":8,"endCol":13}}]},{"text":"  j .L6","source":{"file":null,"line":41,"column":5},"labels":[{"name":".L6","range":{"startCol":5,"endCol":8}}]},{"text":"drawFilledMidpointCircleSinglePixelVisit:","source":null,"labels":[]},{"text":"  addi sp,sp,-64","source":{"file":null,"line":88,"column":1},"labels":[]},{"text":"  sw ra,60(sp)","source":{"file":null,"line":88,"column":1},"labels":[]},{"text":"  sw s0,56(sp)","source":{"file":null,"line":88,"column":1},"labels":[]},{"text":"  addi s0,sp,64","source":{"file":null,"line":88,"column":1},"labels":[]},{"text":"  sw a0,-52(s0)","source":{"file":null,"line":88,"column":1},"labels":[]},{"text":"  sw a1,-56(s0)","source":{"file":null,"line":88,"column":1},"labels":[]},{"text":"  sw a2,-60(s0)","source":{"file":null,"line":88,"column":1},"labels":[]},{"text":"  sw a3,-64(s0)","source":{"file":null,"line":88,"column":1},"labels":[]},{"text":"  lw a5,-60(s0)","source":{"file":null,"line":90,"column":9},"labels":[]},{"text":"  sw a5,-20(s0)","source":{"file":null,"line":90,"column":9},"labels":[]},{"text":"  sw zero,-24(s0)","source":{"file":null,"line":91,"column":9},"labels":[]},{"text":"  li a4,1","source":{"file":null,"line":92,"column":9},"labels":[]},{"text":"  lw a5,-20(s0)","source":{"file":null,"line":92,"column":9},"labels":[]},{"text":"  sub a5,a4,a5","source":{"file":null,"line":92,"column":9},"labels":[]},{"text":"  sw a5,-28(s0)","source":{"file":null,"line":92,"column":9},"labels":[]},{"text":"  j .L8","source":{"file":null,"line":94,"column":11},"labels":[{"name":".L8","range":{"startCol":5,"endCol":8}}]},{"text":".L12:","source":null,"labels":[]},{"text":"  lw a4,-52(s0)","source":{"file":null,"line":98,"column":13},"labels":[]},{"text":"  lw a5,-20(s0)","source":{"file":null,"line":98,"column":13},"labels":[]},{"text":"  sub a5,a4,a5","source":{"file":null,"line":98,"column":13},"labels":[]},{"text":"  sw a5,-32(s0)","source":{"file":null,"line":98,"column":13},"labels":[]},{"text":"  lw a4,-20(s0)","source":{"file":null,"line":99,"column":13},"labels":[]},{"text":"  lw a5,-52(s0)","source":{"file":null,"line":99,"column":13},"labels":[]},{"text":"  add a5,a4,a5","source":{"file":null,"line":99,"column":13},"labels":[]},{"text":"  sw a5,-36(s0)","source":{"file":null,"line":99,"column":13},"labels":[]},{"text":"  lw a4,-24(s0)","source":{"file":null,"line":100,"column":9},"labels":[]},{"text":"  lw a5,-56(s0)","source":{"file":null,"line":100,"column":9},"labels":[]},{"text":"  add a5,a4,a5","source":{"file":null,"line":100,"column":9},"labels":[]},{"text":"  lw a3,-64(s0)","source":{"file":null,"line":100,"column":9},"labels":[]},{"text":"  mv a2,a5","source":{"file":null,"line":100,"column":9},"labels":[]},{"text":"  lw a1,-36(s0)","source":{"file":null,"line":100,"column":9},"labels":[]},{"text":"  lw a0,-32(s0)","source":{"file":null,"line":100,"column":9},"labels":[]},{"text":"  call drawHorizontalLine","source":{"file":null,"line":100,"column":9},"labels":[{"name":"drawHorizontalLine","range":{"startCol":8,"endCol":26}}]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":101,"column":12},"labels":[]},{"text":"  beq a5,zero,.L9","source":{"file":null,"line":101,"column":12},"labels":[{"name":".L9","range":{"startCol":15,"endCol":18}}]},{"text":"  lw a4,-56(s0)","source":{"file":null,"line":103,"column":13},"labels":[]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":103,"column":13},"labels":[]},{"text":"  sub a5,a4,a5","source":{"file":null,"line":103,"column":13},"labels":[]},{"text":"  lw a3,-64(s0)","source":{"file":null,"line":103,"column":13},"labels":[]},{"text":"  mv a2,a5","source":{"file":null,"line":103,"column":13},"labels":[]},{"text":"  lw a1,-36(s0)","source":{"file":null,"line":103,"column":13},"labels":[]},{"text":"  lw a0,-32(s0)","source":{"file":null,"line":103,"column":13},"labels":[]},{"text":"  call drawHorizontalLine","source":{"file":null,"line":103,"column":13},"labels":[{"name":"drawHorizontalLine","range":{"startCol":8,"endCol":26}}]},{"text":".L9:","source":null,"labels":[]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":107,"column":10},"labels":[]},{"text":"  addi a5,a5,1","source":{"file":null,"line":107,"column":10},"labels":[]},{"text":"  sw a5,-24(s0)","source":{"file":null,"line":107,"column":10},"labels":[]},{"text":"  lw a5,-28(s0)","source":{"file":null,"line":110,"column":12},"labels":[]},{"text":"  bge a5,zero,.L10","source":{"file":null,"line":110,"column":12},"labels":[{"name":".L10","range":{"startCol":15,"endCol":19}}]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":112,"column":30},"labels":[]},{"text":"  slli a5,a5,1","source":{"file":null,"line":112,"column":30},"labels":[]},{"text":"  addi a5,a5,1","source":{"file":null,"line":112,"column":34},"labels":[]},{"text":"  lw a4,-28(s0)","source":{"file":null,"line":112,"column":25},"labels":[]},{"text":"  add a5,a4,a5","source":{"file":null,"line":112,"column":25},"labels":[]},{"text":"  sw a5,-28(s0)","source":{"file":null,"line":112,"column":25},"labels":[]},{"text":"  j .L8","source":{"file":null,"line":112,"column":25},"labels":[{"name":".L8","range":{"startCol":5,"endCol":8}}]},{"text":".L10:","source":null,"labels":[]},{"text":"  lw a4,-20(s0)","source":{"file":null,"line":119,"column":16},"labels":[]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":119,"column":16},"labels":[]},{"text":"  blt a4,a5,.L11","source":{"file":null,"line":119,"column":16},"labels":[{"name":".L11","range":{"startCol":13,"endCol":17}}]},{"text":"  li a4,1","source":{"file":null,"line":121,"column":29},"labels":[]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":121,"column":29},"labels":[]},{"text":"  sub a5,a4,a5","source":{"file":null,"line":121,"column":29},"labels":[]},{"text":"  lw a4,-52(s0)","source":{"file":null,"line":121,"column":24},"labels":[]},{"text":"  add a5,a4,a5","source":{"file":null,"line":121,"column":24},"labels":[]},{"text":"  sw a5,-32(s0)","source":{"file":null,"line":121,"column":24},"labels":[]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":122,"column":26},"labels":[]},{"text":"  addi a5,a5,-1","source":{"file":null,"line":122,"column":26},"labels":[]},{"text":"  lw a4,-52(s0)","source":{"file":null,"line":122,"column":22},"labels":[]},{"text":"  add a5,a4,a5","source":{"file":null,"line":122,"column":22},"labels":[]},{"text":"  sw a5,-36(s0)","source":{"file":null,"line":122,"column":22},"labels":[]},{"text":"  lw a4,-20(s0)","source":{"file":null,"line":123,"column":17},"labels":[]},{"text":"  lw a5,-56(s0)","source":{"file":null,"line":123,"column":17},"labels":[]},{"text":"  add a5,a4,a5","source":{"file":null,"line":123,"column":17},"labels":[]},{"text":"  lw a3,-64(s0)","source":{"file":null,"line":123,"column":17},"labels":[]},{"text":"  mv a2,a5","source":{"file":null,"line":123,"column":17},"labels":[]},{"text":"  lw a1,-36(s0)","source":{"file":null,"line":123,"column":17},"labels":[]},{"text":"  lw a0,-32(s0)","source":{"file":null,"line":123,"column":17},"labels":[]},{"text":"  call drawHorizontalLine","source":{"file":null,"line":123,"column":17},"labels":[{"name":"drawHorizontalLine","range":{"startCol":8,"endCol":26}}]},{"text":"  lw a4,-56(s0)","source":{"file":null,"line":124,"column":17},"labels":[]},{"text":"  lw a5,-20(s0)","source":{"file":null,"line":124,"column":17},"labels":[]},{"text":"  sub a5,a4,a5","source":{"file":null,"line":124,"column":17},"labels":[]},{"text":"  lw a3,-64(s0)","source":{"file":null,"line":124,"column":17},"labels":[]},{"text":"  mv a2,a5","source":{"file":null,"line":124,"column":17},"labels":[]},{"text":"  lw a1,-36(s0)","source":{"file":null,"line":124,"column":17},"labels":[]},{"text":"  lw a0,-32(s0)","source":{"file":null,"line":124,"column":17},"labels":[]},{"text":"  call drawHorizontalLine","source":{"file":null,"line":124,"column":17},"labels":[{"name":"drawHorizontalLine","range":{"startCol":8,"endCol":26}}]},{"text":".L11:","source":null,"labels":[]},{"text":"  lw a5,-20(s0)","source":{"file":null,"line":126,"column":14},"labels":[]},{"text":"  addi a5,a5,-1","source":{"file":null,"line":126,"column":14},"labels":[]},{"text":"  sw a5,-20(s0)","source":{"file":null,"line":126,"column":14},"labels":[]},{"text":"  lw a4,-24(s0)","source":{"file":null,"line":127,"column":35},"labels":[]},{"text":"  lw a5,-20(s0)","source":{"file":null,"line":127,"column":35},"labels":[]},{"text":"  sub a5,a4,a5","source":{"file":null,"line":127,"column":35},"labels":[]},{"text":"  addi a5,a5,1","source":{"file":null,"line":127,"column":39},"labels":[]},{"text":"  slli a5,a5,1","source":{"file":null,"line":127,"column":30},"labels":[]},{"text":"  lw a4,-28(s0)","source":{"file":null,"line":127,"column":25},"labels":[]},{"text":"  add a5,a4,a5","source":{"file":null,"line":127,"column":25},"labels":[]},{"text":"  sw a5,-28(s0)","source":{"file":null,"line":127,"column":25},"labels":[]},{"text":".L8:","source":null,"labels":[]},{"text":"  lw a4,-20(s0)","source":{"file":null,"line":94,"column":14},"labels":[]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":94,"column":14},"labels":[]},{"text":"  bge a4,a5,.L12","source":{"file":null,"line":94,"column":14},"labels":[{"name":".L12","range":{"startCol":13,"endCol":17}}]},{"text":"  nop","source":{"file":null,"line":130,"column":1},"labels":[]},{"text":"  nop","source":{"file":null,"line":130,"column":1},"labels":[]},{"text":"  lw ra,60(sp)","source":{"file":null,"line":130,"column":1},"labels":[]},{"text":"  lw s0,56(sp)","source":{"file":null,"line":130,"column":1},"labels":[]},{"text":"  addi sp,sp,64","source":{"file":null,"line":130,"column":1},"labels":[]},{"text":"  jr ra","source":{"file":null,"line":130,"column":1},"labels":[]},{"text":"drawHorizontalLine:","source":null,"labels":[]},{"text":"  addi sp,sp,-64","source":{"file":null,"line":133,"column":1},"labels":[]},{"text":"  sw ra,60(sp)","source":{"file":null,"line":133,"column":1},"labels":[]},{"text":"  sw s0,56(sp)","source":{"file":null,"line":133,"column":1},"labels":[]},{"text":"  addi s0,sp,64","source":{"file":null,"line":133,"column":1},"labels":[]},{"text":"  sw a0,-52(s0)","source":{"file":null,"line":133,"column":1},"labels":[]},{"text":"  sw a1,-56(s0)","source":{"file":null,"line":133,"column":1},"labels":[]},{"text":"  sw a2,-60(s0)","source":{"file":null,"line":133,"column":1},"labels":[]},{"text":"  sw a3,-64(s0)","source":{"file":null,"line":133,"column":1},"labels":[]},{"text":"  li a5,-65536","source":{"file":null,"line":134,"column":28},"labels":[]},{"text":"  addi a5,a5,36","source":{"file":null,"line":134,"column":28},"labels":[]},{"text":"  sw a5,-24(s0)","source":{"file":null,"line":134,"column":28},"labels":[]},{"text":"  li a5,-65536","source":{"file":null,"line":135,"column":28},"labels":[]},{"text":"  addi a5,a5,32","source":{"file":null,"line":135,"column":28},"labels":[]},{"text":"  sw a5,-28(s0)","source":{"file":null,"line":135,"column":28},"labels":[]},{"text":"  li a5,-65536","source":{"file":null,"line":136,"column":28},"labels":[]},{"text":"  addi a5,a5,40","source":{"file":null,"line":136,"column":28},"labels":[]},{"text":"  sw a5,-32(s0)","source":{"file":null,"line":136,"column":28},"labels":[]},{"text":"  li a5,-65536","source":{"file":null,"line":137,"column":28},"labels":[]},{"text":"  addi a5,a5,44","source":{"file":null,"line":137,"column":28},"labels":[]},{"text":"  sw a5,-36(s0)","source":{"file":null,"line":137,"column":28},"labels":[]},{"text":"  lw a4,-60(s0)","source":{"file":null,"line":139,"column":20},"labels":[]},{"text":"  lw a5,-24(s0)","source":{"file":null,"line":139,"column":20},"labels":[]},{"text":"  sw a4,0(a5)","source":{"file":null,"line":139,"column":20},"labels":[]},{"text":"  lw a5,-36(s0)","source":{"file":null,"line":141,"column":21},"labels":[]},{"text":"  li a4,33","source":{"file":null,"line":141,"column":21},"labels":[]},{"text":"  sw a4,0(a5)","source":{"file":null,"line":141,"column":21},"labels":[]},{"text":"  lw a5,-32(s0)","source":{"file":null,"line":142,"column":21},"labels":[]},{"text":"  lw a4,-64(s0)","source":{"file":null,"line":142,"column":21},"labels":[]},{"text":"  sw a4,0(a5)","source":{"file":null,"line":142,"column":21},"labels":[]},{"text":"  lw a5,-52(s0)","source":{"file":null,"line":143,"column":13},"labels":[]},{"text":"  sw a5,-20(s0)","source":{"file":null,"line":143,"column":13},"labels":[]},{"text":"  j .L14","source":{"file":null,"line":143,"column":5},"labels":[{"name":".L14","range":{"startCol":5,"endCol":9}}]},{"text":".L15:","source":null,"labels":[]},{"text":"  lw a4,-20(s0)","source":{"file":null,"line":145,"column":24},"labels":[]},{"text":"  lw a5,-28(s0)","source":{"file":null,"line":145,"column":24},"labels":[]},{"text":"  sw a4,0(a5)","source":{"file":null,"line":145,"column":24},"labels":[]},{"text":"  lw a5,-20(s0)","source":{"file":null,"line":143,"column":33},"labels":[]},{"text":"  addi a5,a5,1","source":{"file":null,"line":143,"column":33},"labels":[]},{"text":"  sw a5,-20(s0)","source":{"file":null,"line":143,"column":33},"labels":[]},{"text":".L14:","source":null,"labels":[]},{"text":"  lw a4,-20(s0)","source":{"file":null,"line":143,"column":24},"labels":[]},{"text":"  lw a5,-56(s0)","source":{"file":null,"line":143,"column":24},"labels":[]},{"text":"  ble a4,a5,.L15","source":{"file":null,"line":143,"column":24},"labels":[{"name":".L15","range":{"startCol":13,"endCol":17}}]},{"text":"  nop","source":{"file":null,"line":147,"column":1},"labels":[]},{"text":"  nop","source":{"file":null,"line":147,"column":1},"labels":[]},{"text":"  lw ra,60(sp)","source":{"file":null,"line":147,"column":1},"labels":[]},{"text":"  lw s0,56(sp)","source":{"file":null,"line":147,"column":1},"labels":[]},{"text":"  addi sp,sp,64","source":{"file":null,"line":147,"column":1},"labels":[]},{"text":"  jr ra","source":{"file":null,"line":147,"column":1},"labels":[]},{"text":"delay:","source":null,"labels":[]},{"text":"  addi sp,sp,-48","source":{"file":null,"line":150,"column":1},"labels":[]},{"text":"  sw ra,44(sp)","source":{"file":null,"line":150,"column":1},"labels":[]},{"text":"  sw s0,40(sp)","source":{"file":null,"line":150,"column":1},"labels":[]},{"text":"  addi s0,sp,48","source":{"file":null,"line":150,"column":1},"labels":[]},{"text":"  sw a0,-36(s0)","source":{"file":null,"line":150,"column":1},"labels":[]},{"text":"  lui a5,%hi(CYCLECOUNT_ADDR)","source":{"file":null,"line":151,"column":35},"labels":[{"name":"CYCLECOUNT_ADDR","range":{"startCol":14,"endCol":29}}]},{"text":"  lw a5,%lo(CYCLECOUNT_ADDR)(a5)","source":{"file":null,"line":151,"column":35},"labels":[{"name":"CYCLECOUNT_ADDR","range":{"startCol":13,"endCol":28}}]},{"text":"  lw a5,0(a5)","source":{"file":null,"line":151,"column":18},"labels":[]},{"text":"  sw a5,-20(s0)","source":{"file":null,"line":151,"column":18},"labels":[]},{"text":"  nop","source":{"file":null,"line":152,"column":10},"labels":[]},{"text":".L17:","source":null,"labels":[]},{"text":"  lui a5,%hi(CYCLECOUNT_ADDR)","source":{"file":null,"line":152,"column":11},"labels":[{"name":"CYCLECOUNT_ADDR","range":{"startCol":14,"endCol":29}}]},{"text":"  lw a5,%lo(CYCLECOUNT_ADDR)(a5)","source":{"file":null,"line":152,"column":11},"labels":[{"name":"CYCLECOUNT_ADDR","range":{"startCol":13,"endCol":28}}]},{"text":"  lw a4,0(a5)","source":{"file":null,"line":152,"column":11},"labels":[]},{"text":"  lw a3,-20(s0)","source":{"file":null,"line":152,"column":45},"labels":[]},{"text":"  lw a5,-36(s0)","source":{"file":null,"line":152,"column":45},"labels":[]},{"text":"  add a5,a3,a5","source":{"file":null,"line":152,"column":45},"labels":[]},{"text":"  bltu a4,a5,.L17","source":{"file":null,"line":152,"column":28},"labels":[{"name":".L17","range":{"startCol":14,"endCol":18}}]},{"text":"  nop","source":{"file":null,"line":153,"column":1},"labels":[]},{"text":"  nop","source":{"file":null,"line":153,"column":1},"labels":[]},{"text":"  lw ra,44(sp)","source":{"file":null,"line":153,"column":1},"labels":[]},{"text":"  lw s0,40(sp)","source":{"file":null,"line":153,"column":1},"labels":[]},{"text":"  addi sp,sp,48","source":{"file":null,"line":153,"column":1},"labels":[]},{"text":"  jr ra","source":{"file":null,"line":153,"column":1},"labels":[]}]},"basic_c":{"code":0,"asm":[{"text":"sum:","source":null,"labels":[]},{"text":"        addi    sp,sp,-48","source":{"file":null,"line":2,"column":30},"labels":[]},{"text":"        sw      ra,44(sp)","source":{"file":null,"line":2,"column":30},"labels":[]},{"text":"        sw      s0,40(sp)","source":{"file":null,"line":2,"column":30},"labels":[]},{"text":"        addi    s0,sp,48","source":{"file":null,"line":2,"column":30},"labels":[]},{"text":"        sw      a0,-36(s0)","source":{"file":null,"line":2,"column":30},"labels":[]},{"text":"        sw      a1,-40(s0)","source":{"file":null,"line":2,"column":30},"labels":[]},{"text":"        sw      a2,-44(s0)","source":{"file":null,"line":2,"column":30},"labels":[]},{"text":"        lw      a4,-36(s0)","source":{"file":null,"line":3,"column":20},"labels":[]},{"text":"        lw      a5,-40(s0)","source":{"file":null,"line":3,"column":20},"labels":[]},{"text":"        add     a5,a4,a5","source":{"file":null,"line":3,"column":20},"labels":[]},{"text":"        lw      a4,-44(s0)","source":{"file":null,"line":3,"column":9},"labels":[]},{"text":"        add     a5,a4,a5","source":{"file":null,"line":3,"column":9},"labels":[]},{"text":"        sw      a5,-20(s0)","source":{"file":null,"line":3,"column":9},"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":4,"column":12},"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":5,"column":1},"labels":[]},{"text":"        lw      ra,44(sp)","source":{"file":null,"line":5,"column":1},"labels":[]},{"text":"        lw      s0,40(sp)","source":{"file":null,"line":5,"column":1},"labels":[]},{"text":"        addi    sp,sp,48","source":{"file":null,"line":5,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":5,"column":1},"labels":[]},{"text":"main:","source":null,"labels":[]},{"text":"        addi    sp,sp,-32","source":{"file":null,"line":7,"column":12},"labels":[]},{"text":"        sw      ra,28(sp)","source":{"file":null,"line":7,"column":12},"labels":[]},{"text":"        sw      s0,24(sp)","source":{"file":null,"line":7,"column":12},"labels":[]},{"text":"        addi    s0,sp,32","source":{"file":null,"line":7,"column":12},"labels":[]},{"text":"        li      a5,10","source":{"file":null,"line":8,"column":9},"labels":[]},{"text":"        sw      a5,-20(s0)","source":{"file":null,"line":8,"column":9},"labels":[]},{"text":"        li      a5,20","source":{"file":null,"line":9,"column":9},"labels":[]},{"text":"        sw      a5,-24(s0)","source":{"file":null,"line":9,"column":9},"labels":[]},{"text":"        li      a5,30","source":{"file":null,"line":10,"column":9},"labels":[]},{"text":"        sw      a5,-28(s0)","source":{"file":null,"line":10,"column":9},"labels":[]},{"text":"        lw      a2,-28(s0)","source":{"file":null,"line":11,"column":17},"labels":[]},{"text":"        lw      a1,-24(s0)","source":{"file":null,"line":11,"column":17},"labels":[]},{"text":"        lw      a0,-20(s0)","source":{"file":null,"line":11,"column":17},"labels":[]},{"text":"        call    sum","source":{"file":null,"line":11,"column":17},"labels":[{"name":"sum","range":{"startCol":17,"endCol":20}}]},{"text":"        sw      a0,-32(s0)","source":{"file":null,"line":11,"column":17},"labels":[]},{"text":"        lw      a5,-32(s0)","source":{"file":null,"line":12,"column":12},"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        lw      ra,28(sp)","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        lw      s0,24(sp)","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        addi    sp,sp,32","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":13,"column":1},"labels":[]}]},"factorial_c":{"code":0,"asm":[{"text":"factorial:","source":null,"labels":[]},{"text":"        addi    sp,sp,-32","source":{"file":null,"line":2,"column":22},"labels":[]},{"text":"        sw      ra,28(sp)","source":{"file":null,"line":2,"column":22},"labels":[]},{"text":"        sw      s0,24(sp)","source":{"file":null,"line":2,"column":22},"labels":[]},{"text":"        addi    s0,sp,32","source":{"file":null,"line":2,"column":22},"labels":[]},{"text":"        sw      a0,-20(s0)","source":{"file":null,"line":2,"column":22},"labels":[]},{"text":"        lw      a4,-20(s0)","source":{"file":null,"line":3,"column":8},"labels":[]},{"text":"        li      a5,1","source":{"file":null,"line":3,"column":8},"labels":[]},{"text":"        bgt     a4,a5,.L2","source":{"file":null,"line":3,"column":8},"labels":[{"name":".L2","range":{"startCol":23,"endCol":26}}]},{"text":"        li      a5,1","source":{"file":null,"line":4,"column":16},"labels":[]},{"text":"        j       .L3","source":{"file":null,"line":4,"column":16},"labels":[{"name":".L3","range":{"startCol":17,"endCol":20}}]},{"text":".L2:","source":null,"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":6,"column":16},"labels":[]},{"text":"        addi    a5,a5,-1","source":{"file":null,"line":6,"column":16},"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":6,"column":16},"labels":[]},{"text":"        call    factorial","source":{"file":null,"line":6,"column":16},"labels":[{"name":"factorial","range":{"startCol":17,"endCol":26}}]},{"text":"        mv      a4,a0","source":{"file":null,"line":6,"column":16},"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":6,"column":14},"labels":[]},{"text":"        mul     a5,a4,a5","source":{"file":null,"line":6,"column":14},"labels":[]},{"text":".L3:","source":null,"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":7,"column":1},"labels":[]},{"text":"        lw      ra,28(sp)","source":{"file":null,"line":7,"column":1},"labels":[]},{"text":"        lw      s0,24(sp)","source":{"file":null,"line":7,"column":1},"labels":[]},{"text":"        addi    sp,sp,32","source":{"file":null,"line":7,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":7,"column":1},"labels":[]},{"text":"main:","source":null,"labels":[]},{"text":"        addi    sp,sp,-32","source":{"file":null,"line":9,"column":12},"labels":[]},{"text":"        sw      ra,28(sp)","source":{"file":null,"line":9,"column":12},"labels":[]},{"text":"        sw      s0,24(sp)","source":{"file":null,"line":9,"column":12},"labels":[]},{"text":"        addi    s0,sp,32","source":{"file":null,"line":9,"column":12},"labels":[]},{"text":"        li      a5,5","source":{"file":null,"line":10,"column":9},"labels":[]},{"text":"        sw      a5,-20(s0)","source":{"file":null,"line":10,"column":9},"labels":[]},{"text":"        lw      a0,-20(s0)","source":{"file":null,"line":11,"column":18},"labels":[]},{"text":"        call    factorial","source":{"file":null,"line":11,"column":18},"labels":[{"name":"factorial","range":{"startCol":17,"endCol":26}}]},{"text":"        sw      a0,-24(s0)","source":{"file":null,"line":11,"column":18},"labels":[]},{"text":"        lw      a5,-24(s0)","source":{"file":null,"line":12,"column":12},"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        lw      ra,28(sp)","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        lw      s0,24(sp)","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        addi    sp,sp,32","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":13,"column":1},"labels":[]}]},"fibonacci_c":{"code":0,"asm":[{"text":"fib:","source":null,"labels":[]},{"text":"        .zero   40","source":null,"labels":[]},{"text":"compute_fib:","source":null,"labels":[]},{"text":"        addi    sp,sp,-48","source":{"file":null,"line":4,"column":24},"labels":[]},{"text":"        sw      ra,44(sp)","source":{"file":null,"line":4,"column":24},"labels":[]},{"text":"        sw      s0,40(sp)","source":{"file":null,"line":4,"column":24},"labels":[]},{"text":"        addi    s0,sp,48","source":{"file":null,"line":4,"column":24},"labels":[]},{"text":"        sw      a0,-36(s0)","source":{"file":null,"line":4,"column":24},"labels":[]},{"text":"        lw      a5,-36(s0)","source":{"file":null,"line":5,"column":8},"labels":[]},{"text":"        bgt     a5,zero,.L2","source":{"file":null,"line":5,"column":8},"labels":[{"name":".L2","range":{"startCol":25,"endCol":28}}]},{"text":"        li      a5,0","source":{"file":null,"line":5,"column":24},"labels":[]},{"text":"        j       .L3","source":{"file":null,"line":5,"column":24},"labels":[{"name":".L3","range":{"startCol":17,"endCol":20}}]},{"text":".L2:","source":null,"labels":[]},{"text":"        lui     a5,%hi(fib)","source":{"file":null,"line":6,"column":12},"labels":[{"name":"fib","range":{"startCol":24,"endCol":27}}]},{"text":"        addi    a5,a5,%lo(fib)","source":{"file":null,"line":6,"column":12},"labels":[{"name":"fib","range":{"startCol":27,"endCol":30}}]},{"text":"        sw      zero,0(a5)","source":{"file":null,"line":6,"column":12},"labels":[]},{"text":"        lui     a5,%hi(fib)","source":{"file":null,"line":7,"column":12},"labels":[{"name":"fib","range":{"startCol":24,"endCol":27}}]},{"text":"        addi    a5,a5,%lo(fib)","source":{"file":null,"line":7,"column":12},"labels":[{"name":"fib","range":{"startCol":27,"endCol":30}}]},{"text":"        li      a4,1","source":{"file":null,"line":7,"column":12},"labels":[]},{"text":"        sw      a4,4(a5)","source":{"file":null,"line":7,"column":12},"labels":[]},{"text":"        li      a5,2","source":{"file":null,"line":8,"column":14},"labels":[]},{"text":"        sw      a5,-20(s0)","source":{"file":null,"line":8,"column":14},"labels":[]},{"text":"        j       .L4","source":{"file":null,"line":8,"column":5},"labels":[{"name":".L4","range":{"startCol":17,"endCol":20}}]},{"text":".L5:","source":null,"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":9,"column":24},"labels":[]},{"text":"        addi    a5,a5,-1","source":{"file":null,"line":9,"column":24},"labels":[]},{"text":"        lui     a4,%hi(fib)","source":{"file":null,"line":9,"column":21},"labels":[{"name":"fib","range":{"startCol":24,"endCol":27}}]},{"text":"        addi    a4,a4,%lo(fib)","source":{"file":null,"line":9,"column":21},"labels":[{"name":"fib","range":{"startCol":27,"endCol":30}}]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        add     a5,a4,a5","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        lw      a4,0(a5)","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":9,"column":37},"labels":[]},{"text":"        addi    a5,a5,-2","source":{"file":null,"line":9,"column":37},"labels":[]},{"text":"        lui     a3,%hi(fib)","source":{"file":null,"line":9,"column":34},"labels":[{"name":"fib","range":{"startCol":24,"endCol":27}}]},{"text":"        addi    a3,a3,%lo(fib)","source":{"file":null,"line":9,"column":34},"labels":[{"name":"fib","range":{"startCol":27,"endCol":30}}]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":9,"column":34},"labels":[]},{"text":"        add     a5,a3,a5","source":{"file":null,"line":9,"column":34},"labels":[]},{"text":"        lw      a5,0(a5)","source":{"file":null,"line":9,"column":34},"labels":[]},{"text":"        add     a4,a4,a5","source":{"file":null,"line":9,"column":29},"labels":[]},{"text":"        lui     a5,%hi(fib)","source":{"file":null,"line":9,"column":16},"labels":[{"name":"fib","range":{"startCol":24,"endCol":27}}]},{"text":"        addi    a3,a5,%lo(fib)","source":{"file":null,"line":9,"column":16},"labels":[{"name":"fib","range":{"startCol":27,"endCol":30}}]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":9,"column":16},"labels":[]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":9,"column":16},"labels":[]},{"text":"        add     a5,a3,a5","source":{"file":null,"line":9,"column":16},"labels":[]},{"text":"        sw      a4,0(a5)","source":{"file":null,"line":9,"column":16},"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":8,"column":29},"labels":[]},{"text":"        addi    a5,a5,1","source":{"file":null,"line":8,"column":29},"labels":[]},{"text":"        sw      a5,-20(s0)","source":{"file":null,"line":8,"column":29},"labels":[]},{"text":".L4:","source":null,"labels":[]},{"text":"        lw      a4,-20(s0)","source":{"file":null,"line":8,"column":23},"labels":[]},{"text":"        lw      a5,-36(s0)","source":{"file":null,"line":8,"column":23},"labels":[]},{"text":"        blt     a4,a5,.L5","source":{"file":null,"line":8,"column":23},"labels":[{"name":".L5","range":{"startCol":23,"endCol":26}}]},{"text":"        lw      a5,-36(s0)","source":{"file":null,"line":11,"column":18},"labels":[]},{"text":"        addi    a5,a5,-1","source":{"file":null,"line":11,"column":18},"labels":[]},{"text":"        lui     a4,%hi(fib)","source":{"file":null,"line":11,"column":15},"labels":[{"name":"fib","range":{"startCol":24,"endCol":27}}]},{"text":"        addi    a4,a4,%lo(fib)","source":{"file":null,"line":11,"column":15},"labels":[{"name":"fib","range":{"startCol":27,"endCol":30}}]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":11,"column":15},"labels":[]},{"text":"        add     a5,a4,a5","source":{"file":null,"line":11,"column":15},"labels":[]},{"text":"        lw      a5,0(a5)","source":{"file":null,"line":11,"column":15},"labels":[]},{"text":".L3:","source":null,"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":12,"column":1},"labels":[]},{"text":"        lw      ra,44(sp)","source":{"file":null,"line":12,"column":1},"labels":[]},{"text":"        lw      s0,40(sp)","source":{"file":null,"line":12,"column":1},"labels":[]},{"text":"        addi    sp,sp,48","source":{"file":null,"line":12,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":12,"column":1},"labels":[]},{"text":"main:","source":null,"labels":[]},{"text":"        addi    sp,sp,-32","source":{"file":null,"line":14,"column":12},"labels":[]},{"text":"        sw      ra,28(sp)","source":{"file":null,"line":14,"column":12},"labels":[]},{"text":"        sw      s0,24(sp)","source":{"file":null,"line":14,"column":12},"labels":[]},{"text":"        addi    s0,sp,32","source":{"file":null,"line":14,"column":12},"labels":[]},{"text":"        li      a0,10","source":{"file":null,"line":15,"column":16},"labels":[]},{"text":"        call    compute_fib","source":{"file":null,"line":15,"column":16},"labels":[{"name":"compute_fib","range":{"startCol":17,"endCol":28}}]},{"text":"        sw      a0,-20(s0)","source":{"file":null,"line":15,"column":16},"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":16,"column":12},"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":17,"column":1},"labels":[]},{"text":"        lw      ra,28(sp)","source":{"file":null,"line":17,"column":1},"labels":[]},{"text":"        lw      s0,24(sp)","source":{"file":null,"line":17,"column":1},"labels":[]},{"text":"        addi    sp,sp,32","source":{"file":null,"line":17,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":17,"column":1},"labels":[]}]},"loop_c":{"code":0,"asm":[{"text":"arr:","source":null,"labels":[]},{"text":"        .word   12","source":null,"labels":[]},{"text":"        .word   45","source":null,"labels":[]},{"text":"        .word   7","source":null,"labels":[]},{"text":"        .word   23","source":null,"labels":[]},{"text":"        .word   89","source":null,"labels":[]},{"text":"        .word   54","source":null,"labels":[]},{"text":"        .word   31","source":null,"labels":[]},{"text":"        .word   68","source":null,"labels":[]},{"text":"size:","source":null,"labels":[]},{"text":"        .word   8","source":null,"labels":[]},{"text":"find_max:","source":null,"labels":[]},{"text":"        addi    sp,sp,-48","source":{"file":null,"line":5,"column":34},"labels":[]},{"text":"        sw      ra,44(sp)","source":{"file":null,"line":5,"column":34},"labels":[]},{"text":"        sw      s0,40(sp)","source":{"file":null,"line":5,"column":34},"labels":[]},{"text":"        addi    s0,sp,48","source":{"file":null,"line":5,"column":34},"labels":[]},{"text":"        sw      a0,-36(s0)","source":{"file":null,"line":5,"column":34},"labels":[]},{"text":"        sw      a1,-40(s0)","source":{"file":null,"line":5,"column":34},"labels":[]},{"text":"        lw      a5,-36(s0)","source":{"file":null,"line":6,"column":9},"labels":[]},{"text":"        lw      a5,0(a5)","source":{"file":null,"line":6,"column":9},"labels":[]},{"text":"        sw      a5,-20(s0)","source":{"file":null,"line":6,"column":9},"labels":[]},{"text":"        li      a5,1","source":{"file":null,"line":7,"column":14},"labels":[]},{"text":"        sw      a5,-24(s0)","source":{"file":null,"line":7,"column":14},"labels":[]},{"text":"        j       .L2","source":{"file":null,"line":7,"column":5},"labels":[{"name":".L2","range":{"startCol":17,"endCol":20}}]},{"text":".L4:","source":null,"labels":[]},{"text":"        lw      a5,-24(s0)","source":{"file":null,"line":8,"column":17},"labels":[]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":8,"column":17},"labels":[]},{"text":"        lw      a4,-36(s0)","source":{"file":null,"line":8,"column":17},"labels":[]},{"text":"        add     a5,a4,a5","source":{"file":null,"line":8,"column":17},"labels":[]},{"text":"        lw      a5,0(a5)","source":{"file":null,"line":8,"column":17},"labels":[]},{"text":"        lw      a4,-20(s0)","source":{"file":null,"line":8,"column":12},"labels":[]},{"text":"        bge     a4,a5,.L3","source":{"file":null,"line":8,"column":12},"labels":[{"name":".L3","range":{"startCol":23,"endCol":26}}]},{"text":"        lw      a5,-24(s0)","source":{"file":null,"line":9,"column":23},"labels":[]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":9,"column":23},"labels":[]},{"text":"        lw      a4,-36(s0)","source":{"file":null,"line":9,"column":23},"labels":[]},{"text":"        add     a5,a4,a5","source":{"file":null,"line":9,"column":23},"labels":[]},{"text":"        lw      a5,0(a5)","source":{"file":null,"line":9,"column":17},"labels":[]},{"text":"        sw      a5,-20(s0)","source":{"file":null,"line":9,"column":17},"labels":[]},{"text":".L3:","source":null,"labels":[]},{"text":"        lw      a5,-24(s0)","source":{"file":null,"line":7,"column":31},"labels":[]},{"text":"        addi    a5,a5,1","source":{"file":null,"line":7,"column":31},"labels":[]},{"text":"        sw      a5,-24(s0)","source":{"file":null,"line":7,"column":31},"labels":[]},{"text":".L2:","source":null,"labels":[]},{"text":"        lw      a4,-24(s0)","source":{"file":null,"line":7,"column":23},"labels":[]},{"text":"        lw      a5,-40(s0)","source":{"file":null,"line":7,"column":23},"labels":[]},{"text":"        blt     a4,a5,.L4","source":{"file":null,"line":7,"column":23},"labels":[{"name":".L4","range":{"startCol":23,"endCol":26}}]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":12,"column":12},"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        lw      ra,44(sp)","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        lw      s0,40(sp)","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        addi    sp,sp,48","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"main:","source":null,"labels":[]},{"text":"        addi    sp,sp,-32","source":{"file":null,"line":15,"column":12},"labels":[]},{"text":"        sw      ra,28(sp)","source":{"file":null,"line":15,"column":12},"labels":[]},{"text":"        sw      s0,24(sp)","source":{"file":null,"line":15,"column":12},"labels":[]},{"text":"        addi    s0,sp,32","source":{"file":null,"line":15,"column":12},"labels":[]},{"text":"        lui     a5,%hi(size)","source":{"file":null,"line":16,"column":19},"labels":[{"name":"size","range":{"startCol":24,"endCol":28}}]},{"text":"        lw      a5,%lo(size)(a5)","source":{"file":null,"line":16,"column":19},"labels":[{"name":"size","range":{"startCol":24,"endCol":28}}]},{"text":"        mv      a1,a5","source":{"file":null,"line":16,"column":19},"labels":[]},{"text":"        lui     a5,%hi(arr)","source":{"file":null,"line":16,"column":19},"labels":[{"name":"arr","range":{"startCol":24,"endCol":27}}]},{"text":"        addi    a0,a5,%lo(arr)","source":{"file":null,"line":16,"column":19},"labels":[{"name":"arr","range":{"startCol":27,"endCol":30}}]},{"text":"        call    find_max","source":{"file":null,"line":16,"column":19},"labels":[{"name":"find_max","range":{"startCol":17,"endCol":25}}]},{"text":"        sw      a0,-20(s0)","source":{"file":null,"line":16,"column":19},"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":17,"column":12},"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":18,"column":1},"labels":[]},{"text":"        lw      ra,28(sp)","source":{"file":null,"line":18,"column":1},"labels":[]},{"text":"        lw      s0,24(sp)","source":{"file":null,"line":18,"column":1},"labels":[]},{"text":"        addi    sp,sp,32","source":{"file":null,"line":18,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":18,"column":1},"labels":[]}]},"matrix_c":{"code":0,"asm":[{"text":"A:","source":null,"labels":[]},{"text":"        .word   1","source":null,"labels":[]},{"text":"        .word   2","source":null,"labels":[]},{"text":"        .word   3","source":null,"labels":[]},{"text":"        .word   4","source":null,"labels":[]},{"text":"B:","source":null,"labels":[]},{"text":"        .word   5","source":null,"labels":[]},{"text":"        .word   6","source":null,"labels":[]},{"text":"        .word   7","source":null,"labels":[]},{"text":"        .word   8","source":null,"labels":[]},{"text":"C:","source":null,"labels":[]},{"text":"        .zero   16","source":null,"labels":[]},{"text":"matmul:","source":null,"labels":[]},{"text":"        addi    sp,sp,-32","source":{"file":null,"line":6,"column":15},"labels":[]},{"text":"        sw      ra,28(sp)","source":{"file":null,"line":6,"column":15},"labels":[]},{"text":"        sw      s0,24(sp)","source":{"file":null,"line":6,"column":15},"labels":[]},{"text":"        addi    s0,sp,32","source":{"file":null,"line":6,"column":15},"labels":[]},{"text":"        sw      zero,-20(s0)","source":{"file":null,"line":7,"column":14},"labels":[]},{"text":"        j       .L2","source":{"file":null,"line":7,"column":5},"labels":[{"name":".L2","range":{"startCol":17,"endCol":20}}]},{"text":".L7:","source":null,"labels":[]},{"text":"        sw      zero,-24(s0)","source":{"file":null,"line":8,"column":18},"labels":[]},{"text":"        j       .L3","source":{"file":null,"line":8,"column":9},"labels":[{"name":".L3","range":{"startCol":17,"endCol":20}}]},{"text":".L6:","source":null,"labels":[]},{"text":"        lui     a5,%hi(C)","source":{"file":null,"line":9,"column":21},"labels":[{"name":"C","range":{"startCol":24,"endCol":25}}]},{"text":"        addi    a4,a5,%lo(C)","source":{"file":null,"line":9,"column":21},"labels":[{"name":"C","range":{"startCol":27,"endCol":28}}]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        slli    a3,a5,1","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        lw      a5,-24(s0)","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        add     a5,a3,a5","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        add     a5,a4,a5","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        sw      zero,0(a5)","source":{"file":null,"line":9,"column":21},"labels":[]},{"text":"        sw      zero,-28(s0)","source":{"file":null,"line":10,"column":22},"labels":[]},{"text":"        j       .L4","source":{"file":null,"line":10,"column":13},"labels":[{"name":".L4","range":{"startCol":17,"endCol":20}}]},{"text":".L5:","source":null,"labels":[]},{"text":"        lui     a5,%hi(C)","source":{"file":null,"line":11,"column":21},"labels":[{"name":"C","range":{"startCol":24,"endCol":25}}]},{"text":"        addi    a4,a5,%lo(C)","source":{"file":null,"line":11,"column":21},"labels":[{"name":"C","range":{"startCol":27,"endCol":28}}]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":11,"column":21},"labels":[]},{"text":"        slli    a3,a5,1","source":{"file":null,"line":11,"column":21},"labels":[]},{"text":"        lw      a5,-24(s0)","source":{"file":null,"line":11,"column":21},"labels":[]},{"text":"        add     a5,a3,a5","source":{"file":null,"line":11,"column":21},"labels":[]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":11,"column":21},"labels":[]},{"text":"        add     a5,a4,a5","source":{"file":null,"line":11,"column":21},"labels":[]},{"text":"        lw      a4,0(a5)","source":{"file":null,"line":11,"column":21},"labels":[]},{"text":"        lui     a5,%hi(A)","source":{"file":null,"line":11,"column":32},"labels":[{"name":"A","range":{"startCol":24,"endCol":25}}]},{"text":"        addi    a3,a5,%lo(A)","source":{"file":null,"line":11,"column":32},"labels":[{"name":"A","range":{"startCol":27,"endCol":28}}]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":11,"column":32},"labels":[]},{"text":"        slli    a2,a5,1","source":{"file":null,"line":11,"column":32},"labels":[]},{"text":"        lw      a5,-28(s0)","source":{"file":null,"line":11,"column":32},"labels":[]},{"text":"        add     a5,a2,a5","source":{"file":null,"line":11,"column":32},"labels":[]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":11,"column":32},"labels":[]},{"text":"        add     a5,a3,a5","source":{"file":null,"line":11,"column":32},"labels":[]},{"text":"        lw      a3,0(a5)","source":{"file":null,"line":11,"column":32},"labels":[]},{"text":"        lui     a5,%hi(B)","source":{"file":null,"line":11,"column":42},"labels":[{"name":"B","range":{"startCol":24,"endCol":25}}]},{"text":"        addi    a2,a5,%lo(B)","source":{"file":null,"line":11,"column":42},"labels":[{"name":"B","range":{"startCol":27,"endCol":28}}]},{"text":"        lw      a5,-28(s0)","source":{"file":null,"line":11,"column":42},"labels":[]},{"text":"        slli    a1,a5,1","source":{"file":null,"line":11,"column":42},"labels":[]},{"text":"        lw      a5,-24(s0)","source":{"file":null,"line":11,"column":42},"labels":[]},{"text":"        add     a5,a1,a5","source":{"file":null,"line":11,"column":42},"labels":[]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":11,"column":42},"labels":[]},{"text":"        add     a5,a2,a5","source":{"file":null,"line":11,"column":42},"labels":[]},{"text":"        lw      a5,0(a5)","source":{"file":null,"line":11,"column":42},"labels":[]},{"text":"        mul     a5,a3,a5","source":{"file":null,"line":11,"column":36},"labels":[]},{"text":"        add     a4,a4,a5","source":{"file":null,"line":11,"column":25},"labels":[]},{"text":"        lui     a5,%hi(C)","source":{"file":null,"line":11,"column":25},"labels":[{"name":"C","range":{"startCol":24,"endCol":25}}]},{"text":"        addi    a3,a5,%lo(C)","source":{"file":null,"line":11,"column":25},"labels":[{"name":"C","range":{"startCol":27,"endCol":28}}]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":11,"column":25},"labels":[]},{"text":"        slli    a2,a5,1","source":{"file":null,"line":11,"column":25},"labels":[]},{"text":"        lw      a5,-24(s0)","source":{"file":null,"line":11,"column":25},"labels":[]},{"text":"        add     a5,a2,a5","source":{"file":null,"line":11,"column":25},"labels":[]},{"text":"        slli    a5,a5,2","source":{"file":null,"line":11,"column":25},"labels":[]},{"text":"        add     a5,a3,a5","source":{"file":null,"line":11,"column":25},"labels":[]},{"text":"        sw      a4,0(a5)","source":{"file":null,"line":11,"column":25},"labels":[]},{"text":"        lw      a5,-28(s0)","source":{"file":null,"line":10,"column":37},"labels":[]},{"text":"        addi    a5,a5,1","source":{"file":null,"line":10,"column":37},"labels":[]},{"text":"        sw      a5,-28(s0)","source":{"file":null,"line":10,"column":37},"labels":[]},{"text":".L4:","source":null,"labels":[]},{"text":"        lw      a4,-28(s0)","source":{"file":null,"line":10,"column":31},"labels":[]},{"text":"        li      a5,1","source":{"file":null,"line":10,"column":31},"labels":[]},{"text":"        ble     a4,a5,.L5","source":{"file":null,"line":10,"column":31},"labels":[{"name":".L5","range":{"startCol":23,"endCol":26}}]},{"text":"        lw      a5,-24(s0)","source":{"file":null,"line":8,"column":33},"labels":[]},{"text":"        addi    a5,a5,1","source":{"file":null,"line":8,"column":33},"labels":[]},{"text":"        sw      a5,-24(s0)","source":{"file":null,"line":8,"column":33},"labels":[]},{"text":".L3:","source":null,"labels":[]},{"text":"        lw      a4,-24(s0)","source":{"file":null,"line":8,"column":27},"labels":[]},{"text":"        li      a5,1","source":{"file":null,"line":8,"column":27},"labels":[]},{"text":"        ble     a4,a5,.L6","source":{"file":null,"line":8,"column":27},"labels":[{"name":".L6","range":{"startCol":23,"endCol":26}}]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":7,"column":29},"labels":[]},{"text":"        addi    a5,a5,1","source":{"file":null,"line":7,"column":29},"labels":[]},{"text":"        sw      a5,-20(s0)","source":{"file":null,"line":7,"column":29},"labels":[]},{"text":".L2:","source":null,"labels":[]},{"text":"        lw      a4,-20(s0)","source":{"file":null,"line":7,"column":23},"labels":[]},{"text":"        li      a5,1","source":{"file":null,"line":7,"column":23},"labels":[]},{"text":"        ble     a4,a5,.L7","source":{"file":null,"line":7,"column":23},"labels":[{"name":".L7","range":{"startCol":23,"endCol":26}}]},{"text":"        nop","source":{"file":null,"line":15,"column":1},"labels":[]},{"text":"        nop","source":{"file":null,"line":15,"column":1},"labels":[]},{"text":"        lw      ra,28(sp)","source":{"file":null,"line":15,"column":1},"labels":[]},{"text":"        lw      s0,24(sp)","source":{"file":null,"line":15,"column":1},"labels":[]},{"text":"        addi    sp,sp,32","source":{"file":null,"line":15,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":15,"column":1},"labels":[]},{"text":"main:","source":null,"labels":[]},{"text":"        addi    sp,sp,-16","source":{"file":null,"line":17,"column":12},"labels":[]},{"text":"        sw      ra,12(sp)","source":{"file":null,"line":17,"column":12},"labels":[]},{"text":"        sw      s0,8(sp)","source":{"file":null,"line":17,"column":12},"labels":[]},{"text":"        addi    s0,sp,16","source":{"file":null,"line":17,"column":12},"labels":[]},{"text":"        call    matmul","source":{"file":null,"line":18,"column":5},"labels":[{"name":"matmul","range":{"startCol":17,"endCol":23}}]},{"text":"        lui     a5,%hi(C)","source":{"file":null,"line":19,"column":16},"labels":[{"name":"C","range":{"startCol":24,"endCol":25}}]},{"text":"        addi    a5,a5,%lo(C)","source":{"file":null,"line":19,"column":16},"labels":[{"name":"C","range":{"startCol":27,"endCol":28}}]},{"text":"        lw      a5,12(a5)","source":{"file":null,"line":19,"column":16},"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":20,"column":1},"labels":[]},{"text":"        lw      ra,12(sp)","source":{"file":null,"line":20,"column":1},"labels":[]},{"text":"        lw      s0,8(sp)","source":{"file":null,"line":20,"column":1},"labels":[]},{"text":"        addi    sp,sp,16","source":{"file":null,"line":20,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":20,"column":1},"labels":[]}]},"peripherals_c":{"code":0,"asm":[{"text":"uart_print:","source":null,"labels":[]},{"text":"        addi    sp,sp,-32","source":{"file":null,"line":9,"column":34},"labels":[]},{"text":"        sw      ra,28(sp)","source":{"file":null,"line":9,"column":34},"labels":[]},{"text":"        sw      s0,24(sp)","source":{"file":null,"line":9,"column":34},"labels":[]},{"text":"        addi    s0,sp,32","source":{"file":null,"line":9,"column":34},"labels":[]},{"text":"        sw      a0,-20(s0)","source":{"file":null,"line":9,"column":34},"labels":[]},{"text":"        j       .L2","source":{"file":null,"line":10,"column":11},"labels":[{"name":".L2","range":{"startCol":17,"endCol":20}}]},{"text":".L3:","source":null,"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":11,"column":23},"labels":[]},{"text":"        addi    a4,a5,1","source":{"file":null,"line":11,"column":23},"labels":[]},{"text":"        sw      a4,-20(s0)","source":{"file":null,"line":11,"column":23},"labels":[]},{"text":"        lbu     a4,0(a5)","source":{"file":null,"line":11,"column":19},"labels":[]},{"text":"        li      a5,-65536","source":{"file":null,"line":11,"column":9},"labels":[]},{"text":"        addi    a5,a5,12","source":{"file":null,"line":11,"column":9},"labels":[]},{"text":"        sw      a4,0(a5)","source":{"file":null,"line":11,"column":17},"labels":[]},{"text":".L2:","source":null,"labels":[]},{"text":"        lw      a5,-20(s0)","source":{"file":null,"line":10,"column":12},"labels":[]},{"text":"        lbu     a5,0(a5)","source":{"file":null,"line":10,"column":12},"labels":[]},{"text":"        bne     a5,zero,.L3","source":{"file":null,"line":10,"column":12},"labels":[{"name":".L3","range":{"startCol":25,"endCol":28}}]},{"text":"        nop","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        nop","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        lw      ra,28(sp)","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        lw      s0,24(sp)","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        addi    sp,sp,32","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":13,"column":1},"labels":[]},{"text":".LC0:","source":null,"labels":[]},{"text":"        .string \"Hello from RISC-V C!\\n\"","source":null,"labels":[]},{"text":"main:","source":null,"labels":[]},{"text":"        addi    sp,sp,-32","source":{"file":null,"line":15,"column":12},"labels":[]},{"text":"        sw      ra,28(sp)","source":{"file":null,"line":15,"column":12},"labels":[]},{"text":"        sw      s0,24(sp)","source":{"file":null,"line":15,"column":12},"labels":[]},{"text":"        addi    s0,sp,32","source":{"file":null,"line":15,"column":12},"labels":[]},{"text":"        li      a5,-65536","source":{"file":null,"line":17,"column":5},"labels":[]},{"text":"        addi    a5,a5,128","source":{"file":null,"line":17,"column":5},"labels":[]},{"text":"        li      a4,305418240","source":{"file":null,"line":17,"column":12},"labels":[]},{"text":"        addi    a4,a4,1656","source":{"file":null,"line":17,"column":12},"labels":[]},{"text":"        sw      a4,0(a5)","source":{"file":null,"line":17,"column":12},"labels":[]},{"text":"        li      a5,-65536","source":{"file":null,"line":20,"column":5},"labels":[]},{"text":"        addi    a5,a5,96","source":{"file":null,"line":20,"column":5},"labels":[]},{"text":"        li      a4,85","source":{"file":null,"line":20,"column":10},"labels":[]},{"text":"        sw      a4,0(a5)","source":{"file":null,"line":20,"column":10},"labels":[]},{"text":"        li      a5,-65536","source":{"file":null,"line":23,"column":23},"labels":[]},{"text":"        addi    a5,a5,100","source":{"file":null,"line":23,"column":23},"labels":[]},{"text":"        lw      a5,0(a5)","source":{"file":null,"line":23,"column":18},"labels":[]},{"text":"        sw      a5,-20(s0)","source":{"file":null,"line":23,"column":18},"labels":[]},{"text":"        li      a5,-65536","source":{"file":null,"line":24,"column":5},"labels":[]},{"text":"        addi    a5,a5,96","source":{"file":null,"line":24,"column":5},"labels":[]},{"text":"        lw      a4,-20(s0)","source":{"file":null,"line":24,"column":15},"labels":[]},{"text":"        andi    a4,a4,255","source":{"file":null,"line":24,"column":15},"labels":[]},{"text":"        sw      a4,0(a5)","source":{"file":null,"line":24,"column":10},"labels":[]},{"text":"        lui     a5,%hi(.LC0)","source":{"file":null,"line":27,"column":5},"labels":[{"name":".LC0","range":{"startCol":24,"endCol":28}}]},{"text":"        addi    a0,a5,%lo(.LC0)","source":{"file":null,"line":27,"column":5},"labels":[{"name":".LC0","range":{"startCol":27,"endCol":31}}]},{"text":"        call    uart_print","source":{"file":null,"line":27,"column":5},"labels":[{"name":"uart_print","range":{"startCol":17,"endCol":27}}]},{"text":"        li      a5,0","source":{"file":null,"line":29,"column":12},"labels":[]},{"text":"        mv      a0,a5","source":{"file":null,"line":30,"column":1},"labels":[]},{"text":"        lw      ra,28(sp)","source":{"file":null,"line":30,"column":1},"labels":[]},{"text":"        lw      s0,24(sp)","source":{"file":null,"line":30,"column":1},"labels":[]},{"text":"        addi    sp,sp,32","source":{"file":null,"line":30,"column":1},"labels":[]},{"text":"        jr      ra","source":{"file":null,"line":30,"column":1},"labels":[]}]}};
-
-    function updateExampleSelectorOptions() {
-      const select = document.getElementById('exampleSelect');
-      if (!select) return;
-      if (editorLanguageMode === 'c') {
-        select.innerHTML = `
-          <option value="basic_c" title="Basic sum = a + b + c">Basic Sum (C)</option>
-          <option value="factorial_c" title="Recursive factorial calculation">Factorial (C)</option>
-          <option value="fibonacci_c" title="Fibonacci sequence generation">Fibonacci (C)</option>
-          <option value="loop_c" title="Array Search & Accumulation">Array Search (C)</option>
-          <option value="matrix_c" title="2x2 Matrix Multiplication">Matrix Multiply (C)</option>
-          <option value="peripherals_c" title="Nexys 4 MMIO Peripherals & UART">MMIO Peripherals (C)</option>
-          <option value="circle_accel_c" title="Circle & Delay Accel (Circle_delay_accel.c)">Circle &amp; Accel (C)</option>
-        `;
-      } else {
-        select.innerHTML = `
-          <option value="basic" title="Basic sum = a + b + c">Basic</option>
-          <option value="rars_syscalls" title="RARS ecall Syscalls Demo (rars_syscalls.asm)">RARS Syscalls</option>
-          <option value="fib" title="Fibonacci sequence">Fibonacci</option>
-          <option value="fact" title="Factorial computation">Factorial</option>
-          <option value="loop" title="Loop & Array">Loop &amp; Array</option>
-          <option value="io" title="I/O & M-Extension">I/O &amp; M-Ext</option>
-          <option value="dip_led" title="DIP to LED (DIP_to_LED.asm)">DIP to LED</option>
-          <option value="hello_world" title="Hello World (HelloWorld.asm)">Hello World</option>
-          <option value="hello_jal" title="Hello World Subroutine (HelloWorld_jal_jalr.asm)">Hello Subroutine</option>
-          <option value="circle_accel" title="Circle & Delay Accel (Circle_delay_accel.asm)">Circle &amp; Accel</option>
-        `;
-      }
-    }
-
-    function setLanguageMode(mode) {
-      if (editorLanguageMode === mode) return;
-      editorLanguageMode = mode;
-
-      const btnAsm = document.getElementById('langBtnAsm');
-      const btnC = document.getElementById('langBtnC');
-      if (btnAsm) btnAsm.classList.toggle('active', mode === 'asm');
-      if (btnC) btnC.classList.toggle('active', mode === 'c');
-
-      if (cmEditor && languageCompartment) {
-        cmEditor.dispatch({
-          effects: languageCompartment.reconfigure(mode === 'c' ? cLanguage : riscvLanguage)
-        });
-      }
-
-      updateExampleSelectorOptions();
-
-      const btnCompilerConfig = document.getElementById('btnCompilerConfig');
-      if (btnCompilerConfig) {
-        btnCompilerConfig.style.display = (mode === 'c') ? 'inline-flex' : 'none';
-      }
-
-      if (mode === 'c') {
-        loadExample('basic_c');
-        setStatus('Switched to C Mode. Click ⚙ Compile to build with Compiler Explorer (Godbolt).', 'info');
-      } else {
-        loadExample('basic');
-        setStatus('Switched to RISC-V Assembly Mode.', 'info');
-      }
-
-      if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
-    }
-
-    function toggleCompilerConfigPanel() {
-      const overlay = document.getElementById('compilerConfigOverlay');
-      if (!overlay) return;
-      overlay.classList.toggle('open');
-    }
-
-    function closeCompilerConfigPanel() {
-      const overlay = document.getElementById('compilerConfigOverlay');
-      if (overlay) overlay.classList.remove('open');
-    }
-
-    function resetCompilerConfig() {
-      const selComp = document.getElementById('godboltCompilerSelect');
-      const selOpt = document.getElementById('godboltOptSelect');
-      const inputArch = document.getElementById('godboltArchFlags');
-      if (selComp) selComp.value = 'rv32-cgcc1420';
-      if (selOpt) selOpt.value = '-O0';
-      if (inputArch) inputArch.value = '-march=rv32im -mabi=ilp32';
-      setStatus('Reset Godbolt compiler settings to default (GCC 14.2, -O0)', 'info');
+      if (tab === 'disassembly') updateDisassembly();
     }
 
     function loadExample(name) {
@@ -8415,13 +7693,8 @@ CYCLECOUNT_ADDR:
 `
       };
 
-      if (editorLanguageMode === 'c') {
-        currentFileName = (name.endsWith('.c') ? name : name + '.c');
-        editor.value = cExamples[name] || cExamples.basic_c;
-      } else {
-        currentFileName = EXAMPLE_FILENAMES[name] || (name + '.asm');
-        editor.value = examples[name] || examples.basic;
-      }
+      currentFileName = EXAMPLE_FILENAMES[name] || (name + '.asm');
+      editor.value = examples[name] || examples.basic;
       lastAssembledCode = null;
       assembled = false;
       editor.scrollTop = 0;
@@ -8531,72 +7804,7 @@ CYCLECOUNT_ADDR:
       setStatus('Cycle defaults restored', 'success');
     }
 
-    // --- Unified Settings Modal Controller (Compiler, Linker, Simulator) ---
-    function openSettingsModal(initialTab = 'compiler') {
-      const ov = document.getElementById('settingsOverlay');
-      if (!ov) return;
-      buildMemSegmentsPanel();
-      buildCyclesPanel();
-      switchSettingsTab(initialTab);
-      ov.classList.add('open');
-      ov.style.display = '';
-    }
-
-    function closeSettingsModal() {
-      const ov = document.getElementById('settingsOverlay');
-      if (ov) {
-        ov.classList.remove('open');
-        ov.style.display = '';
-      }
-    }
-
-    function switchSettingsTab(tabName) {
-      currentSettingsTab = tabName;
-      document.querySelectorAll('.settings-tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
-
-      const activeBtn = document.getElementById('settingsTabBtn-' + tabName);
-      const activeContent = document.getElementById('settingsContent-' + tabName);
-      if (activeBtn) activeBtn.classList.add('active');
-      if (activeContent) activeContent.classList.add('active');
-    }
-
-    function parseHexAddr(str, fallback) {
-      let v = parseInt(String(str || '').trim(), 16);
-      if (isNaN(v) || v < 0) v = fallback;
-      return v & ~3; // word align
-    }
-
-    function updateLinkerStackPreview() {
-      const g = id => {
-        const el = document.getElementById(id);
-        return el ? el.value : '';
-      };
-      const dBase = parseHexAddr(g('ms-data'), dataBase);
-      const dSize = parseHexAddr(g('ms-datasize'), dataSize);
-      const stackTop = (dBase + dSize) >>> 0;
-      const stackInput = document.getElementById('ms-stack');
-      if (stackInput) {
-        stackInput.value = '0x' + stackTop.toString(16);
-      }
-    }
-
-    function buildMemSegmentsPanel() {
-      const codeEl = document.getElementById('ms-code');
-      const codeSizeEl = document.getElementById('ms-codesize');
-      const dataEl = document.getElementById('ms-data');
-      const dataSizeEl = document.getElementById('ms-datasize');
-      const stackEl = document.getElementById('ms-stack');
-      const mmioEl = document.getElementById('ms-mmio');
-
-      if (codeEl) codeEl.value = '0x' + (baseAddress >>> 0).toString(16);
-      if (codeSizeEl) codeSizeEl.value = '0x' + (codeSize >>> 0).toString(16);
-      if (dataEl) dataEl.value = '0x' + (dataBase >>> 0).toString(16);
-      if (dataSizeEl) dataSizeEl.value = '0x' + (dataSize >>> 0).toString(16);
-      if (stackEl) stackEl.value = '0x' + (stackBase >>> 0).toString(16);
-      if (mmioEl) mmioEl.value = '0x' + (mmioBase >>> 0).toString(16);
-    }
-
+    // Read cycle values from the overlay panel inputs
     function getCyclesFromPanel() {
       for (const [key] of CYCLE_FIELD_DEFS) {
         const el = document.getElementById('cf-' + key);
@@ -8607,69 +7815,73 @@ CYCLECOUNT_ADDR:
       }
     }
 
-    function applyAndCloseSettings() {
-      // 1. Apply Linker / Memory Segments
-      const g = id => {
-        const el = document.getElementById(id);
-        return el ? el.value : '';
-      };
-      baseAddress = parseHexAddr(g('ms-code'), baseAddress);
-      codeSize = parseHexAddr(g('ms-codesize'), codeSize);
-      dataBase = parseHexAddr(g('ms-data'), dataBase);
-      dataSize = parseHexAddr(g('ms-datasize'), dataSize);
-      const defaultStack = (dataBase + dataSize) >>> 0;
-      stackBase = parseHexAddr(g('ms-stack'), defaultStack);
-      mmioBase = parseHexAddr(g('ms-mmio'), mmioBase);
+    // Memory-segment configuration popup (mirrors the cycles popup).
+    function buildMemSegmentsPanel() {
+      const body = document.getElementById('memSegmentsConfigBody');
+      const defs = [
+        ['code', 'Code (.text) base', baseAddress],
+        ['data', 'Data (.data) base', dataBase],
+        ['stack', 'Stack top', stackBase],
+        ['mmio', 'MMIO base', mmioBase]
+      ];
+      let html = '<div class="cycle-hint">Base address of each region (hex). Apply reloads the program at the new layout.</div>';
+      for (const [key, label, value] of defs) {
+        html += '<div class="cycle-field"><label for="ms-' + key + '">' + label + '</label>' +
+          '<input id="ms-' + key + '" type="text" value="0x' + value.toString(16) + '"></div>';
+      }
+      body.innerHTML = html;
+    }
 
+    function toggleMemSegmentsPanel() {
+      const ov = document.getElementById('memSegmentsOverlay');
+      if (!ov.classList.contains('open')) {
+        buildMemSegmentsPanel();
+        ov.classList.add('open');
+        ov.style.display = '';
+      } else {
+        closeMemSegmentsPanel();
+      }
+    }
+
+    function closeMemSegmentsPanel() {
+      const ov = document.getElementById('memSegmentsOverlay');
+      ov.classList.remove('open');
+      ov.style.display = '';
+    }
+
+    function parseHexAddr(str, fallback) {
+      let v = parseInt(String(str).trim(), 16);
+      if (isNaN(v) || v < 0) v = fallback;
+      return v & ~3; // word align
+    }
+
+    function applyMemSegments() {
+      const g = (id) => document.getElementById(id).value;
+      baseAddress = parseHexAddr(g('ms-code'), baseAddress);
+      dataBase = parseHexAddr(g('ms-data'), dataBase);
+      stackBase = parseHexAddr(g('ms-stack'), stackBase);
+      mmioBase = parseHexAddr(g('ms-mmio'), mmioBase);
       MMIO_BASE = mmioBase;
       MMIO_GETC = mmioBase;
       MMIO_PUTC = mmioBase + 4;
       MMIO_STATUS = mmioBase + 8;
-
-      const memAddrEl = document.getElementById('memAddr');
-      if (memAddrEl) memAddrEl.value = '0x' + (baseAddress >>> 0).toString(16);
-
-      // 2. Apply Simulator CPI
-      getCyclesFromPanel();
-
-      closeSettingsModal();
+      document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
+      closeMemSegmentsPanel();
       reloadAfterLayoutChange();
-      setStatus('Settings updated successfully', 'success');
+      setStatus('Memory segments updated', 'success');
     }
 
-    function resetCurrentSettingsTab() {
-      if (currentSettingsTab === 'compiler') {
-        const compSelect = document.getElementById('godboltCompilerSelect');
-        const optSelect = document.getElementById('godboltOptSelect');
-        const archInput = document.getElementById('godboltArchFlags');
-        if (compSelect) compSelect.value = 'rv32-cgcc1420';
-        if (optSelect) optSelect.value = '-O0';
-        if (archInput) archInput.value = '-march=rv32im -mabi=ilp32';
-        setStatus('Compiler settings reset to defaults', 'info');
-      } else if (currentSettingsTab === 'linker') {
-        baseAddress = DEFAULT_BASE;
-        codeSize = 0x200;
-        dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET;
-        dataSize = 0x200;
-        stackBase = (dataBase + dataSize) >>> 0;
-        mmioBase = 0xFFFF0000;
-        MMIO_BASE = mmioBase; MMIO_GETC = mmioBase; MMIO_PUTC = mmioBase + 4; MMIO_STATUS = mmioBase + 8;
-        buildMemSegmentsPanel();
-        setStatus('Linker segment defaults restored (0x200 sizes)', 'info');
-      } else if (currentSettingsTab === 'simulator') {
-        resetCyclesConfig();
-      }
+    function resetMemSegments() {
+      baseAddress = DEFAULT_BASE;
+      dataBase = DEFAULT_BASE + DEFAULT_DATA_OFFSET;
+      stackBase = 0x00020200;
+      mmioBase = 0xFFFF0000;
+      MMIO_BASE = mmioBase; MMIO_GETC = mmioBase; MMIO_PUTC = mmioBase + 4; MMIO_STATUS = mmioBase + 8;
+      document.getElementById('memAddr').value = '0x' + baseAddress.toString(16);
+      buildMemSegmentsPanel();
+      reloadAfterLayoutChange();
+      setStatus('Segment defaults restored', 'success');
     }
-
-    // Legacy Aliases for Backward Compatibility
-    function toggleCompilerConfigPanel() { openSettingsModal('compiler'); }
-    function closeCompilerConfigPanel() { closeSettingsModal(); }
-    function toggleMemSegmentsPanel() { openSettingsModal('linker'); }
-    function closeMemSegmentsPanel() { closeSettingsModal(); }
-    function applyMemSegments() { applyAndCloseSettings(); }
-    function resetMemSegments() { resetCurrentSettingsTab(); }
-    function toggleCyclesPanel() { openSettingsModal('simulator'); }
-    function closeCyclesPanel() { closeSettingsModal(); }
 
     // Reset execution state, then re-assemble and load the program so the memory
     // view reflects the current segment addresses. Shared by the segments popup.
@@ -8744,10 +7956,9 @@ CYCLECOUNT_ADDR:
     function saveFile() {
       const content = editor.value;
       if (!content.trim()) { setStatus('Editor is empty — nothing to save', 'error'); return; }
-      const defaultExt = (editorLanguageMode === 'c') ? '.c' : '.asm';
-      let filename = currentFileName || ('program' + defaultExt);
-      if (!filename.toLowerCase().endsWith('.asm') && !filename.toLowerCase().endsWith('.s') && !filename.toLowerCase().endsWith('.c') && !filename.toLowerCase().endsWith('.h') && !filename.toLowerCase().endsWith('.txt')) {
-        filename += defaultExt;
+      let filename = currentFileName || 'program.asm';
+      if (!filename.toLowerCase().endsWith('.asm') && !filename.toLowerCase().endsWith('.s') && !filename.toLowerCase().endsWith('.txt')) {
+        filename += '.asm';
       }
       const blob = new Blob([content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -8762,14 +7973,6 @@ CYCLECOUNT_ADDR:
     }
 
     function sourceLineForPc(addr) {
-      if (editorLanguageMode === 'c') {
-        if (pcToCLineMap && pcToCLineMap.has(addr)) return pcToCLineMap.get(addr);
-        if (labels && labels['main'] !== undefined && addr < labels['main'] && pcToCLineMap) {
-          const mainAddr = labels['main'];
-          if (pcToCLineMap.has(mainAddr)) return pcToCLineMap.get(mainAddr);
-        }
-        return -1;
-      }
       if (pcToLineMap && pcToLineMap.has(addr)) return pcToLineMap.get(addr);
       if (Array.isArray(machineCode)) {
         for (let k = 0; k < machineCode.length; k++) {
@@ -8797,31 +8000,6 @@ CYCLECOUNT_ADDR:
       const totalLines = cmEditor ? cmEditor.state.doc.lines : (editor ? editor.value.split('\n').length : 1);
       if (targetLine < 1) targetLine = 1;
       if (targetLine > totalLines) targetLine = totalLines;
-
-      if (editorLanguageMode === 'c') {
-        if (assembled && cLineToFirstPcMap && cLineToFirstPcMap.size > 0 && lastAssembledCode === (editor ? editor.value : null)) {
-          if (cLineToFirstPcMap.has(targetLine)) return targetLine;
-          const validCLines = Array.from(cLineToFirstPcMap.keys()).sort((a, b) => a - b);
-          const next = validCLines.find(l => l >= targetLine);
-          if (next !== undefined) return next;
-          return validCLines[validCLines.length - 1] || targetLine;
-        }
-        let current = targetLine;
-        while (current <= totalLines) {
-          let lineText = '';
-          if (cmEditor && current <= cmEditor.state.doc.lines) {
-            lineText = cmEditor.state.doc.line(current).text.trim();
-          } else {
-            const allLines = editor ? editor.value.split('\n') : [];
-            lineText = (allLines[current - 1] || '').trim();
-          }
-          if (lineText && !lineText.startsWith('//') && !lineText.startsWith('/*') && !lineText.startsWith('*') && lineText !== '{' && lineText !== '}') {
-            return current;
-          }
-          current++;
-        }
-        return targetLine;
-      }
 
       // 1. If currently assembled and code is up to date, use machineCode source mapping
       if (assembled && Array.isArray(machineCode) && machineCode.length > 0 && lastAssembledCode === (editor ? editor.value : null)) {
@@ -9002,220 +8180,8 @@ CYCLECOUNT_ADDR:
       highlightCurrentLine();
     }
 
-    let pcToCLineMap = new Map();
-    let cLineToPcsMap = new Map();
-    let cLineToFirstPcMap = new Map();
-    let lastCompiledCSource = null;
-    let lastGeneratedAsm = '';
-
-    function highlightFirstCLine(mc) {
-      let firstCLine = -1;
-      if (labels && labels['main'] !== undefined) {
-        const mainAddr = labels['main'];
-        if (pcToCLineMap.has(mainAddr)) {
-          firstCLine = pcToCLineMap.get(mainAddr);
-        }
-      }
-      if (firstCLine === -1) {
-        for (const item of mc) {
-          if (item.cLine && item.cLine >= 1) {
-            firstCLine = item.cLine;
-            break;
-          }
-        }
-      }
-      currentExecLine = firstCLine;
-      highlightCurrentLine();
-    }
-
-    async function compileAndAssembleC(cSourceText) {
-      const source = (typeof cSourceText === 'string') ? cSourceText : (editor ? editor.value : '');
-      if (!source.trim()) {
-        log('No C code to compile.', 'error');
-        setStatus('Error: No C code in editor', 'error');
-        return null;
-      }
-
-      const compilerSelect = document.getElementById('godboltCompilerSelect');
-      const optSelect = document.getElementById('godboltOptSelect');
-      const archInput = document.getElementById('godboltArchFlags');
-
-      const compilerId = compilerSelect ? compilerSelect.value : 'rv32-cgcc1420';
-      const optLevel = optSelect ? optSelect.value : '-O0';
-      const archFlags = archInput ? archInput.value : '-march=rv32im -mabi=ilp32';
-
-      setStatus(`Compiling C with Godbolt (${compilerId}, ${optLevel})...`, 'info');
-      log(`Compiling C code via Godbolt Compiler Explorer (${compilerId}, ${optLevel}, ${archFlags})...`, 'info');
-
-      let godboltData = null;
-
-      // 1. Try Live Godbolt API request
-      if (typeof fetch === 'function') {
-        try {
-          const body = {
-            source: source,
-            options: {
-              userArguments: `${archFlags} ${optLevel} -fno-pic -fno-pie`,
-              filters: {
-                binary: false,
-                commentOnly: true,
-                demangle: true,
-                directives: false,
-                labels: true,
-                libraryCode: false,
-                trim: false
-              }
-            }
-          };
-
-          const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-          const timeoutId = controller ? setTimeout(() => controller.abort(), 12000) : null;
-
-          const resp = await fetch(`https://godbolt.org/api/compiler/${compilerId}/compile`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify(body),
-            signal: controller ? controller.signal : undefined
-          });
-          if (timeoutId) clearTimeout(timeoutId);
-
-          if (resp && resp.ok) {
-            godboltData = await resp.json();
-          } else if (resp) {
-            log(`Godbolt HTTP ${resp.status} status.`, 'warn');
-          }
-        } catch (err) {
-          log(`Godbolt connection notice: ${err.name === 'AbortError' ? 'timeout' : err.message}`, 'info');
-        }
-      }
-
-      // 2. Fallback to precompiled cache if offline or matching built-in examples
-      if (!godboltData || !godboltData.asm) {
-        const matchedKey = Object.keys(cExamples).find(k => cExamples[k].trim() === source.trim());
-        if (matchedKey && cPrecompiled[matchedKey]) {
-          log(`Loaded verified precompiled assembly for example '${matchedKey}'.`, 'info');
-          godboltData = cPrecompiled[matchedKey];
-        } else if (typeof window !== 'undefined' && window.__mockGodboltResponse) {
-          godboltData = window.__mockGodboltResponse;
-        }
-      }
-
-      if (!godboltData || !godboltData.asm) {
-        const errMsg = 'Compilation Notice: Godbolt Compiler API was not reachable and no offline precompiled cache exists for this custom code. Please check your internet connection or select a built-in C example.';
-        log(errMsg, 'error');
-        setStatus('Compilation Error: Network / Offline', 'error');
-        assembled = false;
-        if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
-        return null;
-      }
-
-      // Check if compiler reported errors
-      if (godboltData.code !== 0 && (!godboltData.asm || godboltData.asm.length === 0)) {
-        let errText = '';
-        if (godboltData.stderr && Array.isArray(godboltData.stderr)) {
-          errText = godboltData.stderr.map(e => e.text).join('\n');
-        } else if (godboltData.buildResult && godboltData.buildResult.stderr) {
-          errText = godboltData.buildResult.stderr.map(e => e.text).join('\n');
-        }
-        log(`C Compilation Errors:\n${errText || 'Non-zero exit code from compiler'}`, 'error');
-        setStatus('C Compilation Failed — see console log', 'error');
-        assembled = false;
-        if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
-        return null;
-      }
-
-      // Prepend CRT0 baremetal startup shim: sets sp = stackBase (Data Base + Data Size), calls main(), terminates with ecall (a7=10)
-      const startup = [
-        { text: '.text', source: null },
-        { text: '.globl _start', source: null },
-        { text: '_start:', source: null },
-        { text: `    li sp, 0x${(stackBase >>> 0).toString(16)}`, source: null },
-        { text: '    call main', source: null },
-        { text: '    li a7, 10', source: null },
-        { text: '    ecall', source: null },
-        { text: '__halt:', source: null },
-        { text: '    j __halt', source: null }
-      ];
-
-      const combinedItems = [...startup, ...godboltData.asm];
-      const asmText = combinedItems.map(item => item.text).join('\n');
-      lastGeneratedAsm = asmText;
-
-      const mc = assemble(asmText, baseAddress);
-      if (!mc) {
-        log('Failed to assemble Godbolt emitted assembly.', 'error');
-        setStatus('Assembly Error', 'error');
-        assembled = false;
-        if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
-        return null;
-      }
-
-      let hasError = false;
-      for (const item of mc) {
-        if (item.error) {
-          log(`Line ${item.line}: ${item.error}`, 'error');
-          hasError = true;
-        }
-      }
-      if (hasError) {
-        setStatus('Assembly error in generated code', 'error');
-        assembled = false;
-        if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
-        return null;
-      }
-
-      // Build PC -> C Line mapping
-      pcToCLineMap = new Map();
-      cLineToPcsMap = new Map();
-      cLineToFirstPcMap = new Map();
-      machineCode = mc;
-
-      for (let k = 0; k < mc.length; k++) {
-        const item = mc[k];
-        const asmLineIdx = item.line - 1;
-        if (asmLineIdx >= 0 && asmLineIdx < combinedItems.length) {
-          const gItem = combinedItems[asmLineIdx];
-          if (gItem && gItem.source && typeof gItem.source.line === 'number') {
-            const cLine = gItem.source.line;
-            item.cLine = cLine;
-            item.cCol = gItem.source.column || 1;
-            pcToCLineMap.set(item.address, cLine);
-            if (!cLineToPcsMap.has(cLine)) {
-              cLineToPcsMap.set(cLine, []);
-              cLineToFirstPcMap.set(cLine, item.address);
-            }
-            cLineToPcsMap.get(cLine).push(item.address);
-          }
-        }
-      }
-
-      lastAssembledCode = source;
-      lastCompiledCSource = source;
-
-      loadProgram(mc);
-      updateMachineCode();
-      updateDisassembly();
-      updateStats();
-      highlightFirstCLine(mc);
-
-      assembled = true;
-      programFinished = false;
-      const nInstr = mc.filter(i => !i.error && i.bytes).length;
-      log(`Compiled and loaded ${nInstr} RV32 instructions from C source.`, 'success');
-      setStatus(`Compiled & Assembled (${nInstr} instructions). Ready to step/run.`, 'success');
-      if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
-
-      return mc;
-    }
-
     function assembleOnly() {
       clearLog();
-      if (editorLanguageMode === 'c') {
-        return compileAndAssembleC();
-      }
       const mc = prepareAssembly();
       if (!mc) {
         assembled = false;
@@ -9303,7 +8269,7 @@ CYCLECOUNT_ADDR:
       const st = execHistory.pop();
       for (let i = st.writes.length - 1; i >= 0; i--) {
         const w = st.writes[i];
-        setMemByte(w.addr, w.old);
+        memory[w.addr] = w.old;
       }
       regs.set(st.regs);
       fregs.set(st.fregs);
@@ -9333,24 +8299,12 @@ CYCLECOUNT_ADDR:
         const canAssemble = hasCode && isCodeModifiedOrUnassembled;
         assembleBtn.disabled = !canAssemble;
         assembleBtn.classList.toggle('inactive', !canAssemble);
-        if (editorLanguageMode === 'c') {
-          assembleBtn.innerHTML = '⚙ Compile';
-          if (!hasCode) {
-            assembleBtn.title = 'No C code in editor';
-          } else if (canAssemble) {
-            assembleBtn.title = 'Compile with Godbolt Compiler Explorer & load into memory (Ctrl+Enter)';
-          } else {
-            assembleBtn.title = 'Program is already compiled and up to date';
-          }
+        if (!hasCode) {
+          assembleBtn.title = 'No assembly code in editor';
+        } else if (canAssemble) {
+          assembleBtn.title = 'Assemble and load program into memory (Ctrl+Enter)';
         } else {
-          assembleBtn.innerHTML = '⚙ Assemble';
-          if (!hasCode) {
-            assembleBtn.title = 'No assembly code in editor';
-          } else if (canAssemble) {
-            assembleBtn.title = 'Assemble and load program into memory (Ctrl+Enter)';
-          } else {
-            assembleBtn.title = 'Program is already assembled and up to date';
-          }
+          assembleBtn.title = 'Program is already assembled and up to date';
         }
       }
 
@@ -9647,9 +8601,6 @@ CYCLECOUNT_ADDR:
     }
 
     function resetAll() {
-      running = false;
-      if (runTimerId) { clearTimeout(runTimerId); runTimerId = null; }
-
       const wasAssembled = assembled && machineCode && machineCode.length > 0 && (lastAssembledCode !== null && editor.value === lastAssembledCode);
       resetState();
       clearLog();
@@ -9670,17 +8621,10 @@ CYCLECOUNT_ADDR:
         try { if (editor.value.trim()) mc = assemble(editor.value); } catch (e) { }
         highlightFirstLine(mc);
       }
-      updateRegisters();
-      updateMemoryView();
-      updateStats();
-      updateMachineCode();
-      updateDisassembly();
       updateToolbarButtonStates();
     }
 
     function resetState() {
-      running = false;
-      if (runTimerId) { clearTimeout(runTimerId); runTimerId = null; }
       initializeState();
       execHistory = [];
       stepWriteLog = [];
@@ -9734,13 +8678,6 @@ CYCLECOUNT_ADDR:
     function loadFile(event) {
       const file = event.target.files[0];
       if (!file) return;
-
-      const ext = file.name.split('.').pop().toLowerCase();
-      if (ext === 'c' || ext === 'h') {
-        if (typeof setLanguageMode === 'function') setLanguageMode('c');
-      } else if (ext === 'asm' || ext === 's') {
-        if (typeof setLanguageMode === 'function') setLanguageMode('asm');
-      }
 
       const reader = new FileReader();
       reader.onload = function (e) {
@@ -10320,11 +9257,6 @@ done:
     });
 
     function initCodeMirrorEditor() {
-      if (cmEditor) return;
-      if (!languageCompartment) {
-        languageCompartment = new CM6.Compartment();
-        window.languageCompartment = languageCompartment;
-      }
       const container = document.getElementById('cmEditorContainer');
       if (!container) return;
 
@@ -10369,7 +9301,7 @@ result: .word 0
           CM6.drawSelection(),
           CM6.dropCursor(),
           CM6.bracketMatching(),
-          languageCompartment.of(editorLanguageMode === 'c' ? cLanguage : riscvLanguage),
+          riscvLanguage,
           CM6.syntaxHighlighting(riscvHighlightStyle),
           riscvEditorTheme,
           CM6.autocompletion({
@@ -10480,16 +9412,6 @@ result: .word 0
       updateToolbarButtonStates();
     }
 
-    window.setLanguageMode = setLanguageMode;
-    window.getLanguageMode = () => editorLanguageMode;
-    window.compileAndAssembleC = compileAndAssembleC;
-    window.cExamples = cExamples;
-    window.cPrecompiled = cPrecompiled;
-    window.toggleCompilerConfigPanel = toggleCompilerConfigPanel;
-    window.closeCompilerConfigPanel = closeCompilerConfigPanel;
-    window.resetCompilerConfig = resetCompilerConfig;
-    window.getPcToCLineMap = () => pcToCLineMap;
-    window.getCLineToPcsMap = () => cLineToPcsMap;
     window.stepOnce = stepOnce;
     window.stepBack = stepBack;
     window.resetAll = resetAll;
@@ -10508,26 +9430,8 @@ result: .word 0
       Object.defineProperty(window, 'machineCode', { get: () => machineCode, configurable: true });
       Object.defineProperty(window, 'breakpoints', { get: () => breakpoints, configurable: true });
       Object.defineProperty(window, 'currentExecLine', { get: () => currentExecLine, configurable: true });
-      Object.defineProperty(window, 'running', { get: () => running, configurable: true });
-      Object.defineProperty(window, 'runTimerId', { get: () => runTimerId, configurable: true });
-      Object.defineProperty(window, 'oledBuffer', { get: () => oledBuffer, configurable: true });
-      Object.defineProperty(window, 'oledCol', { get: () => oledCol, configurable: true });
-      Object.defineProperty(window, 'oledRow', { get: () => oledRow, configurable: true });
-      Object.defineProperty(window, 'oledCtrl', { get: () => oledCtrl, configurable: true });
-      Object.defineProperty(window, 'sevsegState', { get: () => sevsegState, configurable: true });
-      Object.defineProperty(window, 'accelX', { get: () => accelX, set: v => { accelX = v; }, configurable: true });
-      Object.defineProperty(window, 'accelY', { get: () => accelY, set: v => { accelY = v; }, configurable: true });
-      Object.defineProperty(window, 'accelZ', { get: () => accelZ, set: v => { accelZ = v; }, configurable: true });
-      Object.defineProperty(window, 'accelTemp', { get: () => accelTemp, set: v => { accelTemp = v; }, configurable: true });
     } catch (e) {}
 
-    window.getOledBuffer = () => oledBuffer;
-    window.readMem = readMem;
-    window.writeMem = writeMem;
-    window.getMemByte = getMemByte;
-    window.setMemByte = setMemByte;
-    window.clearOledDisplay = clearOledDisplay;
-    window.updateAccelValues = updateAccelValues;
     window.loadExample = loadExample;
     window.assembleOnly = assembleOnly;
     window.runProgram = runProgram;

@@ -216,8 +216,8 @@ setTimeout(() => {
     const row1Buttons = toolbar.querySelectorAll('.toolbar-row-primary button');
     const row2Buttons = toolbar.querySelectorAll('.toolbar-row-secondary button');
     console.log(`Toolbar Row 1 buttons: ${row1Buttons.length} (expected 10)`);
-    console.log(`Toolbar Row 2 buttons: ${row2Buttons.length} (expected 4)`);
-    if (row1Buttons.length < 10 || row2Buttons.length < 4) {
+    console.log(`Toolbar Row 2 buttons: ${row2Buttons.length} (expected 3)`);
+    if (row1Buttons.length < 10 || row2Buttons.length < 3) {
       throw new Error('Toolbar button structure missing expected controls');
     }
     console.log('✅ Toolbar layout structure verified!');
