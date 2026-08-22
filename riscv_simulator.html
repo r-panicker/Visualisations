@@ -2258,10 +2258,10 @@
             <div>
               <label style="font-weight:600;display:block;margin-bottom:4px;color:#cba6f7;">RISC-V 32-bit Compiler:</label>
               <select id="godboltCompilerSelect" style="width:100%;padding:5px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;font-family:inherit;">
-                <option value="rv32-cgcc1420" selected>RISC-V GCC 14.2.0 (Stable)</option>
-                <option value="rv32-cgcctrunk">RISC-V GCC (Trunk)</option>
-                <option value="rv32-cclang2010">RISC-V Clang 20.1.0 (Stable)</option>
+                <option value="rv32-cclang2010" selected>RISC-V Clang 20.1.0 (Stable)</option>
                 <option value="rv32-cclang">RISC-V Clang (Trunk)</option>
+                <option value="rv32-cgcc1420">RISC-V GCC 14.2.0 (Stable)</option>
+                <option value="rv32-cgcctrunk">RISC-V GCC (Trunk)</option>
               </select>
             </div>
             <div>
@@ -3282,7 +3282,8 @@
     function setSection(name) {
       const raw = String(name || '').split(',')[0].replace(/["']/g, '').replace(/^\./, '').trim().toLowerCase();
       if (raw === 'text' || raw.startsWith('text')) return 'text';
-      if (raw === 'data' || raw === 'bss' || raw === 'rodata' || raw === 'sdata' || raw === 'sbss' || raw.startsWith('rodata') || raw.startsWith('data') || raw.startsWith('bss')) return 'data';
+      if (raw === 'data' || raw === 'bss' || raw === 'rodata' || raw === 'sdata' || raw === 'sbss' || raw === 'tdata' || raw === 'tbss' ||
+          raw.startsWith('rodata') || raw.startsWith('data') || raw.startsWith('bss') || raw.startsWith('sdata') || raw.startsWith('sbss')) return 'data';
       return null;
     }
 
@@ -3328,8 +3329,12 @@
         const toks = main.split(/\s+/);
         const mn = toks[0].toLowerCase();
         if (mn === '.text') { section = 'text'; activeDataDirPass1 = null; return; }
-        if (mn === '.data') { section = 'data'; activeDataDirPass1 = null; return; }
-        if (mn === '.section' || mn === '.rodata' || mn === '.bss') {
+        if (mn === '.data' || mn === '.rodata' || mn === '.bss' || mn === '.sdata' || mn === '.sbss' || mn === '.tdata' || mn === '.tbss') {
+          section = 'data';
+          activeDataDirPass1 = null;
+          return;
+        }
+        if (mn === '.section') {
           const s = setSection(toks[1] || mn);
           section = s || 'ignore';
           activeDataDirPass1 = null;
@@ -3337,24 +3342,24 @@
         }
         if (section === 'ignore') return;
         switch (mn) {
-          case '.text': section = 'text'; activeDataDirPass1 = null; break;
-          case '.data': section = 'data'; activeDataDirPass1 = null; break;
-          case '.section': case '.rodata': case '.bss': {
-            const s = setSection(toks[1] || mn);
-            section = s || 'ignore';
-            activeDataDirPass1 = null;
-            break;
-          }
           case '.equ': case '.eqv': case '.set': break; // constants already collected in the pre-pass
           case '.align': { const al = parseInt(toks[1], 10) || 0; if (al > 0) setAddr((getAddr() + ((1 << al) - 1)) & ~((1 << al) - 1)); break; }
           case '.balign': { const b = parseInt(toks[1], 10) || 0; if (b > 0) setAddr((getAddr() + (b - 1)) & ~(b - 1)); break; }
           case '.p2align': { const p = parseInt(toks[1], 10) || 0; if (p > 0) setAddr((getAddr() + ((1 << p) - 1)) & ~((1 << p) - 1)); break; }
           case '.org': { const o = parseImm(toks.slice(1).join(' '), true); if (!isNaN(o)) setAddr(o); break; }
-          case '.word': case '.half': case '.byte': case '.dword': {
+          case '.word': case '.4byte': case '.int': case '.long':
+          case '.half': case '.2byte': case '.short':
+          case '.byte':
+          case '.dword': case '.8byte': case '.quad': {
             activeDataDirPass1 = mn;
             const vals = toks.slice(1).join('').split(',').filter(Boolean);
-            const sz = (mn === '.byte' ? 1 : mn === '.half' ? 2 : mn === '.dword' ? 8 : 4);
+            const sz = (mn === '.byte' ? 1 : (mn === '.half' || mn === '.2byte' || mn === '.short') ? 2 : (mn === '.dword' || mn === '.8byte' || mn === '.quad') ? 8 : 4);
             bump(sz * vals.length);
+            break;
+          }
+          case '.space': case '.zero': {
+            const n = parseInt(toks[1], 10) || 0;
+            if (n > 0) bump(n);
             break;
           }
           case '.asciiz': case '.asciz': case '.string': {
@@ -3572,20 +3577,22 @@
                 }
                 break;
               }
-              case '.word': case '.half': case '.byte': {
+              case '.word': case '.4byte': case '.int': case '.long':
+              case '.half': case '.2byte': case '.short':
+              case '.byte': {
                 const vals = toks.slice(1).join('').split(',').filter(Boolean);
                 const bytesArr = [];
                 for (const v of vals) {
                   const val = parseImm(v);
                   if (isNaN(val)) throw new Error(`Bad numeric value '${v}' in ${mn}`);
-                  const sz = mn === '.byte' ? 1 : mn === '.half' ? 2 : 4;
+                  const sz = mn === '.byte' ? 1 : (mn === '.half' || mn === '.2byte' || mn === '.short') ? 2 : 4;
                   const usz = val >>> 0;
                   for (let b = 0; b < sz; b++) bytesArr.push((usz >> (b * 8)) & 0xFF);
                 }
                 if (bytesArr.length) { push({ address: getAddr(), bytes: bytesArr, text: asmText, line: lineNo, asmLine: main }); bump(bytesArr.length); }
                 break;
               }
-              case '.dword': {
+              case '.dword': case '.8byte': case '.quad': {
                 const vals = toks.slice(1).join('').split(',').filter(Boolean);
                 const bytesArr = [];
                 for (const v of vals) {
@@ -3629,9 +3636,9 @@
         if (!main) continue;
         let first = main.split(/\s+/)[0];
         const mnLow = first.toLowerCase();
-        if (mnLow === '.text' || mnLow === '.data' || mnLow === '.section' || mnLow === '.rodata' || mnLow === '.bss') {
+        if (mnLow === '.text' || mnLow === '.data' || mnLow === '.section' || mnLow === '.rodata' || mnLow === '.bss' || mnLow === '.sdata' || mnLow === '.sbss' || mnLow === '.tdata' || mnLow === '.tbss') {
           if (mnLow === '.text') section = 'text';
-          else if (mnLow === '.data') section = 'data';
+          else if (mnLow === '.data' || mnLow === '.rodata' || mnLow === '.bss' || mnLow === '.sdata' || mnLow === '.sbss' || mnLow === '.tdata' || mnLow === '.tbss') section = 'data';
           else {
             const s = setSection(main.split(/\s+/)[1] || mnLow);
             section = s || 'ignore';
@@ -3639,7 +3646,7 @@
           activeDataDirPass2 = null;
           continue;
         }
-        if (section === 'ignore') continue; else if (['.byte', '.word', '.half', '.dword'].includes(mnLow)) {
+        if (section === 'ignore') continue; else if (['.byte', '.word', '.half', '.dword', '.2byte', '.4byte', '.8byte'].includes(mnLow)) {
           activeDataDirPass2 = mnLow;
         } else if (section === 'data' && activeDataDirPass2 && !first.endsWith(':') && !first.startsWith('.') && !INSTRUCTIONS[mnLow] && !PSEUDO_INSTRUCTIONS[mnLow]) {
           main = activeDataDirPass2 + ' ' + main;
@@ -3649,14 +3656,14 @@
           const rest = main.slice(first.length).trim();
           if (!rest) continue;
           let rfirst = rest.split(/\s+/)[0].toLowerCase();
-          if (['.byte', '.word', '.half', '.dword'].includes(rfirst)) activeDataDirPass2 = rfirst;
+          if (['.byte', '.word', '.half', '.dword', '.2byte', '.4byte', '.8byte'].includes(rfirst)) activeDataDirPass2 = rfirst;
           emitOne(rest, lineNo, asmText);
           continue;
         }
         emitOne(main, lineNo, asmText);
       }
 
-      const totalDataBytes = dataAddr - dataBase;
+      const totalDataBytes = Math.max(0, dataAddr - dataBase);
       if (totalDataBytes > dataSize) {
         log(`⚠️ WARNING: Program data section (0x${totalDataBytes.toString(16)} / ${totalDataBytes} bytes) exceeds configured Linker Data Segment size (0x${dataSize.toString(16)} / ${dataSize} bytes)! On physical FPGA hardware with fixed block RAM, memory overflow or wrap-around will occur.`, 'warn');
       }
@@ -8018,10 +8025,10 @@ int main() {
       const selComp = document.getElementById('godboltCompilerSelect');
       const selOpt = document.getElementById('godboltOptSelect');
       const inputArch = document.getElementById('godboltArchFlags');
-      if (selComp) selComp.value = 'rv32-cgcc1420';
+      if (selComp) selComp.value = 'rv32-cclang2010';
       if (selOpt) selOpt.value = '-O0';
       if (inputArch) inputArch.value = '-march=rv32im -mabi=ilp32';
-      setStatus('Reset Godbolt compiler settings to default (GCC 14.2, -O0)', 'info');
+      setStatus('Reset Godbolt compiler settings to default (Clang 20.1, -O0)', 'info');
     }
 
     function loadExample(name) {
@@ -8652,10 +8659,10 @@ STACK_INIT:
         const compSelect = document.getElementById('godboltCompilerSelect');
         const optSelect = document.getElementById('godboltOptSelect');
         const archInput = document.getElementById('godboltArchFlags');
-        if (compSelect) compSelect.value = 'rv32-cgcc1420';
+        if (compSelect) compSelect.value = 'rv32-cclang2010';
         if (optSelect) optSelect.value = '-O0';
         if (archInput) archInput.value = '-march=rv32im -mabi=ilp32';
-        setStatus('Compiler settings reset to defaults', 'info');
+        setStatus('Compiler settings reset to defaults (Clang 20.1, -O0)', 'info');
       } else if (currentSettingsTab === 'linker') {
         baseAddress = DEFAULT_BASE;
         codeSize = 0x200;
@@ -9050,7 +9057,7 @@ STACK_INIT:
       const optSelect = document.getElementById('godboltOptSelect');
       const archInput = document.getElementById('godboltArchFlags');
 
-      const compilerId = compilerSelect ? compilerSelect.value : 'rv32-cgcc1420';
+      const compilerId = compilerSelect ? compilerSelect.value : 'rv32-cclang2010';
       const optLevel = optSelect ? optSelect.value : '-O0';
       const archFlags = archInput ? archInput.value : '-march=rv32im -mabi=ilp32';
 
@@ -9140,39 +9147,55 @@ STACK_INIT:
       // Calculate effective stack pointer: if data symbols or arrays extend beyond stackBase,
       // dynamically elevate stack pointer so the stack frame never collides with global/static data.
       let estimatedDataBytes = 0;
-      let inDataSection = false;
+      let currentSection = 'text';
       for (const item of (godboltData.asm || [])) {
         const t = (item.text || '').trim();
-        if (t.startsWith('.data') || t.startsWith('.rodata') || t.startsWith('.bss') || t.startsWith('.sdata') || t.startsWith('.sbss')) {
-          inDataSection = true;
-        } else if (t.startsWith('.text')) {
-          inDataSection = false;
-        } else if (inDataSection) {
-          if (t.startsWith('.zero') || t.startsWith('.space')) {
-            const n = parseInt(t.replace(/^\.\w+\s*/, ''), 10) || 0;
+        if (!t || t.startsWith('#') || t.startsWith('//')) continue;
+        const toks = t.split(/\s+/);
+        const first = toks[0];
+        const mn = first.toLowerCase();
+        if (mn === '.text') { currentSection = 'text'; continue; }
+        if (mn === '.data' || mn === '.rodata' || mn === '.bss' || mn === '.sdata' || mn === '.sbss' || mn === '.tdata' || mn === '.tbss') {
+          currentSection = 'data';
+          continue;
+        }
+        if (mn === '.section') {
+          const raw = String(toks[1] || '').split(',')[0].replace(/["']/g, '').replace(/^\./, '').trim().toLowerCase();
+          if (raw === 'text' || raw.startsWith('text')) currentSection = 'text';
+          else if (raw === 'data' || raw === 'bss' || raw === 'rodata' || raw === 'sdata' || raw === 'sbss' || raw === 'tdata' || raw === 'tbss' ||
+                   raw.startsWith('rodata') || raw.startsWith('data') || raw.startsWith('bss') || raw.startsWith('sdata') || raw.startsWith('sbss')) currentSection = 'data';
+          else currentSection = 'ignore';
+          continue;
+        }
+        if (currentSection === 'data') {
+          if (mn === '.zero' || mn === '.space') {
+            const n = parseInt(toks[1] || '0', 10) || 0;
             estimatedDataBytes += n;
-          } else if (t.startsWith('.byte')) {
-            const count = t.slice(5).split(',').length;
+          } else if (mn === '.byte') {
+            const count = t.slice(first.length).split(',').filter(s => s.trim().length > 0).length;
             estimatedDataBytes += count;
-          } else if (t.startsWith('.half')) {
-            const count = t.slice(5).split(',').length;
+          } else if (mn === '.half' || mn === '.2byte' || mn === '.short') {
+            const count = t.slice(first.length).split(',').filter(s => s.trim().length > 0).length;
             estimatedDataBytes += count * 2;
-          } else if (t.startsWith('.word')) {
-            const count = t.slice(5).split(',').length;
+          } else if (mn === '.word' || mn === '.4byte' || mn === '.int' || mn === '.long') {
+            const count = t.slice(first.length).split(',').filter(s => s.trim().length > 0).length;
             estimatedDataBytes += count * 4;
-          } else if (t.startsWith('.ascii') || t.startsWith('.asciz') || t.startsWith('.asciiz') || t.startsWith('.string')) {
+          } else if (mn === '.dword' || mn === '.8byte' || mn === '.quad') {
+            const count = t.slice(first.length).split(',').filter(s => s.trim().length > 0).length;
+            estimatedDataBytes += count * 8;
+          } else if (mn === '.ascii' || mn === '.asciz' || mn === '.asciiz' || mn === '.string') {
             const qIdx = t.search(/["']/);
             const strContent = (qIdx >= 0) ? t.slice(qIdx) : '';
-            estimatedDataBytes += parseStringLiteral(strContent).length + (t.startsWith('.ascii') ? 0 : 1);
+            estimatedDataBytes += parseStringLiteral(strContent).length + (mn === '.ascii' ? 0 : 1);
           }
         }
       }
 
       let effectiveStack = stackBase >>> 0;
       const dataEnd = (dataBase + estimatedDataBytes) >>> 0;
-      if (dataEnd >= effectiveStack - 0x200) {
-        effectiveStack = Math.max(effectiveStack, 0x80000, ((dataEnd + 0x4000 + 0xFFF) & ~0xFFF) >>> 0);
-        log(`⚠️ WARNING: Large C data section (0x${estimatedDataBytes.toString(16)} / ${estimatedDataBytes} bytes) exceeds configured segment layout (stackBase: 0x${stackBase.toString(16)}). Dynamically adjusting startup stack pointer to 0x${effectiveStack.toString(16)}. ⚠️ CAUTION: On physical FPGA hardware with fixed data RAM, this size may exceed physical RAM boundaries!`, 'warn');
+      if (dataEnd > effectiveStack || estimatedDataBytes > dataSize) {
+        effectiveStack = Math.max(effectiveStack, ((dataEnd + 0x2000 + 0xFFF) & ~0xFFF) >>> 0);
+        log(`⚠️ WARNING: Large C data section (0x${estimatedDataBytes.toString(16)} / ${estimatedDataBytes} bytes) exceeds configured Linker Data Segment size (0x${dataSize.toString(16)} / ${dataSize} bytes). Dynamically adjusting startup stack pointer to 0x${effectiveStack.toString(16)}. ⚠️ CAUTION: On physical FPGA hardware with fixed data RAM, this size may exceed physical RAM boundaries!`, 'warn');
         setStatus(`⚠️ Warning: Large data section (${estimatedDataBytes} B) adjusted stack to 0x${effectiveStack.toString(16)} (Check FPGA RAM limits)`, 'warn');
       }
 

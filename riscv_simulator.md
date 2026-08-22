@@ -206,7 +206,7 @@ The simulator consolidates Compiler options, Memory layout / Linker settings, an
 | [ ⚡ Compiler ]  [ 🗺 Linker ]  [ ⏱ Simulator ]                                                   |
 +---------------------------------------------------------------------------------------------------+
 | ⚡ Compiler Tab:                                                                                  |
-|    - RISC-V 32-bit Compiler: [ GCC 14.2.0 (Stable) | GCC Trunk | Clang 20.1.0 | Clang Trunk ]     |
+|    - RISC-V 32-bit Compiler: [ Clang 20.1.0 (Stable, Default) | Clang Trunk | GCC 14.2.0 | GCC Trunk ]|
 |    - Optimization Level:     [ -O0 (Debug) | -O1 | -O2 | -Os | -O3 ]                              |
 |    - Architecture & ABI:     [ -march=rv32im -mabi=ilp32 ]                                        |
 +---------------------------------------------------------------------------------------------------+
