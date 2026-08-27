@@ -12,6 +12,7 @@ try {
 }
 
 const htmlContent = fs.readFileSync(path.resolve(__dirname, '../riscv_simulator.html'), 'utf8');
+const CM6_BUNDLE_SOURCE = fs.readFileSync(path.resolve(__dirname, 'cm6_bundle.min.js'), 'utf8');
 
 console.log('Creating JSDOM instance with scripts enabled...');
 
@@ -20,6 +21,13 @@ const dom = new JSDOM(htmlContent, {
   resources: 'usable',
   url: 'http://localhost:8080/riscv_simulator.html',
   beforeParse(window) {
+    // Pre-inject CodeMirror 6 so the app can boot even when the CDN is
+    // unreachable. jsdom cannot run the ESM CDN bundles, and the local
+    // fallback file cannot be fetched without a server, so load it directly.
+    window.addEventListener('DOMContentLoaded', () => {
+      try { window.eval(CM6_BUNDLE_SOURCE); } catch (e) { console.error('CM6 inject failed:', e.message); }
+    });
+
     window.requestAnimationFrame = window.requestAnimationFrame || function(cb) {
       return setTimeout(cb, 16);
     };
