@@ -1748,10 +1748,13 @@
       margin-top: 3px;
     }
 
-    /* Row group that holds two peripheral boxes side-by-side on the same row */
+    /* Row group that holds two peripheral boxes side-by-side on the same row.
+       The tracks wrap automatically: on wide docks the two boxes stay in a row
+       (as before), but in narrow panels (e.g. a 2×2-grid cell) they stack so the
+       7-segment display gets the full panel width and can scale up. */
     .periph-pair {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 10px;
       min-width: 0;
     }
@@ -2005,12 +2008,22 @@
       border-radius: 5px;
       padding: 8px 10px;
       overflow-x: auto;
+      width: 100%;
+      box-sizing: border-box;
+      min-width: 0;
     }
 
     .sevseg-digit {
-      width: 20px;
-      height: 36px;
-      flex-shrink: 0;
+      /* Digits scale to the available width (the SVG viewBox keeps the 22:40
+         ratio) instead of a fixed 20×36px, so the display fills its panel and
+         never needs horizontal scrolling — even in a narrow 2×2 grid cell.
+         A generous max keeps it from growing oversized in a wide dock. */
+      flex: 1 1 0;
+      min-width: 0;
+      width: auto;
+      height: auto;
+      max-width: 58px;
+      aspect-ratio: 22 / 40;
     }
 
     .sevseg-segment {
@@ -2305,7 +2318,7 @@
         overflow: visible;
       }
 
-      /* 2×2 grid collapses to a plain vertical accordion on small screens. */
+      /* 2×2 grid collapses to a plain vertical stack on small screens. */
       .panel-dock-row {
         display: flex;
         flex-direction: column;
@@ -2318,7 +2331,13 @@
         display: none;
       }
 
-      .tab-content {
+      /* Mobile tabbed view: exactly ONE panel is visible at a time — the chip
+         bar becomes a classic mutually-exclusive tab strip. All docked and
+         floating panels are hidden; the active one is shown. */
+      .tab-content,
+      .tab-content.panel-docked,
+      .tab-content.panel-floating {
+        display: none;
         max-height: 560px;
         overflow: hidden;
         padding: 0;
@@ -2327,8 +2346,8 @@
         box-sizing: border-box;
       }
 
-      .tab-content.panel-docked {
-        flex: 0 0 auto;
+      .tab-content.panel-mobile-active {
+        display: flex;
       }
 
       .tab-content.panel-floating {
@@ -2345,6 +2364,12 @@
 
       .tab-content.panel-floating > .panel-hdr {
         cursor: default;
+      }
+
+      /* In the tabbed mobile view the header's float/hide actions are not
+         needed — the chip strip is the navigation. */
+      .panel-hdr-btn {
+        display: none;
       }
 
       .panel-body {
@@ -6224,7 +6249,12 @@
       const rightPanel = document.querySelector('.right-panel');
       if (!splitter || !rightPanel) return;
       let dragging = false;
-      const clamp = (w) => Math.max(220, Math.min(w, (window.innerWidth || 1200) - 320));
+      // The editor needs a usable width even when the user drags the splitter
+      // far to the left. LEFT_MIN guarantees the code editor keeps enough room;
+      // the splitter (6px) is accounted for so the dock never pushes the editor
+      // out of view / creates blank space on the right.
+      const LEFT_MIN = 360;
+      const clamp = (w) => Math.max(220, Math.min(w, Math.max(360, (window.innerWidth || 1200) - LEFT_MIN - 6)));
 
       splitter.addEventListener('pointerdown', (e) => {
         dragging = true;
@@ -6244,9 +6274,18 @@
         dragging = false;
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
+        // Persist the clamped width (not a stale un-clamped value).
+        rightPanel.style.width = clamp(parseFloat(rightPanel.style.width) || 0) + 'px';
       };
       splitter.addEventListener('pointerup', stop);
       splitter.addEventListener('pointercancel', stop);
+      // If the window is resized after a drag, re-clamp so a very wide dock
+      // can never starve the editor or overflow the viewport (blank space).
+      window.addEventListener('resize', () => {
+        if (rightPanel.style.width) {
+          rightPanel.style.width = clamp(parseFloat(rightPanel.style.width) || 0) + 'px';
+        }
+      });
     }
 
     // ============================================================
@@ -6270,6 +6309,10 @@
     let panelDock = null;
     let floatDrag = null;
     let dockSavedWidth = null;
+    // In the tabbed mobile view (≤800px) exactly one panel is shown at a time;
+    // `mobileTab` tracks which one. It is ephemeral — it never changes the
+    // persisted desktop panel visibility/layout.
+    let mobileTab = null;
 
     function panelDockDefaults() {
       return {
@@ -6301,12 +6344,36 @@
     }
 
     // True when the 2×2 grid is active (more than two docked panels on a wide
-    // enough viewport). On ≤800px the mobile accordion fallback takes over.
+    // enough viewport). On ≤800px the mobile tabbed view takes over.
     function dockUsesTwoColumns() {
       if (!panelDock) return false;
       if ((window.innerWidth || 1200) <= 800) return false;
       const docked = panelDock.order.filter(n => panelDock[n].visible && !panelDock[n].floating);
       return docked.length > 2;
+    }
+
+    function mobileMode() {
+      return (window.innerWidth || 1200) <= 800;
+    }
+
+    // Pick a sensible default active tab for the mobile tabbed view: the first
+    // visible panel in dock order, falling back to the last used mobile tab if
+    // it is still visible, then to 'registers'.
+    function ensureMobileTab() {
+      if (!panelDock) return;
+      if (mobileTab && panelDock[mobileTab] && panelDock[mobileTab].visible) return;
+      const first = panelDock.order.find(n => panelDock[n] && panelDock[n].visible);
+      mobileTab = first || 'registers';
+    }
+
+    // Mobile chip clicks switch the single visible tab (mutually exclusive),
+    // exactly like the pre-v22 tab strip — without touching the persisted
+    // desktop panel visibility.
+    function setMobileTab(name) {
+      if (!panelDock || !panelDock[name]) return;
+      mobileTab = name;
+      applyPanelDock();
+      refreshPanel(name);
     }
 
     function currentDockWidth() {
@@ -6415,6 +6482,8 @@
       const dockedNames = panelDock.order.filter(n => panelDock[n].visible && !panelDock[n].floating);
       const floatingNames = panelDock.order.filter(n => panelDock[n].visible && panelDock[n].floating);
       const twoCols = dockUsesTwoColumns();
+      const mobile = mobileMode();
+      if (mobile) ensureMobileTab();
 
       // Reorder every panel node to match panelDock.order (direct children of
       // the stack in the single-column layout), then set docked/floating state.
@@ -6423,13 +6492,19 @@
         if (!el) return;
         stack.appendChild(el);
         const st = panelDock[name];
-        el.classList.remove('panel-docked', 'panel-floating', 'focused');
+        el.classList.remove('panel-docked', 'panel-floating', 'focused', 'panel-mobile-active');
         el.style.flex = '';
         el.style.left = el.style.top = el.style.width = el.style.height = '';
 
+        // In the tabbed mobile view only the active tab is displayed — even if
+        // its persisted desktop visibility is off (the tabbed view always shows
+        // exactly one panel; visibility is only re-persisted if the user taps a
+        // chip, which calls setPanelVisible(true)).
+        if (mobile && name === mobileTab) el.classList.add('panel-mobile-active');
+
         if (!st.visible) return;
 
-        if (st.floating) {
+        if (st.floating && !mobile) {
           el.classList.add('panel-floating');
           el.style.left = st.x + 'px';
           el.style.top = st.y + 'px';
@@ -6498,15 +6573,25 @@
 
       const emptyHint = stack.querySelector('.panel-stack-empty');
       if (emptyHint) stack.appendChild(emptyHint);
-      stack.classList.toggle('is-empty', dockedNames.length === 0);
+      // On desktop the empty hint shows when no docked panel is visible. In the
+      // tabbed mobile view a tab is ALWAYS shown (panel-mobile-active), so the
+      // "All panels are hidden" hint never applies there.
+      stack.classList.toggle('is-empty', !mobile && dockedNames.length === 0);
 
       // Toolbar chip + float-button state.
       PANEL_DEFS.forEach(({ name }) => {
         const st = panelDock[name];
         const chip = document.getElementById('panelChip-' + name);
         if (chip) {
-          chip.classList.toggle('active', st.visible);
-          chip.classList.toggle('floating', st.visible && st.floating);
+          if (mobile) {
+            // On mobile the chips behave like a classic tab strip: exactly one
+            // is active (the currently shown tab), never "floating".
+            chip.classList.toggle('active', name === mobileTab);
+            chip.classList.remove('floating');
+          } else {
+            chip.classList.toggle('active', st.visible);
+            chip.classList.toggle('floating', st.visible && st.floating);
+          }
         }
         const fb = panelEl(name) && panelEl(name).querySelector('[data-panel-act="float"]');
         if (fb) {
@@ -6698,7 +6783,17 @@
       ensurePanelChrome();
       PANEL_DEFS.forEach(({ name }) => {
         const chip = document.getElementById('panelChip-' + name);
-        if (chip) chip.addEventListener('click', () => togglePanel(name));
+        if (chip) chip.addEventListener('click', () => {
+          if (mobileMode()) {
+            // Mobile tabs behave like the classic tab strip: tapping a tab
+            // shows that panel (even if it is currently hidden), and exactly
+            // one panel is displayed at a time.
+            if (!panelDock[name].visible) setPanelVisible(name, true);
+            setMobileTab(name);
+          } else {
+            togglePanel(name);
+          }
+        });
       });
       applyPanelDock();
       panelDock.order.forEach(name => { if (isPanelVisible(name)) refreshPanel(name); });
@@ -6711,6 +6806,11 @@
         if (moved) savePanelDock();
         // Keep the 2×2 grid width in sync when the viewport size changes.
         if (dockUsesTwoColumns() || dockSavedWidth !== null) updateDockWidthForGrid();
+        // Re-apply when crossing the mobile/desktop breakpoint so the layout
+        // switches between the tabbed mobile view and the dock/grid view.
+        if (mobileMode() || (panelDock && panelDock.order.some(n => panelDock[n].visible))) {
+          applyPanelDock();
+        }
       });
     }
 
@@ -8535,9 +8635,11 @@ function updateRegisters() {
 
     // Backward-compatible alias. Panels are now independent (not exclusive tabs);
     // callers of switchTab() expect the named panel to end up shown, so ensure it
-    // is visible and refreshed rather than toggling it.
+    // is visible and refreshed rather than toggling it. On mobile (≤800px) the
+    // tabbed view is active, so it also switches the visible tab.
     function switchTab(tab) {
       if (panelDock && panelDock[tab]) {
+        if (mobileMode()) setMobileTab(tab);
         if (!panelDock[tab].visible) setPanelVisible(tab, true);
         else refreshPanel(tab);
       }

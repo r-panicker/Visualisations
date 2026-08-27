@@ -241,9 +241,91 @@ setTimeout(() => {
     check('Row splitters hidden on mobile (display:none via CSS)', vSplM.length === 3);
     const vSplMComputed = vSplM[0] && vSplM[0].className.includes('panel-vsplitter');
     check('Row splitter present for the vertical stack on mobile', vSplMComputed);
-    // Panels should be direct children (accordion fallback)
+    // Panels should be direct children (mobile tabbed stack)
     const stackM = Array.from(stack.children).filter(c => c.id && c.id.startsWith('tab-'));
     check('4 panels are direct stack children on mobile', stackM.length === 4);
+
+    // --- 9. Mobile tabbed view: exactly one panel visible at a time ---
+    console.log('\n[9] Mobile tabbed view (≤800px) → single mutually-exclusive panel');
+    // After step [8] all 4 panels are still visible (setPanelVisible=true from
+    // earlier steps); the mobile view must show exactly ONE via panel-mobile-active.
+    const mobActive = Array.from(stack.querySelectorAll('.tab-content.panel-mobile-active'));
+    check('Exactly one panel has .panel-mobile-active on mobile', mobActive.length === 1);
+    const chipActive = Array.from(doc.querySelectorAll('.tab-bar button.active'));
+    check('Exactly one chip is .active on mobile', chipActive.length === 1);
+    check('Active mobile chip matches the visible panel', mobActive[0] && chipActive[0] && mobActive[0].id === 'tab-' + chipActive[0].id.replace('panelChip-', ''));
+
+    // Switching mobile tab does NOT touch persisted desktop visibility.
+    const beforeSwitch = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    win.setMobileTab('peripherals');
+    const mobActive2 = Array.from(stack.querySelectorAll('.tab-content.panel-mobile-active'));
+    check('Mobile tab switches to peripherals', mobActive2.length === 1 && mobActive2[0].id === 'tab-peripherals');
+    const afterSwitch = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    const visUnchanged = ['registers', 'memory', 'peripherals', 'disassembly'].every(n => afterSwitch[n].visible === beforeSwitch[n].visible);
+    check('Mobile tab switching leaves persisted desktop visibility untouched', visUnchanged);
+
+    // Going back to a wide viewport restores the 2×2 grid (all visible).
+    win.innerWidth = 1400;
+    win.applyPanelDock();
+    const rowsBack = stack.querySelectorAll('.panel-dock-row');
+    check('Wide viewport restores the 2×2 grid', rowsBack.length === 2);
+    check('No .panel-mobile-active leftover on desktop', stack.querySelectorAll('.panel-mobile-active').length === 0);
+
+    // --- 9b. All panels hidden + mobile → the tabbed view still shows a tab ---
+    console.log('\n[9b] All panels hidden on mobile → tabbed view shows exactly one');
+    // Hide every panel (persists an all-hidden desktop layout).
+    ['registers', 'memory', 'peripherals', 'disassembly'].forEach(n => win.setPanelVisible(n, false));
+    const hiddenSaved = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    check('All four panels are hidden (persisted)', ['registers', 'memory', 'peripherals', 'disassembly'].every(n => !hiddenSaved[n].visible));
+    // Desktop with all hidden shows the empty hint.
+    check('Desktop all-hidden shows the empty hint', stack.classList.contains('is-empty'));
+    // Switch to mobile width: the active tab still renders, matching its chip.
+    win.innerWidth = 700;
+    win.applyPanelDock();
+    const mobActiveAllHidden = Array.from(stack.querySelectorAll('.tab-content.panel-mobile-active'));
+    check('Mobile all-hidden shows exactly one panel (registers fallback)', mobActiveAllHidden.length === 1 && mobActiveAllHidden[0].id === 'tab-registers');
+    const chipAllHidden = Array.from(doc.querySelectorAll('.tab-bar button.active'));
+    check('Mobile all-hidden active chip matches the shown panel', chipAllHidden.length === 1 && chipAllHidden[0].id === 'panelChip-registers');
+    check('Mobile all-hidden hides the empty hint (a tab is always shown)', !stack.classList.contains('is-empty'));
+    // Tapping a chip on mobile makes that panel persisted-visible again.
+    const chipMemory = doc.getElementById('panelChip-memory');
+    chipMemory.click();
+    const afterTap = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    check('Tapping a mobile chip persists that panel as visible', afterTap.memory.visible === true);
+    check('Tapping a mobile chip keeps others hidden (persisted)', afterTap.registers.visible === false && afterTap.peripherals.visible === false && afterTap.disassembly.visible === false);
+    const mobActiveAfterTap = Array.from(stack.querySelectorAll('.tab-content.panel-mobile-active'));
+    check('Tapping a mobile chip switches the shown tab', mobActiveAfterTap.length === 1 && mobActiveAfterTap[0].id === 'tab-memory');
+    // Returning to desktop keeps the (single visible) persisted layout.
+    win.innerWidth = 1400;
+    win.applyPanelDock();
+    const rowsBack2 = stack.querySelectorAll('.panel-dock-row');
+    check('Desktop after mobile tap keeps 1 visible panel (no grid)', rowsBack2.length === 0);
+    check('Desktop after mobile tap shows NO empty hint (memory is docked)', !stack.classList.contains('is-empty'));
+
+    // --- 10. Main splitter clamp keeps the editor usable (no blank space) ---
+    console.log('\n[10] Main splitter clamp prevents the editor being starved');
+    const rightPanel = doc.querySelector('.right-panel');
+    const splitterEl = doc.getElementById('mainSplitter');
+    // jsdom: innerWidth 1400 → max dock = 1400 - 360 - 6 = 1034px.
+    win.innerWidth = 1400;
+    if (!win.Element.prototype.setPointerCapture) {
+      win.Element.prototype.setPointerCapture = () => {};
+      win.Element.prototype.releasePointerCapture = () => {};
+    }
+    splitterEl.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 9, clientX: 900, bubbles: true }));
+    splitterEl.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 9, clientX: 50, bubbles: true }));
+    splitterEl.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 9, clientX: 50, bubbles: true }));
+    const clampedW = parseFloat(rightPanel.style.width);
+    check('Main splitter far-left drag clamps dock width (≤1034px at 1400px viewport)', Number.isFinite(clampedW) && clampedW <= 1034);
+    check('Main splitter clamp keeps the editor ≥360px', Number.isFinite(clampedW) && (1400 - clampedW) >= 360);
+    // Resize re-clamp: simulate shrinking the window after a wide drag.
+    rightPanel.style.width = '1280px'; // stale wide value
+    win.innerWidth = 1000;
+    win.dispatchEvent(new win.Event('resize'));
+    const reClamped = parseFloat(rightPanel.style.width);
+    check('Window resize re-clamps a stale wide dock width', Number.isFinite(reClamped) && reClamped <= 1000 - 360 - 6);
+    win.innerWidth = 1400;
+    win.dispatchEvent(new win.Event('resize'));
 
     console.log('\n===========================================================');
     if (failed === 0) {
