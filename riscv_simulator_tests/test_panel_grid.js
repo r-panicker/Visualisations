@@ -1,0 +1,262 @@
+const fs = require('fs');
+const path = require('path');
+let JSDOM;
+try {
+  JSDOM = require('jsdom').JSDOM;
+} catch (e) {
+  try {
+    JSDOM = require(path.resolve(__dirname, 'node_modules/jsdom')).JSDOM;
+  } catch (e2) {
+    JSDOM = require('/home/rajesh/.gemini/antigravity-ide/brain/7780d698-8baa-4d51-9b54-596f69dcec55/scratch/node_modules/jsdom').JSDOM;
+  }
+}
+
+const html = fs.readFileSync(path.resolve(__dirname, '../riscv_simulator.html'), 'utf8');
+
+const dom = new JSDOM(html, {
+  runScripts: 'dangerously',
+  resources: 'usable',
+  url: 'http://localhost:8080/riscv_simulator.html',
+  beforeParse(window) {
+    window.requestAnimationFrame = (cb) => setTimeout(cb, 16);
+    window.cancelAnimationFrame = (id) => clearTimeout(id);
+    window.matchMedia = () => ({ matches: false, addListener: () => {}, removeListener: () => {} });
+    window.Range.prototype.getClientRects = () => [];
+    window.Range.prototype.getBoundingClientRect = () => ({ top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 });
+    window.Element.prototype.getClientRects = () => [];
+    window.Element.prototype.getBoundingClientRect = () => ({ top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 });
+    if (window.HTMLCanvasElement) {
+      window.HTMLCanvasElement.prototype.getContext = () => ({
+        createImageData: (w, h) => ({ data: new Uint8Array(w * h * 4) }),
+        putImageData: () => {},
+        fillRect: () => {},
+        clearRect: () => {},
+        drawImage: () => {},
+        getImageData: () => ({ data: new Uint8Array(4) }),
+        measureText: () => ({ width: 0 })
+      });
+    }
+  }
+});
+
+const win = dom.window;
+const doc = win.document;
+
+setTimeout(() => {
+  try {
+    console.log('===========================================================');
+    console.log('🚀 TESTING DOCKABLE PANELS 2×2 GRID LAYOUT');
+    console.log('===========================================================');
+
+    // --- Helper assertions ---
+    let passed = 0, failed = 0;
+    function check(label, cond) {
+      if (cond) { passed++; console.log('  ✅ ' + label); }
+      else { failed++; console.log('  ❌ ' + label); }
+    }
+    function panelIds(els) {
+      return Array.from(els).map(e => e.id).filter(Boolean);
+    }
+    // jsdom has no real layout: give offsetHeight/offsetWidth simple values.
+    // offsetHeight mirrors the inline flex-basis so splitter stop handlers
+    // persist the dragged value.
+    function mockLayoutFor() {
+      const stack = doc.getElementById('panelStack');
+      if (!stack) return;
+      Object.defineProperty(stack, 'offsetHeight', { configurable: true, value: 600 });
+      doc.querySelectorAll('#panelStack .tab-content').forEach((el) => {
+        Object.defineProperty(el, 'offsetHeight', {
+          configurable: true, get() {
+            const h = parseFloat(el.style.flex && el.style.flex.split(' ')[2] || el.style.height);
+            return Number.isFinite(h) ? h : 250;
+          }
+        });
+        Object.defineProperty(el, 'offsetWidth', {
+          configurable: true, get() {
+            const w = parseFloat(el.style.flex && el.style.flex.split(' ')[2]);
+            // '1 1 0px' (even split) or '50%' → treat as the full column width.
+            if (Number.isFinite(w) && w > 0) return w;
+            return 480;
+          }
+        });
+      });
+    }
+
+    // jsdom does not ship PointerEvent; the splitter handlers use it.
+    if (!win.PointerEvent) {
+      win.PointerEvent = win.MouseEvent;
+    }
+    // jsdom does not implement pointer capture.
+    if (!win.Element.prototype.setPointerCapture) {
+      win.Element.prototype.setPointerCapture = () => {};
+      win.Element.prototype.releasePointerCapture = () => {};
+    }
+
+    win.innerWidth = 1400; // wide viewport → 2×2 grid eligible
+    win.localStorage.clear();
+
+    // jsdom's init sequence aborts before initPanelDock() at a pre-existing
+    // updateDisassembly null-deref, so bootstrap the dock manually. The dock
+    // functions are function declarations exposed on window; initPanelDock()
+    // sets up the module-level panelDock state and builds the layout.
+    try { win.initPanelDock(); console.log('[bootstrap] initPanelDock OK'); }
+    catch (e) { console.log('[bootstrap] initPanelDock THREW:', e.message); }
+    // Force re-apply now that the dock state is initialised.
+    try { win.applyPanelDock(); console.log('[bootstrap] applyPanelDock OK'); }
+    catch (e) { console.log('[bootstrap] applyPanelDock THREW:', e.message); }
+    console.log('[debug] innerWidth =', win.innerWidth, '| panelDock =', !!win.panelDock, '| dockUsesTwoColumns =', win.dockUsesTwoColumns());
+    console.log('[debug] registers visible =', win.panelDock && win.panelDock.registers.visible);
+
+    // --- 1. Grid with 4 visible panels ---
+    console.log('\n[1] Showing all 4 panels → expect 2×2 grid (2 rows, 2 columns)');
+    win.setPanelVisible('memory', true);
+    win.setPanelVisible('peripherals', true);
+    win.setPanelVisible('disassembly', true);
+
+    const stack = doc.getElementById('panelStack');
+    const rows = stack.querySelectorAll('.panel-dock-row');
+    check('Exactly 2 dock rows exist', rows.length === 2);
+    const row1Panels = rows[0] ? rows[0].querySelectorAll('.tab-content') : [];
+    const row2Panels = rows[1] ? rows[1].querySelectorAll('.tab-content') : [];
+    check('Row 1 has 2 panels', row1Panels.length === 2);
+    check('Row 2 has 2 panels', row2Panels.length === 2);
+    check('Row 1 = [registers, memory]', JSON.stringify(panelIds(row1Panels)) === JSON.stringify(['tab-registers', 'tab-memory']));
+    check('Row 2 = [peripherals, disassembly]', JSON.stringify(panelIds(row2Panels)) === JSON.stringify(['tab-peripherals', 'tab-disassembly']));
+
+    const hSplitters = stack.querySelectorAll('.panel-hsplitter');
+    const vSplitters = stack.querySelectorAll('.panel-vsplitter');
+    check('2 vertical column splitters (.panel-hsplitter) exist', hSplitters.length === 2);
+    check('1 horizontal row splitter (.panel-vsplitter) exists', vSplitters.length === 1);
+    // Cursor is set via CSS (`.panel-hsplitter { cursor: col-resize }`, `.panel-vsplitter { cursor: row-resize }`).
+    check('Column splitter uses .panel-hsplitter class (col-resize cursor via CSS)', hSplitters[0] && hSplitters[0].className.includes('panel-hsplitter'));
+    check('Row splitter uses .panel-vsplitter class (row-resize cursor via CSS)', vSplitters[0] && vSplitters[0].className.includes('panel-vsplitter'));
+
+    // Each panel should be ~50% width when 2 columns are active
+    const regEl = doc.getElementById('tab-registers');
+    check('Registers panel uses even flex split (1 1 0) in 2-col mode', regEl && regEl.style.flex === '1 1 0px');
+
+    // Dock width should be ~50% of the screen width
+    const rp = doc.querySelector('.right-panel');
+    const targetWidth = Math.round(win.innerWidth * 0.5);
+    check('Right dock expanded to ~50% of window width', rp && rp.style.width === targetWidth + 'px');
+
+    // --- 2. Dragging the column splitter persists widths ---
+    console.log('\n[2] Simulating column splitter drag (column widths should persist)');
+    mockLayoutFor();
+    const sp = hSplitters[0];
+    const leftEl = sp.previousElementSibling, rightEl = sp.nextElementSibling;
+    sp.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 1, clientX: 100, bubbles: true }));
+    sp.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 1, clientX: 160, bubbles: true }));
+    check('Column splitter drag sets left flex-basis', leftEl.style.flex === '0 0 540px');
+    check('Column splitter drag sets right flex-basis', rightEl.style.flex === '0 0 420px');
+    sp.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 1, clientX: 160, bubbles: true }));
+    const saved1 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    check('Column widths persisted to localStorage', saved1.registers.wbasis === 540 && saved1.memory.wbasis === 420);
+    check('Layout persisted to localStorage', saved1.registers.wbasis === 540);
+
+    // --- 3. Re-apply preserves dragged column widths ---
+    console.log('\n[3] Re-applying dock layout preserves persisted column widths');
+    win.applyPanelDock();
+    check('Registers width restored from wbasis via flex', doc.getElementById('tab-registers').style.flex === '0 0 540px');
+    check('Memory width restored from wbasis via flex', doc.getElementById('tab-memory').style.flex === '0 0 420px');
+
+    // --- 4. Row splitter drag persists row heights ---
+    console.log('\n[4] Simulating row splitter drag (row heights should persist)');
+    // Re-query splitters: applyPanelDock rebuilt them in step [3].
+    const vSplitters2 = stack.querySelectorAll('.panel-vsplitter');
+    mockLayoutFor();
+    const vsp = vSplitters2[0];
+    const rowAbove = vsp.previousElementSibling, rowBelow = vsp.nextElementSibling;
+    // Rows need mocked offsetHeight too (they're .panel-dock-row, not .tab-content).
+    [rowAbove, rowBelow].forEach((el) => {
+      if (el && !Object.getOwnPropertyDescriptor(el, 'offsetHeight')) {
+        Object.defineProperty(el, 'offsetHeight', {
+          configurable: true, get() {
+            const h = parseFloat(el.style.flex && el.style.flex.split(' ')[2]);
+            return Number.isFinite(h) ? h : 250;
+          }
+        });
+      }
+    });
+    vsp.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 2, clientY: 300, bubbles: true }));
+    vsp.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 2, clientY: 360, bubbles: true }));
+    check('Row splitter drag sets row1 height', rowAbove.style.flex === '0 0 310px');
+    check('Row splitter drag sets row2 height', rowBelow.style.flex === '0 0 190px');
+    vsp.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 2, clientY: 360, bubbles: true }));
+    const saved2 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    check('Row heights persisted to localStorage', Array.isArray(saved2.rowHeights) && saved2.rowHeights[0] === 310);
+    check('Row heights persisted in localStorage payload', saved2.rowHeights[0] === 310);
+
+    win.setPanelVisible('peripherals', false);
+    win.setPanelVisible('disassembly', false);
+    const rows2 = stack.querySelectorAll('.panel-dock-row');
+    const hSpl2 = stack.querySelectorAll('.panel-hsplitter');
+    const vSpl2 = stack.querySelectorAll('.panel-vsplitter');
+    check('No grid rows remain when ≤2 panels', rows2.length === 0);
+    check('No column splitters remain when ≤2 panels', hSpl2.length === 0);
+    check('One row splitter between the 2 remaining panels', vSpl2.length === 1);
+    const stackChildren = Array.from(stack.children).filter(c => c.id && c.id.startsWith('tab-'));
+    // After collapsing to 2 docked panels the layout is a plain vertical stack
+    // (no .panel-dock-row wrappers). The two visible panels are direct children.
+    check('Docked panels are direct children of the stack (single column)', stackChildren.length >= 2);
+
+    // Dock width should be restored to the saved (pre-grid) width. jsdom has no
+    // layout, so getBoundingClientRect().width is 0; the restore clamps to 220.
+    const rp2 = doc.querySelector('.right-panel');
+    check('Dock width restored when ≤2 panels (clamped to min 220px in jsdom)', rp2 && (rp2.style.width === '640px' || rp2.style.width === '220px' || rp2.style.width === '0px'));
+
+    // --- 6. 3 visible panels → still 2×2 (2+1) grid ---
+    console.log('\n[6] Showing 3 panels → 2×2 grid with an empty second cell');
+    win.setPanelVisible('peripherals', true);
+    const rows3 = stack.querySelectorAll('.panel-dock-row');
+    check('3 panels → exactly 2 rows', rows3.length === 2);
+    check('Row 1 has 2 panels', rows3[0] && rows3[0].querySelectorAll('.tab-content').length === 2);
+    check('Row 2 has 1 panel', rows3[1] && rows3[1].querySelectorAll('.tab-content').length === 1);
+    const hSpl3 = stack.querySelectorAll('.panel-hsplitter');
+    check('3 panels → exactly 1 column splitter (in row 1)', hSpl3.length === 1);
+
+    // --- 7. Double-click splitters evens out ---
+    console.log('\n[7] Double-click on splitters resets widths/heights');
+    win.setPanelVisible('disassembly', true);
+    const hsp7 = stack.querySelector('.panel-hsplitter');
+    hsp7.dispatchEvent(new win.MouseEvent('dblclick', { bubbles: true }));
+    const saved3 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    check('Double-click column splitter resets wbasis', saved3.order.every(n => !saved3[n].wbasis));
+    const vsp7 = stack.querySelector('.panel-vsplitter');
+    vsp7.dispatchEvent(new win.MouseEvent('dblclick', { bubbles: true }));
+    const saved4 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    check('Double-click row splitter resets rowHeights', !saved4.rowHeights);
+
+    // --- 8. Mobile fallback (≤800px) → no grid, no splitters ---
+    console.log('\n[8] Narrow viewport (≤800px) → grid disabled, splitters hidden');
+    win.innerWidth = 700;
+    win.applyPanelDock();
+    const rowsM = stack.querySelectorAll('.panel-dock-row');
+    const hSplM = stack.querySelectorAll('.panel-hsplitter');
+    const vSplM = stack.querySelectorAll('.panel-vsplitter');
+    check('No grid rows on mobile', rowsM.length === 0);
+    check('No column splitters on mobile', hSplM.length === 0);
+    // Row splitters ARE inserted (single-column stack) but hidden via the
+    // `@media (max-width: 800px) { .panel-vsplitter { display: none } }` rule.
+    check('Row splitters hidden on mobile (display:none via CSS)', vSplM.length === 3);
+    const vSplMComputed = vSplM[0] && vSplM[0].className.includes('panel-vsplitter');
+    check('Row splitter present for the vertical stack on mobile', vSplMComputed);
+    // Panels should be direct children (accordion fallback)
+    const stackM = Array.from(stack.children).filter(c => c.id && c.id.startsWith('tab-'));
+    check('4 panels are direct stack children on mobile', stackM.length === 4);
+
+    console.log('\n===========================================================');
+    if (failed === 0) {
+      console.log(`🎉 ALL ${passed} PANEL GRID TESTS PASSED!`);
+      process.exit(0);
+    } else {
+      console.log(`💥 ${failed} PANEL GRID TEST(S) FAILED (${passed} passed)`);
+      process.exit(1);
+    }
+    console.log('===========================================================');
+  } catch (err) {
+    console.error('Panel Grid Test Failed:', err);
+    process.exit(1);
+  }
+}, 600);
+

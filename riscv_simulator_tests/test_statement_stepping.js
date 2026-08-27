@@ -89,8 +89,8 @@ setTimeout(() => {
     const pcBeforeStepBack = win.pc;
     win.stepBack();
     console.log(`After Step Back: Reverted to PC: 0x${win.pc.toString(16)}`);
-    if (win.pc !== 0x10000) {
-      throw new Error(`Expected PC to revert to 0x10000, got 0x${win.pc.toString(16)}`);
+    if (win.pc !== 0x400000) {
+      throw new Error(`Expected PC to revert to 0x400000, got 0x${win.pc.toString(16)}`);
     }
     console.log('✅ Step Back flawlessly reversed the multi-instruction statement step!');
 

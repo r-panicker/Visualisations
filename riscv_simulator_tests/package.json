@@ -1,13 +1,18 @@
 {
-  "name": "riscv-simulator-v2-tests",
-  "version": "2.0.0",
-  "description": "CodeMirror 6 test suites and generator for RISC-V Simulator v2",
+  "name": "riscv-simulator-tests",
+  "version": "2.1.0",
+  "description": "Comprehensive test suites and build utilities for RISC-V Simulator",
   "scripts": {
     "test": "node test_comprehensive_suite.js",
     "test:c": "node test_c_godbolt_simulation.js",
     "test:new_c": "node test_new_c_simulation.js",
-    "debug:circle": "node debug_circle.js",
-    "test:all": "node test_tab_and_autocomplete.js && node test_breakpoint_highlight_and_snap.js && node test_jsdom.js && node test_all_instructions_v2.js && node test_execution_programs.js && node test_comprehensive_suite.js && node test_c_godbolt_simulation.js && node test_reset_and_image_display.js",
+    "test:baked": "node test_baked_examples_full.js",
+    "test:stepping": "node test_statement_stepping.js",
+    "test:settings": "node test_sim_max_instructions_setting.js",
+    "test:disasm": "node test_disassembly_labels_and_warnings.js",
+    "test:reset": "node test_reset_and_image_display.js",
+    "test:grid": "node test_panel_grid.js",
+    "test:all": "node test_tab_and_autocomplete.js && node test_breakpoint_highlight_and_snap.js && node test_jsdom.js && node test_all_instructions_v2.js && node test_execution_programs.js && node test_comprehensive_suite.js && node test_panel_grid.js && node test_c_godbolt_simulation.js && node test_new_c_simulation.js && node test_baked_examples_full.js && node test_statement_stepping.js && node test_sim_max_instructions_setting.js && node test_disassembly_labels_and_warnings.js && node test_reset_and_image_display.js",
     "build": "node generate_v2.js"
   },
   "dependencies": {

@@ -179,9 +179,9 @@ setTimeout(() => {
     // 9. Memory View Code Segment Read-Only & Data/Stack/MMIO Editable
     console.log('\n[9] Testing Memory View Code Segment Read-Only & Data/Stack/MMIO Editable...');
     const doc = win.document;
-    doc.getElementById('memAddr').value = '0x00010000';
+    doc.getElementById('memAddr').value = '0x00400000';
     win.memGo('code');
-    const codeSpan = doc.getElementById('memView').querySelector(`[data-addr="${0x10000}"]`);
+    const codeSpan = doc.getElementById('memView').querySelector(`[data-addr="${0x00400000}"]`);
     if (!codeSpan) throw new Error('Could not find code segment memory span');
     if (codeSpan.getAttribute('contenteditable') === 'true') {
       throw new Error('Code segment memory span should NOT be contenteditable');
@@ -192,9 +192,9 @@ setTimeout(() => {
     console.log('Code segment read-only check passed:', codeSpan.getAttribute('contenteditable') === null || codeSpan.getAttribute('contenteditable') === 'false');
 
     // Check Data segment is editable
-    doc.getElementById('memAddr').value = '0x00020000';
+    doc.getElementById('memAddr').value = '0x10010000';
     win.memGo('data');
-    const dataSpan = doc.getElementById('memView').querySelector(`[data-addr="${0x20000}"]`);
+    const dataSpan = doc.getElementById('memView').querySelector(`[data-addr="${0x10010000}"]`);
     if (!dataSpan) throw new Error('Could not find data segment memory span');
     if (dataSpan.getAttribute('contenteditable') !== 'true') {
       throw new Error('Data segment memory span MUST be contenteditable="true"');
@@ -202,7 +202,7 @@ setTimeout(() => {
     console.log('Data segment editable check passed (contenteditable="true")');
 
     // Check code segment edit prevention functions
-    win.editMemByte(0x10000);
+    win.editMemByte(0x00400000);
     const statusText = doc.getElementById('statusBar').textContent;
     if (!statusText.includes('read-only')) {
       throw new Error('editMemByte on code segment did not set read-only status warning');

@@ -50,57 +50,57 @@ const doc = win.document;
 setTimeout(() => {
   try {
     // 1. Verify DOM element exists
-    const maxInstrInput = doc.getElementById('simMaxInstrPerCycle');
-    if (!maxInstrInput) throw new Error('simMaxInstrPerCycle input not found in DOM');
-    console.log('✅ Found #simMaxInstrPerCycle element in DOM');
+    const maxInstrInput = doc.getElementById('simMaxInstrPerRun');
+    if (!maxInstrInput) throw new Error('simMaxInstrPerRun input not found in DOM');
+    console.log('✅ Found #simMaxInstrPerRun element in DOM');
 
     // 2. Verify initial default value
-    if (parseInt(maxInstrInput.value, 10) !== 100000) {
-      throw new Error(`Expected default HTML value 100000, got ${maxInstrInput.value}`);
+    if (parseInt(maxInstrInput.value, 10) !== 100000000) {
+      throw new Error(`Expected default HTML value 100000000, got ${maxInstrInput.value}`);
     }
-    if (win.maxInstructionsPerCycle !== 100000) {
-      throw new Error(`Expected default window.maxInstructionsPerCycle 100000, got ${win.maxInstructionsPerCycle}`);
+    if (win.maxInstructionsPerRun !== 100000000) {
+      throw new Error(`Expected default window.maxInstructionsPerRun 100000000, got ${win.maxInstructionsPerRun}`);
     }
-    console.log('✅ Default maxInstructionsPerCycle is 100,000');
+    console.log('✅ Default maxInstructionsPerRun is 100,000,000');
 
     // 3. Open settings modal on simulator tab
     win.openSettingsModal('simulator');
     if (doc.getElementById('settingsContent-simulator').style.display === 'none') {
       throw new Error('Simulator settings tab should be visible');
     }
-    if (parseInt(maxInstrInput.value, 10) !== 100000) {
-      throw new Error(`Expected buildCyclesPanel to set input value to 100000, got ${maxInstrInput.value}`);
+    if (parseInt(maxInstrInput.value, 10) !== 100000000) {
+      throw new Error(`Expected buildCyclesPanel to set input value to 100000000, got ${maxInstrInput.value}`);
     }
     console.log('✅ openSettingsModal("simulator") properly synchronizes field value');
 
     // 4. Update the input value and apply settings
-    maxInstrInput.value = '50000';
+    maxInstrInput.value = '50000000';
     win.applyAndCloseSettings();
-    if (win.maxInstructionsPerCycle !== 50000) {
-      throw new Error(`Expected maxInstructionsPerCycle to update to 50000, got ${win.maxInstructionsPerCycle}`);
+    if (win.maxInstructionsPerRun !== 50000000) {
+      throw new Error(`Expected maxInstructionsPerRun to update to 50000000, got ${win.maxInstructionsPerRun}`);
     }
-    console.log('✅ applyAndCloseSettings() successfully updated maxInstructionsPerCycle to 50,000');
+    console.log('✅ applyAndCloseSettings() successfully updated maxInstructionsPerRun to 50,000,000');
 
     // 5. Re-open modal and verify the updated value is populated
     win.openSettingsModal('simulator');
-    if (parseInt(maxInstrInput.value, 10) !== 50000) {
-      throw new Error(`Expected reopened modal to show 50000, got ${maxInstrInput.value}`);
+    if (parseInt(maxInstrInput.value, 10) !== 50000000) {
+      throw new Error(`Expected reopened modal to show 50000000, got ${maxInstrInput.value}`);
     }
-    console.log('✅ Re-opening modal retains updated value 50,000');
+    console.log('✅ Re-opening modal retains updated value 50,000,000');
 
     // 6. Test Reset Defaults
     win.switchSettingsTab('simulator');
     win.resetCurrentSettingsTab();
-    if (win.maxInstructionsPerCycle !== 100000) {
-      throw new Error(`Expected resetCurrentSettingsTab to restore 100000, got ${win.maxInstructionsPerCycle}`);
+    if (win.maxInstructionsPerRun !== 100000000) {
+      throw new Error(`Expected resetCurrentSettingsTab to restore 100000000, got ${win.maxInstructionsPerRun}`);
     }
-    if (parseInt(maxInstrInput.value, 10) !== 100000) {
-      throw new Error(`Expected resetCurrentSettingsTab to update input to 100000, got ${maxInstrInput.value}`);
+    if (parseInt(maxInstrInput.value, 10) !== 100000000) {
+      throw new Error(`Expected resetCurrentSettingsTab to update input to 100000000, got ${maxInstrInput.value}`);
     }
-    console.log('✅ resetCurrentSettingsTab() successfully reverted maxInstructionsPerCycle to 100,000');
+    console.log('✅ resetCurrentSettingsTab() successfully reverted maxInstructionsPerRun to 100,000,000');
 
-    // 7. Test running a program with custom chunk size
-    win.maxInstructionsPerCycle = 25000;
+    // 7. Test running a program with custom limit
+    win.maxInstructionsPerRun = 25000;
     win.setLanguageMode('asm');
     win.loadExample('basic');
     win.assembleOnly();

@@ -16,7 +16,7 @@ A self-contained, offline-capable **RISC-V RV32GC** assembler, C compiler front-
 | **Execution** | Non-blocking `requestAnimationFrame` loop, fixed `BATCH_SIZE = 10,000` instr/tick. Configurable run limit (`simMaxInstrPerRun`, default 100,000,000) auto-pauses infinite loops. Cycle-accurate CPI timing by instruction category. |
 | **Debugging** | Run / Pause / Resume, Step, Step Back (full register+memory history), optional **Statement Stepping** (one C statement / multi-instr pseudo-op per step). Breakpoint gutter with smart snapping to the next valid instruction; highlighted breakpoint line numbers; active execution line tracking with auto-scroll. |
 | **Memory view** | Tabbed `[ Code | Data | Stack | MMIO ]`. Code segment read-only; Data/Stack/MMIO editable. Stack shown in downward-decreasing address order. Little-endian word display. Code/data segment overflow warnings. Verilog `.mem` dumps (`AA_IROM.mem`, `AA_DMEM.mem`). |
-| **Panel layout** | Registers / Memory / Peripherals / Disassembly are independent (not exclusive tabs): show any combination, stack them vertically with drag-resize splitters, or detach any panel into a draggable, resizable floating window. Layout persists to `localStorage`. |
+| **Panel layout** | Registers / Memory / Peripherals / Disassembly are independent (not exclusive tabs): show any combination; ≤2 docked panels stack vertically, >2 form a **2×2 grid** (dock expands to half the window width) with draggable row/column splitters; detach any panel into a draggable, resizable floating window. Layout persists to `localStorage`. |
 | **Settings** | One `⚙ Settings…` modal, 3 tabs: **Compiler** (toolchain, `-O`, march/mabi), **Linker** (segment bases/sizes, stack top, MMIO base — SPIM-style defaults), **Simulator** (statement stepping, run limit, per-category CPI). |
 
 ---
@@ -85,6 +85,8 @@ Node-based harness in [`riscv_simulator_tests/`](file:///home/rajesh/GitHub/Visu
 ---
 
 ## Current version
+
+**v23.0** — 2×2 docking grid: when more than two inspector panels are docked they arrange in a 2×2 grid (2 rows × 2 columns) and the dock expands to half the window width; draggable column (`.panel-hsplitter`) and row (`.panel-vsplitter`) separators resize the grid, with row heights and column widths persisted.
 
 **v22.0** — Dockable/detachable inspector panels: Registers, Memory, Peripherals, and Disassembly are no longer mutually-exclusive tabs; they can be stacked in the side column or torn off into floating windows, with layout persisted to `localStorage`.
 

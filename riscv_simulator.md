@@ -126,22 +126,30 @@ The four right-side inspector views — **Registers**, **Memory**, **Peripherals
 +---------------------------------------------------+
 | ● Registers   ● Memory   ○ Peripherals  ⟳ Disasm  |   <- toolbar chips (● shown, ⟳ = detached)
 +---------------------------------------------------+
-| REGISTERS                              ⧉   ✕      |
-|  x0  zero  0x00000000  ...                        |
-| ======= drag to resize (dbl-click evens) ======= |
-| MEMORY                                 ⧉   ✕      |
-|  [ Code | Data | Stack | MMIO ] ...               |
-+---------------------------------------------------+
-        +--------------------------------------+
-        | DISASSEMBLY (floating)      ▣    ✕   |  <- draggable by header,
-        |  0x00400000  ...                    |     resizable from any edge
-        +--------------------------------------+
+| With ≤2 docked panels:                           |
+|  REGISTERS                              ⧉   ✕    |
+|  ============== drag to resize ================= |
+|  MEMORY                                 ⧉   ✕    |
+|                                                   |
+| With >2 docked panels (2×2 grid):                |
+| +----------------------------+  +--------------+ |
+| | REGISTERS          ⧉   ✕  |  | MEMORY  ⧉  ✕ | |
+| | ...                       |  | ...          | |
+| | ========== drag ==========|  |===== drag ====| |
+| | PERIPHERALS        ⧉   ✕  |  | DISASM  ⧉  ✕ | |
+| | ...                       |  | ...          | |
+| +----------------------------+  +--------------+ |
+|         +--------------------------------------+
+|         | DISASSEMBLY (floating)      ▣    ✕   |  <- draggable by header,
+|         |  0x00400000  ...                    |     resizable from any edge
+|         +--------------------------------------+
 ```
 
 - **Toolbar chips (`#panelChip-*`)**: Clicking a chip shows or hides that panel. A filled mauve dot marks a visible panel; a blue haloed dot marks one that is currently detached/floating.
-- **Docked stack (`.panel-stack`)**: Visible non-floating panels stack vertically in the right column, each with an injected header bar (`.panel-hdr`) carrying a title, a **⧉ float / ▣ dock** toggle, and a **✕ hide** button. A `.panel-vsplitter` between adjacent docked panels drags to redistribute height (double-click resets to an even split).
+- **Docked stack (`.panel-stack`)**: Visible non-floating panels arrange in the right column. With **≤2 docked panels** they stack vertically, each with an injected header bar (`.panel-hdr`) carrying a title, a **⧉ float / ▣ dock** toggle, and a **✕ hide** button. A `.panel-vsplitter` between adjacent docked panels drags to redistribute height (double-click resets to an even split).
+- **2×2 grid layout**: With **>2 docked panels** the panels automatically arrange as a **2×2 grid** (2 rows × 2 columns) — row 1 holds the first ⌈n/2⌉ panels, row 2 the rest. The dock expands to **50% of the window width** so each panel is about a quarter of the screen, and returns to the user's previous width when fewer panels are shown. A draggable **`.panel-hsplitter`** resizes the two columns, while the **`.panel-vsplitter`** resizes the two rows (double-click either to even out). Per-row heights and per-panel column widths persist.
 - **Floating panels (`.tab-content.panel-floating`)**: `position: fixed`, dragged by their header, resized natively from any edge (`resize: both`). They render above the editor but below the Settings modal, and stay clamped inside the viewport on window resize.
-- **Persistence**: Which panels are shown, their order, per-panel docked heights, and floating positions/sizes are saved to `localStorage` under `rvsim.panelDock.v1` and restored on reload. Defaults to Registers-only, docked (unchanged first-run layout).
+- **Persistence**: Which panels are shown, their order, docked row heights, per-panel column widths, and floating positions/sizes are saved to `localStorage` under `rvsim.panelDock.v1` and restored on reload. Defaults to Registers-only, docked (unchanged first-run layout).
 - **Live updates**: All four panels keep refreshing (`updateRegisters`, `updateMemoryView`, `updateDisassembly`, `updatePeripherals`) on every step/run/reset regardless of visibility, so any combination of open panels stays current. Disassembly auto-scroll to the current-PC row fires whenever that panel is visible in either mode.
 - **Compatibility**: The legacy `switchTab(name)` entry point still exists and now means "ensure this panel is visible and refreshed".
 - **Mobile (`≤ 800px`)**: Detaching is neutralised — panels render inline as a stacked accordion with per-panel scroll; splitters are hidden.
@@ -488,4 +496,5 @@ The simulator includes an automated test harness located in [`riscv_simulator_te
 | **v20.0 (Run Limit Fix, SPIM-Style Memory Layout & UART Console Polish)** | Fixed **Max Instructions Per Run** to correctly pause execution after the configured total instruction count (previously only controlled per-tick batch size); now uses a fixed internal `BATCH_SIZE=10,000` per JS event-loop tick for UI responsiveness. Default raised to **100,000,000**. Updated default memory layout to **SPIM-style** addresses: `.text` base `0x00400000`, `.data` base `0x10010000`, MMIO base `0xFFFF0000`; fixed a `pc >= memory.length` bounds check that immediately stopped execution at the new `.text` base — replaced with `pc >= mmioBase`. **UART Console**: simplified input-mode dropdown to **ASCII / Hex**; text input grows to fill remaining width; placeholder updates dynamically — ASCII shows `ASCII text incl. extended — \r, \n, …`, Hex shows `Comma-separated hex bytes — 0x48, 0x69, 0x0D, …`. Increased push-button gap from 4 px to 10 px. **Assembler**: confirmed no implicit alignment padding is inserted between byte-oriented directives (`.asciz`, `.byte`) and subsequent labels — addresses advance by exactly the directive's byte count, matching GAS/RARS behaviour. |
 | **v21.0 (Clang Stable Compiler Default & Dual Segment Boundary Overflow Warnings)** | Set **RISC-V Clang 20.1.0 (Stable)** (`rv32-cclang2010`) as the default C compiler across UI selection, settings resets, and compiler fallback resolution. Fixed C data segment byte sizing to accurately categorize `.data`, `.rodata`, `.bss`, `.sdata`, `.sbss`, `.tdata`, `.tbss` while strictly ignoring debug info sections (`.debug_*`, `.comment`, `.note*`). Fixed false-positive overflow warnings and premature stack adjustments on small C programs. Added **Code Segment Overflow Warning** in `assemble()` when assembled instructions exceed configured `codeSize` (`0x200` / 512 B), triggering for `Circle & Accel` and `Image Display & Accel` at `-O0`. Eliminated duplicate data section warnings in C mode. |
 | **v22.0 (Dockable & Detachable Inspector Panels)** | Replaced the mutually-exclusive right-side tab strip with **independently toggled panels**: Registers, Memory, Peripherals, and Disassembly can now be shown at the same time, **stacked vertically** in a resizable `.panel-stack` (drag the `.panel-vsplitter` between panels; double-click to even out), or **detached** into `position: fixed` floating windows that drag by their header bar and resize from any edge. Toolbar buttons became **toggle chips** with visible/floating status dots; each panel gained an injected header (`.panel-hdr`) with **⧉ float / ▣ dock** and **✕ hide** controls. Layout (shown set, order, docked heights, floating rects) persists to `localStorage` (`rvsim.panelDock.v1`); first-run layout is unchanged (Registers only). All panels refresh regardless of visibility; disassembly current-PC auto-scroll now fires in both docked and floating modes. Legacy `switchTab(name)` retained as an "ensure visible" alias. Detaching is disabled on `≤ 800px` viewports (inline accordion fallback). |
+| **v23.0 (2×2 Docking Grid & Draggable Column Splitters)** | When **more than two panels are docked**, the right-side inspector now arranges them in a **2×2 grid** (2 rows × 2 columns) instead of a 4×1 stack. The dock expands to **50% of the window width** (each panel ≈ ¼ screen) and returns to the previous width when ≤2 panels are shown. Added draggable **`.panel-hsplitter`** column separators (vertical, `col-resize`) alongside the existing `.panel-vsplitter` row separators; both drag to resize and double-click to even out. Per-row heights (`panelDock.rowHeights`) and per-panel column widths (`wbasis`) persist to `localStorage`. The 3-panel case renders as 2+1 (row 1 two columns, row 2 one panel). |
 

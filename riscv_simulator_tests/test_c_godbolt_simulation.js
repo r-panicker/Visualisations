@@ -363,22 +363,22 @@ setTimeout(async () => {
     if (!win.document.getElementById('memTabBtn-data').classList.contains('active')) {
       throw new Error('Data memory sub-tab not marked active');
     }
-    if (win.document.getElementById('memAddr').value !== '0x20000') {
-      throw new Error('Data memory address not set to 0x20000');
+    if (win.document.getElementById('memAddr').value !== '0x10010000') {
+      throw new Error('Data memory address not set to 0x10010000');
     }
 
     win.memGo('stack');
     if (!win.document.getElementById('memTabBtn-stack').classList.contains('active')) {
       throw new Error('Stack memory sub-tab not marked active');
     }
-    if (win.document.getElementById('memAddr').value !== '0x20200') {
-      throw new Error('Stack memory address not set to 0x20200');
+    if (win.document.getElementById('memAddr').value !== '0x10010200') {
+      throw new Error('Stack memory address not set to 0x10010200');
     }
-    // Verify stack rows are in decreasing order starting from top (0x20200, 0x201F8, 0x201F0...)
+    // Verify stack rows are in decreasing order starting from top (0x10010200, 0x100101F8, 0x100101F0...)
     const stackAddrs = Array.from(win.document.querySelectorAll('#memView .addr')).map(el => parseInt(el.textContent, 16));
     console.log('Stack Memory View First 4 Row Addresses:', stackAddrs.slice(0, 4).map(a => '0x' + a.toString(16)));
-    if (stackAddrs.length < 3 || stackAddrs[0] !== 0x20200 || stackAddrs[1] !== 0x201F8 || stackAddrs[2] !== 0x201F0) {
-      throw new Error(`Expected decreasing stack addresses starting at 0x20200, got: ${stackAddrs.slice(0, 4).map(a => '0x' + a.toString(16)).join(', ')}`);
+    if (stackAddrs.length < 3 || stackAddrs[0] !== 0x10010200 || stackAddrs[1] !== 0x100101F8 || stackAddrs[2] !== 0x100101F0) {
+      throw new Error(`Expected decreasing stack addresses starting at 0x10010200, got: ${stackAddrs.slice(0, 4).map(a => '0x' + a.toString(16)).join(', ')}`);
     }
     console.log('✅ Stack memory addresses in decreasing order verified!');
 
@@ -394,8 +394,8 @@ setTimeout(async () => {
     if (!win.document.getElementById('memTabBtn-code').classList.contains('active')) {
       throw new Error('Code memory sub-tab not marked active');
     }
-    if (win.document.getElementById('memAddr').value !== '0x10000') {
-      throw new Error('Code memory address not set to 0x10000');
+    if (parseInt(win.document.getElementById('memAddr').value, 16) !== 0x00400000) {
+      throw new Error('Code memory address not set to 0x00400000');
     }
     console.log('✅ Tabbed Memory View subtabs verified!');
 
