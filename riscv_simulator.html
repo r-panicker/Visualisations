@@ -493,15 +493,17 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
     }
 
-    /* Right Panel Tabs */
+    /* Right Panel Tabs / Dockable Panels */
     .tab-bar {
       display: flex;
+      flex-wrap: wrap;
       background: #181825;
       border-bottom: 1px solid #313244;
     }
 
     .tab-bar button {
-      flex: 1;
+      flex: 1 1 auto;
+      min-width: 90px;
       background: none;
       border: none;
       color: #a6adc8;
@@ -512,6 +514,10 @@
       font-family: inherit;
       border-bottom: 2px solid transparent;
       transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
     .tab-bar button:hover {
@@ -525,15 +531,158 @@
       border-bottom-color: #cba6f7;
     }
 
-    .tab-content {
-      flex: 1;
-      overflow: auto;
-      display: none;
-      padding: 8px;
+    .tab-chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #45475a;
+      flex-shrink: 0;
+      transition: background 0.15s, box-shadow 0.15s;
     }
 
-    .tab-content.active {
-      display: block;
+    .tab-bar button.active .tab-chip-dot {
+      background: #cba6f7;
+    }
+
+    .tab-bar button.floating .tab-chip-dot {
+      background: #89b4fa;
+      box-shadow: 0 0 0 2px rgba(137, 180, 250, 0.3);
+    }
+
+    /* Vertical stack of docked panels */
+    .panel-stack {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .panel-stack-empty {
+      flex: 1;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      color: #6c7086;
+      font-size: 12.5px;
+      line-height: 1.7;
+    }
+
+    .panel-stack-empty b {
+      color: #9399b2;
+    }
+
+    .panel-stack.is-empty .panel-stack-empty {
+      display: flex;
+    }
+
+    .tab-content {
+      flex: 1 1 0;
+      min-height: 90px;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .tab-content.panel-docked {
+      display: flex;
+    }
+
+    .tab-content.panel-floating {
+      display: flex;
+      position: fixed;
+      z-index: 40;
+      width: 460px;
+      height: 360px;
+      min-width: 240px;
+      min-height: 150px;
+      background: #1e1e2e;
+      border: 1px solid #45475a;
+      border-radius: 8px;
+      box-shadow: 0 14px 44px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      resize: both;
+      flex: 0 0 auto;
+    }
+
+    .tab-content.panel-floating.focused {
+      z-index: 46;
+      border-color: #cba6f7;
+    }
+
+    /* Injected panel header bar */
+    .panel-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 3px 4px 3px 10px;
+      background: #181825;
+      border-bottom: 1px solid #313244;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .panel-hdr-title {
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #9399b2;
+    }
+
+    .tab-content.panel-floating > .panel-hdr {
+      cursor: move;
+    }
+
+    .tab-content.panel-floating > .panel-hdr .panel-hdr-title {
+      color: #cba6f7;
+    }
+
+    .panel-hdr-actions {
+      display: inline-flex;
+      gap: 2px;
+    }
+
+    .panel-hdr-btn {
+      background: none;
+      border: none;
+      color: #9399b2;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 4px 7px;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .panel-hdr-btn:hover {
+      background: #313244;
+      color: #cdd6f4;
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow: auto;
+      padding: 8px;
+      min-height: 0;
+    }
+
+    /* Row splitter between docked panels */
+    .panel-vsplitter {
+      height: 6px;
+      flex: 0 0 6px;
+      cursor: row-resize;
+      background: #181825;
+      border-top: 1px solid #313244;
+      border-bottom: 1px solid #313244;
+    }
+
+    .panel-vsplitter:hover {
+      background: #cba6f7;
     }
 
     /* Register Table */
@@ -2124,15 +2273,47 @@
         flex: 1 0 auto;
       }
 
+      .panel-stack {
+        overflow: visible;
+      }
+
       .tab-content {
-        max-height: 520px;
-        overflow-y: auto;
-        overflow-x: auto;
-        padding: 8px 6px;
+        max-height: 560px;
+        overflow: hidden;
+        padding: 0;
         width: 100%;
         max-width: 100vw;
         box-sizing: border-box;
+      }
+
+      .tab-content.panel-docked {
+        flex: 0 0 auto;
+      }
+
+      .tab-content.panel-floating {
+        position: static;
+        left: auto !important;
+        top: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        resize: none;
+        z-index: auto;
+        box-shadow: none;
+        border-radius: 0;
+      }
+
+      .tab-content.panel-floating > .panel-hdr {
+        cursor: default;
+      }
+
+      .panel-body {
+        overflow: auto;
         -webkit-overflow-scrolling: touch;
+        max-height: 500px;
+      }
+
+      .panel-vsplitter {
+        display: none;
       }
 
       .mem-toolbar {
@@ -2445,13 +2626,15 @@
       </div>
       <div class="splitter" id="mainSplitter" title="Drag to resize"></div>
       <div class="right-panel">
-        <div class="tab-bar">
-          <button class="active" onclick="switchTab('registers',this)">Registers</button>
-          <button onclick="switchTab('memory',this)">Memory</button>
-          <button onclick="switchTab('peripherals',this)">Peripherals</button>
-          <button onclick="switchTab('disassembly',this)">Disassembly</button>
+        <div class="tab-bar"
+          title="Click to show or hide a panel. Panels are independent — stack several in this column, or detach any to a floating window with its ⧉ button.">
+          <button id="panelChip-registers" type="button"><span class="tab-chip-dot"></span>Registers</button>
+          <button id="panelChip-memory" type="button"><span class="tab-chip-dot"></span>Memory</button>
+          <button id="panelChip-peripherals" type="button"><span class="tab-chip-dot"></span>Peripherals</button>
+          <button id="panelChip-disassembly" type="button"><span class="tab-chip-dot"></span>Disassembly</button>
         </div>
-        <div class="tab-content active" id="tab-registers">
+        <div class="panel-stack" id="panelStack">
+        <div class="tab-content" id="tab-registers">
           <table class="reg-table" id="regTable">
             <thead>
               <tr>
@@ -2481,7 +2664,7 @@
             <button onclick="updateMemoryView()">&#x21bb;</button>
           </div>
           <div class="mem-legend">
-            groups of 4 bytes = one 32-bit word &nbsp;·&nbsp; <span style="color:#cba6f7">label</span> = symbol at row
+            groups of 4 bytes = one 32-bit <span style="color:#00ffff;font-weight:bold">little endian (LSB to the left) </span> word &nbsp;·&nbsp; <span style="color:#cba6f7">label</span> = symbol at row
             &nbsp;·&nbsp;
             <span style="color:#ffe08f;font-weight:bold">highlighted bytes</span> were written at runtime &nbsp;·&nbsp; <span style="color:#89b4fa;font-weight:550;">Data/Stack/MMIO: editable</span> (Code: read-only)
           </div>
@@ -2554,7 +2737,7 @@
               </div>
               <div class="uart-terminal" id="uartTerminal" title="Terminal Output (0xFFFF000C WO)"></div>
               <div class="uart-controls">
-                <select id="uartInputMode" title="Input mode" style="flex:0 0 auto;" onchange="(function(){var m=document.getElementById('uartInputMode').value,el=document.getElementById('uartInputText');if(el)el.placeholder=m==='hex'?'Comma-separated hex bytes — 0x48, 0x69, 0x0D, ...':'ASCII text incl. extended — \\r, \\n, ...';renderUartTerminal();})()">
+                <select id="uartInputMode" title="Input and output mode" style="flex:0 0 auto;" onchange="(function(){var m=document.getElementById('uartInputMode').value,el=document.getElementById('uartInputText');if(el)el.placeholder=m==='hex'?'Comma-separated hex bytes — 0x48, 0x69, 0x0D, ...':'ASCII text incl. extended — \\r, \\n, ...';renderUartTerminal();})()">
                   <option value="ascii">ASCII</option>
                   <option value="hex">Hex</option>
                 </select>
@@ -2682,6 +2865,11 @@
               current PC.</span>
           </div>
           <div id="disassemblyDisplay"></div>
+        </div>
+          <div class="panel-stack-empty">
+            All panels are hidden.<br>Use the buttons above to show <b>Registers</b>, <b>Memory</b>,
+            <b>Peripherals</b>, or <b>Disassembly</b>.
+          </div>
         </div>
       </div>
     </div>
@@ -6022,6 +6210,320 @@
       splitter.addEventListener('pointercancel', stop);
     }
 
+    // ============================================================
+    // DOCKABLE / DETACHABLE RIGHT-SIDE PANELS
+    // The four panels (Registers / Memory / Peripherals / Disassembly)
+    // are no longer mutually exclusive: each can be independently shown,
+    // stacked vertically in the right column, or detached to a floating
+    // window. Layout is persisted to localStorage.
+    // ============================================================
+    const PANEL_DOCK_KEY = 'rvsim.panelDock.v1';
+    const PANEL_DEFS = [
+      { name: 'registers', label: 'Registers' },
+      { name: 'memory', label: 'Memory' },
+      { name: 'peripherals', label: 'Peripherals' },
+      { name: 'disassembly', label: 'Disassembly' },
+    ];
+    let panelDock = null;
+    let floatDrag = null;
+
+    function panelDockDefaults() {
+      return {
+        registers: { visible: true, floating: false, x: 90, y: 90, w: 460, h: 360, basis: 0 },
+        memory: { visible: false, floating: false, x: 130, y: 120, w: 540, h: 400, basis: 0 },
+        peripherals: { visible: false, floating: false, x: 170, y: 150, w: 560, h: 440, basis: 0 },
+        disassembly: { visible: false, floating: false, x: 210, y: 180, w: 580, h: 400, basis: 0 },
+        order: ['registers', 'memory', 'peripherals', 'disassembly'],
+      };
+    }
+
+    function loadPanelDock() {
+      const def = panelDockDefaults();
+      let saved = null;
+      try { saved = JSON.parse(localStorage.getItem(PANEL_DOCK_KEY) || 'null'); } catch (e) { saved = null; }
+      if (!saved || typeof saved !== 'object') return def;
+      PANEL_DEFS.forEach(({ name }) => {
+        if (saved[name] && typeof saved[name] === 'object') def[name] = Object.assign(def[name], saved[name]);
+      });
+      if (Array.isArray(saved.order) && saved.order.length === PANEL_DEFS.length &&
+        PANEL_DEFS.every(({ name }) => saved.order.includes(name))) {
+        def.order = saved.order.slice();
+      }
+      return def;
+    }
+
+    function savePanelDock() {
+      try { localStorage.setItem(PANEL_DOCK_KEY, JSON.stringify(panelDock)); } catch (e) { /* storage unavailable */ }
+    }
+
+    function panelEl(name) { return document.getElementById('tab-' + name); }
+
+    function isPanelVisible(name) {
+      return !!(panelDock && panelDock[name] && panelDock[name].visible);
+    }
+
+    function refreshPanel(name) {
+      try {
+        if (name === 'registers') updateRegisters();
+        else if (name === 'memory') { if (typeof updateMemSubTabs === 'function') updateMemSubTabs(); updateMemoryView(); }
+        else if (name === 'peripherals') initPeripherals();
+        else if (name === 'disassembly') updateDisassembly();
+      } catch (e) { /* dependent state not ready yet */ }
+    }
+
+    // Wrap each panel's existing content in a scrollable body and prepend a header bar.
+    function ensurePanelChrome() {
+      PANEL_DEFS.forEach(({ name, label }) => {
+        const el = panelEl(name);
+        if (!el || el.querySelector(':scope > .panel-hdr')) return;
+
+        const body = document.createElement('div');
+        body.className = 'panel-body';
+        while (el.firstChild) body.appendChild(el.firstChild);
+
+        const hdr = document.createElement('div');
+        hdr.className = 'panel-hdr';
+        hdr.innerHTML =
+          '<span class="panel-hdr-title">' + label + '</span>' +
+          '<span class="panel-hdr-actions">' +
+          '<button class="panel-hdr-btn" type="button" data-panel-act="float">⧉</button>' +
+          '<button class="panel-hdr-btn" type="button" data-panel-act="hide" title="Hide this panel">✕</button>' +
+          '</span>';
+
+        el.appendChild(hdr);
+        el.appendChild(body);
+
+        hdr.addEventListener('pointerdown', (e) => onFloatDragStart(e, name));
+        hdr.querySelector('[data-panel-act="float"]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePanelFloat(name);
+        });
+        hdr.querySelector('[data-panel-act="hide"]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          setPanelVisible(name, false);
+        });
+
+        observeFloatResize(name);
+      });
+    }
+
+    function observeFloatResize(name) {
+      const el = panelEl(name);
+      if (!el || el._roAttached || typeof ResizeObserver === 'undefined') return;
+      el._roAttached = true;
+      const ro = new ResizeObserver(() => {
+        const st = panelDock && panelDock[name];
+        if (st && st.floating && el.classList.contains('panel-floating')) {
+          st.w = el.offsetWidth;
+          st.h = el.offsetHeight;
+          clearTimeout(el._roT);
+          el._roT = setTimeout(savePanelDock, 300);
+        }
+      });
+      ro.observe(el);
+    }
+
+    function applyPanelDock() {
+      const stack = document.getElementById('panelStack');
+      if (!stack || !panelDock) return;
+
+      stack.querySelectorAll('.panel-vsplitter').forEach(s => s.remove());
+
+      const dockedNames = panelDock.order.filter(n => panelDock[n].visible && !panelDock[n].floating);
+      const floatingNames = panelDock.order.filter(n => panelDock[n].visible && panelDock[n].floating);
+
+      // Re-order every panel node to match panelDock.order, then set state classes/styles.
+      panelDock.order.forEach(name => {
+        const el = panelEl(name);
+        if (!el) return;
+        stack.appendChild(el);
+        const st = panelDock[name];
+        el.classList.remove('panel-docked', 'panel-floating', 'focused');
+        el.style.flex = '';
+        el.style.left = el.style.top = el.style.width = el.style.height = '';
+
+        if (!st.visible) return;
+
+        if (st.floating) {
+          el.classList.add('panel-floating');
+          el.style.left = st.x + 'px';
+          el.style.top = st.y + 'px';
+          el.style.width = st.w + 'px';
+          el.style.height = st.h + 'px';
+        } else {
+          el.classList.add('panel-docked');
+          el.style.flex = (st.basis && st.basis > 0) ? ('0 0 ' + st.basis + 'px') : '1 1 0';
+        }
+      });
+
+      // Splitters between consecutive docked panels.
+      for (let i = 0; i < dockedNames.length - 1; i++) {
+        const sp = document.createElement('div');
+        sp.className = 'panel-vsplitter';
+        sp.title = 'Drag to resize · double-click to even out';
+        panelEl(dockedNames[i]).after(sp);
+        attachVSplitter(sp);
+      }
+
+      const emptyHint = stack.querySelector('.panel-stack-empty');
+      if (emptyHint) stack.appendChild(emptyHint);
+      stack.classList.toggle('is-empty', dockedNames.length === 0);
+
+      // Toolbar chip + float-button state.
+      PANEL_DEFS.forEach(({ name }) => {
+        const st = panelDock[name];
+        const chip = document.getElementById('panelChip-' + name);
+        if (chip) {
+          chip.classList.toggle('active', st.visible);
+          chip.classList.toggle('floating', st.visible && st.floating);
+        }
+        const fb = panelEl(name) && panelEl(name).querySelector('[data-panel-act="float"]');
+        if (fb) {
+          fb.textContent = st.floating ? '▣' : '⧉';
+          fb.title = st.floating ? 'Dock back into the side panel' : 'Detach to a floating window';
+        }
+      });
+
+      floatingNames.forEach(name => keepFloatInView(name));
+      savePanelDock();
+    }
+
+    function keepFloatInView(name) {
+      const st = panelDock[name];
+      const el = panelEl(name);
+      if (!st || !el) return;
+      const maxX = window.innerWidth - 60;
+      const maxY = window.innerHeight - 32;
+      if (st.x > maxX) st.x = Math.max(0, maxX);
+      if (st.y > maxY) st.y = Math.max(0, maxY);
+      if (st.x < -el.offsetWidth + 60) st.x = 0;
+      if (st.y < 0) st.y = 0;
+      el.style.left = st.x + 'px';
+      el.style.top = st.y + 'px';
+    }
+
+    function setPanelVisible(name, vis) {
+      if (!panelDock || !panelDock[name]) return;
+      panelDock[name].visible = vis;
+      if (!vis) panelDock[name].floating = false;
+      applyPanelDock();
+      if (vis) refreshPanel(name);
+    }
+
+    function togglePanel(name) {
+      if (!panelDock || !panelDock[name]) return;
+      setPanelVisible(name, !panelDock[name].visible);
+    }
+
+    function togglePanelFloat(name) {
+      const st = panelDock && panelDock[name];
+      if (!st || !st.visible) return;
+      st.floating = !st.floating;
+      if (st.floating) {
+        if (st.x > window.innerWidth - 120 || st.x < 0) st.x = Math.max(20, (window.innerWidth - st.w) / 2);
+        if (st.y > window.innerHeight - 80 || st.y < 0) st.y = Math.max(20, (window.innerHeight - st.h) / 3);
+      }
+      applyPanelDock();
+      refreshPanel(name);
+    }
+
+    function onFloatDragStart(e, name) {
+      const st = panelDock && panelDock[name];
+      if (!st || !st.floating) return;
+      if (e.target.closest('.panel-hdr-btn')) return;
+      const el = panelEl(name);
+      floatDrag = { name, startX: e.clientX, startY: e.clientY, origX: st.x, origY: st.y };
+      document.querySelectorAll('.tab-content.panel-floating').forEach(p => p.classList.remove('focused'));
+      el.classList.add('focused');
+      if (el.setPointerCapture) el.setPointerCapture(e.pointerId);
+      el.addEventListener('pointermove', onFloatDragMove);
+      el.addEventListener('pointerup', onFloatDragEnd);
+      el.addEventListener('pointercancel', onFloatDragEnd);
+      e.preventDefault();
+    }
+
+    function onFloatDragMove(e) {
+      if (!floatDrag) return;
+      const st = panelDock[floatDrag.name];
+      const el = panelEl(floatDrag.name);
+      let nx = floatDrag.origX + (e.clientX - floatDrag.startX);
+      let ny = floatDrag.origY + (e.clientY - floatDrag.startY);
+      nx = Math.max(-el.offsetWidth + 60, Math.min(nx, window.innerWidth - 60));
+      ny = Math.max(0, Math.min(ny, window.innerHeight - 32));
+      st.x = nx; st.y = ny;
+      el.style.left = nx + 'px';
+      el.style.top = ny + 'px';
+    }
+
+    function onFloatDragEnd() {
+      if (!floatDrag) return;
+      const el = panelEl(floatDrag.name);
+      el.removeEventListener('pointermove', onFloatDragMove);
+      el.removeEventListener('pointerup', onFloatDragEnd);
+      el.removeEventListener('pointercancel', onFloatDragEnd);
+      floatDrag = null;
+      savePanelDock();
+    }
+
+    function attachVSplitter(sp) {
+      let dragging = false, startY = 0, aboveEl = null, belowEl = null, aboveH = 0, belowH = 0;
+      sp.addEventListener('pointerdown', (e) => {
+        aboveEl = sp.previousElementSibling;
+        belowEl = sp.nextElementSibling;
+        if (!aboveEl || !belowEl) return;
+        dragging = true;
+        startY = e.clientY;
+        aboveH = aboveEl.offsetHeight;
+        belowH = belowEl.offsetHeight;
+        sp.setPointerCapture(e.pointerId);
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+      sp.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const dy = e.clientY - startY;
+        aboveEl.style.flex = '0 0 ' + Math.max(90, aboveH + dy) + 'px';
+        belowEl.style.flex = '0 0 ' + Math.max(90, belowH - dy) + 'px';
+      });
+      const stop = () => {
+        if (!dragging) return;
+        dragging = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        panelDock.order.forEach(n => {
+          const el = panelEl(n);
+          if (el && el.classList.contains('panel-docked')) panelDock[n].basis = el.offsetHeight;
+        });
+        savePanelDock();
+      };
+      sp.addEventListener('pointerup', stop);
+      sp.addEventListener('pointercancel', stop);
+      sp.addEventListener('dblclick', () => {
+        panelDock.order.forEach(n => { panelDock[n].basis = 0; });
+        applyPanelDock();
+      });
+    }
+
+    function initPanelDock() {
+      panelDock = loadPanelDock();
+      ensurePanelChrome();
+      PANEL_DEFS.forEach(({ name }) => {
+        const chip = document.getElementById('panelChip-' + name);
+        if (chip) chip.addEventListener('click', () => togglePanel(name));
+      });
+      applyPanelDock();
+      panelDock.order.forEach(name => { if (isPanelVisible(name)) refreshPanel(name); });
+      window.addEventListener('resize', () => {
+        let moved = false;
+        PANEL_DEFS.forEach(({ name }) => {
+          const st = panelDock[name];
+          if (st.visible && st.floating) { keepFloatInView(name); moved = true; }
+        });
+        if (moved) savePanelDock();
+      });
+    }
+
     function updateLineNumbers() {
       if (!cmEditor) return;
       cmEditor.dispatch({
@@ -7819,9 +8321,11 @@ function updateRegisters() {
       html += '</table>';
       disassemblyDisplay.innerHTML = html;
 
-      // Autoscroll active execution instruction into view if Disassembly tab is active
+      // Autoscroll active execution instruction into view while the Disassembly panel is shown
       const tabDisasm = document.getElementById('tab-disassembly');
-      if (tabDisasm && tabDisasm.classList.contains('active')) {
+      const disasmShown = tabDisasm &&
+        (tabDisasm.classList.contains('panel-docked') || tabDisasm.classList.contains('panel-floating'));
+      if (disasmShown) {
         const curRow = disassemblyDisplay.querySelector('.current-native');
         if (curRow && typeof curRow.scrollIntoView === 'function') {
           curRow.scrollIntoView({ block: 'nearest', behavior: 'auto' });
@@ -7829,14 +8333,14 @@ function updateRegisters() {
       }
     }
 
-    function switchTab(tab, btn) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-bar button').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + tab).classList.add('active');
-      if (btn) btn.classList.add('active');
-      if (tab === 'memory') { updateMemSubTabs(); updateMemoryView(); }
-      if (tab === 'peripherals') { initPeripherals(); }
-      if (tab === 'disassembly') { updateDisassembly(); }
+    // Backward-compatible alias. Panels are now independent (not exclusive tabs);
+    // callers of switchTab() expect the named panel to end up shown, so ensure it
+    // is visible and refreshed rather than toggling it.
+    function switchTab(tab) {
+      if (panelDock && panelDock[tab]) {
+        if (!panelDock[tab].visible) setPanelVisible(tab, true);
+        else refreshPanel(tab);
+      }
     }
 
     const cExamples = {
@@ -9964,6 +10468,7 @@ done:
     log('Supports: RV32I, M, F, D, A extensions', 'info');
     log('F5 Run · Ctrl+Enter Assemble · F8 Step · Shift+F8 Back · F9 Breakpoint · Ctrl+F Find · Ctrl+/ Comment', 'info');
     initSplitter();
+    initPanelDock();
 
     // ============================================================
     // ADVANCED IN-EDITOR EDITING & FIND/REPLACE (PLAIN JS)
