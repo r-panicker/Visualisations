@@ -86,6 +86,11 @@ Node-based harness in [`riscv_simulator_tests/`](file:///home/rajesh/GitHub/Visu
 
 ## Current version
 
+**v23.6** — UART hex-mode & mobile keyboard fixes:
+- **Hex input now parses as hex**: in Hex mode, comma-separated bytes like `0x41, 0x0d` (or bare `41, 0d`, or `69h`) are interpreted as hex bytes, so `0x41, 0x0d` transmits the same bytes as `A\r`. Non-hex / >0xFF tokens are skipped.
+- **Hex output display persists**: the terminal renders UART_TX output as `0xHH` bytes in Hex mode and **stays hex** across program-run batches, stepping, mode toggles, and resets (previously `updatePeripherals()` snapped the display back to ASCII). Switching to ASCII re-renders the same bytes as raw text.
+- **Mobile keyboard stays open**: the transmit field now uses `autocomplete="off"`, `autocapitalize="off"`, `spellcheck="false"`, `enterkeyhint="send"`, and the global F5/F8/F9/Ctrl+Enter/Ctrl+S shortcuts are suppressed while any form field is focused — so typing into the UART console (or any input) is not interrupted on phones.
+
 **v23.5** — Disassembly machine-code Byte/Word toggle (Word default), Word default for Memory, and accelerometer tilt start direction:
 - **Disassembly machine-code `[ Byte | Word ]` toggle**: a **segmented `[ Byte | Word ]` pill** in the Disassembly toolbar (same styling as the Memory toggle) switches the **Machine-code** column between the classic separate bytes (`xx xx xx xx`) and one **whole 8-digit little-endian 32-bit hex word** per 4-byte chunk. **Word is the default**.
 - **Word is the default everywhere**: the **Memory view also opens in Word mode** on load (Word button pre-highlighted, word-mode legend shown).

@@ -289,6 +289,49 @@ loadExample('basic');
 const uartPass5 = (uartTxBuffer === '' && uartRxQueue.length === 0 && document.getElementById('badgeRxValid').innerText === '0');
 console.log('  Switching example clears serial console & resets UART state:', uartPass5 ? 'PASS' : `FAIL (tx=${uartTxBuffer}, qLen=${uartRxQueue.length})`);
 
+// 4b. Hex mode: input parsing interprets tokens as hex bytes (0x-prefixed or bare)
+const hexModeEl = document.getElementById('uartInputMode');
+const hexInputEl = document.getElementById('uartInputText');
+hexModeEl.value = 'hex';
+hexInputEl.value = '0x41, 0x0d, 48, 69h, 0D';
+uartRxQueue = [];
+sendUartInput();
+const hexQueue = JSON.stringify(uartRxQueue);
+const hexParsePass = (hexQueue === JSON.stringify([0x41, 0x0D, 0x48, 0x69, 0x0D]));
+console.log('  UART hex send "0x41, 0x0d, 48, 69h, 0D" -> 5 bytes (0x41,0x0D,0x48,0x69,0x0D):', hexParsePass ? 'PASS' : `FAIL (queue=${hexQueue})`);
+
+// Invalid hex tokens are skipped (zz, 0xGG, >0xFF) without erroring
+hexInputEl.value = '0x41, zz, 0xGG, 300, 0d';
+uartRxQueue = [];
+sendUartInput();
+const hexQueue2 = JSON.stringify(uartRxQueue);
+const hexSkipPass = (hexQueue2 === JSON.stringify([0x41, 0x0D]));
+console.log('  UART hex send skips invalid tokens (zz, 0xGG, 300):', hexSkipPass ? 'PASS' : `FAIL (queue=${hexQueue2})`);
+
+// Hex output: UART_TX writes render as hex and persist across updatePeripherals
+uartTxBuffer = '';
+uartTxBytes = [];
+writeMem(0xFFFF000C, 0x41, 1); // 'A'
+writeMem(0xFFFF000C, 0x0D, 1); // '\r'
+updatePeripherals();
+const hexTermText = document.getElementById('uartTerminal').innerText;
+const hexDisplayPass = (hexTermText === '0x41 0x0D');
+console.log('  UART hex terminal shows "0x41 0x0D" after updatePeripherals:', hexDisplayPass ? 'PASS' : `FAIL (text=${JSON.stringify(hexTermText)})`);
+
+// Switching back to ASCII re-renders the same bytes as raw text
+hexModeEl.value = 'ascii';
+updatePeripherals();
+const asciiTermText = document.getElementById('uartTerminal').innerText;
+const asciiReRenderPass = (asciiTermText === 'A\r');
+console.log('  Switching to ASCII re-renders terminal as raw buffer:', asciiReRenderPass ? 'PASS' : `FAIL (text=${JSON.stringify(asciiTermText)})`);
+
+// Reset clears the byte log so the hex display is cleared too
+hexModeEl.value = 'hex';
+resetAll();
+const clearedTermText = document.getElementById('uartTerminal').innerText;
+const hexResetPass = (clearedTermText === '(Terminal output will appear here...)');
+console.log('  Reset clears UART terminal display (hex mode):', hexResetPass ? 'PASS' : `FAIL (text=${JSON.stringify(clearedTermText)})`);
+
 // 5. Verify Stack Pointer (x2 / sp) is 0 on reset
 resetAll();
 const spResetPass = (regs[2] === 0);

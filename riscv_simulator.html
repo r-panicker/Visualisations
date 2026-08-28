@@ -3022,7 +3022,8 @@
                 </select>
                 <input type="text" id="uartInputText" placeholder="ASCII text incl. extended — \r, \n, ..."
                   style="flex:1;min-width:0;"
-                  onkeydown="if(event.key==='Enter')sendUartInput()">
+                  autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="send"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();sendUartInput();}">
                 <button id="uartSendBtn" onclick="sendUartInput()" class="primary">Send</button>
                 <button id="uartClearBtn" onclick="clearUartTx()" title="Clear Terminal display output">Clear</button>
               </div>
@@ -7852,8 +7853,7 @@ function updateRegisters() {
         }
       }
       if (termEl) {
-        termEl.innerText = uartTxBuffer || '(Terminal output will appear here...)';
-        termEl.scrollTop = termEl.scrollHeight;
+        renderUartTerminal();
       }
 
       const autoStatusEl = document.getElementById('uartAutoSendStatus');
@@ -8068,16 +8068,19 @@ function updateRegisters() {
       if (modeEl.value === 'ascii') {
         bytes = parseAsciiEscapes(raw);
       } else if (modeEl.value === 'hex') {
+        // Hex mode: each comma-separated token is interpreted as a hex byte
+        // (optionally prefixed with 0x/0X). e.g. "0x48, 0x69, 0x0D" or "48 69 0d".
         const tokens = raw.split(',');
         for (let token of tokens) {
           token = token.trim();
           if (!token) continue;
-          let val = NaN;
-          if (token.startsWith('0x') || token.startsWith('0X') || /[a-fA-F]/.test(token)) {
-            val = parseInt(token, 10);
-          }
-          if (!isNaN(val) && val >= 0 && val <= 255) {
-            bytes.push(val & 0xFF);
+          let hexStr = token.replace(/^0[xX]/, '');
+          // Also allow a single trailing 'h' hex suffix (e.g. "41h").
+          hexStr = hexStr.replace(/[hH]$/, '');
+          if (!/^[0-9a-fA-F]{1,2}$/.test(hexStr)) continue;
+          const val = parseInt(hexStr, 16);
+          if (val >= 0 && val <= 255) {
+            bytes.push(val);
           }
         }
       }
@@ -8117,16 +8120,21 @@ function updateRegisters() {
       if (!termEl) return;
       const modeEl = document.getElementById('uartInputMode');
       const isHex = modeEl && modeEl.value === 'hex';
+      let text;
       if (uartTxBytes.length === 0) {
-        termEl.innerText = '(Terminal output will appear here...)';
-        return;
-      }
-      if (isHex) {
-        termEl.innerText = uartTxBytes.map(b => '0x' + b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+        text = '(Terminal output will appear here...)';
+      } else if (isHex) {
+        text = uartTxBytes.map(b => '0x' + b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
       } else {
-        termEl.innerText = uartTxBuffer;
+        text = uartTxBuffer;
       }
-      termEl.scrollTop = termEl.scrollHeight;
+      // Only touch the DOM when the rendered text actually changes — avoids
+      // needless reflow/scroll churn (which on mobile can disrupt an in-progress
+      // text entry into the UART input while a program is transmitting).
+      if (termEl.innerText !== text) {
+        termEl.innerText = text;
+        termEl.scrollTop = termEl.scrollHeight;
+      }
     }
 
     function clearUartTx() {
@@ -11106,6 +11114,7 @@ STACK_INIT:
       pbState = 0;
       // Reset UART Terminal display & RX queue
       uartTxBuffer = '';
+      uartTxBytes = [];
       uartRxQueue = [];
       autoSeqPending = false;
       autoSeqQueue = [];
@@ -11673,6 +11682,15 @@ done:
           closeFindReplace();
           return;
         }
+      }
+
+      // If a form field other than the code editor is focused (UART console input,
+      // memory address box, find/replace fields, etc.), don't let the global
+      // simulator shortcuts (F5/F8/F9/Ctrl+Enter/Ctrl+S) fire while typing.
+      const t = e.target;
+      if (t && t !== editor && t.id !== 'asmEditor' &&
+        (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) {
+        return;
       }
 
       if (e.target && e.target.id === 'asmEditor') {
