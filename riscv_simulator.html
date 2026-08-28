@@ -2949,18 +2949,27 @@
   <script>
     /* ================================================================
        CodeMirror 6 loader (window.CM6)
-       Primary: dynamically import the @codemirror ESM packages from
-       jsDelivr and assemble them into window.CM6.
-       Fallback: if the CDN is unreachable (offline / blocked), inject
-       the local classic bundle (riscv_simulator_tests/cm6_bundle.min.js)
-       which defines window.CM6.
+       Loads a SINGLE self-contained CM6 bundle (cm6_bundle.min.js) —
+       one copy of every @codemirror/@lezer package — from jsDelivr,
+       with an automatic fallback to the local copy of the same bundle.
+       (Loading individual ESM packages separately does NOT work: each
+       +esm bundle inlines its own @lezer/common internals, so StreamLanguage
+       extensions built against one instance fail EditorState validation
+       with "Unrecognized extension value" and highlighting silently breaks.
+       A single pre-bundled unit has consistent instances everywhere.)
        If window.CM6 is already present (e.g. tests pre-inject it), skip.
        The main app script defers its editor bootstrap until window.CM6
        exists, so load timing here is non-blocking.
        ================================================================ */
     (function () {
       if (window.CM6) return; // already available
+      // Tests / embedding pages that pre-inject their own CM6 can set this
+      // flag synchronously in beforeParse to prevent the CDN <script> from
+      // being fetched (jsdom cannot run layout-dependent CM6 code on the CDN
+      // bundle). The app still boots via the pre-injected window.CM6.
+      if (window.__CM6_DISABLE_CDN) return;
 
+      var CDN_SRC = 'https://cdn.jsdelivr.net/gh/r-panicker/Visualisations@main/riscv_simulator_tests/cm6_bundle.min.js';
       var FALLBACK_SRC = 'riscv_simulator_tests/cm6_bundle.min.js';
       var started = false;
 
@@ -2975,43 +2984,13 @@
         document.head.appendChild(s);
       }
 
-      var CDN = 'https://cdn.jsdelivr.net/npm/';
-      // Versions pinned so every package shares the SAME @codemirror/state
-      // instance (6.5.2). Mixing state versions (e.g. latest 6.7.x) breaks
-      // CM6's instanceof checks with "Unrecognized extension value".
-      var deps = [
-        CDN + '@codemirror/state@6.5.2/+esm',
-        CDN + '@codemirror/view@6.36.5/+esm',
-        CDN + '@codemirror/language@6.11.3/+esm',
-        CDN + '@codemirror/commands@6.9.0/+esm',
-        CDN + '@codemirror/autocomplete@6.19.1/+esm',
-        CDN + '@lezer/highlight@1.2.3/+esm'
-      ];
-
-      // Dynamic import() is valid inside a classic script, but the `import`
-      // keyword itself cannot be used as an identifier (e.g. `typeof import`)
-      // outside a module — so attempt the CDN load directly and fall back on
-      // any failure (offline, CSP, unsupported browser, etc.).
-      try {
-        Promise.all(deps.map(function (u) { return import(u); }))
-          .then(function (mods) {
-            var cm6 = {};
-            mods.forEach(function (m) {
-              for (var k in m) {
-                if (Object.prototype.hasOwnProperty.call(m, k)) cm6[k] = m[k];
-              }
-            });
-            cm6.tags = mods[mods.length - 1].tags;
-            window.CM6 = cm6;
-          })
-          .catch(function (err) {
-            console.warn('[CM6] CDN load failed, using local fallback:', err);
-            loadFallback();
-          });
-      } catch (err) {
-        console.warn('[CM6] CDN import unavailable, using local fallback:', err);
+      var s = document.createElement('script');
+      s.src = CDN_SRC;
+      s.onerror = function () {
+        console.warn('[CM6] CDN bundle failed to load, using local fallback.');
         loadFallback();
-      }
+      };
+      document.head.appendChild(s);
     })();
   </script>
   <script>

@@ -29,6 +29,7 @@ const dom = new JSDOM(html, {
   resources: 'usable',
   url: 'http://localhost:8080/riscv_simulator.html',
   beforeParse(window) {
+    window.__CM6_DISABLE_CDN = true; // prevent the loader from fetching the CDN bundle (jsdom layout limitations); tests pre-inject the local bundle
     // Pre-inject CodeMirror 6 so the app can boot even when the CDN is
     // unreachable. jsdom cannot run the ESM CDN bundles, and the local
     // fallback file cannot be fetched without a server, so load it directly.
