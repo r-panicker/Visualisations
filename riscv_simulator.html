@@ -591,11 +591,24 @@
       display: none;
       align-items: center;
       justify-content: center;
+      gap: 8px;
       padding: 24px;
       text-align: center;
       color: #6c7086;
       font-size: 12.5px;
       line-height: 1.7;
+    }
+
+    .panel-stack-empty-icon {
+      color: #45475a;
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .panel-stack-empty-panels {
+      color: #a6adc8;
+      font-weight: 600;
     }
 
     .panel-stack-empty b {
@@ -802,11 +815,26 @@
     /* Memory View */
     .mem-toolbar {
       display: flex;
+      flex-direction: column;
       gap: 4px;
       margin-bottom: 6px;
-      align-items: center;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-weight: 500;
+    }
+
+    .mem-toolbar-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .mem-tool-label {
+      color: #6c7086;
+      font-size: 12px;
+      font-weight: 550;
+      user-select: none;
+      white-space: nowrap;
     }
 
     .mem-toolbar input {
@@ -819,6 +847,10 @@
       font-family: 'Consolas', 'Roboto Mono', monospace;
       width: 110px;
       border-radius: 3px;
+    }
+
+    .mem-toolbar input#memRows {
+      width: 52px;
     }
 
     .mem-toolbar button {
@@ -837,6 +869,19 @@
       background: #45475a;
     }
 
+    .mem-toolbar button.mem-refresh-btn {
+      background: transparent;
+      border-color: #45475a;
+      color: #a6adc8;
+      font-size: 14px;
+      padding: 3px 10px;
+    }
+
+    .mem-toolbar button.mem-refresh-btn:hover {
+      background: #45475a;
+      color: #cdd6f4;
+    }
+
     .mem-toolbar button.gear {
       background: #45475a;
       color: #f5c2e7;
@@ -846,6 +891,45 @@
 
     .mem-toolbar button.gear:hover {
       background: #585b70;
+    }
+
+    /* Segmented Byte/Word display-mode toggle */
+    .mem-view-toggle {
+      display: inline-flex;
+      align-items: center;
+      background: #181825;
+      border: 1px solid #45475a;
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+      user-select: none;
+    }
+
+    .mem-view-mode-btn {
+      background: transparent !important;
+      border: 1px solid transparent !important;
+      color: #6c7086 !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      padding: 3px 12px !important;
+      border-radius: 4px !important;
+      cursor: pointer !important;
+      font-family: inherit !important;
+      box-shadow: none !important;
+      transition: all 0.15s ease !important;
+    }
+
+    .mem-view-mode-btn:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.06) !important;
+      color: #a6adc8 !important;
+    }
+
+    .mem-view-mode-btn.active {
+      background: #313244 !important;
+      color: #cba6f7 !important;
+      border-color: #45475a !important;
+      font-weight: 700 !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
     }
 
     .mem-view {
@@ -947,38 +1031,79 @@
       outline: 1px solid #cba6f7;
     }
 
-    .mem-view-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      font-size: 12.5px;
-      color: #6c7086;
-      font-weight: 500;
-      user-select: none;
-      white-space: nowrap;
-    }
-
-    .mem-view-toggle input {
-      width: 13px;
-      height: 13px;
-      accent-color: #cba6f7;
-      cursor: pointer;
-      margin: 0;
-    }
-
     .mem-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 2px 0;
       font-size: 11.5px;
       color: #bac2de;
       font-weight: 500;
       padding: 5px 8px;
       border-bottom: 1px solid #313244;
+      line-height: 1.5;
+    }
+
+    .mem-legend-mode {
+      color: #bac2de;
+    }
+
+    .mem-legend-endian {
+      color: #00ffff;
+      font-weight: bold;
+    }
+
+    .mem-legend-label {
+      color: #fab387;
+      font-weight: bold;
+    }
+
+    .mem-legend-changed {
+      color: #ffe08f;
+      font-weight: bold;
+    }
+
+    .mem-legend-editable {
+      color: #89b4fa;
+      font-weight: 550;
+    }
+
+    .mem-legend-sep {
+      color: #6c7086;
     }
 
     .mmio-desc {
       font-size: 11.5px;
       color: #b4befe;
       font-weight: 500;
+    }
+
+    .mem-row-label {
+      font-size: 11.5px;
+      color: #fab387;
+      font-weight: bold;
+    }
+
+    /* Anchored symbol labels: the label is placed directly ABOVE the 4-byte word
+       it belongs to. .mem-row-label-anchor stacks label + word cells vertically;
+       .mem-row-bytes wraps the four byte cells of a group so they stay in a row. */
+    .mem-row-label-anchor {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      vertical-align: top;
+    }
+    .mem-row-label-anchor .mem-row-label {
+      font-size: 10.5px;
+      color: #fab387;
+      font-weight: bold;
+      line-height: 1.15;
+      padding: 0 6px;
+      white-space: nowrap;
+      text-align: left;
+    }
+    .mem-row-label-anchor .mem-row-bytes {
+      display: inline-flex;
     }
 
     /* Machine / Disassembly views */
@@ -1039,7 +1164,9 @@
     }
 
     .code-list .pseudo {
-      color: #fab387;
+      /* Simple colour swap: pseudoinstructions were orange (the label colour in
+         the code window / memory view); the panel's label blue is a better fit. */
+      color: #89b4fa;
     }
 
     .code-list .native-expanded {
@@ -1075,7 +1202,8 @@
     }
 
     .disasm-label-name {
-      color: #f9e2af;
+      /* Orange like the code-window labels and the memory-view row labels */
+      color: #fab387;
       font-family: 'Consolas', 'Roboto Mono', 'SF Mono', monospace;
       font-weight: 700;
     }
@@ -2447,7 +2575,6 @@
       }
 
       .mem-toolbar {
-        flex-wrap: wrap;
         gap: 4px;
       }
 
@@ -2457,7 +2584,12 @@
         padding: 2px 4px;
       }
 
-      .mem-toolbar button {
+      .mem-toolbar input#memRows {
+        width: 44px;
+      }
+
+      .mem-toolbar button,
+      .mem-view-mode-btn {
         padding: 2px 6px;
         font-size: 11px;
       }
@@ -2783,28 +2915,37 @@
         </div>
         <div class="tab-content" id="tab-memory">
           <div class="mem-toolbar">
-            <span style="color:#6c7086;font-size:13px;">Addr</span>
-            <input type="text" id="memAddr" value="0x400000" onchange="updateMemoryView()"
-              onkeydown="if(event.key==='Enter')updateMemoryView()">
-            <span style="color:#6c7086;font-size:13px;">Rows</span>
-            <input type="number" id="memRows" value="64" min="1" max="128" style="width:50px;"
-              onchange="updateMemoryView()">
-            <label class="mem-view-toggle" title="Toggle between separate editable bytes and whole 32-bit word display">
-              <input type="checkbox" id="memViewModeToggle" onchange="setMemViewMode(this.checked ? 'word' : 'bytes')">
-              Word
-            </label>
-            <div class="mem-subtabs">
-              <button class="mem-subtab-btn active" id="memTabBtn-code" onclick="memGo('code')" title="Program / code segment">Code</button>
-              <button class="mem-subtab-btn" id="memTabBtn-data" onclick="memGo('data')" title="Data / static segment (writes land here)">Data</button>
-              <button class="mem-subtab-btn" id="memTabBtn-stack" onclick="memGo('stack')" title="Stack region near the stack pointer">Stack</button>
-              <button class="mem-subtab-btn" id="memTabBtn-mmio" onclick="memGo('mmio')" title="Memory-mapped I/O region">MMIO</button>
+            <div class="mem-toolbar-row">
+              <label class="mem-tool-label" for="memAddr">Addr</label>
+              <input type="text" id="memAddr" value="0x400000" onchange="updateMemoryView()"
+                onkeydown="if(event.key==='Enter')updateMemoryView()">
+              <div class="mem-subtabs" role="group" aria-label="Memory region">
+                <button class="mem-subtab-btn active" id="memTabBtn-code" onclick="memGo('code')" title="Program / code segment">Code</button>
+                <button class="mem-subtab-btn" id="memTabBtn-data" onclick="memGo('data')" title="Data / static segment (writes land here)">Data</button>
+                <button class="mem-subtab-btn" id="memTabBtn-stack" onclick="memGo('stack')" title="Stack region near the stack pointer">Stack</button>
+                <button class="mem-subtab-btn" id="memTabBtn-mmio" onclick="memGo('mmio')" title="Memory-mapped I/O region">MMIO</button>
+              </div>
+              <button class="mem-refresh-btn" onclick="updateMemoryView()" title="Refresh memory view">&#x21bb;</button>
             </div>
-            <button onclick="updateMemoryView()">&#x21bb;</button>
+            <div class="mem-toolbar-row">
+              <label class="mem-tool-label" for="memRows">Rows</label>
+              <input type="number" id="memRows" value="64" min="1" max="128" onchange="updateMemoryView()">
+              <div class="mem-view-toggle" role="group" aria-label="Display mode">
+                <button type="button" id="memViewModeBytes" class="mem-view-mode-btn active"
+                  title="Show separate editable bytes (groups of 4 bytes = one 32-bit little-endian word)" onclick="setMemViewMode('bytes')">Byte</button>
+                <button type="button" id="memViewModeWord" class="mem-view-mode-btn"
+                  title="Show one whole 32-bit little-endian word per 4-byte group" onclick="setMemViewMode('word')">Word</button>
+              </div>
+            </div>
           </div>
           <div class="mem-legend">
-            <span id="memLegendText">groups of 4 bytes = one 32-bit <span style="color:#00ffff;font-weight:bold">little endian (LSB to the left) </span> word &nbsp;·&nbsp;</span> <span style="color:#cba6f7">label</span> = symbol at row
-            &nbsp;·&nbsp;
-            <span style="color:#ffe08f;font-weight:bold">highlighted bytes</span> were written at runtime &nbsp;·&nbsp; <span style="color:#89b4fa;font-weight:550;">Data/Stack/MMIO: editable</span> (Code: read-only)
+            <span id="memLegendText" class="mem-legend-mode">groups of 4 bytes = one 32-bit <span class="mem-legend-endian">little endian (LSB to the left) </span> word</span>
+            <span class="mem-legend-sep">&nbsp;·&nbsp;</span>
+            <span><span class="mem-legend-label">label</span> = symbol at row</span>
+            <span class="mem-legend-sep">&nbsp;·&nbsp;</span>
+            <span><span class="mem-legend-changed">highlighted bytes</span> were written at runtime</span>
+            <span class="mem-legend-sep">&nbsp;·&nbsp;</span>
+            <span><span class="mem-legend-editable">Data/Stack/MMIO: editable</span> (Code: read-only)</span>
           </div>
           <div class="mem-view" id="memView"></div>
         </div>
@@ -3004,8 +3145,8 @@
           <div id="disassemblyDisplay"></div>
         </div>
           <div class="panel-stack-empty">
-            All panels are hidden.<br>Use the buttons above to show <b>Registers</b>, <b>Memory</b>,
-            <b>Peripherals</b>, or <b>Disassembly</b>.
+            <span class="panel-stack-empty-icon">▤</span>
+            <span>All panels are hidden — use the buttons above to show <span class="panel-stack-empty-panels">Registers, Memory, Peripherals, or Disassembly</span>.</span>
           </div>
         </div>
       </div>
@@ -8110,12 +8251,52 @@ function updateRegisters() {
       const isStackView = (activeMemRegion === 'stack' || currentMemSegment === 'stack');
       const wordMode = (memViewMode === 'word');
 
+      // Build address -> label-name map (same approach as the disassembly view)
+      const labelsByAddr = {};
+      if (labels && typeof labels === 'object') {
+        for (const [name, addr] of Object.entries(labels)) {
+          if (typeof addr === 'number' && !isNaN(addr)) {
+            const uaddr = addr >>> 0;
+            if (!labelsByAddr[uaddr]) labelsByAddr[uaddr] = [];
+            if (!labelsByAddr[uaddr].includes(name)) labelsByAddr[uaddr].push(name);
+          }
+        }
+      }
+
+      // Returns an anchored orange "label" annotation that sits directly ABOVE
+      // the 4-byte word at `wordStart` ('' when no label falls inside it). The
+      // wrapper (.mem-row-label-anchor) stacks the label above the wrapped
+      // group of bytes/word cell so they share an exact column — this works in
+      // both byte and word display modes and for stack-view rows. `inner`
+      // carries the rendered cell(s) so they sit directly under the label.
+      // When a label is NOT word-aligned, a title tooltip reveals the exact
+      // byte address (hover only — zero visual clutter).
+      const labelAnnotationHtml = (wordStart, inner) => {
+        const names = [];
+        const offsets = [];
+        for (let c = 0; c < 4; c++) {
+          const offset = isStackView ? ((wordStart - c) >>> 0) : ((wordStart + c) >>> 0);
+          if (labelsByAddr[offset]) {
+            for (const n of labelsByAddr[offset]) if (!names.includes(n)) names.push(n);
+            if (!offsets.includes(offset)) offsets.push(offset);
+          }
+        }
+        if (!names.length) return inner;
+        // Tooltip only when a label's byte offset within the word is non-zero,
+        // i.e. the symbol is not word-aligned (its exact byte matters).
+        const unaligned = offsets.some(o => (o - wordStart) % 4 !== 0);
+        const title = unaligned
+          ? ` title="Symbol${offsets.length > 1 ? 's' : ''} at ${offsets.map(o => '0x' + o.toString(16).padStart(8, '0')).join(', ')}"` : '';
+        return '<span class="mem-row-label-anchor"><span class="mem-row-label"' + title + '>' +
+          names.map(escapeHtml).join(', ') + '</span>' + inner + '</span>';
+      };
+
       // Update legend hint for the active view mode
       const legendEl = document.getElementById('memLegendText');
       if (legendEl) {
         legendEl.innerHTML = wordMode
-          ? 'each <span style="color:#00ffff;font-weight:bold">word = 32-bit little endian (LSB to the left)</span> &nbsp;·&nbsp;'
-          : 'groups of 4 bytes = one 32-bit <span style="color:#00ffff;font-weight:bold">little endian (LSB to the left) </span> word &nbsp;·&nbsp;';
+          ? 'each row = two <span class="mem-legend-endian">32-bit words</span> &nbsp;·&nbsp; <span class="mem-legend-endian">Full word (LSB to the right)</span>'
+          : 'groups of 4 bytes = one 32-bit <span class="mem-legend-endian">little endian (LSB to the left) </span> word';
       }
 
       let html = '';
@@ -8146,8 +8327,9 @@ function updateRegisters() {
               }
               const cls = isChanged ? ' changed' : '';
               const wordHex = (wordVal >>> 0).toString(16).padStart(8, '0');
+              const cell = `<span class="val word-cell${cls}" data-addr="${wordStart}" data-size="4" onclick="startMemWordCellEdit(event,${wordStart})" title="Click to edit 32-bit word (little-endian)">${wordHex}</span>`;
               if (p > 0) hexVals += '<span class="wordgap"></span>';
-              hexVals += `<span class="val word-cell${cls}" data-addr="${wordStart}" data-size="4" onclick="startMemWordCellEdit(event,${wordStart})" title="Click to edit 32-bit word (little-endian)">${wordHex}</span>`;
+              hexVals += labelAnnotationHtml(wordStart, cell);
               if (wordStart === (UART_RX_VALID >>> 0)) descriptors.push('UART RX VALID RO 0xFFFF0000');
               else if (wordStart === (UART_RX >>> 0)) descriptors.push('UART RX RO 0xFFFF0004');
               else if (wordStart === (UART_TX_READY >>> 0)) descriptors.push('UART TX READY RO 0xFFFF0008');
@@ -8169,17 +8351,23 @@ function updateRegisters() {
             continue;
           }
 
-          for (let c = 0; c < 8; c++) {
-            const offset = (base + c) >>> 0;
-            const val = readMem(offset, 1, true) & 0xFF;
-            const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
-            const cls = isChanged ? ' changed' : '';
-            if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
-            hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2, '0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte | Double-click: edit word">${val.toString(16).padStart(2, '0')}</span>`;
+          // Byte view: render 4-byte groups so a label can be anchored above them
+          for (let c = 0; c < 8; c += 4) {
+            const wordStart = (base + c) >>> 0;
+            let groupBytes = '';
+            if (c > 0) hexVals += '<span class="wordgap"></span>';
+            for (let i = 0; i < 4; i++) {
+              const offset = (wordStart + i) >>> 0;
+              const val = readMem(offset, 1, true) & 0xFF;
+              const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
+              const cls = isChanged ? ' changed' : '';
+              groupBytes += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2, '0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte | Double-click: edit word">${val.toString(16).padStart(2, '0')}</span>`;
 
-            const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-            const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
-            asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+              const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
+              const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
+              asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+            }
+            hexVals += labelAnnotationHtml(wordStart, '<span class="mem-row-bytes">' + groupBytes + '</span>');
           }
 
           for (let p = 0; p < 8; p += 4) {
@@ -8225,12 +8413,14 @@ function updateRegisters() {
               const cls = isChanged ? ' changed' : '';
               const wordStart = offsets[0];
               const wordHex = (wordVal >>> 0).toString(16).padStart(8, '0');
-              if (w > 0) hexVals += '<span class="wordgap"></span>';
+              let cell;
               if (allReadonly) {
-                hexVals += `<span class="val word-cell${cls} readonly-code" data-addr="${wordStart}" data-size="4" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${wordHex}</span>`;
+                cell = `<span class="val word-cell${cls} readonly-code" data-addr="${wordStart}" data-size="4" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${wordHex}</span>`;
               } else {
-                hexVals += `<span class="val word-cell${cls}" data-addr="${wordStart}" data-size="4" onclick="startMemWordCellEdit(event,${wordStart})" title="Click to edit 32-bit word (little-endian)">${wordHex}</span>`;
+                cell = `<span class="val word-cell${cls}" data-addr="${wordStart}" data-size="4" onclick="startMemWordCellEdit(event,${wordStart})" title="Click to edit 32-bit word (little-endian)">${wordHex}</span>`;
               }
+              if (w > 0) hexVals += '<span class="wordgap"></span>';
+              hexVals += labelAnnotationHtml(wordStart, cell);
             }
             for (let c = 0; c < 8; c++) {
               const offset = isStackView ? ((base - c) >>> 0) : ((base + c) >>> 0);
@@ -8241,25 +8431,30 @@ function updateRegisters() {
               asciiVals += `<span class="ascii${cls}" title="Byte 0x${offset.toString(16).padStart(8, '0')}">${escapeHtml(ch)}</span>`;
             }
           } else {
-            for (let c = 0; c < 8; c++) {
-              const offset = isStackView ? ((base - c) >>> 0) : ((base + c) >>> 0);
-              const val = getMemByte(offset);
-              const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
-              const cls = isChanged ? ' changed' : '';
-              const isCodeSegment = isCodeSegmentAddress(offset);
+            // Byte view: render 4-byte groups so a label can be anchored above them
+            for (let c = 0; c < 8; c += 4) {
+              const wordStart = isStackView ? ((base - c) >>> 0) : ((base + c) >>> 0);
+              let groupBytes = '';
+              if (c > 0) hexVals += '<span class="wordgap"></span>';
+              for (let i = 0; i < 4; i++) {
+                const offset = isStackView ? ((wordStart - i) >>> 0) : ((wordStart + i) >>> 0);
+                const val = getMemByte(offset);
+                const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
+                const cls = isChanged ? ' changed' : '';
+                const isCodeSegment = isCodeSegmentAddress(offset);
 
-              if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
-
-              if (isCodeSegment) {
-                hexVals += `<span class="val${cls} readonly-code" data-addr="${offset}" data-size="1" style="cursor:default;opacity:0.88;" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${val.toString(16).padStart(2, '0')}</span>`;
-                const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-                asciiVals += `<span class="ascii${cls}" title="Code segment byte (read-only)">${escapeHtml(ch)}</span>`;
-              } else {
-                hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2, '0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2, '0')}</span>`;
-                const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-                const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
-                asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+                if (isCodeSegment) {
+                  groupBytes += `<span class="val${cls} readonly-code" data-addr="${offset}" data-size="1" style="cursor:default;opacity:0.88;" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${val.toString(16).padStart(2, '0')}</span>`;
+                  const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
+                  asciiVals += `<span class="ascii${cls}" title="Code segment byte (read-only)">${escapeHtml(ch)}</span>`;
+                } else {
+                  groupBytes += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2, '0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2, '0')}</span>`;
+                  const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
+                  const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
+                  asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+                }
               }
+              hexVals += labelAnnotationHtml(wordStart, '<span class="mem-row-bytes">' + groupBytes + '</span>');
             }
           }
 
@@ -8271,8 +8466,10 @@ function updateRegisters() {
 
     function setMemViewMode(mode) {
       memViewMode = (mode === 'word') ? 'word' : 'bytes';
-      const toggle = document.getElementById('memViewModeToggle');
-      if (toggle) toggle.checked = (memViewMode === 'word');
+      const bytesBtn = document.getElementById('memViewModeBytes');
+      const wordBtn = document.getElementById('memViewModeWord');
+      if (bytesBtn) bytesBtn.classList.toggle('active', memViewMode === 'bytes');
+      if (wordBtn) wordBtn.classList.toggle('active', memViewMode === 'word');
       updateMemoryView();
       setStatus(memViewMode === 'word' ? 'Memory view: 32-bit word display' : 'Memory view: separate byte display', 'info');
     }
@@ -8728,6 +8925,11 @@ function updateRegisters() {
           else btn.classList.remove('active');
         }
       });
+      // Sync the segmented Byte/Word display-mode buttons
+      const bytesBtn = document.getElementById('memViewModeBytes');
+      const wordBtn = document.getElementById('memViewModeWord');
+      if (bytesBtn) bytesBtn.classList.toggle('active', memViewMode === 'bytes');
+      if (wordBtn) wordBtn.classList.toggle('active', memViewMode === 'word');
     }
 
     function updateMachineCode() {
