@@ -910,6 +910,63 @@
       width: 20px;
     }
 
+    .mem-view span.val.word-cell {
+      color: #f5c2e7;
+      cursor: text;
+      display: inline-block;
+      min-width: 9ch;
+      text-align: center;
+      background: rgba(203, 166, 247, 0.08);
+      border: 1px solid rgba(203, 166, 247, 0.28);
+      border-radius: 3px;
+      padding: 0 6px;
+      margin: 0 2px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .mem-view span.val.word-cell.readonly-code {
+      cursor: default !important;
+      opacity: 0.88;
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .mem-view span.val.word-cell:hover:not(.readonly-code) {
+      background: rgba(203, 166, 247, 0.2);
+    }
+
+    .mem-view span.val.word-cell.changed {
+      color: #ffe08f;
+      font-weight: bold;
+    }
+
+    .mem-view span.val.word-cell.editing {
+      background: #f5c2e7;
+      color: #1e1e2e;
+      outline: 1px solid #cba6f7;
+    }
+
+    .mem-view-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 12.5px;
+      color: #6c7086;
+      font-weight: 500;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .mem-view-toggle input {
+      width: 13px;
+      height: 13px;
+      accent-color: #cba6f7;
+      cursor: pointer;
+      margin: 0;
+    }
+
     .mem-legend {
       font-size: 11.5px;
       color: #bac2de;
@@ -2531,6 +2588,10 @@
             <div>
               <label style="font-weight:600;display:block;margin-bottom:4px;color:#cba6f7;">Architecture &amp; ABI Flags:</label>
               <input type="text" id="godboltArchFlags" value="-march=rv32im -mabi=ilp32" style="width:100%;padding:5px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;box-sizing:border-box;font-family:monospace;">
+              <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#cba6f7;cursor:pointer;margin-top:6px;font-size:12.5px;">
+                <input type="checkbox" id="godboltUseM" checked onchange="syncGodboltArchFlags()" style="accent-color:#cba6f7;width:15px;height:15px;cursor:pointer;">
+                Include M extension (RV32I + M — mul/div)
+              </label>
             </div>
             <div style="font-size:11px;color:#9399b2;line-height:1.4;background:#11111b;padding:8px;border-radius:4px;border:1px solid #313244;">
               💡 <strong>Note:</strong> C source code is compiled online via Compiler Explorer (Godbolt) REST API
@@ -2728,6 +2789,10 @@
             <span style="color:#6c7086;font-size:13px;">Rows</span>
             <input type="number" id="memRows" value="64" min="1" max="128" style="width:50px;"
               onchange="updateMemoryView()">
+            <label class="mem-view-toggle" title="Toggle between separate editable bytes and whole 32-bit word display">
+              <input type="checkbox" id="memViewModeToggle" onchange="setMemViewMode(this.checked ? 'word' : 'bytes')">
+              Word
+            </label>
             <div class="mem-subtabs">
               <button class="mem-subtab-btn active" id="memTabBtn-code" onclick="memGo('code')" title="Program / code segment">Code</button>
               <button class="mem-subtab-btn" id="memTabBtn-data" onclick="memGo('data')" title="Data / static segment (writes land here)">Data</button>
@@ -2737,7 +2802,7 @@
             <button onclick="updateMemoryView()">&#x21bb;</button>
           </div>
           <div class="mem-legend">
-            groups of 4 bytes = one 32-bit <span style="color:#00ffff;font-weight:bold">little endian (LSB to the left) </span> word &nbsp;·&nbsp; <span style="color:#cba6f7">label</span> = symbol at row
+            <span id="memLegendText">groups of 4 bytes = one 32-bit <span style="color:#00ffff;font-weight:bold">little endian (LSB to the left) </span> word &nbsp;·&nbsp;</span> <span style="color:#cba6f7">label</span> = symbol at row
             &nbsp;·&nbsp;
             <span style="color:#ffe08f;font-weight:bold">highlighted bytes</span> were written at runtime &nbsp;·&nbsp; <span style="color:#89b4fa;font-weight:550;">Data/Stack/MMIO: editable</span> (Code: read-only)
           </div>
@@ -8024,6 +8089,7 @@ function updateRegisters() {
     // ============================================================
 
     let activeMemRegion = 'code';
+    let memViewMode = 'bytes'; // 'bytes' = separate editable bytes, 'word' = one whole 32-bit word per 4-byte group
 
     function isCodeSegmentAddress(addr) {
       return (addr >= baseAddress && addr < dataBase) || (activeMemRegion === 'code' && addr < dataBase);
@@ -8042,6 +8108,15 @@ function updateRegisters() {
       addr = (addr >>> 0) & ~0x7;  // Align to 8-byte boundary unsigned
 
       const isStackView = (activeMemRegion === 'stack' || currentMemSegment === 'stack');
+      const wordMode = (memViewMode === 'word');
+
+      // Update legend hint for the active view mode
+      const legendEl = document.getElementById('memLegendText');
+      if (legendEl) {
+        legendEl.innerHTML = wordMode
+          ? 'each <span style="color:#00ffff;font-weight:bold">word = 32-bit little endian (LSB to the left)</span> &nbsp;·&nbsp;'
+          : 'groups of 4 bytes = one 32-bit <span style="color:#00ffff;font-weight:bold">little endian (LSB to the left) </span> word &nbsp;·&nbsp;';
+      }
 
       let html = '';
       for (let r = 0; r < rows; r++) {
@@ -8055,6 +8130,44 @@ function updateRegisters() {
         if (isMMIO || hasPeriph) {
           let hexVals = '';
           let asciiVals = '';
+          const descriptors = [];
+
+          if (wordMode) {
+            // Word view: one whole 32-bit word per 4-byte register
+            for (let p = 0; p < 8; p += 4) {
+              const wordStart = (base + p) >>> 0;
+              let wordVal = 0;
+              let isChanged = false;
+              for (let i = 0; i < 4; i++) {
+                const offset = (wordStart + i) >>> 0;
+                const bv = readMem(offset, 1, true) & 0xFF;
+                wordVal |= bv << (i * 8);
+                if (lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size)) isChanged = true;
+              }
+              const cls = isChanged ? ' changed' : '';
+              const wordHex = (wordVal >>> 0).toString(16).padStart(8, '0');
+              if (p > 0) hexVals += '<span class="wordgap"></span>';
+              hexVals += `<span class="val word-cell${cls}" data-addr="${wordStart}" data-size="4" onclick="startMemWordCellEdit(event,${wordStart})" title="Click to edit 32-bit word (little-endian)">${wordHex}</span>`;
+              if (wordStart === (UART_RX_VALID >>> 0)) descriptors.push('UART RX VALID RO 0xFFFF0000');
+              else if (wordStart === (UART_RX >>> 0)) descriptors.push('UART RX RO 0xFFFF0004');
+              else if (wordStart === (UART_TX_READY >>> 0)) descriptors.push('UART TX READY RO 0xFFFF0008');
+              else if (wordStart === (UART_TX >>> 0)) descriptors.push('UART TX WO 0xFFFF000C');
+              else if (wordStart === (OLED_COL >>> 0)) descriptors.push('OLED COL WO 0xFFFF0020');
+              else if (wordStart === (OLED_ROW >>> 0)) descriptors.push('OLED ROW WO 0xFFFF0024');
+              else if (wordStart === (OLED_DATA >>> 0)) descriptors.push('OLED DATA WO 0xFFFF0028');
+              else if (wordStart === (OLED_CTRL >>> 0)) descriptors.push('OLED CTRL WO 0xFFFF002C');
+              else if (wordStart === (ACCEL_DATA >>> 0)) descriptors.push('ACCEL DATA RO 0xFFFF0040');
+              else if (wordStart === (ACCEL_DREADY >>> 0)) descriptors.push('ACCEL DREADY RO 0xFFFF0044');
+              else if (wordStart === (PERIPH_LED >>> 0)) descriptors.push('LED WO 0xFFFF0060');
+              else if (wordStart === (PERIPH_DIP >>> 0)) descriptors.push('DIP RO 0xFFFF0064');
+              else if (wordStart === (PERIPH_PB >>> 0)) descriptors.push('PB RO 0xFFFF0068');
+              else if (wordStart === (PERIPH_SEVENSEG >>> 0)) descriptors.push('7SEG WO 0xFFFF0080');
+              else if (wordStart === (CYCLECOUNT >>> 0)) descriptors.push('CYCLECOUNT RO 0xFFFF00A0');
+            }
+            let desc = descriptors.length ? `[${descriptors.join(' · ')}]` : '[MMIO]';
+            html += `<div><span class="addr">0x${base.toString(16).padStart(8, '0')}</span> ${hexVals} <span class="mmio-desc" style="font-size:10px;color:#cba6f7;">${desc}</span></div>`;
+            continue;
+          }
 
           for (let c = 0; c < 8; c++) {
             const offset = (base + c) >>> 0;
@@ -8069,7 +8182,6 @@ function updateRegisters() {
             asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
           }
 
-          const descriptors = [];
           for (let p = 0; p < 8; p += 4) {
             const wordAddr = (base + p) >>> 0;
             if (wordAddr === (UART_RX_VALID >>> 0)) descriptors.push('UART RX VALID RO 0xFFFF0000');
@@ -8095,24 +8207,59 @@ function updateRegisters() {
           let hexVals = '';
           let asciiVals = '';
 
-          for (let c = 0; c < 8; c++) {
-            const offset = isStackView ? ((base - c) >>> 0) : ((base + c) >>> 0);
-            const val = getMemByte(offset);
-            const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
-            const cls = isChanged ? ' changed' : '';
-            const isCodeSegment = isCodeSegmentAddress(offset);
-
-            if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
-
-            if (isCodeSegment) {
-              hexVals += `<span class="val${cls} readonly-code" data-addr="${offset}" data-size="1" style="cursor:default;opacity:0.88;" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${val.toString(16).padStart(2, '0')}</span>`;
+          if (wordMode) {
+            // Word view: each 4-byte group rendered as one whole 32-bit word (little-endian)
+            for (let w = 0; w < 8; w += 4) {
+              const offsets = [];
+              let wordVal = 0;
+              let isChanged = false;
+              let allReadonly = true;
+              for (let c = 0; c < 4; c++) {
+                const offset = isStackView ? ((base - (w + c)) >>> 0) : ((base + (w + c)) >>> 0);
+                offsets.push(offset);
+                const bv = getMemByte(offset);
+                wordVal |= bv << (c * 8);
+                if (lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size)) isChanged = true;
+                if (!isCodeSegmentAddress(offset)) allReadonly = false;
+              }
+              const cls = isChanged ? ' changed' : '';
+              const wordStart = offsets[0];
+              const wordHex = (wordVal >>> 0).toString(16).padStart(8, '0');
+              if (w > 0) hexVals += '<span class="wordgap"></span>';
+              if (allReadonly) {
+                hexVals += `<span class="val word-cell${cls} readonly-code" data-addr="${wordStart}" data-size="4" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${wordHex}</span>`;
+              } else {
+                hexVals += `<span class="val word-cell${cls}" data-addr="${wordStart}" data-size="4" onclick="startMemWordCellEdit(event,${wordStart})" title="Click to edit 32-bit word (little-endian)">${wordHex}</span>`;
+              }
+            }
+            for (let c = 0; c < 8; c++) {
+              const offset = isStackView ? ((base - c) >>> 0) : ((base + c) >>> 0);
+              const val = getMemByte(offset);
+              const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
+              const cls = isChanged ? ' changed' : '';
               const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-              asciiVals += `<span class="ascii${cls}" title="Code segment byte (read-only)">${escapeHtml(ch)}</span>`;
-            } else {
-              hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2, '0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2, '0')}</span>`;
-              const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-              const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
-              asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+              asciiVals += `<span class="ascii${cls}" title="Byte 0x${offset.toString(16).padStart(8, '0')}">${escapeHtml(ch)}</span>`;
+            }
+          } else {
+            for (let c = 0; c < 8; c++) {
+              const offset = isStackView ? ((base - c) >>> 0) : ((base + c) >>> 0);
+              const val = getMemByte(offset);
+              const isChanged = lastChangedMem.some(m => offset >= m.addr && offset < m.addr + m.size);
+              const cls = isChanged ? ' changed' : '';
+              const isCodeSegment = isCodeSegmentAddress(offset);
+
+              if (c > 0 && c % 4 === 0) hexVals += '<span class="wordgap"></span>';
+
+              if (isCodeSegment) {
+                hexVals += `<span class="val${cls} readonly-code" data-addr="${offset}" data-size="1" style="cursor:default;opacity:0.88;" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${val.toString(16).padStart(2, '0')}</span>`;
+                const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
+                asciiVals += `<span class="ascii${cls}" title="Code segment byte (read-only)">${escapeHtml(ch)}</span>`;
+              } else {
+                hexVals += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2, '0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2, '0')}</span>`;
+                const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
+                const asciiOnclick = `onclick="focusMemByte(${offset})" title="Click matching hex byte to edit"`;
+                asciiVals += `<span class="ascii${cls}" ${asciiOnclick}>${escapeHtml(ch)}</span>`;
+              }
             }
           }
 
@@ -8120,6 +8267,14 @@ function updateRegisters() {
         }
       }
       memView.innerHTML = html;
+    }
+
+    function setMemViewMode(mode) {
+      memViewMode = (mode === 'word') ? 'word' : 'bytes';
+      const toggle = document.getElementById('memViewModeToggle');
+      if (toggle) toggle.checked = (memViewMode === 'word');
+      updateMemoryView();
+      setStatus(memViewMode === 'word' ? 'Memory view: 32-bit word display' : 'Memory view: separate byte display', 'info');
     }
 
     function editMemByte(addr) {
@@ -8219,11 +8374,32 @@ function updateRegisters() {
         if (el) spans.push(el);
       }
       if (spans.length < 4) return;
+      openMemWordOverlay(alignedAddr, spans);
+    }
 
+    // Word-cell click handler for the "word view" memory display mode.
+    function startMemWordCellEdit(event, wordStartAddr) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (isCodeSegmentAddress(wordStartAddr)) {
+        setStatus('Code segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
+        return;
+      }
+      openMemWordOverlay(wordStartAddr & ~0x3, null);
+    }
+
+    function openMemWordOverlay(alignedAddr, spans) {
       // Read current word value (little-endian)
       let wordVal = 0;
-      for (let i = 0; i < 4; i++) {
-        wordVal |= (parseInt(spans[i].textContent || '00', 16) & 0xFF) << (i * 8);
+      if (spans && spans.length >= 4) {
+        for (let i = 0; i < 4; i++) {
+          wordVal |= (parseInt(spans[i].textContent || '00', 16) & 0xFF) << (i * 8);
+        }
+      } else {
+        for (let i = 0; i < 4; i++) {
+          const off = (alignedAddr + i) >>> 0;
+          wordVal |= (getMemByte(off) & 0xFF) << (i * 8);
+        }
       }
       const wordHex = (wordVal >>> 0).toString(16).padStart(8, '0');
 
@@ -8248,7 +8424,7 @@ function updateRegisters() {
 
       // Store context for commit
       overlay._wordAddr = alignedAddr;
-      overlay._spans = spans;
+      overlay._spans = spans || [];
 
       const handleKey = (e) => {
         if (e.key === 'Enter') {
@@ -8891,12 +9067,23 @@ int main() {
       if (overlay) overlay.classList.remove('open');
     }
 
+    function syncGodboltArchFlags() {
+      const cb = document.getElementById('godboltUseM');
+      const input = document.getElementById('godboltArchFlags');
+      if (!input) return;
+      const useM = cb ? cb.checked : true;
+      const march = useM ? '-march=rv32im' : '-march=rv32i';
+      input.value = march + ' -mabi=ilp32';
+    }
+
     function resetCompilerConfig() {
       const selComp = document.getElementById('godboltCompilerSelect');
       const selOpt = document.getElementById('godboltOptSelect');
       const inputArch = document.getElementById('godboltArchFlags');
+      const useMCheck = document.getElementById('godboltUseM');
       if (selComp) selComp.value = 'rv32-cclang2010';
       if (selOpt) selOpt.value = '-O0';
+      if (useMCheck) useMCheck.checked = true;
       if (inputArch) inputArch.value = '-march=rv32im -mabi=ilp32';
       setStatus('Reset Godbolt compiler settings to default (Clang 20.1, -O0)', 'info');
     }
@@ -9302,8 +9489,11 @@ STACK_INIT:
       updateEditor();
       updateLineNumbers();
       clearLog();
+      if (editorLanguageMode === 'asm') {
+        assembleOnly(); // Auto-assemble on load so Run / Step are active immediately
+      }
       log(`Example loaded: ${name} (${currentFileName})`, 'info');
-      setStatus('Example loaded: ' + name);
+      setStatus('Example loaded: ' + name + (editorLanguageMode === 'asm' && assembled ? ' (auto-assembled — ready to Run/Step)' : ''));
       updateToolbarButtonStates();
     }
     window.loadExample = loadExample;
@@ -9539,8 +9729,10 @@ STACK_INIT:
         const compSelect = document.getElementById('godboltCompilerSelect');
         const optSelect = document.getElementById('godboltOptSelect');
         const archInput = document.getElementById('godboltArchFlags');
+        const useMCheck = document.getElementById('godboltUseM');
         if (compSelect) compSelect.value = 'rv32-cclang2010';
         if (optSelect) optSelect.value = '-O0';
+        if (useMCheck) useMCheck.checked = true;
         if (archInput) archInput.value = '-march=rv32im -mabi=ilp32';
         setStatus('Compiler settings reset to defaults (Clang 20.1, -O0)', 'info');
       } else if (currentSettingsTab === 'linker') {
@@ -10150,6 +10342,8 @@ STACK_INIT:
       loadProgram(mc);
       updateMachineCode();
       updateDisassembly();
+      updateMemoryView();
+      updateMemSubTabs();
       updateStats();
       highlightFirstCLine(mc);
 
@@ -10180,6 +10374,8 @@ STACK_INIT:
       loadProgram(mc);
       updateMachineCode();
       updateDisassembly();
+      updateMemoryView();
+      updateMemSubTabs();
       updateStats();
       highlightFirstLine(mc);
       assembled = true;
@@ -10733,8 +10929,11 @@ STACK_INIT:
         updateEditor();
         updateLineNumbers();
         clearLog();
+        if (editorLanguageMode === 'asm') {
+          assembleOnly(); // Auto-assemble on load so Run / Step are active immediately
+        }
         log(`Loaded file: ${file.name}`, 'success');
-        setStatus('File loaded: ' + file.name);
+        setStatus('File loaded: ' + file.name + (editorLanguageMode === 'asm' && assembled ? ' (auto-assembled — ready to Run/Step)' : ''));
         updateToolbarButtonStates();
 
         // Display loaded filename in example dropdown
@@ -11457,6 +11656,10 @@ result: .word 0
         return;
       }
       initCodeMirrorEditor();
+      // Auto-assemble the initial example so Run / Step are active on first load
+      if (editorLanguageMode === 'asm' && editor.value.trim()) {
+        try { assembleOnly(); } catch (e) { }
+      }
       updateToolbarButtonStates();
     }
     if (document.readyState === 'loading') {
@@ -11525,6 +11728,11 @@ result: .word 0
     window.togglePause = togglePause;
     window.updateRunButtonState = updateRunButtonState;
     window.updateToolbarButtonStates = updateToolbarButtonStates;
+    window.setMemViewMode = setMemViewMode;
+    window.getMemViewMode = () => memViewMode;
+    window.syncGodboltArchFlags = syncGodboltArchFlags;
+    window.openMemWordOverlay = openMemWordOverlay;
+    window.startMemWordCellEdit = startMemWordCellEdit;
     window.openFindReplace = openFindReplace;
     window.closeFindReplace = closeFindReplace;
     window.toggleFindCase = toggleFindCase;

@@ -86,6 +86,11 @@ Node-based harness in [`riscv_simulator_tests/`](file:///home/rajesh/GitHub/Visu
 
 ## Current version
 
+**v23.3** — Memory byte/word view toggle, M-extension compiler checkbox, and auto-assemble on load:
+- **Memory View toggle**: a small **"Word"** switch in the Memory toolbar flips between the classic separate-editable-bytes view (single-click byte edit, double-click word edit) and a **whole-32-bit-word view** where each aligned 4-byte group renders as one 8-digit little-endian hex word. Word cells are click-editable via the word overlay (code segment stays read-only), ASCII column and symbol labels are preserved, and the legend hint updates to match the active mode.
+- **Compiler options — M extension checkbox**: Settings → Compiler now has a tiny **"Include M extension (RV32I + M — mul/div)"** checkbox (checked by default) that automatically rewrites the Architecture & ABI flags text box between `-march=rv32im -mabi=ilp32` and `-march=rv32i -mabi=ilp32`. Both "Reset Defaults" paths restore the checkbox.
+- **Auto-assemble on load**: loading an example or file (and the initial boot example) now assembles immediately in ASM mode, so **Run and Step are active right away** and the **Assemble button is disabled** until the source is edited. Editing the code re-enables Assemble and disables Run/Step. The **Memory (code/data) view now refreshes immediately** after Assemble/Compile (previously only the Disassembly window updated).
+
 **v23.0** — 2×2 docking grid: when more than two inspector panels are docked they arrange in a 2×2 grid (2 rows × 2 columns) and the dock expands to half the window width; draggable column (`.panel-hsplitter`) and row (`.panel-vsplitter`) separators resize the grid, with row heights and column widths persisted.
 
 **v22.0** — Dockable/detachable inspector panels: Registers, Memory, Peripherals, and Disassembly are no longer mutually-exclusive tabs; they can be stacked in the side column or torn off into floating windows, with layout persisted to `localStorage`.
