@@ -86,6 +86,11 @@ Node-based harness in [`riscv_simulator_tests/`](file:///home/rajesh/GitHub/Visu
 
 ## Current version
 
+**v23.5** — Disassembly machine-code Byte/Word toggle (Word default), Word default for Memory, and accelerometer tilt start direction:
+- **Disassembly machine-code `[ Byte | Word ]` toggle**: a **segmented `[ Byte | Word ]` pill** in the Disassembly toolbar (same styling as the Memory toggle) switches the **Machine-code** column between the classic separate bytes (`xx xx xx xx`) and one **whole 8-digit little-endian 32-bit hex word** per 4-byte chunk. **Word is the default**.
+- **Word is the default everywhere**: the **Memory view also opens in Word mode** on load (Word button pre-highlighted, word-mode legend shown).
+- **Accelerometer `Tilt X` / `Tilt Y` first click is now $-1g$**: the first click tilts the selected axis to `-64` (`0xC0` = $-1g$), the second flips to `+64` (`+1g`), repeating alternately; the button tooltips read "Toggle Tilt X/Y (-1g / +1g)".
+
 **v23.4** — Streamlined Memory-view toolbar & legend:
 - **Two-row Memory toolbar**: Row 1 = `Addr` + `[ Code | Data | Stack | MMIO ]` + **↻ refresh**; Row 2 = `Rows` + a **segmented `[ Byte | Word ]`** display-mode toggle (a two-button pill with the active mode highlighted, replacing the old bare checkbox).
 - **Word-mode legend**: when Word view is active the legend shows *"each row = two 32-bit words · Full word (LSB to the right)"* (never called "big endian" — RISC-V is little-endian); byte mode keeps *"groups of 4 bytes = one 32-bit little endian (LSB to the left) word"*. The little-endian hint stays cyan.

@@ -363,19 +363,19 @@ const accelTByte = readMem(0xFFFF0043, 1);
 const accelPackingPass = (packedAccel === expPacked) && (accelZByte === 127) && (accelYByte === 0xC0) && (accelXByte === 64) && (accelTByte === 25);
 console.log('  ACCEL_DATA packing {temp, X, Y, Z} & byte offsets:', accelPackingPass ? 'PASS' : 'FAIL');
 
-// 10. Tilt preset toggle (+1g / -1g)
+// 10. Tilt preset toggle (-1g / +1g)
 setAccelPreset('flat');
 const flatZ = accelZ === 64 && accelX === 0 && accelY === 0;
-setAccelPreset('tiltX'); // 1st click -> +64 (+1g)
-const tiltX1 = accelX === 64;
-setAccelPreset('tiltX'); // 2nd click -> -64 (-1g)
-const tiltX2 = accelX === -64;
-setAccelPreset('tiltY'); // 1st click -> +64 (+1g)
-const tiltY1 = accelY === 64;
-setAccelPreset('tiltY'); // 2nd click -> -64 (-1g)
-const tiltY2 = accelY === -64;
+setAccelPreset('tiltX'); // 1st click -> -64 (-1g)
+const tiltX1 = accelX === -64;
+setAccelPreset('tiltX'); // 2nd click -> +64 (+1g)
+const tiltX2 = accelX === 64;
+setAccelPreset('tiltY'); // 1st click -> -64 (-1g)
+const tiltY1 = accelY === -64;
+setAccelPreset('tiltY'); // 2nd click -> +64 (+1g)
+const tiltY2 = accelY === 64;
 const tiltTogglePass = flatZ && tiltX1 && tiltX2 && tiltY1 && tiltY2;
-console.log('  Accelerometer Tilt X/Y toggle between +1g and -1g:', tiltTogglePass ? 'PASS' : 'FAIL');
+console.log('  Accelerometer Tilt X/Y toggle between -1g and +1g:', tiltTogglePass ? 'PASS' : 'FAIL');
 
 // 11. RARS Syscall Execution (print_int, print_string, print_hex, print_char, exit)
 resetAll();

@@ -2931,15 +2931,15 @@
               <label class="mem-tool-label" for="memRows">Rows</label>
               <input type="number" id="memRows" value="64" min="1" max="128" onchange="updateMemoryView()">
               <div class="mem-view-toggle" role="group" aria-label="Display mode">
-                <button type="button" id="memViewModeBytes" class="mem-view-mode-btn active"
+                <button type="button" id="memViewModeBytes" class="mem-view-mode-btn"
                   title="Show separate editable bytes (groups of 4 bytes = one 32-bit little-endian word)" onclick="setMemViewMode('bytes')">Byte</button>
-                <button type="button" id="memViewModeWord" class="mem-view-mode-btn"
+                <button type="button" id="memViewModeWord" class="mem-view-mode-btn active"
                   title="Show one whole 32-bit little-endian word per 4-byte group" onclick="setMemViewMode('word')">Word</button>
               </div>
             </div>
           </div>
           <div class="mem-legend">
-            <span id="memLegendText" class="mem-legend-mode">groups of 4 bytes = one 32-bit <span class="mem-legend-endian">little endian (LSB to the left) </span> word</span>
+            <span id="memLegendText" class="mem-legend-mode">each row = two <span class="mem-legend-endian">32-bit words</span> &nbsp;·&nbsp; <span class="mem-legend-endian">Full word (LSB to the right)</span></span>
             <span class="mem-legend-sep">&nbsp;·&nbsp;</span>
             <span><span class="mem-legend-label">label</span> = symbol at row</span>
             <span class="mem-legend-sep">&nbsp;·&nbsp;</span>
@@ -3093,9 +3093,9 @@
                 <div style="display:flex;gap:6px;margin-top:4px;font-size:10px;flex-wrap:wrap;">
                   <button onclick="setAccelPreset('flat')" style="padding:2px 6px;font-size:10px;">Flat (Z=+1g)</button>
                   <button onclick="setAccelPreset('tiltX')" id="btnTiltX" style="padding:2px 6px;font-size:10px;"
-                    title="Toggle Tilt X (+1g / -1g)">Tilt X (±1g)</button>
+                    title="Toggle Tilt X (-1g / +1g)">Tilt X (±1g)</button>
                   <button onclick="setAccelPreset('tiltY')" id="btnTiltY" style="padding:2px 6px;font-size:10px;"
-                    title="Toggle Tilt Y (+1g / -1g)">Tilt Y (±1g)</button>
+                    title="Toggle Tilt Y (-1g / +1g)">Tilt Y (±1g)</button>
                   <button onclick="setAccelPreset('shake')" style="padding:2px 6px;font-size:10px;">Shake (±2g)</button>
                   <button onclick="setAccelPreset('zero')" style="padding:2px 6px;font-size:10px;">Zero All</button>
                 </div>
@@ -3139,6 +3139,12 @@
           <div class="disasm-toolbar">
             <label><input type="checkbox" id="showHex" checked onchange="updateDisassembly()"> Show Hex</label>
             <label><input type="checkbox" id="showBinary" onchange="updateDisassembly()"> Show Binary</label>
+            <div class="mem-view-toggle" role="group" aria-label="Machine code display mode">
+              <button type="button" id="disasmViewModeBytes" class="mem-view-mode-btn"
+                title="Show separate hex bytes of the machine code (groups of 4 bytes = one 32-bit word)" onclick="setDisasmViewMode('bytes')">Byte</button>
+              <button type="button" id="disasmViewModeWord" class="mem-view-mode-btn active"
+                title="Show one whole 32-bit little-endian hex word per 4-byte group" onclick="setDisasmViewMode('word')">Word</button>
+            </div>
             <span class="disasm-hint">Native stream after pseudo-instruction expansion. Blue row = instruction at
               current PC.</span>
           </div>
@@ -3429,6 +3435,7 @@
     let currentSettingsTab = 'compiler';
     let pc = baseAddress;
     let machineCode = []; // array of {address, bytes, instruction, line}
+    let disasmViewMode = 'word'; // 'word' = one whole 32-bit little-endian hex word per 4-byte group (default), 'bytes' = separate hex bytes
     let labels = {};
     let symbolTable = {};
     let assembled = false;
@@ -7931,11 +7938,11 @@ function updateRegisters() {
       if (preset === 'flat') {
         accelX = 0; accelY = 0; accelZ = 64;
       } else if (preset === 'tiltX') {
-        accelX = (accelX === 64) ? -64 : 64;
+        accelX = (accelX === -64) ? 64 : -64;
         accelY = 0;
         accelZ = 0;
       } else if (preset === 'tiltY') {
-        accelY = (accelY === 64) ? -64 : 64;
+        accelY = (accelY === -64) ? 64 : -64;
         accelX = 0;
         accelZ = 0;
       } else if (preset === 'shake') {
@@ -8230,7 +8237,7 @@ function updateRegisters() {
     // ============================================================
 
     let activeMemRegion = 'code';
-    let memViewMode = 'bytes'; // 'bytes' = separate editable bytes, 'word' = one whole 32-bit word per 4-byte group
+    let memViewMode = 'word'; // 'word' = one whole 32-bit word per 4-byte group (default), 'bytes' = separate editable bytes
 
     function isCodeSegmentAddress(addr) {
       return (addr >= baseAddress && addr < dataBase) || (activeMemRegion === 'code' && addr < dataBase);
@@ -8936,6 +8943,20 @@ function updateRegisters() {
       updateDisassembly();
     }
 
+    function updateDisasmViewButtons() {
+      const bytesBtn = document.getElementById('disasmViewModeBytes');
+      const wordBtn = document.getElementById('disasmViewModeWord');
+      if (bytesBtn) bytesBtn.classList.toggle('active', disasmViewMode === 'bytes');
+      if (wordBtn) wordBtn.classList.toggle('active', disasmViewMode === 'word');
+    }
+
+    function setDisasmViewMode(mode) {
+      disasmViewMode = (mode === 'bytes') ? 'bytes' : 'word';
+      updateDisasmViewButtons();
+      updateDisassembly();
+      setStatus(disasmViewMode === 'word' ? 'Disassembly: 32-bit word machine-code display' : 'Disassembly: separate byte machine-code display', 'info');
+    }
+
     function updateDisassembly() {
       if (!disassemblyDisplay) return;
       const showHexEl = document.getElementById('showHex');
@@ -8945,6 +8966,7 @@ function updateRegisters() {
       if (!showHexEl || !showBinaryEl) return;
       const showHex = showHexEl.checked;
       const showBinary = showBinaryEl.checked;
+      updateDisasmViewButtons();
 
       // Build address-to-labels mapping for label headers and target annotations
       const addrToLabels = {};
@@ -9002,13 +9024,31 @@ function updateRegisters() {
         }
 
         let bytesStr = '';
+        // Byte mode (default grouping): separate hex bytes, 4 per chunk.
+        // Word mode: one whole 32-bit little-endian hex word per 4-byte chunk.
+        const wordMode = (disasmViewMode === 'word');
         if (showHex) {
           const hexBytes = Array.from(item.bytes).map(b => b.toString(16).padStart(2, '0'));
-          // Group bytes in chunks of 4
-          for (let i = 0; i < hexBytes.length; i += 4) {
-            const chunk = hexBytes.slice(i, i + 4);
-            bytesStr += chunk.join(' ');
-            if (i + 4 < hexBytes.length) bytesStr += '<br>';
+          if (wordMode) {
+            // One whole little-endian word per 4-byte chunk: bytes[3]<<24 | bytes[2]<<16 | bytes[1]<<8 | bytes[0]
+            for (let i = 0; i < hexBytes.length; i += 4) {
+              if (i > 0) bytesStr += '<br>';
+              const chunk = item.bytes.slice(i, i + 4);
+              if (chunk.length === 4) {
+                const val = ((chunk[3] << 24) | (chunk[2] << 16) | (chunk[1] << 8) | chunk[0]) >>> 0;
+                bytesStr += val.toString(16).padStart(8, '0');
+              } else {
+                // Trailing partial chunk (non-4-byte data): fall back to byte grouping
+                bytesStr += chunk.map(b => b.toString(16).padStart(2, '0')).join(' ');
+              }
+            }
+          } else {
+            // Group bytes in chunks of 4
+            for (let i = 0; i < hexBytes.length; i += 4) {
+              const chunk = hexBytes.slice(i, i + 4);
+              bytesStr += chunk.join(' ');
+              if (i + 4 < hexBytes.length) bytesStr += '<br>';
+            }
           }
           if (showBinary) bytesStr += ' ';
         }
@@ -11932,6 +11972,8 @@ result: .word 0
     window.updateToolbarButtonStates = updateToolbarButtonStates;
     window.setMemViewMode = setMemViewMode;
     window.getMemViewMode = () => memViewMode;
+    window.setDisasmViewMode = setDisasmViewMode;
+    window.getDisasmViewMode = () => disasmViewMode;
     window.syncGodboltArchFlags = syncGodboltArchFlags;
     window.openMemWordOverlay = openMemWordOverlay;
     window.startMemWordCellEdit = startMemWordCellEdit;
