@@ -215,8 +215,8 @@ setTimeout(() => {
     const rp2 = doc.querySelector('.right-panel');
     check('Dock width restored when ≤2 panels (clamped to min 220px in jsdom)', rp2 && (rp2.style.width === '640px' || rp2.style.width === '220px' || rp2.style.width === '0px'));
 
-    // --- 6. 3 visible panels → still 2×2 (2+1) grid ---
-    console.log('\n[6] Showing 3 panels → 2×2 grid with an empty second cell');
+    // --- 6. 3 visible panels → still 2×2 (2+1) grid; row-2 lone panel spans full width ---
+    console.log('\n[6] Showing 3 panels → 2×2 grid; row-2 lone panel spans full width');
     win.setPanelVisible('peripherals', true);
     const rows3 = stack.querySelectorAll('.panel-dock-row');
     check('3 panels → exactly 2 rows', rows3.length === 2);
@@ -224,6 +224,30 @@ setTimeout(() => {
     check('Row 2 has 1 panel', rows3[1] && rows3[1].querySelectorAll('.tab-content').length === 1);
     const hSpl3 = stack.querySelectorAll('.panel-hsplitter');
     check('3 panels → exactly 1 column splitter (in row 1)', hSpl3.length === 1);
+    // The lone row-2 panel must stretch across the entire row (no blank 4th slot).
+    const loneRow = rows3[1];
+    const lonePanel = loneRow && loneRow.querySelector('.tab-content');
+    check('Row-2 lone panel spans full width (single-panel row class)', loneRow && loneRow.className.includes('panel-dock-row-single'));
+    check('Row-2 lone panel flex fills the row (1 1 0)', lonePanel && lonePanel.style.flex === '1 1 0px');
+
+    // A persisted column width must NOT force a lone panel to stay narrow.
+    const dockState = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    dockState.peripherals.wbasis = 300;
+    win.localStorage.setItem('rvsim.panelDock.v1', JSON.stringify(dockState));
+    win.initPanelDock();
+    win.applyPanelDock();
+    const rows3b = stack.querySelectorAll('.panel-dock-row');
+    const lonePanelB = rows3b[1] && rows3b[1].querySelector('.tab-content');
+    check('Lone panel ignores persisted wbasis (full-width flex)', lonePanelB && lonePanelB.style.flex === '1 1 0px');
+    // The paired row-1 panels still honour their persisted wbasis.
+    const row1b = rows3b[0].querySelectorAll('.tab-content');
+    check('Paired row-1 panels still honour wbasis', row1b[0].style.flex === '0 0 540px' && row1b[1].style.flex === '0 0 420px');
+    // Restore the defaults for subsequent steps (clear the saved wbasis).
+    const dockState2 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    dockState2.peripherals.wbasis = 0;
+    win.localStorage.setItem('rvsim.panelDock.v1', JSON.stringify(dockState2));
+    win.initPanelDock();
+    win.applyPanelDock();
 
     // --- 7. Double-click splitters evens out ---
     console.log('\n[7] Double-click on splitters resets widths/heights');
@@ -334,6 +358,27 @@ setTimeout(() => {
     win.dispatchEvent(new win.Event('resize'));
     const reClamped = parseFloat(rightPanel.style.width);
     check('Window resize re-clamps a stale wide dock width', Number.isFinite(reClamped) && reClamped <= 1000 - 360 - 6);
+    // --- 11. Main-splitter width is preserved (dock no longer jumps back to 50%) ---
+    console.log('\n[11] Relayout preserves the user-chosen dock width (no jump / blank space)');
+    // User drags the main splitter to a dock narrower than the 50% grid target.
+    win.innerWidth = 1400;
+    rightPanel.style.width = '500px';
+    rightPanel.style.minWidth = '';
+    rightPanel.style.maxWidth = '';
+    win.applyPanelDock();
+    const afterRelayout = parseFloat(rightPanel.style.width);
+    // The 50% target is 700px at this viewport; applyPanelDock must NOT force the
+    // width back up to 700px (that would move the panels area left / leave blank
+    // space on the right).
+    check('Relayout preserves a dock width below the 50% grid target', Number.isFinite(afterRelayout) && afterRelayout < 700);
+    check('Relayout keeps the user-chosen narrow dock width (500px)', afterRelayout === 500);
+    // A resize (e.g. browser window resize) should re-clamp for the editor but not grow the dock.
+    win.innerWidth = 1000;
+    win.dispatchEvent(new win.Event('resize'));
+    const afterResize = parseFloat(rightPanel.style.width);
+    check('Resize does not force the dock back to 50% (keeps <= min(500, 634))', Number.isFinite(afterResize) && afterResize <= 634 && afterResize <= 500);
+    // Restore a wide dock for the grid.
+    rightPanel.style.width = '700px';
     win.innerWidth = 1400;
     win.dispatchEvent(new win.Event('resize'));
 

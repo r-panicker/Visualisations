@@ -39,7 +39,7 @@ cd riscv_simulator_tests && npm install
 # 1. Install dependencies (first time only)
 cd riscv_simulator_tests && npm install
 
-# 2. Run the complete test suite (all 13 suites sequentially)
+# 2. Run the complete test suite (all 14 suites sequentially)
 npm test:all
 # or from repo root:
 npm --prefix riscv_simulator_tests run test:all
@@ -58,6 +58,7 @@ node riscv_simulator_tests/test_breakpoint_highlight_and_snap.js
 node riscv_simulator_tests/test_jsdom.js
 node riscv_simulator_tests/test_all_instructions_v2.js
 node riscv_simulator_tests/test_execution_programs.js
+node riscv_simulator_tests/test_disassembly_machine_code.js
 
 # 4. Re-generate riscv_simulator.html
 npm --prefix riscv_simulator_tests run build
@@ -172,6 +173,16 @@ npm --prefix riscv_simulator_tests run build
   - If `applyPanelDock()` *does* run for any other reason, it captures the active form field + caret position before moving panels and restores both afterwards.
   - Resizing with a non-form focus (e.g. a `<button>`) still performs the normal panel relayout.
 - **Run Command**: `node riscv_simulator_tests/test_mobile_keyboard_focus.js`
+
+---
+
+### 15. `test_disassembly_machine_code.js` — Disassembly Machine-Code Byte/Word & Binary Rendering
+- **Purpose**: Regression test for the Disassembly **Machine-code** column:
+  - **Word mode** renders one whole 8-digit little-endian hex word per 4-byte chunk; **Byte mode** renders separate space-separated hex bytes in memory order.
+  - **Binary mode** groups the 8 digits of each byte together and separates bytes with **spaces in Byte mode** and **underscores in Word mode** (so a byte's digits are never split across rows).
+  - The toolbar **`LSB to the left` / `LSB to the right`** hint updates with the active mode.
+  - The `Byte`/`Word` toggle buttons stay in sync, and the CSS no longer forces mid-byte wrapping.
+- **Run Command**: `node riscv_simulator_tests/test_disassembly_machine_code.js`
 
 ---
 

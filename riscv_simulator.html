@@ -112,10 +112,12 @@
       display: flex;
       flex-direction: column;
       border-left: 1px solid #313244;
-      min-width: 220px;
+      /* Allow the dock to shrink below its content's natural min-content width
+         (e.g. the 2×2 grid) so the main-splitter drag resizes the panel columns
+         responsively instead of the whole panels area shifting / overflowing. */
+      min-width: 0;
       flex-shrink: 0;
     }
-
     /* Simulation Output */
     .editor-container {
       position: relative;
@@ -570,6 +572,13 @@
       flex: 1 1 0;
       min-height: 90px;
       min-width: 0;
+    }
+
+    /* Row holding only ONE panel (e.g. the 3rd of 3 visible panels): the lone
+       panel must stretch to fill the entire row width — no blank space is left
+       for an invisible 4th panel. */
+    .panel-dock-row-single > .tab-content {
+      flex: 1 1 0 !important;
     }
 
     /* Vertical separator between the two columns of the 2×2 grid. */
@@ -1143,10 +1152,27 @@
     .code-list .bytes {
       color: #f5c2e7;
       font-weight: 550;
-      word-break: break-all;
-      overflow-wrap: break-word;
+      /* Allow wrapping, but only between byte groups — never inside the 8 binary
+         digits of a single byte. `word-break: normal` + `overflow-wrap: anywhere`
+         lets the cell reflow at spaces/underscores on narrow panels while keeping
+         each byte's digits contiguous (previously `break-all` could split a byte). */
+      word-break: normal;
+      overflow-wrap: anywhere;
+      white-space: normal;
       min-width: 10ch;
-      width: 12ch;
+    }
+
+    /* LSB-order hint beside the Disassembly Byte/Word toggle (cyan, matching the
+       Memory-view endianness hint). Byte mode = "LSB to the left" (bytes shown in
+       memory order), Word mode = "LSB to the right" (one whole little-endian word). */
+    .disasm-order-hint {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: #89dceb;
+      white-space: nowrap;
+      user-select: none;
     }
 
     .code-list .native {
@@ -3142,10 +3168,11 @@
             <label><input type="checkbox" id="showBinary" onchange="updateDisassembly()"> Show Binary</label>
             <div class="mem-view-toggle" role="group" aria-label="Machine code display mode">
               <button type="button" id="disasmViewModeBytes" class="mem-view-mode-btn"
-                title="Show separate hex bytes of the machine code (groups of 4 bytes = one 32-bit word)" onclick="setDisasmViewMode('bytes')">Byte</button>
+                title="Show separate hex bytes of the machine code (groups of 4 bytes = one 32-bit word). In binary mode the 8 binary digits of each byte stay together; bytes are separated by spaces." onclick="setDisasmViewMode('bytes')">Byte</button>
               <button type="button" id="disasmViewModeWord" class="mem-view-mode-btn active"
-                title="Show one whole 32-bit little-endian hex word per 4-byte group" onclick="setDisasmViewMode('word')">Word</button>
+                title="Show one whole 32-bit little-endian hex word per 4-byte group (in binary mode its 8-bit bytes are separated by underscores)" onclick="setDisasmViewMode('word')">Word</button>
             </div>
+            <span class="disasm-order-hint" id="disasmOrderHint">LSB to the right</span>
             <span class="disasm-hint">Native stream after pseudo-instruction expansion. Blue row = instruction at
               current PC.</span>
           </div>
@@ -6516,6 +6543,8 @@
         const mainRect = splitter.parentElement.getBoundingClientRect();
         const width = mainRect.right - e.clientX;
         rightPanel.style.width = clamp(width) + 'px';
+        rightPanel.style.minWidth = '';
+        rightPanel.style.maxWidth = '';
       });
       const stop = () => {
         if (!dragging) return;
@@ -6626,18 +6655,30 @@
 
     function currentDockWidth() {
       const rp = document.querySelector('.right-panel');
-      return rp ? rp.getBoundingClientRect().width : 0;
+      if (!rp) return 0;
+      const rectW = rp.getBoundingClientRect().width;
+      if (rectW > 0) return rectW;
+      // jsdom (and layouts where getBoundingClientRect is stubbed) returns 0 for
+      // the rendered width; fall back to the inline width so `updateDockWidthForGrid`
+      // still computes a sensible target instead of collapsing the dock.
+      const inlineW = parseFloat(rp.style.width);
+      return Number.isFinite(inlineW) ? inlineW : 0;
     }
 
     // When the 2×2 grid is active the dock expands to half of the window
     // width; otherwise it returns to the user's manually chosen width.
+    // NOTE: the target is only applied as an absolute width — never as a
+    // `Math.max(current, target)` "grow-only" value. A grow-only clamp made the
+    // whole panels area jump left (and leave blank space on the right) whenever
+    // the user dragged the main splitter narrower than 50% and a relayout ran
+    // afterwards, instead of the panel widths flexing responsively.
     function updateDockWidthForGrid() {
       const rp = document.querySelector('.right-panel');
       if (!rp) return;
       if (dockUsesTwoColumns()) {
         const target = Math.round((window.innerWidth || 1200) * DOCK_TWO_COL_WIDTH_PCT);
         if (dockSavedWidth === null) dockSavedWidth = currentDockWidth();
-        rp.style.width = Math.max(currentDockWidth(), target) + 'px';
+        rp.style.width = Math.max(target, 220) + 'px';
       } else {
         if (dockSavedWidth !== null) {
           rp.style.width = Math.max(220, dockSavedWidth) + 'px';
@@ -6790,9 +6831,17 @@
         } else if (twoCols) {
           el.classList.add('panel-docked');
           // Column widths are driven by flex-basis: default (wbasis 0) is an
-          // even 1:1 split; a dragged width is a fixed basis (`0 0 Npx`) so the
-          // flex layout honours it.
-          el.style.flex = (st.wbasis && st.wbasis > 0) ? ('0 0 ' + st.wbasis + 'px') : '1 1 0';
+          // even 1:1 split; a dragged width is a basis (`0 1 Npx`) so the flex
+          // layout honours it while the panel can still shrink when the dock
+          // gets narrower than the dragged total. (A grow-only `0 0 Npx` made
+          // the row overflow the dock — fixed flex-basis items cannot shrink,
+          // so dragging the main splitter narrow left a blank space on the
+          // right where the clipped overflow spilled.) A panel that is the
+          // ONLY panel in its grid row (e.g. the 3rd of 3 visible panels) must
+          // always span the full row width — a persisted column width would
+          // otherwise leave a blank space where a 4th panel would sit.
+          const rowHasPair = !(dockedNames.length % 2 === 1 && dockedNames.indexOf(name) === dockedNames.length - 1);
+          el.style.flex = (rowHasPair && st.wbasis && st.wbasis > 0) ? ('0 1 ' + st.wbasis + 'px') : '1 1 0';
         } else {
           el.classList.add('panel-docked');
           el.style.flex = (st.basis && st.basis > 0) ? ('0 0 ' + st.basis + 'px') : '1 1 0';
@@ -6807,7 +6856,7 @@
           const row2 = dockedNames.slice(mid);
           [row1, row2].forEach((rowNames, rowIdx) => {
             const row = document.createElement('div');
-            row.className = 'panel-dock-row';
+            row.className = 'panel-dock-row' + (rowNames.length < 2 ? ' panel-dock-row-single' : '');
             // Restore persisted row heights (from dragging the row splitter).
             if (Array.isArray(panelDock.rowHeights) && panelDock.rowHeights[rowIdx]) {
               row.style.flex = '0 0 ' + panelDock.rowHeights[rowIdx] + 'px';
@@ -9011,6 +9060,10 @@ function updateRegisters() {
       const showHex = showHexEl.checked;
       const showBinary = showBinaryEl.checked;
       updateDisasmViewButtons();
+      // Byte mode = "LSB to the left" (bytes in memory order, low byte first),
+      // Word mode = "LSB to the right" (one whole little-endian 32-bit word).
+      const orderHintEl = document.getElementById('disasmOrderHint');
+      if (orderHintEl) orderHintEl.textContent = (disasmViewMode === 'word') ? 'LSB to the right' : 'LSB to the left';
 
       // Build address-to-labels mapping for label headers and target annotations
       const addrToLabels = {};
@@ -9099,13 +9152,28 @@ function updateRegisters() {
         if (showBinary) {
           if (item.bytes.length === 4) {
             const val = ((item.bytes[3] << 24) | (item.bytes[2] << 16) | (item.bytes[1] << 8) | item.bytes[0]) >>> 0;
-            bytesStr += val.toString(2).padStart(32, '0');
+            if (wordMode) {
+              // Whole 32-bit little-endian word; group the bits into the 4 bytes it
+              // was stored as, separated by underscores (keeps the 8 digits of each
+              // byte on one line and preserves the value across the full word).
+              const bin = val.toString(2).padStart(32, '0');
+              bytesStr += bin.slice(0, 8) + '_' + bin.slice(8, 16) + '_' + bin.slice(16, 24) + '_' + bin.slice(24, 32);
+            } else {
+              // Separate bytes (memory order), each byte's 8 digits kept together.
+              bytesStr += item.bytes.map(b => b.toString(2).padStart(8, '0')).join(' ');
+            }
           } else {
-            // Group binary in chunks of 32 bits (4 bytes)
+            // Group binary in chunks of 32 bits (4 bytes); word mode keeps the
+            // underscore grouping between bytes, byte mode uses spaces.
             for (let i = 0; i < item.bytes.length; i += 4) {
               if (i > 0) bytesStr += '<br>';
               const chunk = item.bytes.slice(i, i + 4);
-              bytesStr += chunk.map(b => b.toString(2).padStart(8, '0')).join(' ');
+              const binChunk = chunk.map(b => b.toString(2).padStart(8, '0'));
+              if (wordMode) {
+                bytesStr += binChunk.join('_');
+              } else {
+                bytesStr += binChunk.join(' ');
+              }
             }
           }
         }

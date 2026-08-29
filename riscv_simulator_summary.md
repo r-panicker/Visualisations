@@ -80,11 +80,19 @@ All C examples carry embedded precompiled Godbolt assembly so they run fully off
 
 ## Tests
 
-Node-based harness in [`riscv_simulator_tests/`](file:///home/rajesh/GitHub/Visualisations/riscv_simulator_tests) covering: full system integration, Godbolt C compilation + line mapping, all 19 baked examples, statement stepping, run-limit throttling, disassembly labels & warnings, image-display rendering parity (ASM vs C), Tab/autocomplete behavior, breakpoint snapping & highlight, RV32GC instruction coverage (90+), multi-step execution correctness, dockable-panel 2×2 grid layout, and mobile on-screen-keyboard focus preservation.
+Node-based harness in [`riscv_simulator_tests/`](file:///home/rajesh/GitHub/Visualisations/riscv_simulator_tests) covering: full system integration, Godbolt C compilation + line mapping, all 19 baked examples, statement stepping, run-limit throttling, disassembly labels & warnings, disassembly machine-code Byte/Word & binary grouping, image-display rendering parity (ASM vs C), Tab/autocomplete behavior, breakpoint snapping & highlight, RV32GC instruction coverage (90+), multi-step execution correctness, dockable-panel 2×2 grid layout, and mobile on-screen-keyboard focus preservation.
 
 ---
 
 ## Current version
+
+**v23.7** — Disassembly machine-code binary grouping + LSB hint, and panel-grid layout fixes:
+- **Binary machine code groups each byte's 8 digits together**: in the Disassembly Machine-code column, binary output now keeps the **8 binary digits of a byte contiguous** — **Byte mode** renders separate bytes (`xxxxxxxx xxxxxxxx …`, space-separated, in memory order) and **Word mode** renders one whole 32-bit word with its bytes **underscore-separated** (`xxxxxxxx_xxxxxxxx_xxxxxxxx_xxxxxxxx`). Hex output is unchanged: bytes are space-separated in Byte mode (`xx xx xx xx`) and a single 8-digit word in Word mode.
+- **"LSB to the left / LSB to the right" hint**: the Disassembly toolbar now shows a cyan **LSB hint** beside the `[ Byte | Word ]` pill — **`LSB to the left`** in Byte mode (bytes in memory order) and **`LSB to the right`** in Word mode (one whole little-endian word) — matching the Memory-view endianness legend.
+- **No mid-byte wrapping**: the machine-code cell CSS no longer uses `word-break: break-all` (which could split a byte's digits across rows); it now wraps only at byte boundaries so the bytes stay readable while remaining responsive on narrow panels.
+- **3-panel grid no longer leaves a blank 4th cell**: with exactly 3 visible panels the 2×2 grid's second row holds only the third panel, which now **stretches across the full row width** (a persisted column width no longer keeps it narrow). A `.panel-dock-row-single` rule enforces `flex: 1 1 0` for the lone panel.
+- **Main-splitter drag no longer shifts the panels area**: the dock width is no longer re-forced up to 50% on every relayout (`updateDockWidthForGrid` no longer uses a grow-only `Math.max(current, target)`), and `.right-panel` now allows shrinking below its content width (`min-width: 0`). Dragging the main splitter resizes the panel columns responsively instead of moving the whole panels area left / leaving blank space on the right.
+- New regression suites: `riscv_simulator_tests/test_disassembly_machine_code.js` and 7 new grid-layout assertions in `riscv_simulator_tests/test_panel_grid.js`.
 
 **v23.6** — UART hex-mode & mobile keyboard fixes:
 - **Hex input now parses as hex**: in Hex mode, comma-separated bytes like `0x41, 0x0d` (or bare `41, 0d`, or `69h`) are interpreted as hex bytes, so `0x41, 0x0d` transmits the same bytes as `A\r`. Non-hex / >0xFF tokens are skipped.
