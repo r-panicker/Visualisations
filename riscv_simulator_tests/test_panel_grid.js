@@ -157,8 +157,8 @@ setTimeout(() => {
     const leftEl = sp.previousElementSibling, rightEl = sp.nextElementSibling;
     sp.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 1, clientX: 100, bubbles: true }));
     sp.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 1, clientX: 160, bubbles: true }));
-    check('Column splitter drag sets left flex-basis', leftEl.style.flex === '0 0 540px');
-    check('Column splitter drag sets right flex-basis', rightEl.style.flex === '0 0 420px');
+    check('Column splitter drag sets left flex-basis', leftEl.style.flex === '0 1 540px');
+    check('Column splitter drag sets right flex-basis', rightEl.style.flex === '0 1 420px');
     sp.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 1, clientX: 160, bubbles: true }));
     const saved1 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
     check('Column widths persisted to localStorage', saved1.registers.wbasis === 540 && saved1.memory.wbasis === 420);
@@ -167,8 +167,8 @@ setTimeout(() => {
     // --- 3. Re-apply preserves dragged column widths ---
     console.log('\n[3] Re-applying dock layout preserves persisted column widths');
     win.applyPanelDock();
-    check('Registers width restored from wbasis via flex', doc.getElementById('tab-registers').style.flex === '0 0 540px');
-    check('Memory width restored from wbasis via flex', doc.getElementById('tab-memory').style.flex === '0 0 420px');
+    check('Registers width restored from wbasis via flex', doc.getElementById('tab-registers').style.flex === '0 1 540px');
+    check('Memory width restored from wbasis via flex', doc.getElementById('tab-memory').style.flex === '0 1 420px');
 
     // --- 4. Row splitter drag persists row heights ---
     console.log('\n[4] Simulating row splitter drag (row heights should persist)');
@@ -241,7 +241,7 @@ setTimeout(() => {
     check('Lone panel ignores persisted wbasis (full-width flex)', lonePanelB && lonePanelB.style.flex === '1 1 0px');
     // The paired row-1 panels still honour their persisted wbasis.
     const row1b = rows3b[0].querySelectorAll('.tab-content');
-    check('Paired row-1 panels still honour wbasis', row1b[0].style.flex === '0 0 540px' && row1b[1].style.flex === '0 0 420px');
+    check('Paired row-1 panels still honour wbasis', row1b[0].style.flex === '0 1 540px' && row1b[1].style.flex === '0 1 420px');
     // Restore the defaults for subsequent steps (clear the saved wbasis).
     const dockState2 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
     dockState2.peripherals.wbasis = 0;
@@ -381,6 +381,66 @@ setTimeout(() => {
     rightPanel.style.width = '700px';
     win.innerWidth = 1400;
     win.dispatchEvent(new win.Event('resize'));
+
+    // --- 12. Row-fit clamp: persisted column widths never overflow the dock ---
+    console.log('\\n[12] Row-fit clamp scales oversized persisted column widths');
+    // Show all 4 panels → 2×2 grid with the dock at 50% (700px).
+    ['registers', 'memory', 'peripherals', 'disassembly'].forEach(n => win.setPanelVisible(n, true));
+    const rp12 = doc.querySelector('.right-panel');
+    rp12.style.width = '700px';
+    win.innerWidth = 1400;
+    win.applyPanelDock();
+    // jsdom has no layout (clientWidth = 0), so the clamp is normally skipped.
+    // Mock the dock width so the row-fit clamp has a real target to check against.
+    Object.defineProperty(rp12, 'clientWidth', { configurable: true, value: 700 });
+    // Persist a wildly oversized row: two columns that together (with the 6px
+    // splitter) exceed the 700px dock.
+    const dock12 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    dock12.registers.wbasis = 600;
+    dock12.memory.wbasis = 500; // 600 + 6 + 500 = 1106 > 700 → must be scaled
+    win.localStorage.setItem('rvsim.panelDock.v1', JSON.stringify(dock12));
+    win.initPanelDock();
+    win.applyPanelDock();
+    const saved12 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    const row12Total = saved12.registers.wbasis + saved12.memory.wbasis;
+    check('Oversized row basis is scaled down to fit the dock', row12Total + 6 <= 700);
+    check('Scaled widths keep the dragged ratio', Math.round(saved12.registers.wbasis / 600) === Math.round(saved12.memory.wbasis / 500));
+    // The persisted flex basis now reflects the clamped values (shrinkable, not fixed).
+    const reg12 = doc.getElementById('tab-registers');
+    const mem12 = doc.getElementById('tab-memory');
+    check('Clamped wbasis applied via shrinkable flex (0 1 Npx)',
+      reg12 && reg12.style.flex === '0 1 ' + saved12.registers.wbasis + 'px' &&
+      mem12 && mem12.style.flex === '0 1 ' + saved12.memory.wbasis + 'px');
+    // A row that already fits is left untouched.
+    const dock12b = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    dock12b.registers.wbasis = 300;
+    dock12b.memory.wbasis = 200; // 300 + 6 + 200 = 506 ≤ 700 → no scaling
+    win.localStorage.setItem('rvsim.panelDock.v1', JSON.stringify(dock12b));
+    win.initPanelDock();
+    win.applyPanelDock();
+    const saved12b = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    check('A fitting row is left untouched', saved12b.registers.wbasis === 300 && saved12b.memory.wbasis === 200);
+
+    // --- 13. H-splitter stop clamps an over-wide drag ---
+    console.log('\\n[13] Column-splitter drag cannot persist an overflowing row');
+    const hsp13 = stack.querySelector('.panel-hsplitter');
+    mockLayoutFor();
+    // Mock the row clientWidth so the stop handler has a real available width.
+    const row13 = hsp13.parentElement;
+    Object.defineProperty(row13, 'clientWidth', { configurable: true, value: 700 });
+    const left13 = hsp13.previousElementSibling, right13 = hsp13.nextElementSibling;
+    hsp13.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 3, clientX: 100, bubbles: true }));
+    hsp13.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 3, clientX: 700, bubbles: true }));
+    hsp13.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 3, clientX: 700, bubbles: true }));
+    const saved13 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    const leftName13 = left13.id.replace('tab-', '');
+    const rightName13 = right13.id.replace('tab-', '');
+    const row13Total = saved13[leftName13].wbasis + saved13[rightName13].wbasis;
+    check('Over-wide drag clamps the persisted pair to the row width', row13Total + 6 <= 700);
+    // Both columns stay ≥90px even after scaling.
+    check('Clamped columns keep the 90px minimum',
+      saved13[leftName13].wbasis >= 90 && saved13[rightName13].wbasis >= 90);
+
 
     console.log('\n===========================================================');
     if (failed === 0) {
