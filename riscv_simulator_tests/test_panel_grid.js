@@ -441,6 +441,88 @@ setTimeout(() => {
     check('Clamped columns keep the 90px minimum',
       saved13[leftName13].wbasis >= 90 && saved13[rightName13].wbasis >= 90);
 
+    // --- 14. Column-splitter drag tracks the pointer 1:1 (no compounding) ---
+    console.log('\\n[14] Column-splitter drag is not hyper-sensitive (snapshot + absolute dx)');
+    mockLayoutFor();
+    // Reset to a clean fitting pair: section [13] left the persisted/DOM state
+    // clamped at the 700px row, so re-init with a small fitting pair (300/200)
+    // and re-apply to give the DOM fresh `0 1 300px`/`0 1 200px` flex values.
+    const dock14 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    dock14.registers.wbasis = 300;
+    dock14.memory.wbasis = 200; // 300 + 6 + 200 = 506 ≤ 700 → no clamp
+    win.localStorage.setItem('rvsim.panelDock.v1', JSON.stringify(dock14));
+    win.initPanelDock();
+    win.applyPanelDock();
+    const hsp14 = stack.querySelector('.panel-hsplitter');
+    const left14 = hsp14.previousElementSibling, right14 = hsp14.nextElementSibling;
+    // Read the exact flex-basis applied to the DOM by applyPanelDock.
+    const leftStart14 = parseFloat(left14.style.flex.split(' ')[2]);
+    const rightStart14 = parseFloat(right14.style.flex.split(' ')[2]);
+    const row14 = hsp14.parentElement;
+    Object.defineProperty(row14, 'clientWidth', { configurable: true, value: 700 });
+    // A small 30px drag as MANY small moves (3×10px). A compounding bug would
+    // accumulate 10+20+30=60px (or worse with repeated moves), so the final
+    // persisted widths must match the ABSOLUTE 30px delta, not the sum.
+    hsp14.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 4, clientX: 200, bubbles: true }));
+    hsp14.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 4, clientX: 210, bubbles: true }));
+    hsp14.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 4, clientX: 220, bubbles: true }));
+    hsp14.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 4, clientX: 230, bubbles: true }));
+    hsp14.dispatchEvent(new win.PointerEvent('pointerup',   { pointerId: 4, clientX: 230, bubbles: true }));
+    const saved14 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    const l14 = saved14[left14.id.replace('tab-', '')].wbasis;
+    const r14 = saved14[right14.id.replace('tab-', '')].wbasis;
+    check('Left column grows by exactly the absolute 30px drag', l14 === leftStart14 + 30);
+    check('Right column shrinks by exactly the absolute 30px drag', r14 === rightStart14 - 30);
+    check('Dragged pair keeps its total width (no runaway growth)', l14 + r14 === leftStart14 + rightStart14);
+
+    // --- 15. Main-splitter drag re-clamps paired rows to the narrower dock ---
+    console.log('\n[15] Main-splitter drag narrowing the dock re-clamps persisted pair widths');
+    // The reported regression: after dragging the main splitter narrower, the
+    // paired (2×2 grid) rows kept their old wide persisted column widths and
+    // overflowed the dock (blank space on the right / panels shifted left),
+    // while the solo full-width row behaved correctly. This test reproduces the
+    // exact path: wide pairs that fit the dock are persisted, then the main
+    // splitter is dragged to a 500px dock, and both pairs must be re-clamped.
+    ['registers', 'memory', 'peripherals', 'disassembly'].forEach(n => win.setPanelVisible(n, true));
+    const rp15 = doc.querySelector('.right-panel');
+    rp15.style.width = '1100px';
+    Object.defineProperty(rp15, 'clientWidth', { configurable: true, value: 1100 });
+    win.innerWidth = 1400;
+    const dock15 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    dock15.registers.wbasis = 540;
+    dock15.memory.wbasis = 420;          // row 1: 540 + 6 + 420 = 966 ≤ 1100 → fits
+    dock15.peripherals.wbasis = 600;
+    dock15.disassembly.wbasis = 300;     // row 2: 600 + 6 + 300 = 906 ≤ 1100 → fits
+    win.localStorage.setItem('rvsim.panelDock.v1', JSON.stringify(dock15));
+    win.initPanelDock();
+    win.applyPanelDock();
+    const preDrag15 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    check('Wide pairs are left untouched before the drag (dock is wide enough)',
+      preDrag15.registers.wbasis === 540 && preDrag15.memory.wbasis === 420 &&
+      preDrag15.peripherals.wbasis === 600 && preDrag15.disassembly.wbasis === 300);
+
+    // Simulate the main-splitter drag to a 500px dock. jsdom stubs
+    // getBoundingClientRect to zeros, so give `.main` a real right edge and let
+    // the splitter's pointermove compute width = main.right - clientX = 500.
+    const mainEl15 = doc.querySelector('.main');
+    Object.defineProperty(mainEl15, 'getBoundingClientRect', {
+      configurable: true, value: () => ({ top: 0, bottom: 600, left: 0, right: 1400, width: 1400, height: 600 })
+    });
+    // The narrowed rendered dock width the row-fit clamp should fit against.
+    Object.defineProperty(rp15, 'clientWidth', { configurable: true, value: 500 });
+    const mainSplitter15 = doc.getElementById('mainSplitter');
+    mainSplitter15.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 5, clientX: 700, bubbles: true }));
+    mainSplitter15.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 5, clientX: 900, bubbles: true })); // width = 1400-900 = 500
+    mainSplitter15.dispatchEvent(new win.PointerEvent('pointerup',   { pointerId: 5, clientX: 900, bubbles: true }));
+    delete mainEl15.getBoundingClientRect;
+    const afterDrag15 = JSON.parse(win.localStorage.getItem('rvsim.panelDock.v1'));
+    const r1a = afterDrag15.registers.wbasis, r1b = afterDrag15.memory.wbasis;
+    const r2a = afterDrag15.peripherals.wbasis, r2b = afterDrag15.disassembly.wbasis;
+    check('Main-splitter drag narrows the dock to 500px', parseFloat(rp15.style.width) === 500);
+    check('Row 1 (registers/memory) re-clamped to fit the 500px dock', r1a + r1b + 6 <= 500);
+    check('Row 2 (peripherals/disassembly) re-clamped to fit the 500px dock', r2a + r2b + 6 <= 500);
+    check('Re-clamped columns keep the 90px minimum', r1a >= 90 && r1b >= 90 && r2a >= 90 && r2b >= 90);
+
 
     console.log('\n===========================================================');
     if (failed === 0) {

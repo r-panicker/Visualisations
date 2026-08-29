@@ -639,6 +639,12 @@
 
     .tab-content.panel-docked {
       display: flex;
+      /* Paired grid rows use shrinkable `0 1 Npx` flex-basis; without
+         min-width: 0 the panel cannot shrink below its content's min-content
+         width (wide tables / machine-code columns), so when the main splitter
+         narrows the dock the row overflows and leaves blank space on the right.
+         min-width: 0 lets the flex item shrink to match the narrower dock. */
+      min-width: 0;
     }
 
     .tab-content.panel-floating {
@@ -6545,6 +6551,10 @@
         rightPanel.style.width = clamp(width) + 'px';
         rightPanel.style.minWidth = '';
         rightPanel.style.maxWidth = '';
+        // The dock just changed width — re-clamp the persisted 2×2 column
+        // bases so a paired row never keeps its old wide widths and overflows
+        // the narrower dock (blank space on the right / panels shifting left).
+        clampGridRowWidths();
       });
       const stop = () => {
         if (!dragging) return;
@@ -6553,6 +6563,8 @@
         document.body.style.userSelect = '';
         // Persist the clamped width (not a stale un-clamped value).
         rightPanel.style.width = clamp(parseFloat(rightPanel.style.width) || 0) + 'px';
+        // Final re-clamp after the width is committed.
+        clampGridRowWidths();
       };
       splitter.addEventListener('pointerup', stop);
       splitter.addEventListener('pointercancel', stop);
@@ -6561,6 +6573,7 @@
       window.addEventListener('resize', () => {
         if (rightPanel.style.width) {
           rightPanel.style.width = clamp(parseFloat(rightPanel.style.width) || 0) + 'px';
+          clampGridRowWidths();
         }
       });
     }
@@ -6692,6 +6705,50 @@
       }
     }
 
+    // Row-fit clamp for the 2×2 grid: if a paired row's persisted column bases
+    // (+ the 6px splitter) exceed the dock's available width, scale them down
+    // proportionally so the row never overflows (which previously clipped the
+    // rightmost panel and left blank space on the right). Only shrink on
+    // overflow — a lone row-2 panel is never affected (it always uses `1 1 0`).
+    // Extracted so both `applyPanelDock()` and the live main-splitter drag can
+    // re-clamp persisted widths against the current (possibly narrower) dock.
+    // The clamp deliberately reads ONLY the rendered clientWidth: in jsdom (and
+    // in layouts where getBoundingClientRect is stubbed) clientWidth is 0, so
+    // the clamp is skipped and persisted widths are restored verbatim — exactly
+    // as the drag-time tests expect. In a real browser clientWidth is the live
+    // rendered dock width, so a main-splitter drag that narrows the dock
+    // re-clamps the persisted pair to fit (no blank space on the right).
+    function clampGridRowWidths() {
+      if (!panelDock) return;
+      if (!dockUsesTwoColumns()) return;
+      if (mobileMode()) return;
+      const rp = document.querySelector('.right-panel');
+      if (!rp) return;
+      const availW = rp.clientWidth;
+      if (!(availW > 0)) return;
+      const dockedNames = panelDock.order.filter(n => panelDock[n].visible && !panelDock[n].floating);
+      const mid = Math.ceil(dockedNames.length / 2);
+      const row1 = dockedNames.slice(0, mid);
+      const row2 = dockedNames.slice(mid);
+      [row1, row2].forEach((rowNames) => {
+        if (rowNames.length < 2) return; // single panel row — full width
+        let total = 0;
+        rowNames.forEach(n => { total += (panelDock[n].wbasis || 0); });
+        if (total <= 0 || total + 6 <= availW) return;
+        // Scale the pair down to fit the dock while keeping each column at
+        // least MIN_COL_W: give each its minimum, then split the remaining
+        // space in the persisted ratio. (A plain proportional scale with a
+        // per-column floor can still overflow — e.g. one column pinned at
+        // its floor plus a large other column would exceed the dock.)
+        const extra = Math.max(0, availW - 6 - 2 * MIN_COL_W);
+        const r1 = rowNames[0], r2 = rowNames[1];
+        const b1 = panelDock[r1].wbasis || 0;
+        panelDock[r1].wbasis = MIN_COL_W + Math.round((b1 / total) * extra);
+        panelDock[r2].wbasis = availW - 6 - panelDock[r1].wbasis; // exact fit
+      });
+      savePanelDock();
+    }
+
     function panelEl(name) { return document.getElementById('tab-' + name); }
 
     function isPanelVisible(name) {
@@ -6805,38 +6862,7 @@
       // Set the dock width before laying out the grid: the row-fit clamp below
       // reads the actual available width, and the panel loop below uses it.
       updateDockWidthForGrid();
-
-      // Row-fit clamp for the 2×2 grid: if a paired row's persisted column
-      // bases (+ the 6px splitter) exceed the dock's available width, scale
-      // them down proportionally so the row never overflows (which previously
-      // clipped the rightmost panel and left blank space on the right). Only
-      // shrink on overflow — a lone row-2 panel is never affected (it always
-      // uses `1 1 0`).
-      if (twoCols && !mobile) {
-        const rp = document.querySelector('.right-panel');
-        const availW = rp ? rp.clientWidth : 0;
-        if (availW > 0) {
-          const mid = Math.ceil(dockedNames.length / 2);
-          const row1 = dockedNames.slice(0, mid);
-          const row2 = dockedNames.slice(mid);
-          [row1, row2].forEach((rowNames) => {
-            if (rowNames.length < 2) return; // single panel row — full width
-            let total = 0;
-            rowNames.forEach(n => { total += (panelDock[n].wbasis || 0); });
-            if (total <= 0 || total + 6 <= availW) return;
-            // Scale the pair down to fit the dock while keeping each column at
-            // least MIN_COL_W: give each its minimum, then split the remaining
-            // space in the persisted ratio. (A plain proportional scale with a
-            // per-column floor can still overflow — e.g. one column pinned at
-            // its floor plus a large other column would exceed the dock.)
-            const extra = Math.max(0, availW - 6 - 2 * MIN_COL_W);
-            const r1 = rowNames[0], r2 = rowNames[1];
-            const b1 = panelDock[r1].wbasis || 0;
-            panelDock[r1].wbasis = MIN_COL_W + Math.round((b1 / total) * extra);
-            panelDock[r2].wbasis = availW - 6 - panelDock[r1].wbasis; // exact fit
-          });
-        }
-      }
+      clampGridRowWidths();
 
       // Reorder every panel node to match panelDock.order (direct children of
       // the stack in the single-column layout), then set docked/floating state.
@@ -7105,10 +7131,14 @@
     // Column splitter: drags to redistribute the width of the two columns
     // within one row of the 2×2 grid.
     function attachHSplitter(sp) {
-      let dragging = false, startX = 0, leftEl = null, rightEl = null;
-      // The flex-basis values being dragged. Tracked explicitly because a
+      let dragging = false, startX = 0, lastX = 0, leftEl = null, rightEl = null;
+      // The flex-basis values at pointerdown. Tracked explicitly because a
       // shrinkable basis (`0 1 Npx`) means `offsetWidth` reflects the RENDERED
-      // (possibly shrunk) width, not the value we want to persist.
+      // (possibly shrunk) width, not the value we want to persist. They are
+      // snapshots — never mutated during the drag. The dragged width is always
+      // computed as `snapshot + (clientX − startX)` (absolute from pointerdown),
+      // mirroring the row splitter. Accumulating the delta into the snapshot
+      // compounded on every move, making a small drag shoot to the extreme.
       let leftBasis = 0, rightBasis = 0;
       sp.addEventListener('pointerdown', (e) => {
         leftEl = sp.previousElementSibling;
@@ -7116,6 +7146,7 @@
         if (!leftEl || !rightEl) return;
         dragging = true;
         startX = e.clientX;
+        lastX = startX;
         leftBasis = leftEl.offsetWidth;
         rightBasis = rightEl.offsetWidth;
         sp.setPointerCapture(e.pointerId);
@@ -7125,16 +7156,17 @@
       });
       sp.addEventListener('pointermove', (e) => {
         if (!dragging) return;
-        const dx = e.clientX - startX;
+        lastX = e.clientX;
+        const dx = lastX - startX;
         // Set flex-basis (`0 1 Npx`) so the flex row honours the widths while
         // the panels can still shrink if the dock is narrower than the dragged
         // total. A grow-only `0 0 Npx` basis made the row overflow the dock
         // (fixed-basis flex items cannot shrink), which shifted the panels area
         // left and left blank space on the right.
-        leftBasis = Math.max(MIN_COL_W, leftBasis + dx);
-        rightBasis = Math.max(MIN_COL_W, rightBasis - dx);
-        leftEl.style.flex = '0 1 ' + leftBasis + 'px';
-        rightEl.style.flex = '0 1 ' + rightBasis + 'px';
+        const wl = Math.max(MIN_COL_W, leftBasis + dx);
+        const wr = Math.max(MIN_COL_W, rightBasis - dx);
+        leftEl.style.flex = '0 1 ' + wl + 'px';
+        rightEl.style.flex = '0 1 ' + wr + 'px';
       });
       const stop = () => {
         if (!dragging) return;
@@ -7150,10 +7182,12 @@
           const n = el.id && el.id.replace(/^tab-/, '');
           return n && panelDock[n] ? n : null;
         });
+        const dx = lastX - startX;
+        let wl = Math.max(MIN_COL_W, leftBasis + dx);
+        let wr = Math.max(MIN_COL_W, rightBasis - dx);
         const row = sp.parentElement;
         const available = row ? row.clientWidth : 0;
-        const total = leftBasis + rightBasis;
-        let wl = leftBasis, wr = rightBasis;
+        const total = wl + wr;
         if (available > 0 && total + 6 > available && total > 0) {
           // Scale the pair down to fit the row while keeping each column at
           // least MIN_COL_W: give each its minimum, then split the remaining
@@ -7161,7 +7195,7 @@
           // per-column floor can still overflow — e.g. one column pinned at its
           // floor plus a large other column would exceed the row.)
           const extra = Math.max(0, available - 6 - 2 * MIN_COL_W);
-          wl = MIN_COL_W + Math.round((leftBasis / total) * extra);
+          wl = MIN_COL_W + Math.round((wl / total) * extra);
           wr = available - 6 - wl; // exact fit, no rounding overflow
         }
         if (pair[0]) panelDock[pair[0]].wbasis = Math.max(MIN_COL_W, wl);
