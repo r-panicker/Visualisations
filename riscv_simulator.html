@@ -6717,6 +6717,29 @@
       const stack = document.getElementById('panelStack');
       if (!stack || !panelDock) return;
 
+      // Preserve focus + caret across the relayout below. Re-appending panel
+      // nodes inside #panelStack (or refreshing a panel's innerHTML) can make
+      // the browser drop focus — which on mobile closes the soft keyboard in
+      // the middle of typing into the UART console (or any other form field).
+      const activeEl = document.activeElement;
+      let restoreFocus = null;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT' || activeEl.isContentEditable)) {
+        restoreFocus = {
+          el: activeEl,
+          selStart: (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') ? activeEl.selectionStart : null,
+          selEnd: (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') ? activeEl.selectionEnd : null
+        };
+      }
+      const restoreFocusNow = () => {
+        if (!restoreFocus || !restoreFocus.el.isConnected) return;
+        try {
+          restoreFocus.el.focus();
+          if (restoreFocus.selStart !== null && restoreFocus.selEnd !== null) {
+            restoreFocus.el.setSelectionRange(restoreFocus.selStart, restoreFocus.selEnd);
+          }
+        } catch (e) { /* element not focusable — ignore */ }
+      };
+
       // Remove every dynamically inserted splitter and grid row from a
       // previous apply, moving any panels that live inside dock rows back
       // into the stack first (removing the rows would detach the panels, and
@@ -6857,6 +6880,10 @@
       floatingNames.forEach(name => keepFloatInView(name));
       updateDockWidthForGrid();
       savePanelDock();
+      // Bring focus back to the field that was being typed in (e.g. the UART
+      // console) now that the panels have been moved/re-appended, so the mobile
+      // soft keyboard is not dismissed by the relayout.
+      restoreFocusNow();
     }
 
     function keepFloatInView(name) {
@@ -7052,6 +7079,15 @@
       applyPanelDock();
       panelDock.order.forEach(name => { if (isPanelVisible(name)) refreshPanel(name); });
       window.addEventListener('resize', () => {
+        // While a form field is focused (UART console, memory address box,
+        // find/replace, …), a mobile on-screen keyboard open/close fires a
+        // window resize (visual viewport). Relayouting the panel stack during
+        // typing would move the focused node and can dismiss the keyboard, so
+        // skip every panel/layout adjustment in that case.
+        const ae = document.activeElement;
+        if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT' || ae.isContentEditable)) {
+          return;
+        }
         let moved = false;
         PANEL_DEFS.forEach(({ name }) => {
           const st = panelDock[name];

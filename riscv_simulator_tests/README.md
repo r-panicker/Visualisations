@@ -166,6 +166,15 @@ npm --prefix riscv_simulator_tests run build
 
 ---
 
+### 14. `test_mobile_keyboard_focus.js` — Mobile On-Screen Keyboard Focus Preservation
+- **Purpose**: Regression test for the mobile UART console keyboard issue. When the on-screen soft keyboard opens/closes on Android it fires a `window` `resize` (the visual viewport shrinks). This test verifies that while a form field (UART input, memory box, find/replace) is focused:
+  - A `resize` event does **not** relayout the panel stack (the guarded resize handler returns early), so the focused input keeps focus and the keyboard stays open.
+  - If `applyPanelDock()` *does* run for any other reason, it captures the active form field + caret position before moving panels and restores both afterwards.
+  - Resizing with a non-form focus (e.g. a `<button>`) still performs the normal panel relayout.
+- **Run Command**: `node riscv_simulator_tests/test_mobile_keyboard_focus.js`
+
+---
+
 ## 🛠️ Build & Generator Utilities
 
 ### `generate_v2.js`
