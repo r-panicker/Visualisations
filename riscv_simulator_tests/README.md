@@ -186,6 +186,15 @@ npm --prefix riscv_simulator_tests run build
 
 ---
 
+### 16. `test_panel_grid.js` sections [16]–[18] — Intra-panel Column Splitters & No-Wrap Columns
+- **Purpose**: Regression coverage for the new per-panel column splitter feature (also part of the 2×2 grid suite):
+  - **[16]** The `◂ Columns ▸` knob bars (`.panel-colsplit`) are created for **Registers**, **Memory**, and **Disassembly** but **not** for **Peripherals** (deliberately untouched).
+  - **[17]** The Disassembly `<table class="code-list">` emits a 4-column `<colgroup>` marking **Addr + Machine code** as `col-fixed` (natural width, nowrap) and **Native + Source** as `col-flex` (elastic).
+  - **[18]** Dragging the Registers knob (pointerdown/move/up) grows the fixed `#`/`Name` columns, shrinks the elastic Value columns by the same delta, persists to `localStorage` under `rvsim.panelCols.registers`, and the **Reset** button restores the default widths.
+- **Run Command**: `node riscv_simulator_tests/test_panel_grid.js`
+
+---
+
 ## 🛠️ Build & Generator Utilities
 
 ### `generate_v2.js`

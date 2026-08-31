@@ -523,6 +523,67 @@ setTimeout(() => {
     check('Row 2 (peripherals/disassembly) re-clamped to fit the 500px dock', r2a + r2b + 6 <= 500);
     check('Re-clamped columns keep the 90px minimum', r1a >= 90 && r1b >= 90 && r2a >= 90 && r2b >= 90);
 
+    // --- 16. Intra-panel column splitters exist for the 3 data panels only ---
+    console.log('\n[16] Intra-panel column-splitter bars exist (Registers/Memory/Disassembly, not Peripherals)');
+    // Re-init the dock so the col-splitter bars get built for all panels.
+    win.innerWidth = 1400;
+    ['registers', 'memory', 'peripherals', 'disassembly'].forEach(n => win.setPanelVisible(n, true));
+    win.initPanelDock();
+    const csReg = doc.getElementById('tab-registers').querySelector('.panel-colsplit');
+    const csMem = doc.getElementById('tab-memory').querySelector('.panel-colsplit');
+    const csDis = doc.getElementById('tab-disassembly').querySelector('.panel-colsplit');
+    const csPer = doc.getElementById('tab-peripherals').querySelector('.panel-colsplit');
+    check('Registers panel has a column-splitter bar', !!csReg);
+    check('Memory panel has a column-splitter bar', !!csMem);
+    check('Disassembly panel has a column-splitter bar', !!csDis);
+    check('Peripherals panel has NO column-splitter bar (untouched)', !csPer);
+
+    // --- 17. Disassembly table uses fixed Addr/Machine-code + elastic Native/Source ---
+    console.log('\n[17] Disassembly colgroup marks Addr + Machine code as fixed (no data scaling)');
+    // Assemble a tiny program so the disassembly table is populated.
+    win.updateEditor(); // ensure state
+    const disTbl = doc.getElementById('disassemblyDisplay').querySelector('.code-list');
+    if (disTbl) {
+      const cols = disTbl.querySelectorAll('col');
+      const colClasses = Array.from(cols).map(c => c.className || '');
+      check('Disassembly table has a 4-column colgroup', cols.length === 4);
+      check('Addr + Machine code are fixed columns (col-fixed)',
+        colClasses[0].includes('col-fixed') && colClasses[1].includes('col-fixed'));
+      check('Native + Source are elastic columns (col-flex)',
+        colClasses[2].includes('col-flex') && colClasses[3].includes('col-flex'));
+    } else {
+      check('Disassembly table populated (skipping colgroup check)', false);
+    }
+
+    // --- 18. Dragging the registers column knob resizes fixed cols + persists ---
+    console.log('\n[18] Column-splitter knob drag resizes fixed columns and persists');
+    const handleReg = csReg && csReg.querySelector('.panel-colsplit-handle');
+    if (handleReg) {
+      // Mock clientX so the drag delta is deterministic: drag +40px.
+      // pointerdown at 100, move to 140 → dx = 40.
+      // Default widths: '#'=42, 'Name'=76 (fixed). Value cols elastic.
+      const savedBefore = JSON.parse(win.localStorage.getItem('rvsim.panelCols.registers') || 'null');
+      handleReg.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 7, clientX: 100, bubbles: true }));
+      handleReg.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 7, clientX: 140, bubbles: true }));
+      handleReg.dispatchEvent(new win.PointerEvent('pointerup',   { pointerId: 7, clientX: 140, bubbles: true }));
+      const savedAfter = JSON.parse(win.localStorage.getItem('rvsim.panelCols.registers') || 'null');
+      const fixedTotalBefore = (savedBefore && (savedBefore['#'] || 42)) + (savedBefore && (savedBefore['Name'] || 76));
+      const fixedTotalAfter = (savedAfter['#'] || 42) + (savedAfter['Name'] || 76);
+      check('Fixed column widths grew after dragging right (+40px)', fixedTotalAfter > fixedTotalBefore);
+      check('Fixed columns persisted in localStorage', !!savedAfter && Number.isFinite(savedAfter['#']));
+      // Elastic columns gave up the same pixels. When no widths were persisted
+      // before the drag, the baseline is the natural default (120 + 120).
+      const flexBefore = (savedBefore && (savedBefore['Value (Hex)'] || 120)) + (savedBefore && (savedBefore['Value (Dec)'] || 120)) || 240;
+      const flexAfter = (savedAfter['Value (Hex)'] || 120) + (savedAfter['Value (Dec)'] || 120);
+      check('Elastic Value columns shrank to give up the drag delta', flexAfter < flexBefore);
+      // Reset restores the defaults.
+      const resetBtn = csReg.querySelector('.panel-colsplit-reset');
+      resetBtn.click();
+      const savedReset = JSON.parse(win.localStorage.getItem('rvsim.panelCols.registers') || 'null');
+      check('Reset restores default column widths', savedReset['#'] === 42 && savedReset['Name'] === 76);
+    } else {
+      check('Registers knob exists for drag test', false);
+    }
 
     console.log('\n===========================================================');
     if (failed === 0) {
