@@ -761,44 +761,28 @@
       vertical-align: middle;
     }
 
-    /* Registers panel column widths: `#`/`Name` are narrow fit-to-content
-       columns that never scale with the panel (their data always fits on one
-       line), while the two Value columns are the flexible ones that absorb any
-       extra panel width. */
-    .reg-table th.col-id,
-    .reg-table td.col-id {
-      width: 42px;
-      min-width: 42px;
+    .reg-table th:nth-child(1),
+    .reg-table td:nth-child(1) {
+      width: 40px;
       text-align: left;
     }
 
-    .reg-table th.col-name,
-    .reg-table td.col-name {
-      width: 76px;
-      min-width: 76px;
+    .reg-table th:nth-child(2),
+    .reg-table td:nth-child(2) {
+      width: 65px;
       text-align: left;
     }
 
-    .reg-table th.col-val,
-    .reg-table td.col-val {
+    .reg-table th:nth-child(3),
+    .reg-table td:nth-child(3) {
+      width: 120px;
       text-align: right;
     }
 
-    /* The narrow columns keep their data on one line (no wrapping) while the
-       wide Value columns are allowed to wrap if the panel is ever so narrow
-       that they cannot fit — headers may wrap freely (one-off real estate). */
-    .reg-table .col-id,
-    .reg-table .col-name {
-      white-space: nowrap;
-    }
-
-    /* The value columns absorb the extra width when the panel widens, so the
-       narrow columns never scale up (avoids unnecessary data wrapping).
-       `table-layout: fixed` sizes columns from the header row, so the values
-       get the remainder as a percentage. */
-    .reg-table th.col-val,
-    .reg-table td.col-val {
-      width: 1%;
+    .reg-table th:nth-child(4),
+    .reg-table td:nth-child(4) {
+      width: 120px;
+      text-align: right;
     }
 
     .reg-table td {
@@ -970,11 +954,6 @@
       line-height: 1.6;
       overflow-x: auto;
       word-wrap: break-word;
-      /* Persisted per-column widths (set via JS from the column-splitter
-         drags). Defaults keep the natural sizes when nothing is persisted. */
-      --mem-addr-w: 106px;
-      --mem-hex-w: 244px;
-      --mem-ascii-w: 90px;
     }
 
     .mem-view .addr {
@@ -982,8 +961,7 @@
       font-weight: 550;
       white-space: nowrap;
       display: inline-block;
-      min-width: var(--mem-addr-w);
-      width: var(--mem-addr-w);
+      min-width: 10ch;
     }
 
     .mem-view span.val {
@@ -1024,29 +1002,6 @@
 
     .mem-view div {
       margin: 2px 0;
-      /* Flex row: Addr (fixed) · hex block (natural, never wraps its data) ·
-         ASCII (flexible). When the panel is wider, the extra width goes to the
-         ASCII region and the hex data stays on one line — no wrapping. */
-      display: flex;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .mem-view .mem-hex-block {
-      flex: 0 0 auto;
-      /* The persisted Hex column width: the hex block is sized to exactly
-         this, so the ASCII column always starts after it. The hex DATA never
-         wraps (one 32-bit word per chunk stays on one line) — on a very
-         narrow panel the hex block just overflows and the .mem-view scrolls
-         horizontally. */
-      min-width: var(--mem-hex-w);
-      white-space: nowrap;
-    }
-
-    .mem-view .mem-ascii-block {
-      flex: 1 1 auto;
-      min-width: var(--mem-ascii-w);
-      padding-left: 6px;
     }
 
     .wordgap {
@@ -1171,109 +1126,9 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
-      /* `auto` layout lets the two elastic columns (Native instruction /
-         Original source) share the leftover space after the fixed-width
-         Addr + Machine code columns are reserved, instead of squashing every
-         column into a fixed grid. */
-      table-layout: auto;
+      table-layout: fixed;
       font-family: 'Consolas', 'Roboto Mono', 'SF Mono', monospace;
       font-weight: 500;
-    }
-
-    /* Fixed-width header columns: Addr and Machine code are sized so their
-       contents (always a fixed-width hex address / machine-code word) fit on
-       one line. These never grow when the panel widens — the surplus goes to
-       Native instruction / Original source, avoiding unnecessary wrapping. */
-    .code-list .col-fixed {
-      width: 1%;
-      white-space: nowrap;
-    }
-
-    /* The two elastic columns share the leftover width. */
-    .code-list .col-flex {
-      width: auto;
-    }
-
-    /* ============================================================
-       Intra-panel column splitter ("knob"): a small draggable handle
-       that appears at the top of a data panel (Registers / Memory /
-       Disassembly) and resizes the columns within that panel.
-       Implemented as a separate .panel-colsplit element appended by
-       JS, so the panel content (table / mem-view) stays untouched.
-       ============================================================ */
-    .panel-colsplit {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      padding: 3px 8px 0 8px;
-      flex-shrink: 0;
-      user-select: none;
-    }
-
-    /* The draggable grabber pill. */
-    .panel-colsplit-handle {
-      flex: 0 0 auto;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      padding: 2px 8px;
-      border-radius: 8px;
-      background: #181825;
-      border: 1px solid #45475a;
-      cursor: col-resize;
-      color: #a6adc8;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      white-space: nowrap;
-    }
-
-    .panel-colsplit-handle:hover,
-    .panel-colsplit-handle.dragging {
-      background: #313244;
-      border-color: #cba6f7;
-      color: #cdd6f4;
-    }
-
-    /* Directional markers inside the handle (▸/◂). */
-    .panel-colsplit-handle .cs-l,
-    .panel-colsplit-handle .cs-r {
-      font-size: 10px;
-      line-height: 1;
-      opacity: 0.75;
-    }
-
-    /* A "recenter" reset button (double-click / middle-click the handle also
-       resets, mirroring the panel-grid splitters' double-click behaviour). */
-    .panel-colsplit-reset {
-      flex: 0 0 auto;
-      background: none;
-      border: 1px solid transparent;
-      color: #6c7086;
-      font-size: 11px;
-      padding: 1px 5px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: inherit;
-      line-height: 1.3;
-    }
-
-    .panel-colsplit-reset:hover {
-      color: #cdd6f4;
-      background: #313244;
-      border-color: #45475a;
-    }
-
-    /* Hide the column splitter entirely in the tabbed mobile view — the whole
-       panel is full-width there and the columns auto-fit the viewport. */
-    @media (max-width: 800px) {
-      .panel-colsplit {
-        display: none !important;
-      }
     }
 
     .code-list th {
@@ -3081,10 +2936,10 @@
           <table class="reg-table" id="regTable">
             <thead>
               <tr>
-                <th id="regId" class="col-left col-id">#</th>
-                <th id="regName" class="col-left col-name">Name</th>
-                <th id="regHex" class="col-right col-val">Value (Hex)</th>
-                <th id="regDec" class="col-right col-val">Value (Dec)</th>
+                <th id="regId" class="col-left">#</th>
+                <th id="regName" class="col-left">Name</th>
+                <th id="regHex" class="col-right">Value (Hex)</th>
+                <th id="regDec" class="col-right">Value (Dec)</th>
               </tr>
             </thead>
             <tbody id="regBody"></tbody>
@@ -6894,269 +6749,6 @@
       savePanelDock();
     }
 
-    /* ============================================================
-       Intra-panel column splitters (Registers / Memory / Disassembly)
-       A small draggable "knob" bar is appended inside each of the three
-       data panels. Dragging it resizes the panel's OWN columns: the fixed
-       columns (short hex/addr/name data that fits on one line) grow or
-       shrink, while the elastic columns (Native / Source / Value / ASCII)
-       automatically fill the rest of the panel width — so the fixed data
-       never scales and never wraps. The Peripherals panel is untouched.
-       Column widths are persisted per panel in localStorage key
-       `rvsim.panelCols.<name>` as an object of column-name → pixel width.
-       ============================================================ */
-    // Column definition per panel. `flex: false` = fixed (natural px width,
-    // white-space nowrap, never scales with the panel). `flex: true` =
-    // elastic (shares the leftover panel width equally). `start` is the
-    // natural default width for fixed columns; `min` is the drag floor.
-    const PANEL_COL_CONFIG = {
-      registers: {
-        '#':            { min: 30, start: 42,  flex: false },
-        'Name':         { min: 40, start: 76,  flex: false },
-        'Value (Hex)':  { min: 70, start: 120, flex: true },
-        'Value (Dec)':  { min: 70, start: 120, flex: true },
-      },
-      memory: {
-        'Addr':  { min: 70, start: 106, flex: false },
-        'Hex':   { min: 120, start: 244, flex: false },
-        'ASCII': { min: 70, start: 90,  flex: true },
-      },
-      disassembly: {
-        'Addr':         { min: 70, start: 100, flex: false },
-        'Machine code': { min: 90, start: 130, flex: false },
-        'Native':       { min: 120, start: 280, flex: true },
-        'Source':       { min: 120, start: 280, flex: true },
-      },
-    };
-    // Column order per panel (the fixed columns come first, then elastic).
-    const PANEL_COL_ORDER = {
-      registers: ['#', 'Name', 'Value (Hex)', 'Value (Dec)'],
-      memory: ['Addr', 'Hex', 'ASCII'],
-      disassembly: ['Addr', 'Machine code', 'Native', 'Source'],
-    };
-
-    function colSplitKey(name) { return 'rvsim.panelCols.' + name; }
-    function loadPanelColWidths(name) {
-      try {
-        const raw = localStorage.getItem(colSplitKey(name));
-        const o = raw ? JSON.parse(raw) : null;
-        if (o && typeof o === 'object') {
-          const cfg = PANEL_COL_CONFIG[name];
-          // Only accept known columns, clamped to a sane range.
-          const out = {};
-          for (const k of Object.keys(cfg)) {
-            const v = Number(o[k]);
-            out[k] = Number.isFinite(v) ? Math.max(cfg[k].min, Math.min(v, 900)) : null;
-          }
-          return out;
-        }
-      } catch (e) { /* corrupt storage → defaults */ }
-      return null;
-    }
-    function savePanelColWidths(name) {
-      try { localStorage.setItem(colSplitKey(name), JSON.stringify(panelColWidths[name] || {})); }
-      catch (e) { /* storage unavailable */ }
-    }
-
-    // Per-panel persisted column widths (loaded lazily on first access).
-    const panelColWidths = {};
-    function colWidthsFor(name) {
-      if (!panelColWidths[name]) panelColWidths[name] = loadPanelColWidths(name) || {};
-      return panelColWidths[name];
-    }
-
-    // Default (natural) column widths, used on reset.
-    function defaultColWidths(name) {
-      const d = {};
-      for (const k of Object.keys(PANEL_COL_CONFIG[name])) d[k] = PANEL_COL_CONFIG[name][k].start;
-      return d;
-    }
-
-    // Force a re-render of the panel so the new column widths take effect
-    // (the widths are applied via inline style on cells during render).
-    function reapplyColWidths(name) {
-      try {
-        if (name === 'registers') updateRegisters();
-        else if (name === 'memory') updateMemoryView();
-        else if (name === 'disassembly') updateDisassembly();
-      } catch (e) { /* dependent state not ready yet */ }
-    }
-
-    // Build the "knob" bar. It is appended to the panel's .panel-body (or the
-    // panel itself when no body wrapper exists yet).
-    function createColSplitBar(name) {
-      const el = panelEl(name);
-      if (!el || el.querySelector('.panel-colsplit')) return;
-      const bar = document.createElement('div');
-      bar.className = 'panel-colsplit';
-      bar.innerHTML =
-        '<span class="panel-colsplit-handle" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize panel columns · double-click to reset">' +
-        '<span class="cs-l">◂</span> Columns <span class="cs-r">▸</span>' +
-        '</span>' +
-        '<button class="panel-colsplit-reset" type="button" title="Reset column widths">Reset</button>';
-
-      const body = el.querySelector(':scope > .panel-body');
-      (body || el).appendChild(bar);
-
-      const handle = bar.querySelector('.panel-colsplit-handle');
-      const resetBtn = bar.querySelector('.panel-colsplit-reset');
-      let dragging = false, startX = 0;
-
-      handle.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        dragging = true;
-        startX = e.clientX;
-        handle.classList.add('dragging');
-        document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none';
-        if (handle.setPointerCapture) handle.setPointerCapture(e.pointerId);
-      });
-      handle.addEventListener('pointermove', (e) => {
-        if (!dragging) return;
-        const dx = e.clientX - startX;
-        shiftPanelColWidths(name, dx);
-      });
-      const stopDrag = () => {
-        if (!dragging) return;
-        dragging = false;
-        handle.classList.remove('dragging');
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        savePanelColWidths(name);
-      };
-      handle.addEventListener('pointerup', stopDrag);
-      handle.addEventListener('pointercancel', stopDrag);
-      handle.addEventListener('dblclick', (e) => {
-        e.preventDefault();
-        resetPanelColWidths(name);
-      });
-      resetBtn.addEventListener('click', () => resetPanelColWidths(name));
-
-      return bar;
-    }
-
-    // Shift a width delta between the FIXED columns and the ELASTIC pool.
-    // Dragging right (+) grows the fixed columns; the elastic columns give up
-    // the same pixels. Dragging left (−) shrinks the fixed columns and the
-    // elastic columns reclaim the space. The fixed columns always stay above
-    // their `min` and their data never wraps.
-    function shiftPanelColWidths(name, dx) {
-      const cfg = PANEL_COL_CONFIG[name];
-      const order = PANEL_COL_ORDER[name];
-      const widths = colWidthsFor(name);
-      const defaults = defaultColWidths(name);
-      // Work from the persisted widths; fall back to defaults for anything
-      // missing (e.g. a newly added column).
-      let current = {};
-      for (const k of Object.keys(cfg)) current[k] = Number(widths[k]) || defaults[k];
-      // Fixed columns = the ones flagged `flex: false`; elastic = the rest.
-      const fixedKeys = order.filter(k => !cfg[k].flex);
-      const elasticKeys = order.filter(k => cfg[k].flex);
-      if (!fixedKeys.length || !elasticKeys.length) return;
-
-      const fixedTotal = fixedKeys.reduce((s, k) => s + current[k], 0);
-      const fixedFloor = fixedKeys.reduce((s, k) => s + cfg[k].min, 0);
-      const elasticTotal = elasticKeys.reduce((s, k) => s + current[k], 0);
-      const elasticFloor = elasticKeys.reduce((s, k) => s + cfg[k].min, 0);
-
-      // How far the fixed columns can grow before the elastic ones hit their
-      // floor, and how far they can shrink before the fixed ones hit theirs.
-      const growable = Math.max(0, elasticTotal - elasticFloor);
-      const shrinkable = Math.max(0, fixedTotal - fixedFloor);
-      const move = Math.max(-shrinkable, Math.min(dx, growable));
-
-      if (fixedTotal > 0) {
-        fixedKeys.forEach(k => {
-          current[k] = Math.max(cfg[k].min, Math.round(current[k] + move * (current[k] / fixedTotal)));
-        });
-      }
-      // Give the elastic columns the leftover space (clamped to their floors).
-      const newFixedTotal = fixedKeys.reduce((s, k) => s + current[k], 0);
-      const delta = newFixedTotal - fixedTotal; // +grew, −shrank
-      if (elasticTotal > 0) {
-        elasticKeys.forEach(k => {
-          current[k] = Math.max(cfg[k].min, Math.round(current[k] - delta * (current[k] / elasticTotal)));
-        });
-      }
-
-      // Persist and re-render.
-      for (const k of Object.keys(current)) widths[k] = current[k];
-      savePanelColWidths(name);
-      reapplyColWidths(name);
-    }
-
-    function resetPanelColWidths(name) {
-      panelColWidths[name] = defaultColWidths(name);
-      savePanelColWidths(name);
-      reapplyColWidths(name);
-    }
-
-    // Apply the persisted widths to the current DOM (called on init and after
-    // any re-render that rebuilds the panel content).
-    function applyColWidths(name) {
-      const widths = colWidthsFor(name);
-      const defaults = defaultColWidths(name);
-      if (name === 'registers') {
-        const tbl = document.getElementById('regTable');
-        if (!tbl) return;
-        // Only the fixed columns (#, Name) take a real width; the value
-        // columns are elastic (share the rest). Apply to the header row so
-        // `table-layout: fixed` picks the widths up.
-        const headers = {
-          '#': tbl.querySelector('th#regId'),
-          'Name': tbl.querySelector('th#regName'),
-        };
-        for (const k of Object.keys(headers)) {
-          const th = headers[k];
-          if (!th) continue;
-          const w = Number(widths[k]) || defaults[k];
-          th.style.width = w + 'px';
-          th.style.minWidth = w + 'px';
-        }
-      } else if (name === 'memory') {
-        const view = document.getElementById('memView');
-        if (!view) return;
-        // The memory view's rows are plain divs; the widths are consumed via
-        // CSS custom properties on #memView (see the .mem-view rules). The
-        // leading Addr span is sized inline too for exactness.
-        const wAddr = Number(widths['Addr']) || defaults['Addr'];
-        const wHex = Number(widths['Hex']) || defaults['Hex'];
-        const wAscii = Number(widths['ASCII']) || defaults['ASCII'];
-        view.style.setProperty('--mem-addr-w', wAddr + 'px');
-        view.style.setProperty('--mem-hex-w', wHex + 'px');
-        view.style.setProperty('--mem-ascii-w', wAscii + 'px');
-        view.querySelectorAll(':scope > div').forEach(row => {
-          const addr = row.querySelector('.addr');
-          if (addr) {
-            addr.style.minWidth = wAddr + 'px';
-            addr.style.width = wAddr + 'px';
-          }
-        });
-      } else if (name === 'disassembly') {
-        const tbl = disassemblyDisplay && disassemblyDisplay.querySelector('.code-list');
-        if (tbl) {
-          const cols = tbl.querySelectorAll('col');
-          if (cols.length >= 4) {
-            // Only the FIXED columns (Addr, Machine code) get an explicit px
-            // width; Native/Source are elastic and share the leftover space.
-            cols[0].style.width = (Number(widths['Addr']) || defaults['Addr']) + 'px';
-            cols[1].style.width = (Number(widths['Machine code']) || defaults['Machine code']) + 'px';
-            cols[2].style.width = '';
-            cols[3].style.width = '';
-          }
-        }
-      }
-    }
-
-    // Called from initPanelDock() to build + apply the knob bars and the
-    // persisted column widths after the panel chrome (panel-body) exists.
-    function initPanelColSplitters() {
-      ['registers', 'memory', 'disassembly'].forEach(name => {
-        createColSplitBar(name);
-        applyColWidths(name);
-      });
-    }
-
     function panelEl(name) { return document.getElementById('tab-' + name); }
 
     function isPanelVisible(name) {
@@ -7169,12 +6761,6 @@
         else if (name === 'memory') { if (typeof updateMemSubTabs === 'function') updateMemSubTabs(); updateMemoryView(); }
         else if (name === 'peripherals') initPeripherals();
         else if (name === 'disassembly') updateDisassembly();
-        // The three data panels carry a draggable column-splitter bar + any
-        // persisted per-column widths; apply them after the content renders.
-        if (name === 'registers' || name === 'memory' || name === 'disassembly') {
-          createColSplitBar(name);
-          applyColWidths(name);
-        }
       } catch (e) { /* dependent state not ready yet */ }
     }
 
@@ -7643,9 +7229,6 @@
       });
       applyPanelDock();
       panelDock.order.forEach(name => { if (isPanelVisible(name)) refreshPanel(name); });
-      // Build the intra-panel column splitter bars (Registers / Memory /
-      // Disassembly) and apply any persisted per-panel column widths.
-      initPanelColSplitters();
       window.addEventListener('resize', () => {
         // While a form field is focused (UART console, memory address box,
         // find/replace, …), a mobile on-screen keyboard open/close fires a
@@ -8309,13 +7892,11 @@ function updateRegisters() {
         const uval = val >>> 0;
         const isChanged = i === lastChangedReg;
         const valClass = 'reg-val' + (isChanged ? ' reg-changed' : '');
-        html += `<tr><td class="reg-name col-id">x${i}</td><td class="reg-name col-name">${name}</td>
-      <td class="${valClass} reg-editable col-val" data-idx="${i}" data-val="${uval.toString(16).padStart(8, '0')}" data-type="hex" style="width:120px" onclick="startRegEdit(this)" ondblclick="popRegEditModal(event,this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)" title="Single-click: edit inline | Double-click: open edit window">0x${uval.toString(16).padStart(8, '0')}</td>
-      <td class="${valClass} reg-editable col-val" data-idx="${i}" data-val="${val.toString().padStart(11, ' ')}" data-type="dec" onclick="startRegEdit(this)" ondblclick="popRegEditModal(event,this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)" style="width:120px" title="Single-click: edit inline | Double-click: open edit window">${val}</td></tr>`;
+        html += `<tr><td class="reg-name">x${i}</td><td class="reg-name">${name}</td>
+      <td class="${valClass} reg-editable" data-idx="${i}" data-val="${uval.toString(16).padStart(8, '0')}" data-type="hex" onclick="startRegEdit(this)" ondblclick="popRegEditModal(event,this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)" title="Single-click: edit inline | Double-click: open edit window">0x${uval.toString(16).padStart(8, '0')}</td>
+      <td class="${valClass} reg-editable" data-idx="${i}" data-val="${val.toString().padStart(11, ' ')}" data-type="dec" onclick="startRegEdit(this)" ondblclick="popRegEditModal(event,this)" onblur="commitRegEdit(this)" onkeydown="handleRegEditKey(event,this)" style="width:120px" title="Single-click: edit inline | Double-click: open edit window">${val}</td></tr>`;
       }
       regBody.innerHTML = html;
-      // Apply the user's persisted column widths to the fresh rows.
-      applyColWidths('registers');
       // Also update peripherals (PC LEDs, etc.) when registers are refreshed
       updatePeripherals();
     }
@@ -8968,7 +8549,7 @@ function updateRegisters() {
               else if (wordStart === (CYCLECOUNT >>> 0)) descriptors.push('CYCLECOUNT RO 0xFFFF00A0');
             }
             let desc = descriptors.length ? `[${descriptors.join(' · ')}]` : '[MMIO]';
-            html += `<div><span class="addr" data-col="addr">0x${base.toString(16).padStart(8, '0')}</span><span class="mem-hex-block">${hexVals}</span><span class="mmio-desc" style="font-size:10px;color:#cba6f7;">${desc}</span></div>`;
+            html += `<div><span class="addr">0x${base.toString(16).padStart(8, '0')}</span> ${hexVals} <span class="mmio-desc" style="font-size:10px;color:#cba6f7;">${desc}</span></div>`;
             continue;
           }
 
@@ -9011,7 +8592,7 @@ function updateRegisters() {
           }
           let desc = descriptors.length ? `[${descriptors.join(' · ')}]` : '[MMIO]';
 
-          html += `<div><span class="addr" data-col="addr">0x${base.toString(16).padStart(8, '0')}</span><span class="mem-hex-block">${hexVals}</span><span class="mem-ascii-block">${asciiVals}</span><span class="mmio-desc" style="font-size:10px;color:#cba6f7;">${desc}</span></div>`;
+          html += `<div><span class="addr">0x${base.toString(16).padStart(8, '0')}</span> ${hexVals}  ${asciiVals} <span class="mmio-desc" style="font-size:10px;color:#cba6f7;">${desc}</span></div>`;
         } else {
           let hexVals = '';
           let asciiVals = '';
@@ -9079,12 +8660,10 @@ function updateRegisters() {
             }
           }
 
-          html += `<div><span class="addr" data-col="addr">0x${base.toString(16).padStart(8, '0')}</span><span class="mem-hex-block">${hexVals}</span><span class="mem-ascii-block">${asciiVals}</span></div>`;
+          html += `<div><span class="addr">0x${base.toString(16).padStart(8, '0')}</span> ${hexVals}  ${asciiVals}</div>`;
         }
       }
       memView.innerHTML = html;
-      // Apply the user's persisted column widths to the freshly built rows.
-      applyColWidths('memory');
     }
 
     function setMemViewMode(mode) {
@@ -9614,12 +9193,7 @@ function updateRegisters() {
       }
 
       let html = '<table class="code-list">';
-      // Fixed-width Addr + Machine-code columns stay at their natural size so
-      // their data never wraps; Native instruction / Original source (the
-      // elastic columns) absorb the extra width when the panel is widened.
-      html += '<colgroup><col class="col-fixed"><col class="col-fixed">' +
-        '<col class="col-flex"><col class="col-flex"></colgroup>';
-      html += '<tr><th class="col-fixed">Addr</th><th class="col-fixed">Machine code</th><th class="col-flex">Native instruction</th><th class="col-flex">Original source</th></tr>';
+      html += '<tr><th>Addr</th><th>Machine code</th><th>Native instruction</th><th>Original source</th></tr>';
       for (const item of machineCode) {
         if (!item.bytes || item.error) continue;
 
@@ -9710,16 +9284,14 @@ function updateRegisters() {
         const sourceRendered = annotateLabels(escapeHtml(source));
 
         html += `<tr${rowClass ? ` class="${rowClass}"` : ''}>
-      <td class="addr" data-col="addr">0x${item.address.toString(16).padStart(8, '0')}</td>
-      <td class="bytes" data-col="bytes">${bytesStr}</td>
-      <td class="native ${expanded ? 'native-expanded' : ''}" data-col="native">${nativeRendered}</td>
-      <td class="source ${expanded ? 'pseudo' : ''}" data-col="source">${sourceRendered}${cSrcTag}</td>
+      <td class="addr">0x${item.address.toString(16).padStart(8, '0')}</td>
+      <td class="bytes">${bytesStr}</td>
+      <td class="native ${expanded ? 'native-expanded' : ''}">${nativeRendered}</td>
+      <td class="source ${expanded ? 'pseudo' : ''}">${sourceRendered}${cSrcTag}</td>
     </tr>`;
       }
       html += '</table>';
       disassemblyDisplay.innerHTML = html;
-      // Apply the user's persisted column widths to the freshly built table.
-      applyColWidths('disassembly');
 
       // Autoscroll active execution instruction into view while the Disassembly panel is shown
       const tabDisasm = document.getElementById('tab-disassembly');
