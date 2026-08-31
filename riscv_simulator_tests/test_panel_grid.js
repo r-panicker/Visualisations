@@ -523,66 +523,168 @@ setTimeout(() => {
     check('Row 2 (peripherals/disassembly) re-clamped to fit the 500px dock', r2a + r2b + 6 <= 500);
     check('Re-clamped columns keep the 90px minimum', r1a >= 90 && r1b >= 90 && r2a >= 90 && r2b >= 90);
 
-    // --- 16. Intra-panel column splitters exist for the 3 data panels only ---
-    console.log('\n[16] Intra-panel column-splitter bars exist (Registers/Memory/Disassembly, not Peripherals)');
-    // Re-init the dock so the col-splitter bars get built for all panels.
+    // --- 16. Intra-panel column-resize handles exist for the 3 data panels only ---
+    console.log('\n[16] Intra-panel column-resize handles exist (Registers/Memory/Disassembly, not Peripherals)');
+    // Re-init the dock so the resizer listeners are wired for all panels.
     win.innerWidth = 1400;
     ['registers', 'memory', 'peripherals', 'disassembly'].forEach(n => win.setPanelVisible(n, true));
     win.initPanelDock();
-    const csReg = doc.getElementById('tab-registers').querySelector('.panel-colsplit');
-    const csMem = doc.getElementById('tab-memory').querySelector('.panel-colsplit');
-    const csDis = doc.getElementById('tab-disassembly').querySelector('.panel-colsplit');
-    const csPer = doc.getElementById('tab-peripherals').querySelector('.panel-colsplit');
-    check('Registers panel has a column-splitter bar', !!csReg);
-    check('Memory panel has a column-splitter bar', !!csMem);
-    check('Disassembly panel has a column-splitter bar', !!csDis);
-    check('Peripherals panel has NO column-splitter bar (untouched)', !csPer);
+    win.updateEditor(); // populate the disassembly table
+    const regResizers = doc.querySelectorAll('#tab-registers .col-resizer');
+    const memResizers = doc.querySelectorAll('#tab-memory .col-resizer');
+    const disResizers = doc.querySelectorAll('#tab-disassembly .col-resizer');
+    const perResizers = doc.querySelectorAll('#tab-peripherals .col-resizer');
+    check('Registers panel has 3 column-resize handles (#, Name, Value (Hex))', regResizers.length === 3);
+    check('Memory panel has 2 column-resize handles (Addr, Hex)', memResizers.length === 2);
+    check('Disassembly panel has 3 column-resize handles (Addr, Machine code, Native)', disResizers.length === 3);
+    check('Peripherals panel has NO column-resize handles (untouched)', perResizers.length === 0);
 
-    // --- 17. Disassembly table uses fixed Addr/Machine-code + elastic Native/Source ---
-    console.log('\n[17] Disassembly colgroup marks Addr + Machine code as fixed (no data scaling)');
-    // Assemble a tiny program so the disassembly table is populated.
-    win.updateEditor(); // ensure state
+    // Frozen headers: all three data panels pin their header row while the
+    // rows scroll under it (the shared .panel-body is the scrollport).
+    const stickyPos = (el) => el && win.getComputedStyle(el).position;
+    check('Registers header is frozen (sticky)', stickyPos(doc.getElementById('regId')) === 'sticky');
+    check('Memory header is frozen (sticky)', stickyPos(doc.getElementById('memColHeader')) === 'sticky');
+    const disHeadTh = doc.querySelector('#disassemblyDisplay .code-list thead th');
+    check('Disassembly header is frozen (sticky)', stickyPos(disHeadTh) === 'sticky');
+    check('Disassembly header row is a real <thead>', !!disHeadTh);
+    check('Memory header labels read Addr / Content (Hex) / Content (ASCII)',
+      Array.from(doc.querySelectorAll('#memColHeader .mem-col-h'))
+        .map(e => e.textContent.trim()).join('|') === 'Addr|Content (Hex)|Content (ASCII)');
+
+    // --- 17. Every panel column is sized from its <colgroup> ---
+    console.log('\n[17] Columns are sized from the <colgroup>; grow columns absorb the surplus');
     const disTbl = doc.getElementById('disassemblyDisplay').querySelector('.code-list');
-    if (disTbl) {
-      const cols = disTbl.querySelectorAll('col');
-      const colClasses = Array.from(cols).map(c => c.className || '');
-      check('Disassembly table has a 4-column colgroup', cols.length === 4);
-      check('Addr + Machine code are fixed columns (col-fixed)',
-        colClasses[0].includes('col-fixed') && colClasses[1].includes('col-fixed'));
-      check('Native + Source are elastic columns (col-flex)',
-        colClasses[2].includes('col-flex') && colClasses[3].includes('col-flex'));
+    const regTbl = doc.getElementById('regTable');
+    if (disTbl && regTbl) {
+      const disCols = disTbl.querySelectorAll('colgroup > col');
+      const regCols = regTbl.querySelectorAll('colgroup > col');
+      check('Disassembly table has a 4-column colgroup', disCols.length === 4);
+      check('Registers table has a 4-column colgroup', regCols.length === 4);
+      const px = (el) => parseFloat(el.style.width) || 0;
+      check('Every disassembly column got an explicit px width',
+        Array.from(disCols).every(c => px(c) > 0));
+      check('Every registers column got an explicit px width',
+        Array.from(regCols).every(c => px(c) > 0));
+      // jsdom reports clientWidth 0, so no surplus is distributed and every
+      // column sits at its natural `fit` width — which is exactly the
+      // no-stretch guarantee: Addr/Machine code stay content-sized.
+      check('Addr keeps its content-sized width (never stretched)', px(disCols[0]) === 94);
+      check('Machine code keeps its content-sized width (never stretched)', px(disCols[1]) === 116);
+      check('Native + Source are the wider text columns', px(disCols[2]) === 200 && px(disCols[3]) === 200);
+      check('Registers # / Name stay narrow, Value columns are wider',
+        px(regCols[0]) === 44 && px(regCols[1]) === 72 && px(regCols[2]) === 104 && px(regCols[3]) === 96);
+      check('Table min-width is the column total (narrow panel scrolls, never crushes)',
+        parseFloat(disTbl.style.minWidth) === 94 + 116 + 200 + 200);
     } else {
-      check('Disassembly table populated (skipping colgroup check)', false);
+      check('Disassembly + Registers tables populated (skipping colgroup check)', false);
     }
 
-    // --- 18. Dragging the registers column knob resizes fixed cols + persists ---
-    console.log('\n[18] Column-splitter knob drag resizes fixed columns and persists');
-    const handleReg = csReg && csReg.querySelector('.panel-colsplit-handle');
-    if (handleReg) {
-      // Mock clientX so the drag delta is deterministic: drag +40px.
-      // pointerdown at 100, move to 140 → dx = 40.
-      // Default widths: '#'=42, 'Name'=76 (fixed). Value cols elastic.
-      const savedBefore = JSON.parse(win.localStorage.getItem('rvsim.panelCols.registers') || 'null');
-      handleReg.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 7, clientX: 100, bubbles: true }));
-      handleReg.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 7, clientX: 140, bubbles: true }));
-      handleReg.dispatchEvent(new win.PointerEvent('pointerup',   { pointerId: 7, clientX: 140, bubbles: true }));
-      const savedAfter = JSON.parse(win.localStorage.getItem('rvsim.panelCols.registers') || 'null');
-      const fixedTotalBefore = (savedBefore && (savedBefore['#'] || 42)) + (savedBefore && (savedBefore['Name'] || 76));
-      const fixedTotalAfter = (savedAfter['#'] || 42) + (savedAfter['Name'] || 76);
-      check('Fixed column widths grew after dragging right (+40px)', fixedTotalAfter > fixedTotalBefore);
-      check('Fixed columns persisted in localStorage', !!savedAfter && Number.isFinite(savedAfter['#']));
-      // Elastic columns gave up the same pixels. When no widths were persisted
-      // before the drag, the baseline is the natural default (120 + 120).
-      const flexBefore = (savedBefore && (savedBefore['Value (Hex)'] || 120)) + (savedBefore && (savedBefore['Value (Dec)'] || 120)) || 240;
-      const flexAfter = (savedAfter['Value (Hex)'] || 120) + (savedAfter['Value (Dec)'] || 120);
-      check('Elastic Value columns shrank to give up the drag delta', flexAfter < flexBefore);
-      // Reset restores the defaults.
-      const resetBtn = csReg.querySelector('.panel-colsplit-reset');
-      resetBtn.click();
-      const savedReset = JSON.parse(win.localStorage.getItem('rvsim.panelCols.registers') || 'null');
-      check('Reset restores default column widths', savedReset['#'] === 42 && savedReset['Name'] === 76);
+
+    // Give the panel a real width so the surplus-distribution path runs
+    // (jsdom reports clientWidth 0 by default, which only exercises the
+    // natural-width case above). This is the behaviour that regressed:
+    // widening the panel must feed the text columns, not stretch Addr /
+    // Machine code, and must never collapse the last columns.
+    const disBody = doc.querySelector('#tab-disassembly > .panel-body');
+    if (disBody && disTbl) {
+      Object.defineProperty(disBody, 'clientWidth', { configurable: true, value: 1000 });
+      win.applyPanelColLayout('disassembly');
+      const c = disTbl.querySelectorAll('colgroup > col');
+      const px = (el) => parseFloat(el.style.width) || 0;
+      check('Widening the panel does NOT stretch Addr', px(c[0]) === 94);
+      check('Widening the panel does NOT stretch Machine code', px(c[1]) === 116);
+      check('Native + Source absorb the surplus equally (neither collapses)',
+        px(c[2]) === px(c[3]) && px(c[2]) > 200);
+      check('The four columns fill the available width', px(c[0]) + px(c[1]) + px(c[2]) + px(c[3]) >= 980);
+
+      // Narrower than the natural total: nothing is crushed, the widths hold
+      // at their natural sizes and the table's min-width makes the panel scroll.
+      Object.defineProperty(disBody, 'clientWidth', { configurable: true, value: 300 });
+      win.applyPanelColLayout('disassembly');
+      check('A too-narrow panel holds the natural widths instead of crushing',
+        px(c[0]) === 94 && px(c[1]) === 116 && px(c[2]) === 200 && px(c[3]) === 200);
+      check('...and scrolls instead, via the table min-width',
+        parseFloat(disTbl.style.minWidth) === 610);
+      delete disBody.clientWidth;
+      Object.defineProperty(disBody, 'clientWidth', { configurable: true, value: 0 });
+      win.applyPanelColLayout('disassembly');
     } else {
-      check('Registers knob exists for drag test', false);
+      check('Disassembly panel body available for surplus-distribution check', false);
+    }
+
+    // --- 18. Dragging a separator resizes that column and shifts the rest ---
+    console.log('\n[18] Dragging a separator resizes that column, pins the rest, and persists');
+    const regIdTh = doc.getElementById('regId');
+    const idHandle = regIdTh && regIdTh.querySelector('.col-resizer');
+    const regCols2 = regTbl.querySelectorAll('colgroup > col');
+    if (idHandle) {
+      idHandle.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 8, clientX: 100, bubbles: true }));
+      idHandle.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 8, clientX: 140, bubbles: true })); // dx = +40
+      idHandle.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 8, clientX: 140, bubbles: true }));
+      check('# column grew by exactly the dragged delta (44px -> 84px)',
+        parseFloat(regCols2[0].style.width) === 84);
+      // Spreadsheet behaviour: the columns to the right are unchanged, so
+      // they shift along with the boundary instead of being re-flowed.
+      check('Columns to the right keep their widths (they shift, not re-flow)',
+        parseFloat(regCols2[1].style.width) === 72 &&
+        parseFloat(regCols2[2].style.width) === 104 &&
+        parseFloat(regCols2[3].style.width) === 96);
+      check('Table min-width grew by the same delta (panel scrolls if needed)',
+        parseFloat(regTbl.style.minWidth) === 84 + 72 + 104 + 96);
+      const saved = JSON.parse(win.localStorage.getItem('rvsim.panelColW.registers') || 'null');
+      check('Dragged width persisted to localStorage', !!saved && saved.id === 84);
+      check('The whole row was pinned on the first move', !!saved && saved.dec === 96);
+
+      idHandle.dispatchEvent(new win.MouseEvent('dblclick', { bubbles: true }));
+      check('Double-click restores the automatic layout (# back to 44px)',
+        parseFloat(regCols2[0].style.width) === 44);
+      const savedReset = JSON.parse(win.localStorage.getItem('rvsim.panelColW.registers') || 'null');
+      check('Reset clears every pinned width for the panel',
+        !savedReset || Object.keys(savedReset).length === 0);
+    } else {
+      check('Registers # column resizer exists for drag test', false);
+    }
+
+    // A plain click (pointerdown/up with no movement) must not pin anything.
+    const nameHandle = doc.getElementById('regName').querySelector('.col-resizer');
+    if (nameHandle) {
+      nameHandle.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 11, clientX: 300, bubbles: true }));
+      nameHandle.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 11, clientX: 300, bubbles: true }));
+      const savedClick = JSON.parse(win.localStorage.getItem('rvsim.panelColW.registers') || 'null');
+      check('A click without dragging pins nothing',
+        !savedClick || Object.keys(savedClick).length === 0);
+    } else {
+      check('Registers Name resizer exists for click-without-drag test', false);
+    }
+
+    // Memory: dragging Addr updates the --mem-addr-w custom property that both
+    // the data rows and the column-header labels read, and both scroll together.
+    const memColHeader = doc.getElementById('memColHeader');
+    const memView = doc.getElementById('memView');
+    const memAddrHandle = memColHeader && memColHeader.querySelector('.col-resizer[data-col="addr"]');
+    if (memAddrHandle) {
+      memAddrHandle.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 10, clientX: 300, bubbles: true }));
+      memAddrHandle.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 10, clientX: 330, bubbles: true })); // dx = +30
+      memAddrHandle.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 10, clientX: 330, bubbles: true }));
+      check('Memory Addr column widened (106px -> 136px)',
+        memView.style.getPropertyValue('--mem-addr-w') === '136px');
+      check('Memory column-header stays in sync with the data rows',
+        memColHeader.style.getPropertyValue('--mem-addr-w') === '136px');
+      check('Header and rows share one min-width so they scroll together',
+        memView.style.minWidth === memColHeader.style.minWidth &&
+        parseFloat(memView.style.minWidth) === 136 + 244 + 122);
+      const savedMem = JSON.parse(win.localStorage.getItem('rvsim.panelColW.memory') || 'null');
+      check('Memory Addr width persisted to localStorage', !!savedMem && savedMem.addr === 136);
+
+      // The Hex|ASCII boundary must not be draggable back over the hex data.
+      const memHexHandle = memColHeader.querySelector('.col-resizer[data-col="hex"]');
+      memHexHandle.dispatchEvent(new win.PointerEvent('pointerdown', { pointerId: 12, clientX: 500, bubbles: true }));
+      memHexHandle.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 12, clientX: 100, bubbles: true })); // dx = -400
+      memHexHandle.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 12, clientX: 100, bubbles: true }));
+      check('Hex column cannot be dragged below its floor (clamped, not collapsed)',
+        parseFloat(memView.style.getPropertyValue('--mem-hex-w')) === 200);
+    } else {
+      check('Memory Addr column-header resizer exists for drag test', false);
     }
 
     console.log('\n===========================================================');

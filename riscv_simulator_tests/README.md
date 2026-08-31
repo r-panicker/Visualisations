@@ -186,11 +186,11 @@ npm --prefix riscv_simulator_tests run build
 
 ---
 
-### 16. `test_panel_grid.js` sections [16]–[18] — Intra-panel Column Splitters & No-Wrap Columns
-- **Purpose**: Regression coverage for the new per-panel column splitter feature (also part of the 2×2 grid suite):
-  - **[16]** The `◂ Columns ▸` knob bars (`.panel-colsplit`) are created for **Registers**, **Memory**, and **Disassembly** but **not** for **Peripherals** (deliberately untouched).
-  - **[17]** The Disassembly `<table class="code-list">` emits a 4-column `<colgroup>` marking **Addr + Machine code** as `col-fixed` (natural width, nowrap) and **Native + Source** as `col-flex` (elastic).
-  - **[18]** Dragging the Registers knob (pointerdown/move/up) grows the fixed `#`/`Name` columns, shrinks the elastic Value columns by the same delta, persists to `localStorage` under `rvsim.panelCols.registers`, and the **Reset** button restores the default widths.
+### 16. `test_panel_grid.js` sections [16]–[18] — Intra-panel Column-Resize Separators & Column Sizing
+- **Purpose**: Regression coverage for the per-column `.col-resizer` separators and the `PANEL_COLS`/`applyPanelColLayout()` sizing model (also part of the 2×2 grid suite):
+  - **[16]** All three panels freeze their header row (`position: sticky`), Disassembly's is a real `<thead>`, Memory's columns read `Addr` / `Content (Hex)` / `Content (ASCII)`, and `.col-resizer` separators exist for **Registers** (3: `#`, `Name`, `Value (Hex)`), **Memory** (2: `Addr`, `Content (Hex)`, in the `.mem-col-header` bar), and **Disassembly** (3: `Addr`, `Machine code`, `Native instruction`) but **not** for **Peripherals** (deliberately untouched).
+  - **[17]** Both tables carry a 4-`<col>` `<colgroup>` and every column gets an explicit px width; `Addr`/`Machine code` sit at their content-sized widths. With the panel body's `clientWidth` stubbed to a real value, widening the panel **does not stretch** `Addr`/`Machine code` while `Native`+`Source` absorb the surplus **equally**; a too-narrow panel holds the natural widths and scrolls via the table's `min-width` instead of crushing a column. Guards the `width: 1%` regression that collapsed the last two columns while ballooning the first two.
+  - **[18]** Dragging a separator resizes only that column while the columns to its right keep their widths (spreadsheet behaviour) and the table's `min-width` grows with it; the first move pins the whole row; a click without dragging pins nothing; double-click clears every pinned width for the panel. Also covers Memory's `--mem-*-w` custom properties staying in sync between the data rows and the header bar (shared `min-width` so they scroll together) and the `Content (Hex)` column being clamped to its floor rather than draggable back over the hex data.
 - **Run Command**: `node riscv_simulator_tests/test_panel_grid.js`
 
 ---
