@@ -2,3 +2,15 @@
 ImageDisplay_autoadvance_accel.asm
 node_modules/
 package-lock.json
+RV/Wrapper.v
+RV/test_Wrapper_DIP_to_LED_self_checking.v
+RV/Shifter.v
+RV/RV.v
+RV/RegFile.v
+RV/ProgramCounter.v
+RV/PC_Logic.v
+RV/Extend.v
+RV/Decoder.v
+RV/ALU.v
+RV/AA_IROM_DIP_to_LED.mem
+RV/AA_DMEM_DIP_to_LED.mem
