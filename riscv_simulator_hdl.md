@@ -24,6 +24,7 @@ existing panels.
 |---|---|---|
 | Executes | Built-in RV32GC interpreter | Your uploaded `.v` sources |
 | Stepping | Live, instruction at a time | Through a recording — forwards *and* backwards |
+| Run / Resume / breakpoints | Yes | Yes — Resume seeks the recording to the next breakpoint |
 | Registers panel | Live | Read out of your register file by hierarchical reference |
 | Memory panel | Live | Driven by the Wrapper's actual DMEM writes |
 | LEDs / 7-seg / OLED / UART | Live | Driven by your hardware's pins |
@@ -34,14 +35,55 @@ existing panels.
 
 ## Using it
 
-1. **Switch to HDL** — the `JS | HDL` pill in the toolbar. The HDL panel opens and the
-   engine (~2.7 MB of WASM) begins loading.
-2. **Load your Verilog** — drag `.v` files onto the HDL panel, or use *browse...*.
-   Include `Wrapper.v`, `RV.v` and **every** submodule (`ALU.v`, `Decoder.v`,
-   `Extend.v`, `PC_Logic.v`, `ProgramCounter.v`, `RegFile.v`, `Shifter.v`).
-   The file holding `module Wrapper` is tagged in the list.
+1. **Switch to HDL** — the `JS | HDL` pill in the toolbar. The engine (~2.7 MB of
+   WASM) begins loading, and with no sources yet loaded the **🔌 HDL Simulation**
+   settings tab opens by itself, because nothing else can happen until it has them.
+2. **Load your Verilog** — drop `.v` files **anywhere on the page**, open them with
+   **📂 Open**, or use *browse…* on that tab. Include `Wrapper.v`, `RV.v` and **every**
+   submodule (`ALU.v`, `Decoder.v`, `Extend.v`, `PC_Logic.v`, `ProgramCounter.v`,
+   `RegFile.v`, `Shifter.v`). The file holding `module Wrapper` is tagged in the list,
+   and a chip next to the `JS | HDL` pill shows the count — turning amber if there is
+   no Wrapper among them.
 3. **Assemble a program** as usual (any example, or your own).
 4. **Run**, then **Step** / **Back** to move through what the hardware did.
+   **Run** becomes **Resume** once there is a recording; **Reset** (⟲) is how you
+   ask for a fresh one.
+
+Switching between **JS** and **HDL** does not throw anything away. The recording
+survives the trip, and each switch lands on the instruction the other engine had
+reached — so you can step through the RTL, hop to the functional model to get
+somewhere quickly, and come back to the hardware at the same instruction. Only one
+engine ever executes: switching away from a running functional simulation pauses it
+first, and the engine toggle is locked while an HDL run is in flight.
+
+### There is no HDL panel
+
+Everything the hardware engine needs is done **once per session**, so it lives in
+**⚙ Settings** rather than holding a panel open for the whole run. The panel layout is
+the same four panels it has always been — Registers, Memory, Peripherals, Disassembly.
+
+| Where | What |
+|---|---|
+| ⚙ → **🔌 HDL Simulation** | sources · cycle budget · Trace · Verilog standard · VCD · cross-check · register-file path · *Save testbench* |
+| ⚙ → **⏱ JS Simulation** | Max Instructions Per Run · the per-instruction cycle table |
+
+Each tab is named for the engine it configures. **Statement Stepping** applies to both,
+so it sits at the top of both — one setting with two controls, kept in step.
+| **Toolbar** | Run / Resume · Step · Back · Reset · the source chip · **⭳ VCD** once a run has produced one |
+| **Console** (under the editor) | the engine's output, tagged `[HDL]`, next to the assembler's |
+| **Status bar** | what the engine is doing right now |
+
+On the JS Simulation tab, the settings are **dimmed, not hidden** while the HDL engine
+is the one running — a setting you can still find, that tells you why it is doing
+nothing.
+
+The console is **resizable**: drag the bar above it, double-click to reset. A Verilog
+compile error can run to many lines, and the height is remembered.
+
+Two readouts worth naming, because they look identical and are not: the toolbar's
+**Cycles** is tagged `est` in JS mode (an estimate from the per-instruction table) and
+`hw` in HDL mode (real clock edges counted by your simulation). The cycles table
+affects only the first.
 
 Nothing is bundled: the Verilog is always yours, uploaded per session.
 
@@ -80,6 +122,27 @@ Two consequences worth knowing:
 `TRACE` levels: `0` silent, `1` peripherals only, `2` (default) adds the architectural
 trace. Your own `$display` output passes through to the HDL console untouched.
 
+### Which clock edge, and why it matters
+
+A timestamp in `stim.mem` or `uart_rx.mem` means **in force during that cycle**, so
+an input stamped at cycle *C* is already settled when the instruction of cycle *C*
+reads it. The testbench therefore drives it one edge earlier, at the edge that
+*starts* cycle *C* — these are nonblocking assignments, and driving them at the edge
+that ends *C* would let the instruction read the previous value.
+
+The same reasoning runs the other way. `LED_OUT`, `SEVENSEGHEX`, `UART_TX_valid`,
+`OLED_Write` and `UART_RX_ack` are all `output reg` in the Wrapper: the write made by
+the instruction of cycle *C* lands at the edge that ends *C* and is only readable
+during *C+1*. They are sampled on the **falling** edge, where the new value is
+visible but the trace still sits inside step *C* — so the effect is attributed to the
+instruction that caused it rather than to the one after it. `MemWrite_out` is
+combinational and stays on the rising edge, alongside the instruction record.
+
+Get either of these wrong and everything looks one instruction late: change a DIP
+switch while paused on the load that reads it and the old value comes back; write the
+LED register and the display updates one Step behind. Section 11 of the test suite pins
+both directions down.
+
 ### Reading the register file
 
 Register values come from a hierarchical reference into your design. Two tiers, by how
@@ -97,11 +160,22 @@ edge, so **only the array is ever named** — renaming your register file's port
 module itself, cannot break the trace. If the path cannot be resolved at all, the run
 falls back to a Wrapper-only testbench: you lose the register view, not the simulation.
 
+### The UART console follows the hardware
+
+`UART_RX_ack` is reported as its own event, so the console's RX FIFO drains exactly
+when your hardware takes a byte — `RX_VALID` falls back to 0 on the instruction that
+reads `0xFFFF0004`, and comes back if you step *back* over it. Nothing about the
+console is guessed from the program.
+
+A **buffered** send has no drip feed here (nothing steps the functional engine's
+instruction counter), so the whole sequence is queued at once, spaced by the same
+instruction gap you asked for, and delivered on that schedule inside the recording.
+
 ### Memory images
 
 `IROM_DEPTH_BITS` and `DMEM_DEPTH_BITS` are read out of *your* Wrapper, so a design
 with an enlarged IROM gets a correspondingly sized image. If the program needs more
-instruction words than your IROM holds, the panel says so rather than letting the
+instruction words than your IROM holds, the console says so rather than letting the
 Wrapper quietly fetch NOPs past the end.
 
 Images are built from the assembled memory image, so gaps inside a segment keep their
@@ -129,11 +203,30 @@ This is better than live stepping on every axis that matters here:
 Untick **Trace** to record peripheral activity only. That is slightly faster, and
 disables Step.
 
-### The budget grows on its own
+### Run, Resume and breakpoints
 
-*Cycles* is how much to record. Stepping past the end simply records more — the budget
-quadruples and the run repeats — so the number rarely needs tuning. If the PC has
-stopped advancing (a halt, or a tight self-loop) the panel says so instead.
+Breakpoints work exactly as they do in the functional engine — they are source lines,
+and the recording is searched by mapping each recorded PC back to its line.
+
+* **Run** (no recording yet) simulates, then stops at the first breakpoint, or at the
+  end of the budget if none is hit.
+* **Resume** continues from wherever you are to the next breakpoint. With no
+  breakpoints it runs to the end of what has been recorded.
+* **Resume at the end of the recording** records another *Cycles* worth and carries
+  on — that is the "run for another N cycles" button.
+* **Reset** (⟲) discards the recording, so the next Run starts the hardware from
+  reset again.
+
+**Statement Stepping** applies here too. With it on, one **Step** covers every machine
+instruction the current source line expands to — a `la` pseudo-op, or a C statement —
+by seeking that far through the recording, and **Back** covers exactly the same
+distance in reverse.
+
+*Cycles* keeps one meaning throughout: how much a fresh Run records, and how much each
+Resume adds. It is never rewritten behind your back. Stepping past the end of the
+recording also extends it, geometrically rather than by one increment, so a long
+program does not re-simulate on every step. If the PC has stopped advancing (a halt,
+or a tight self-loop) the console says so instead.
 
 ### Changing an input while paused
 
@@ -194,7 +287,10 @@ your disk.
   or setting a breakpoint the hardware does not know about, has no effect on the RTL —
   the recording is what the hardware actually did.
 - **Registers depend on discovery.** A register file that is not a 32-entry array of
-  32-bit regs needs its path typed in by hand.
+  32-bit regs needs its path typed in by hand. When it cannot be reached at all the
+  Registers panel says so in place of the values, rather than showing zeros that were
+  never read from your hardware — the PC, instructions, memory and peripherals all
+  come from the fixed Wrapper and keep working.
 - **Long runs are slow**: roughly 40k-200k cycles/sec. A program that needs millions of
   cycles is better run in JS mode.
 - **First run downloads ~2.7 MB** of WASM (cached afterwards).
@@ -205,7 +301,7 @@ your disk.
 
 ## Tests
 
-`riscv_simulator_tests/test_hdl_mode.js` — 70 assertions. It loads the page, assembles
+`riscv_simulator_tests/test_hdl_mode.js` — 120 assertions. It loads the page, assembles
 through the normal assembler, has the page generate the `.mem` images, the testbench
 and the stimulus files, then runs the **real** Icarus pipeline over the unmodified
 `RV/*.v` sources:
@@ -224,6 +320,22 @@ and the stimulus files, then runs the **real** Icarus pipeline over the unmodifi
   stays bit-identical — the property the whole interaction model rests on.
 - **`HelloWorld`**: `'A'` + CR delivered through `uart_rx.mem` produces the echo *and*
   the greeting stored in DMEM, exercising `UART_RX`/`valid`/`ack` and `UART_TX`/`valid`.
+- **MMIO timing, both directions**: an input changed while paused is read by the very
+  next instruction (not the one after it), the recording before that point is
+  unchanged, and the LED shows its new value as soon as the storing instruction
+  completes.
+- **Breakpoints**: Resume stops on the breakpoint line, resumes to the next time that
+  line is reached, and runs to the end of the recording when there are none.
+- **RX_VALID**: both bytes are acknowledged, the FIFO empties on the instruction that
+  reads each one, and stepping back puts the byte back.
+- **Settings placement**: there is no HDL panel and no HDL panel chip, the dock is
+  back to four panels, every HDL setting is on the HDL Simulation tab, the toolbar carries the
+  source chip and the VCD download, the console is resizable, 📂 Open accepts `.v`,
+  and switching to HDL with no sources loaded opens the tab that asks for them.
+- **Statement Stepping on both tabs**: ticking it on either turns it on for both, and
+  clearing it on either clears both — it is one setting, not two.
+- **Statement Stepping in HDL**: with it off a Step is one machine instruction; with
+  it on a Step covers the whole source line and Back undoes exactly that.
 
 ```bash
 node riscv_simulator_tests/test_hdl_mode.js

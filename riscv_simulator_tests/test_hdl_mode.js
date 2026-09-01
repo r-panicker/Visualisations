@@ -122,31 +122,104 @@ setTimeout(async () => {
     console.log('===========================================================');
 
     // --- 1. UI surface -------------------------------------------------
-    console.log('\n[1] HDL panel, engine toggle and stepping controls');
-    check('HDL panel exists', !!doc.getElementById('tab-hdl'));
-    check('HDL chip button exists', !!doc.getElementById('panelChip-hdl'));
+    console.log('\n[1] HDL setup lives in Settings, not in a panel of its own');
+    check('There is no HDL panel', !doc.getElementById('tab-hdl'));
+    check('There is no HDL panel chip', !doc.getElementById('panelChip-hdl'));
+    check('The panel dock is back to four panels',
+      ['registers', 'memory', 'peripherals', 'disassembly']
+        .every(p => !!doc.getElementById('tab-' + p)) &&
+      doc.querySelectorAll('#panelStack > .tab-content').length === 4);
+    check('Settings has a dedicated HDL tab',
+      !!doc.getElementById('settingsTabBtn-hdl') && !!doc.getElementById('settingsContent-hdl'));
     check('Engine toggle has JS and HDL buttons',
       !!doc.getElementById('engBtnJs') && !!doc.getElementById('engBtnHdl'));
     check('File drop zone and file input exist',
       !!doc.getElementById('hdlDropZone') && !!doc.getElementById('hdlFileInput'));
-    check('Run button starts disabled (no sources loaded)',
-      doc.getElementById('hdlRunBtn').disabled === true);
+    check('The toolbar carries the source-state chip and the VCD download',
+      !!doc.getElementById('hdlFilesChip') && !!doc.getElementById('hdlVcdBtn'));
+    check('With nothing loaded the file list does not repeat the drop zone advice',
+      /No files loaded yet/.test(doc.getElementById('hdlFileList').textContent) &&
+      !/every submodule it needs/.test(doc.getElementById('hdlFileList').innerHTML));
+    check('The console is resizable',
+      !!doc.getElementById('consoleResizer') && !!doc.getElementById('console'));
+    check('Open accepts Verilog alongside assembly and C',
+      /accept="[^"]*\.v[,"]/.test(doc.getElementById('fileLoader').outerHTML));
     check('Trace toggle exists and is on by default',
       !!doc.getElementById('hdlTrace') && doc.getElementById('hdlTrace').checked === true);
     check('Cross-check toggle exists and is off by default',
       !!doc.getElementById('hdlCompare') && doc.getElementById('hdlCompare').checked === false);
+
+    // Every simulation setting has one home, and which engine it reaches is
+    // visible from where it sits.
+    const inTab = (id, tab) => {
+      const el = doc.getElementById(id);
+      return !!el && !!el.closest('#settingsContent-' + tab);
+    };
+    check('The Simulation tab keeps the shared and JS-only groups',
+      !!doc.getElementById('simGroupBoth') && !!doc.getElementById('simGroupJs'));
+    check('Statement Stepping sits under "Both engines"',
+      !!doc.getElementById('simStatementStep') &&
+      doc.getElementById('simStatementStep').closest('#simGroupBoth') !== null);
+    check('JS-only settings sit under "Functional model"',
+      doc.getElementById('simMaxInstrPerRun').closest('#simGroupJs') !== null &&
+      doc.getElementById('cyclesConfigBody').closest('#simGroupJs') !== null);
+    check('Every HDL setting is on the HDL tab',
+      ['hdlCycles', 'hdlGeneration', 'hdlVcd', 'hdlCompare', 'hdlTrace', 'hdlRegPath',
+       'hdlDropZone', 'hdlFileList'].every(id => inTab(id, 'hdl')));
+    check('The JS tab points at the HDL tab rather than hiding it',
+      /HDL Simulation<\/b>/.test(doc.getElementById('settingsContent-simulator').innerHTML));
+    check('The duplicate in-panel Run button is gone', !doc.getElementById('hdlRunBtn'));
+    check('Each simulation tab is named for the engine it configures',
+      /JS Simulation/.test(doc.getElementById('settingsTabBtn-simulator').textContent) &&
+      /HDL Simulation/.test(doc.getElementById('settingsTabBtn-hdl').textContent));
+    // Statement Stepping reaches both engines, so it is offered on both tabs -
+    // as one setting with two controls, not two settings.
+    check('Statement Stepping appears on the HDL tab too',
+      !!doc.getElementById('hdlStatementStep') &&
+      doc.getElementById('hdlStatementStep').closest('#settingsContent-hdl') !== null);
+    win.statementStepping = false;
+    win.buildCyclesPanel();
+    doc.getElementById('hdlStatementStep').checked = true;
+    doc.getElementById('hdlStatementStep').onchange();
+    check('Ticking it on the HDL tab turns it on for both',
+      win.statementStepping === true && doc.getElementById('simStatementStep').checked === true);
+    doc.getElementById('simStatementStep').checked = false;
+    doc.getElementById('simStatementStep').onchange();
+    check('And clearing it on the JS tab clears both',
+      win.statementStepping === false && doc.getElementById('hdlStatementStep').checked === false);
     check('Register-file path field and its hint exist',
       !!doc.getElementById('hdlRegPath') && !!doc.getElementById('hdlRegPathHint'));
     check('Peripherals panel is untouched (still present)', !!doc.getElementById('tab-peripherals'));
+    check('Nothing dims the Step control in HDL mode',
+      !/body\.hdl-mode\s+#btnStep/.test(html));
+    check('Registers panel carries the "no register file" notice element',
+      !!doc.getElementById('hdlRegNotice'));
 
     // --- 2. Engine mode switching --------------------------------------
     console.log('\n[2] Engine mode toggle');
     win.setSimEngineMode('hdl');
     check('HDL mode marks the body', doc.body.classList.contains('hdl-mode'));
     check('HDL button becomes active', doc.getElementById('engBtnHdl').classList.contains('active'));
+    win.refreshSimSettingsScope();
+    check('In HDL mode the functional-model settings are dimmed, not hidden',
+      doc.getElementById('simGroupJs').classList.contains('sim-group-off'));
+    check('The dimmed group says why it is inactive',
+      /HDL engine/.test(doc.getElementById('simGroupJsNote').textContent));
+    check('Switching to HDL with no sources asks for them',
+      doc.getElementById('settingsOverlay').classList.contains('open') &&
+      doc.getElementById('settingsContent-hdl').classList.contains('active'));
+    win.closeSettingsModal();
+    check('The toolbar chip warns that no Verilog is loaded',
+      /no Verilog/.test(doc.getElementById('hdlFilesChip').textContent));
     win.setSimEngineMode('js');
     check('Switching back to JS clears the body class', !doc.body.classList.contains('hdl-mode'));
+    win.refreshSimSettingsScope();
+    check('In JS mode the functional-model settings are live again',
+      !doc.getElementById('simGroupJs').classList.contains('sim-group-off'));
+    check('Settings shared by both engines are never dimmed',
+      !doc.getElementById('simGroupBoth').classList.contains('sim-group-off'));
     win.setSimEngineMode('hdl');
+    win.closeSettingsModal();
 
     // --- 3. Register-file discovery ------------------------------------
     // The Wrapper is fixed, but the core behind it is student code, so the
@@ -157,6 +230,8 @@ setTimeout(async () => {
 
     win.hdlSetSources(DESIGN.map(n => ({ name: n, src: fs.readFileSync(path.join(RV, n), 'utf8') })));
     check('All 9 RV sources are loaded', win.getHdlFiles().length === 9);
+    check('The toolbar chip reports the loaded sources',
+      /9 files/.test(doc.getElementById('hdlFilesChip').textContent));
     const regPath = win.hdlDiscoverRegBank();
     check('Register bank discovered: ' + regPath, regPath === 'dut.RV1.RegFile1.RegBank');
     check('The hint line reports the discovered path',
@@ -205,6 +280,25 @@ setTimeout(async () => {
     check('Emits the architectural trace records', /@@I %0d %0h %0h/.test(tb) &&
       /@@W %0d %0d %0h/.test(tb) && /@@M %0d %0h %0h %0h/.test(tb));
     check('Emits tagged peripheral events', /@@L %0d %0h/.test(tb) && /@@O %0d %0d %0d %0h/.test(tb));
+    check('Reports the UART RX acknowledge, so the console FIFO can drain',
+      /@@A %0d/.test(tb));
+    // Inputs are nonblocking assignments, so they have to be driven at the
+    // edge that STARTS the cycle they are stamped with - otherwise the
+    // instruction executing in that cycle reads the previous value.
+    check('An input change is in force during the cycle it is stamped with',
+      /stim_mem\[3\*stim_i\] <= cyc \+ 1/.test(tb));
+    check('A UART byte is offered during the cycle it is stamped with',
+      /rx_mem\[2\*rx_i\] <= cyc \+ 1/.test(tb));
+    // Every peripheral output of the Wrapper is a registered output, so it
+    // only becomes readable on the following cycle; sampling it at the
+    // falling edge attributes it to the instruction that caused it.
+    const negBlock = tb.slice(tb.indexOf('always @(negedge CLK) begin',
+                                        tb.indexOf('Peripheral monitors')));
+    check('Registered peripheral outputs are sampled on the falling edge',
+      /@@L/.test(negBlock) && /@@S/.test(negBlock) &&
+      /@@T/.test(negBlock) && /@@O/.test(negBlock) && /@@A/.test(negBlock));
+    check('The combinational memory-write strobe stays on the rising edge',
+      /always @\(posedge CLK\) begin[\s\S]*?@@M/.test(tb));
 
     // The decisive check: change every input and load a different program,
     // and the Verilog must come out byte-identical.
@@ -399,6 +493,150 @@ setTimeout(async () => {
         check('The received bytes were echoed back', tx.indexOf('A') === 0);
         check('The greeting the program stores in DMEM was printed: ' +
           JSON.stringify(tx.slice(0, 40)), /Welcome to CG3207/.test(tx));
+      }
+
+      // --- 11. MMIO timing, in and out ------------------------------
+      // Both halves of the "one instruction late" class of bug: an input
+      // changed while paused must be seen by the very next instruction, and
+      // a peripheral write must show up on the instruction that made it.
+      console.log('\n[11] MMIO reads and writes land on the right instruction');
+      win.loadExample('dip_led');
+      const memD = win.hdlMemFiles(wrapperSrc);
+      const icarus4 = await makeIcarus(tb);
+      if (icarus4.ok) {
+        const baseD = {
+          'AA_IROM.mem': memD.files['AA_IROM.mem'],
+          'AA_DMEM.mem': memD.files['AA_DMEM.mem'],
+          'stim.mem': '', 'uart_rx.mem': ''
+        };
+        const plainD = await icarus4.run(['+CYCLES=60', '+DIP=bead', '+TRACE=2'], baseD);
+        const tD = win.hdlParseTrace(plainD);
+
+        // (a) the instruction that reads the DIP switches
+        const kLoad = tD.steps.findIndex(x => x.regw.some(w => w[1] === 0xbead));
+        check('Found the DIP load in the recording', kLoad > 0);
+        const cycLoad = tD.steps[kLoad].cyc;
+
+        // Stamp the change at exactly the cycle that instruction runs in,
+        // which is what the UI does when an input is moved while paused.
+        win.hdlSetStim([{ cycle: cycLoad, code: 1, value: 0x00ff }]);
+        const stimTiming = win.hdlStimFile();
+        win.hdlSetStim([]);
+        const changed = await icarus4.run(
+          ['+CYCLES=60', '+DIP=bead', '+TRACE=2', '+NSTIM=1'],
+          Object.assign({}, baseD, { 'stim.mem': stimTiming }));
+        const tC = win.hdlParseTrace(changed);
+        check('An input changed while paused is read by the very next ' +
+          'instruction, not the one after it',
+          tC.steps[kLoad].regw.some(w => w[1] === 0x00ff));
+        check('The recording up to that instruction is unchanged',
+          tC.steps.slice(0, kLoad).every((x, i) =>
+            x.pc === tD.steps[i].pc && x.cyc === tD.steps[i].cyc));
+
+        // (b) the store into the LED register
+        const kStore = tD.steps.findIndex(x => x.memw.some(w => w[0] === 0xFFFF0060));
+        check('Found the store to the LED register', kStore > 0);
+        win.hdlLoadTrace(plainD, 60);
+        win.hdlSeek(kStore);
+        const ledBefore = win.getLedState();
+        win.hdlSeek(kStore + 1);
+        check('The LED is still unlit on the instruction that writes it',
+          ledBefore === 0);
+        check('The LED shows the new value as soon as that instruction ' +
+          'completes, not one instruction later', win.getLedState() === 0xad);
+
+        // --- 12. Breakpoints and Resume ------------------------------
+        console.log('\n[12] Breakpoints stop the hardware run');
+        const storePc = tD.steps[kStore].pc;
+        const storeLine = win.getMachineCode().find(m => m.address === storePc).line;
+        win.getBreakpoints().clear();
+        win.getBreakpoints().add(storeLine);
+        check('Breakpoint search finds the recorded instruction on that line',
+          win.hdlBreakAt(0) === kStore);
+        win.hdlSeek(0);
+        const r1 = await win.hdlResumeRun();
+        check('Resume stops at the breakpoint rather than running to the end',
+          r1.stop === 'breakpoint' && win.getHdlIndex() === kStore);
+        const r2 = await win.hdlResumeRun();
+        check('Resuming again moves on to the next time that line is reached',
+          r2.stop === 'breakpoint' && win.getHdlIndex() > kStore);
+        win.getBreakpoints().clear();
+        win.hdlSeek(0);
+        const r3 = await win.hdlResumeRun();
+        check('With no breakpoints Resume runs to the end of the recording',
+          r3.stop === 'end' && win.getHdlIndex() === tD.steps.length);
+
+        // --- 13. The console RX FIFO drains as the hardware reads it --
+        console.log('\n[13] UART RX_VALID follows the hardware');
+        win.loadExample('hello_world');
+        const memH = win.hdlMemFiles(wrapperSrc);
+        win.hdlSetRx([{ cycle: 0, byte: 0x41 }, { cycle: 0, byte: 0x0D }]);
+        const rxTxt = win.hdlRxFile();
+        const outH = await icarus4.run(['+CYCLES=40000', '+NRX=2', '+TRACE=2'], {
+          'AA_IROM.mem': memH.files['AA_IROM.mem'],
+          'AA_DMEM.mem': memH.files['AA_DMEM.mem'],
+          'stim.mem': '', 'uart_rx.mem': rxTxt
+        });
+        const tH = win.hdlParseTrace(outH);
+        const acks = [];
+        tH.steps.forEach((x, i) => { if (x.acks) acks.push(i); });
+        check('Both RX bytes were acknowledged by the hardware (' + acks.length + ')',
+          acks.length === 2);
+        win.hdlLoadTrace(outH, 40000);
+        win.hdlSetRx([{ cycle: 0, byte: 0x41 }, { cycle: 0, byte: 0x0D }]);
+        win.hdlSeek(acks[0]);
+        check('Before the read, both bytes are still queued and RX_VALID is 1',
+          win.getUartRxQueue().length === 2);
+        win.hdlSeek(acks[0] + 1);
+        check('The byte leaves the queue on the instruction that reads it',
+          win.getUartRxQueue().join(',') === '13');
+        win.hdlSeek(acks[1] + 1);
+        check('RX_VALID falls back to 0 once every byte has been read',
+          win.getUartRxQueue().length === 0);
+        win.hdlSeek(acks[0]);
+        check('Stepping back over the read puts the byte back',
+          win.getUartRxQueue().length === 2);
+        win.hdlSetRx([]);
+
+        // --- 14. Statement Stepping applies to both engines -----------
+        // One Step should cover every machine instruction a source line
+        // expands to, in the recording exactly as in the functional model.
+        console.log('\n[14] Statement Stepping moves the same distance in HDL');
+        win.loadExample('basic');
+        const memB = win.hdlMemFiles(wrapperSrc);
+        const outB = await icarus4.run(['+CYCLES=60', '+TRACE=2'], {
+          'AA_IROM.mem': memB.files['AA_IROM.mem'],
+          'AA_DMEM.mem': memB.files['AA_DMEM.mem'],
+          'stim.mem': '', 'uart_rx.mem': ''
+        });
+        win.hdlLoadTrace(outB, 60);
+        const tB = win.getHdlTrace();
+        win.hdlSeek(0);
+        // Find a source line that expands to more than one instruction
+        // (`la` becomes auipc + addi).
+        let kPair = -1;
+        for (let i = 0; i + 1 < tB.steps.length; i++) {
+          const a = win.sourceLineForPc(tB.steps[i].pc);
+          if (a > 0 && a === win.sourceLineForPc(tB.steps[i + 1].pc)) { kPair = i; break; }
+        }
+        check('Found a source line that expands to several instructions', kPair >= 0);
+        if (kPair >= 0) {
+          win.statementStepping = false;
+          check('Off: one Step is one machine instruction',
+            win.hdlStatementTarget(kPair) === kPair + 1);
+          win.statementStepping = true;
+          const target = win.hdlStatementTarget(kPair);
+          check('On: one Step covers the whole statement (' +
+            (target - kPair) + ' instructions)', target > kPair + 1);
+          check('The step lands on a different source line',
+            win.sourceLineForPc(tB.steps[target] ? tB.steps[target].pc : tB.next) !==
+            win.sourceLineForPc(tB.steps[kPair].pc));
+          check('Back undoes exactly what Step did',
+            win.hdlStatementBackTarget(target) === kPair);
+          win.statementStepping = false;
+          check('Off: Back is one machine instruction',
+            win.hdlStatementBackTarget(target) === target - 1);
+        }
       }
     }
 

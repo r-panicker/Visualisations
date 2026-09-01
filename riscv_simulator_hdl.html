@@ -1408,33 +1408,9 @@
       color: #6c7086;
     }
 
-
     /* ============================================================
-       HDL simulation panel (Verilog / Icarus-WASM mode)
+       HDL source list and drop zone, now living in the settings dialog
        ============================================================ */
-    .hdl-body {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-size: 12.5px;
-    }
-
-    .hdl-section {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .hdl-section-title {
-      font-size: 11px;
-      font-weight: 650;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-      color: #9399b2;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      user-select: none;
-    }
-
     .hdl-row {
       display: flex;
       align-items: center;
@@ -1481,18 +1457,6 @@
     .hdl-btn:disabled {
       opacity: 0.45;
       cursor: not-allowed;
-    }
-
-    .hdl-btn-primary {
-      background: #a6e3a1;
-      border-color: #a6e3a1;
-      color: #11111b;
-      font-weight: 650;
-    }
-
-    .hdl-btn-primary:hover:not(:disabled) {
-      background: #94d68f;
-      border-color: #94d68f;
     }
 
     .hdl-file-list {
@@ -1583,74 +1547,28 @@
       line-height: 1.5;
     }
 
-    .hdl-status {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: #9399b2;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    .hdl-status-busy { color: #f9e2af; }
-    .hdl-status-ok   { color: #a6e3a1; }
-    .hdl-status-err  { color: #f38ba8; }
-
-    .hdl-console {
-      background: #11111b;
-      border: 1px solid #313244;
-      border-radius: 4px;
-      padding: 6px 8px;
-      font-family: 'Consolas', 'Roboto Mono', 'SF Mono', monospace;
-      font-size: 12px;
-      line-height: 1.5;
-      min-height: 90px;
-      max-height: 260px;
-      overflow: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .hdl-console .hdl-l-out  { color: #cdd6f4; }
-    .hdl-console .hdl-l-sys  { color: #6c7086; }
-    .hdl-console .hdl-l-warn { color: #f9e2af; }
-    .hdl-console .hdl-l-err  { color: #f38ba8; }
-
-    .hdl-num {
-      background: #313244;
-      border: 1px solid #45475a;
-      color: #cdd6f4;
-      padding: 3px 6px;
-      font-size: 12px;
-      font-family: 'Consolas', 'Roboto Mono', monospace;
-      width: 84px;
-      border-radius: 3px;
-    }
-
-    /* Hierarchical path to the register array - long, and monospace makes
-       a mistyped path much easier to spot. */
-    .hdl-text {
-      background: #313244;
-      border: 1px solid #45475a;
-      color: #cdd6f4;
-      padding: 3px 6px;
-      font-size: 12px;
-      font-family: 'Consolas', 'Roboto Mono', monospace;
-      border-radius: 3px;
-      flex: 1 1 180px;
-      min-width: 120px;
-    }
-
-    .hdl-select {
-      background: #313244;
-      border: 1px solid #45475a;
-      color: #cdd6f4;
-      padding: 3px 6px;
-      font-size: 12px;
-      border-radius: 3px;
-      font-family: inherit;
-    }
-
     /* A register the hardware has not written yet really is undefined; the
        functional model shows 0, the RTL cannot honestly claim that. */
+    /* Shown in place of register values when HDL mode cannot reach the
+       register file inside the uploaded design. */
+    .hdl-reg-notice {
+      margin: 6px;
+      padding: 7px 9px;
+      border: 1px solid #f9e2af;
+      border-left-width: 3px;
+      border-radius: 4px;
+      background: #2a2618;
+      color: #f9e2af;
+      font-size: 11.5px;
+      line-height: 1.5;
+    }
+    .hdl-reg-notice code {
+      background: #11111b;
+      padding: 0 3px;
+      border-radius: 3px;
+      color: #cdd6f4;
+    }
+
     .reg-unknown {
       color: #6c7086 !important;
       font-style: italic;
@@ -1661,6 +1579,98 @@
       font-size: 11.5px;
       line-height: 1.55;
     }
+
+    /* Simulation settings, grouped by the engine each group reaches. */
+    /* Standing indicator of the loaded Verilog, in place of the panel's file list. */
+    .hdl-chip {
+      background: #313244;
+      border: 1px solid #45475a;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: #a6adc8;
+      cursor: pointer;
+    }
+    .hdl-chip:hover { background: #45475a; color: #cdd6f4; }
+    .hdl-chip-warn {
+      border-color: #f9e2af;
+      color: #f9e2af;
+      background: #2a2618;
+    }
+    .hdl-chip-warn:hover { background: #3a3420; color: #f9e2af; }
+
+    /* Marks which kind of cycle count the toolbar is showing. */
+    .stat-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #6c7086;
+      vertical-align: 1px;
+    }
+
+    .sim-group {
+      margin-bottom: 16px;
+      transition: opacity 0.15s ease;
+    }
+    .sim-group-hdr {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #313244;
+    }
+    .sim-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #89b4fa;
+    }
+    .sim-group-note {
+      font-size: 10.5px;
+      color: #6c7086;
+      font-style: italic;
+    }
+    .sim-card {
+      background: #11111b;
+      border: 1px solid #313244;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    /* Dimmed, never hidden: a setting that does nothing right now should still
+       be findable, and should say why it is doing nothing. */
+    .sim-group.sim-group-off { opacity: 0.45; }
+    .sim-group.sim-group-off .sim-group-title { color: #6c7086; }
+
+    /* Reference text that is worth having but not worth a permanent block
+       of the panel: one line until it is asked for. */
+    .hdl-note {
+      margin-top: 6px;
+    }
+
+    .hdl-note > summary {
+      cursor: pointer;
+      font-size: 11px;
+      color: #7f849c;
+      list-style: none;
+      user-select: none;
+    }
+    .hdl-note > summary::-webkit-details-marker { display: none; }
+    .hdl-note > summary::before {
+      content: '\25B8';
+      display: inline-block;
+      margin-right: 5px;
+      transition: transform 0.12s ease;
+    }
+    .hdl-note[open] > summary::before { transform: rotate(90deg); }
+    .hdl-note > summary:hover { color: #cdd6f4; }
+    .hdl-note > .hdl-hint { margin-top: 4px; }
 
     .hdl-hint code {
       color: #89b4fa;
@@ -1695,24 +1705,40 @@
       font-weight: 700;
     }
 
-    /* In HDL mode the JS-only stepping controls no longer describe what
-       the Run button does, so they are visually de-emphasised. */
-    body.hdl-mode #btnStep,
-    body.hdl-mode #btnStepBack {
-      opacity: 0.4;
-    }
-
     /* Console */
     .console {
       background: #11111b;
       padding: 8px 10px;
       font-size: 13px;
-      border-top: 1px solid #313244;
       max-height: 140px;
       overflow: auto;
       min-height: 40px;
       line-height: 1.5;
     }
+
+    /* Grab bar for the console's height. Its own top border stands in for the
+       console's, so the two never double up. */
+    .console-resizer {
+      height: 6px;
+      flex: 0 0 6px;
+      cursor: ns-resize;
+      background: #181825;
+      border-top: 1px solid #313244;
+      position: relative;
+    }
+    .console-resizer::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 2px;
+      width: 28px;
+      height: 2px;
+      margin-left: -14px;
+      border-radius: 1px;
+      background: #45475a;
+    }
+    .console-resizer:hover::after,
+    .console-resizer.dragging::after { background: #89b4fa; }
 
     .console .error {
       color: #f38ba8;
@@ -3154,7 +3180,8 @@
         <div class="settings-tab-bar">
           <button class="settings-tab-btn active" id="settingsTabBtn-compiler" onclick="switchSettingsTab('compiler')">⚡ Compiler</button>
           <button class="settings-tab-btn" id="settingsTabBtn-linker" onclick="switchSettingsTab('linker')">🗺 Linker</button>
-          <button class="settings-tab-btn" id="settingsTabBtn-simulator" onclick="switchSettingsTab('simulator')">⏱ Simulator</button>
+          <button class="settings-tab-btn" id="settingsTabBtn-simulator" onclick="switchSettingsTab('simulator')">⏱ JS Simulation</button>
+          <button class="settings-tab-btn" id="settingsTabBtn-hdl" onclick="switchSettingsTab('hdl')">🔌 HDL Simulation</button>
         </div>
         <!-- Tab 1: Compiler -->
         <div class="settings-tab-content active" id="settingsContent-compiler">
@@ -3206,32 +3233,190 @@
             <div class="cycle-field"><label for="ms-mmio">MMIO base</label><input id="ms-mmio" type="text" value="0xFFFF0000"></div>
           </div>
         </div>
-        <!-- Tab 3: Simulator -->
+        <!-- Tab 3: Simulation — grouped by the engine each setting reaches,
+             because "simulation settings" previously meant the JS model only
+             while the HDL ones lived in a different place entirely. -->
         <div class="settings-tab-content" id="settingsContent-simulator">
-          <div class="cycle-hint" style="margin-bottom:12px;">Applied live — changes take effect on the next instruction executed.</div>
-          <div style="background:#11111b;border:1px solid #313244;border-radius:6px;padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:column;gap:5px;">
-            <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#cba6f7;cursor:pointer;font-size:13px;">
-              <input type="checkbox" id="simStatementStep" style="accent-color:#cba6f7;width:16px;height:16px;cursor:pointer;">
-              Statement Stepping (Fast Mode)
-            </label>
-            <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
-              Executes all machine instructions for a C statement or multi-instruction pseudo-op in a single step.
-            </span>
+          <div class="cycle-hint" style="margin-bottom:12px;">
+            Settings for the built-in JavaScript functional model. Applied live — and dimmed
+            while the HDL engine is the one running, so nothing here silently does nothing.
           </div>
-          <div style="background:#11111b;border:1px solid #313244;border-radius:6px;padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:column;gap:6px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <label for="simMaxInstrPerRun" style="font-weight:600;color:#cba6f7;font-size:13px;">
-                Max Instructions Per Run
+
+          <div class="sim-group" id="simGroupBoth">
+            <div class="sim-group-hdr"><span class="sim-group-title">Both engines</span></div>
+            <div class="sim-card">
+              <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#cba6f7;cursor:pointer;font-size:13px;">
+                <input type="checkbox" id="simStatementStep" style="accent-color:#cba6f7;width:16px;height:16px;cursor:pointer;">
+                Statement Stepping (Fast Mode)
               </label>
-              <input id="simMaxInstrPerRun" type="number" min="1" max="2000000000" step="1000000" value="100000000"
-                style="width:110px;padding:4px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;font-family:inherit;font-size:12px;text-align:right;">
+              <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
+                One Step covers every machine instruction a C statement or multi-instruction
+                pseudo-op expands to. In HDL mode it moves the same distance through the recording.
+              </span>
             </div>
-            <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
-              Maximum number of instructions executed per simulation run before pausing. Default: <strong>100,000,000</strong>.
-            </span>
           </div>
-          <div class="cycle-hint" style="margin-bottom:12px;">Cycles consumed per instruction category for CPI and runtime estimation.</div>
-          <div class="c-body" id="cyclesConfigBody" style="padding:0;"></div>
+
+          <div class="sim-group" id="simGroupJs">
+            <div class="sim-group-hdr"><span class="sim-group-title">JavaScript model</span>
+              <span class="sim-group-note" id="simGroupJsNote"></span></div>
+            <div class="sim-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label for="simMaxInstrPerRun" style="font-weight:600;color:#cba6f7;font-size:13px;">
+                  Max Instructions Per Run
+                </label>
+                <input id="simMaxInstrPerRun" type="number" min="1" max="2000000000" step="1000000" value="100000000"
+                  style="width:110px;padding:4px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;font-family:inherit;font-size:12px;text-align:right;">
+              </div>
+              <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
+                Maximum number of instructions executed per run before pausing. Default: <strong>100,000,000</strong>.
+              </span>
+            </div>
+            <div class="cycle-hint" style="margin:10px 0 8px;">Cycles consumed per instruction category — the estimate
+              behind the <b>Cycles</b> readout in the toolbar. The hardware engine counts real clock edges instead.</div>
+            <div class="c-body" id="cyclesConfigBody" style="padding:0;"></div>
+          </div>
+
+          <div class="cycle-hint">
+            Everything for the hardware engine — your Verilog sources, the cycle budget,
+            the compiler and the register-file path — is on <b>🔌 HDL Simulation</b>.
+          </div>
+        </div>
+        <!-- Tab 4: HDL — the Verilog engine's setup. All of it is done once per
+             session, which is why it is here rather than in a panel. Run, Step
+             and Back are on the toolbar; output goes to the console below the
+             editor, alongside the assembler's. -->
+        <div class="settings-tab-content" id="settingsContent-hdl">
+          <div class="cycle-hint" style="margin-bottom:12px;">
+            Your Verilog is never bundled with this page, so load it here each session.
+            Nothing is uploaded anywhere — it is compiled inside your browser with
+            Icarus Verilog built to WebAssembly.
+          </div>
+
+          <div class="sim-group" id="hdlGroupBoth">
+            <div class="sim-group-hdr"><span class="sim-group-title">Both engines</span>
+              <span class="sim-group-note">shared with JS Simulation</span></div>
+            <div class="sim-card">
+              <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#cba6f7;cursor:pointer;font-size:13px;">
+                <input type="checkbox" id="hdlStatementStep" style="accent-color:#cba6f7;width:16px;height:16px;cursor:pointer;">
+                Statement Stepping (Fast Mode)
+              </label>
+              <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
+                One Step covers every machine instruction a C statement or multi-instruction
+                pseudo-op expands to — here, that many steps through the recording at once.
+              </span>
+            </div>
+          </div>
+
+          <div class="sim-group">
+            <div class="sim-group-hdr"><span class="sim-group-title">Processor sources</span>
+              <span class="sim-group-note" id="hdlSourcesNote"></span></div>
+            <div class="hdl-drop" id="hdlDropZone">
+              Drop your <b>.v</b> files here, or
+              <label class="hdl-btn" style="display:inline-block;padding:2px 8px;">
+                browse…
+                <input type="file" id="hdlFileInput" multiple accept=".v,.sv,.vh,.svh" style="display:none;">
+              </label>
+              <br>Include <b>Wrapper.v</b>, <b>RV.v</b> and every submodule (ALU, Decoder, RegFile, …).
+              <br><span style="color:#6c7086;">You can also drop them anywhere on the page, or open them with 📂 Open.</span>
+            </div>
+            <div class="hdl-file-list" id="hdlFileList"></div>
+            <div class="hdl-warn" id="hdlWrapperWarn">
+              None of the loaded files declares <code>module Wrapper</code>. The generated
+              testbench instantiates <code>Wrapper</code> by name, so add your Wrapper.v.
+            </div>
+            <div class="hdl-row" style="margin-top:8px;">
+              <button type="button" class="hdl-btn" onclick="hdlClearFiles()">Clear files</button>
+              <button type="button" class="hdl-btn" onclick="hdlDownloadTestbench()"
+                title="Save the exact auto-generated testbench, to run in Vivado or iverilog offline">Save testbench</button>
+            </div>
+          </div>
+
+          <div class="sim-group">
+            <div class="sim-group-hdr"><span class="sim-group-title">Recording</span></div>
+            <div class="sim-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                <label for="hdlCycles" style="font-weight:600;color:#cba6f7;font-size:13px;">Cycles per Run / Resume</label>
+                <input type="number" id="hdlCycles" value="2000" min="1" max="2000000"
+                  onchange="setHdlCycles(this.value)"
+                  style="width:110px;padding:4px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;font-family:inherit;font-size:12px;text-align:right;">
+              </div>
+              <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
+                Clock cycles a fresh Run records, and how many more each Resume adds.
+                Stepping past the end of the recording also extends it.
+              </span>
+              <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#cba6f7;cursor:pointer;font-size:13px;margin-top:8px;">
+                <input type="checkbox" id="hdlTrace" checked onchange="setHdlTrace(this.checked)"
+                  style="accent-color:#cba6f7;width:16px;height:16px;cursor:pointer;">
+                Record the architectural trace
+              </label>
+              <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
+                The PC, register writes and memory writes, so <b>Step</b> and <b>Back</b> can move
+                through the run. Turning it off is slightly faster and disables stepping.
+              </span>
+            </div>
+          </div>
+
+          <div class="sim-group">
+            <div class="sim-group-hdr"><span class="sim-group-title">Compiler &amp; output</span></div>
+            <div class="sim-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                <label for="hdlGeneration" style="font-weight:600;color:#cba6f7;font-size:13px;">Verilog standard</label>
+                <select id="hdlGeneration"
+                  style="padding:4px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;font-family:inherit;font-size:12px;">
+                  <option value="2005">Verilog-2005</option>
+                  <option value="2001">Verilog-2001</option>
+                  <option value="1995">Verilog-1995</option>
+                  <option value="2005-sv">SystemVerilog</option>
+                </select>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#cba6f7;cursor:pointer;font-size:13px;margin-top:8px;">
+                <input type="checkbox" id="hdlVcd" onchange="setHdlDumpVcd(this.checked)"
+                  style="accent-color:#cba6f7;width:16px;height:16px;cursor:pointer;">
+                Dump a VCD waveform
+              </label>
+              <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
+                Records every signal to a file you can open in GTKWave. A <b>⭳ VCD</b> button
+                appears in the toolbar once a run has produced one.
+              </span>
+              <label style="display:flex;align-items:center;gap:8px;font-weight:600;color:#cba6f7;cursor:pointer;font-size:13px;margin-top:8px;">
+                <input type="checkbox" id="hdlCompare" onchange="setHdlCompare(this.checked)"
+                  style="accent-color:#cba6f7;width:16px;height:16px;cursor:pointer;">
+                Cross-check against the JS model
+              </label>
+              <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;">
+                After each run, replays the same program on the functional model and reports the
+                first instruction where the two disagree. Costs a second execution.
+              </span>
+            </div>
+          </div>
+
+          <div class="sim-group">
+            <div class="sim-group-hdr"><span class="sim-group-title">Register file</span>
+              <span class="sim-group-note">detected automatically</span></div>
+            <div class="sim-card">
+              <input type="text" id="hdlRegPath" spellcheck="false" onchange="setHdlRegPath()"
+                style="width:100%;padding:5px 8px;background:#313244;color:#cdd6f4;border:1px solid #45475a;border-radius:4px;box-sizing:border-box;font-family:monospace;font-size:12px;"
+                title="Hierarchical path to your 32-entry register array. Detected automatically; override it only if detection fails.">
+              <span style="font-size:11.5px;color:#a6adc8;line-height:1.4;" id="hdlRegPathHint">load your sources to detect the register file</span>
+            </div>
+          </div>
+
+          <details class="hdl-note">
+            <summary>How HDL mode works</summary>
+            <div class="hdl-hint">
+              The assembled program reaches your Wrapper as <code>AA_IROM.mem</code> and
+              <code>AA_DMEM.mem</code> through its own <code>$readmemh</code> — assemble first, then run.
+              Run records the whole simulation; <b>Step</b> and <b>Back</b> then move through that
+              recording, so stepping is instant and works in both directions. <b>Run</b> becomes
+              <b>Resume</b> once there is a recording — it continues to the next breakpoint, and
+              records another <i>Cycles</i> worth when it reaches the end. <b>Reset</b> is how you
+              start the hardware over.
+              Changing a DIP switch, a button, the accelerometer or the UART input while paused is
+              timestamped at the current cycle and the run replayed — everything before that point
+              comes out identical, so you keep your place, and the very next instruction already
+              sees the new value.
+            </div>
+          </details>
         </div>
         <!-- Footer -->
         <div class="c-foot" style="margin-top:0;border-top:1px solid #313244;padding:12px 20px;">
@@ -3269,6 +3454,8 @@
                 <button type="button" id="engBtnJs" class="eng-btn active" onclick="setSimEngineMode('js')">JS</button>
                 <button type="button" id="engBtnHdl" class="eng-btn" onclick="setSimEngineMode('hdl')">HDL</button>
               </div>
+              <button type="button" id="hdlFilesChip" class="hdl-chip" style="display:none;"
+                onclick="openSettingsModal('hdl')">no Verilog</button>
               <label class="example-label" title="Select an example program">Example:
                 <select id="exampleSelect" onchange="loadExample(this.value)">
                   <option value="basic" title="Basic sum = a + b + c">Basic</option>
@@ -3284,7 +3471,7 @@
                   <option value="image_display_accel" title="Image Display & Delay Accel (ImageDisplay_autoadvance_accel.asm)">Image Display &amp; Accel</option>
                 </select>
               </label>
-              <input type="file" id="fileLoader" accept=".asm,.s,.c,.h,.txt" onchange="loadFile(event)">
+              <input type="file" id="fileLoader" accept=".asm,.s,.c,.h,.txt,.v,.sv,.vh,.svh" onchange="loadFile(event)">
               <button id="btnOpen" onclick="document.getElementById('fileLoader').click()" title="Open RISC-V assembly or C source file">📂 Open</button>
               <button id="btnSave" onclick="saveFile()" title="Save source code to file">💾 Save</button>
             </div>
@@ -3311,6 +3498,8 @@
             <div class="toolbar-btn-group toolbar-group-config-stats">
               <button id="btnDumpTxt" onclick="dumpTextSegment()" title="Dump code (text) memory to AA_IROM.mem">💾 Dump txt</button>
               <button id="btnDumpData" onclick="dumpDataSegment()" title="Dump data memory to AA_DMEM.mem">💾 Dump data</button>
+              <button id="hdlVcdBtn" style="display:none;" onclick="hdlDownloadVcd()"
+                title="Download the waveform recorded by the last HDL run">⭳ VCD</button>
               <button id="btnSettings" onclick="openSettingsModal()" title="Configure Compiler, Linker segments, and Simulator settings" class="gear">⚙ Settings…</button>
               <span class="stats" id="statsBar">Cycles: 0 &nbsp;|&nbsp; Instr: 0</span>
             </div>
@@ -3353,6 +3542,8 @@
             <div id="cmEditorContainer" style="flex:1;height:100%;min-height:0;overflow:hidden;position:relative;"></div>
           </div>
         </div>
+        <div class="console-resizer" id="consoleResizer"
+          title="Drag to resize the console · double-click to reset"></div>
         <div class="console" id="console"></div>
       </div>
       <div class="splitter" id="mainSplitter" title="Drag to resize"></div>
@@ -3363,10 +3554,10 @@
           <button id="panelChip-memory" type="button"><span class="tab-chip-dot"></span>Memory</button>
           <button id="panelChip-peripherals" type="button"><span class="tab-chip-dot"></span>Peripherals</button>
           <button id="panelChip-disassembly" type="button"><span class="tab-chip-dot"></span>Disassembly</button>
-          <button id="panelChip-hdl" type="button" title="Verilog / HDL simulation (Icarus → WASM)"><span class="tab-chip-dot"></span>HDL</button>
         </div>
         <div class="panel-stack" id="panelStack">
         <div class="tab-content" id="tab-registers">
+          <div id="hdlRegNotice" class="hdl-reg-notice" style="display:none"></div>
           <table class="reg-table" id="regTable">
             <colgroup><col><col><col><col></colgroup>
             <thead>
@@ -3585,13 +3776,16 @@
                 <button onclick="clearOledDisplay()" title="Clear OLED Frame Buffer"
                   style="font-size:10px;padding:2px 8px;">Clear Display</button>
               </div>
-              <div style="display:flex;gap:12px;align-items:flex-start;margin-top:4px;">
+              <!-- The register read-out sits beside the display when there is room
+                   for it and drops underneath when the panel is narrow (five-panel
+                   layouts), rather than being squeezed past the panel edge. -->
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;margin-top:4px;">
                 <div
                   style="background:#09090d;border:2px solid #313244;border-radius:6px;padding:4px;display:inline-block;box-shadow:0 0 10px rgba(0,0,0,0.5);">
                   <canvas id="oledCanvas" width="96" height="64"
                     style="width:192px;height:128px;display:block;image-rendering:pixelated;background:#000;border-radius:2px;"></canvas>
                 </div>
-                <div style="font-size:11px;color:#a6adc8;line-height:1.5;flex:1;">
+                <div style="font-size:11px;color:#a6adc8;line-height:1.5;flex:1 1 150px;min-width:150px;">
                   <div><strong>OLED_COL:</strong> <span id="oledColVal"
                       style="color:#f9e2af;font-family:monospace;font-weight:bold;">0</span> (0–95)</div>
                   <div><strong>OLED_ROW:</strong> <span id="oledRowVal"
@@ -3600,9 +3794,6 @@
                       style="color:#89b4fa;font-family:monospace;font-weight:bold;">0x00</span></div>
                   <div style="font-size:10px;color:#6c7086;margin-top:3px;" id="oledModeDesc">
                     Mode: vary_pixel_data_mode &nbsp;·&nbsp; Format: 8-bit (3R-3G-2B)
-                  </div>
-                  <div style="font-size:9.5px;color:#f38ba8;margin-top:4px;font-style:italic;">
-                    ⚠️ Caution: Do not leave OLED on unnecessarily long with static frames to prevent burn-in.
                   </div>
                 </div>
               </div>
@@ -3623,90 +3814,6 @@
               current PC.</span>
           </div>
           <div id="disassemblyDisplay"></div>
-        </div>
-        <div class="tab-content" id="tab-hdl">
-          <div class="hdl-body">
-            <div class="hdl-section">
-              <div class="hdl-row">
-                <span class="hdl-section-title">Verilog sources</span>
-                <span class="hdl-status" id="hdlStatus">engine not loaded</span>
-              </div>
-              <div class="hdl-drop" id="hdlDropZone">
-                Drop your <b>.v</b> files here, or
-                <label class="hdl-btn" style="display:inline-block;padding:2px 8px;">
-                  browse…
-                  <input type="file" id="hdlFileInput" multiple accept=".v,.sv,.vh,.svh" style="display:none;">
-                </label>
-                <br>Include <b>Wrapper.v</b>, <b>RV.v</b> and every submodule (ALU, Decoder, RegFile, …).
-              </div>
-              <div class="hdl-file-list" id="hdlFileList"></div>
-              <div class="hdl-warn" id="hdlWrapperWarn">
-                None of the loaded files declares <code>module Wrapper</code>. The generated
-                testbench instantiates <code>Wrapper</code> by name, so add your Wrapper.v.
-              </div>
-              <div class="hdl-row">
-                <button type="button" class="hdl-btn" onclick="hdlClearFiles()">Clear files</button>
-                <button type="button" class="hdl-btn" onclick="hdlDownloadTestbench()"
-                  title="Save the exact auto-generated testbench, to run in Vivado or iverilog offline">Save testbench</button>
-              </div>
-            </div>
-
-            <div class="hdl-section">
-              <div class="hdl-section-title">Simulation</div>
-              <div class="hdl-row">
-                <label class="hdl-hint" for="hdlCycles">Cycles</label>
-                <input type="number" class="hdl-num" id="hdlCycles" value="2000" min="1" max="2000000"
-                  onchange="setHdlCycles(this.value)"
-                  title="Cycles to record per run. Stepping past the end simply records more.">
-                <select class="hdl-select" id="hdlGeneration" title="Verilog standard passed to the compiler">
-                  <option value="2005">Verilog-2005</option>
-                  <option value="2001">Verilog-2001</option>
-                  <option value="1995">Verilog-1995</option>
-                  <option value="2005-sv">SystemVerilog</option>
-                </select>
-                <label class="hdl-hint" title="Record every signal to a VCD you can open in GTKWave">
-                  <input type="checkbox" id="hdlVcd" onchange="setHdlDumpVcd(this.checked)"> VCD
-                </label>
-              </div>
-              <div class="hdl-row">
-                <label class="hdl-hint"
-                  title="Record the PC, register writes and memory writes so Step and Back can move through the run">
-                  <input type="checkbox" id="hdlTrace" checked onchange="setHdlTrace(this.checked)"> Trace (enables Step)
-                </label>
-                <label class="hdl-hint"
-                  title="After each run, replay the same program on the JavaScript model and report the first instruction where the two disagree. Costs a second execution.">
-                  <input type="checkbox" id="hdlCompare" onchange="setHdlCompare(this.checked)"> Cross-check vs JS model
-                </label>
-              </div>
-              <div class="hdl-row">
-                <label class="hdl-hint" for="hdlRegPath">Register file</label>
-                <input type="text" class="hdl-text" id="hdlRegPath" spellcheck="false"
-                  onchange="setHdlRegPath()"
-                  title="Hierarchical path to your 32-entry register array. Detected automatically; override it only if detection fails.">
-              </div>
-              <div class="hdl-hint" id="hdlRegPathHint">load your sources to detect the register file</div>
-              <div class="hdl-row">
-                <button type="button" class="hdl-btn hdl-btn-primary" id="hdlRunBtn"
-                  onclick="runHdlSimulation()" disabled>▶ Run HDL</button>
-                <button type="button" class="hdl-btn" id="hdlVcdBtn" style="display:none;"
-                  onclick="hdlDownloadVcd()" title="Download the recorded waveform">⭳ VCD</button>
-              </div>
-              <div class="hdl-hint">
-                The assembled program reaches your Wrapper as <code>AA_IROM.mem</code> and
-                <code>AA_DMEM.mem</code> through its own <code>$readmemh</code> — assemble first, then run.
-                Run records the whole simulation; <b>Step</b> and <b>Back</b> then move through that
-                recording, so stepping is instant and works in both directions.
-                Changing a DIP switch, a button, the accelerometer or the UART input while paused is
-                timestamped at the current cycle and the run replayed — everything before that point
-                comes out identical, so you keep your place.
-              </div>
-            </div>
-
-            <div class="hdl-section">
-              <div class="hdl-section-title">Console</div>
-              <div class="hdl-console" id="hdlConsole"></div>
-            </div>
-          </div>
         </div>
           <div class="panel-stack-empty">
             <span class="panel-stack-empty-icon">▤</span>
@@ -4028,7 +4135,6 @@
     let stepWriteLog = [];
     let journalEnabled = false;
 
-
     // Memory-mapped I/O: Standard 16550/RISC-V UART Serial Console (115200 8N1)
     let MMIO_BASE = mmioBase;
     let UART_RX_VALID = 0xFFFF0000; // RO: Bit 0 = 1 when RX data is valid/available
@@ -4191,7 +4297,6 @@
       return NaN;
     }
 
-
     function parseMemOp(s, allowForward = false) {
       // Formats: "offset(reg)" or "%lo(sym)(reg)" or "reg" or plain label/symbol
       if (typeof s !== 'string') s = String(s);
@@ -4330,7 +4435,6 @@
           raw.startsWith('rodata') || raw.startsWith('data') || raw.startsWith('bss') || raw.startsWith('sdata') || raw.startsWith('sbss')) return 'data';
       return null;
     }
-
 
     function assemble(source, startAddr) {
       const base = (startAddr !== undefined) ? startAddr : baseAddress;
@@ -6903,7 +7007,6 @@
       };
     }
 
-
     // CodeMirror 6 Compatibility Proxy
     const editor = {
       get value() {
@@ -7115,7 +7218,6 @@
       { name: 'memory', label: 'Memory' },
       { name: 'peripherals', label: 'Peripherals' },
       { name: 'disassembly', label: 'Disassembly' },
-      { name: 'hdl', label: 'HDL (Verilog)' },
     ];
     // Width (px) of the right-side dock while the 2×2 grid is active. When the
     // user collapses back to ≤2 docked panels, the previously saved width
@@ -7143,7 +7245,6 @@
         memory: { x: 130, y: 120, w: 540, h: 400 },
         peripherals: { x: 170, y: 150, w: 560, h: 440 },
         disassembly: { x: 210, y: 180, w: 580, h: 400 },
-        hdl: { x: 250, y: 210, w: 620, h: 460 },
       };
       const def = { order: PANEL_DEFS.map(p => p.name) };
       PANEL_DEFS.forEach(({ name }, i) => {
@@ -8787,7 +8888,6 @@ function updateRegisters() {
       updatePeripherals();
     }
 
-
     function updatePeripherals() {
       // 1. PC[8:2] LEDs (LED[15:9]) -> Cyan/Blue
       for (let i = 15; i >= 9; i--) {
@@ -9732,7 +9832,6 @@ function updateRegisters() {
       }
       overlay.remove();
     }
-
 
     function focusMemByte(addr) {
       const el = memView.querySelector(`[data-addr="${addr}"]`);
@@ -10832,12 +10931,23 @@ STACK_INIT:
       ['system', 'System (ECALL / EBREAK)']
     ];
 
+    // Statement Stepping reaches both engines, so it is offered on both tabs.
+    // The two checkboxes are the same setting, and are kept identical.
+    const STMT_STEP_IDS = ['simStatementStep', 'hdlStatementStep'];
+    function syncStatementStepBoxes() {
+      STMT_STEP_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = !!statementStepping;
+      });
+    }
+
     function buildCyclesPanel() {
-      const stmtEl = document.getElementById('simStatementStep');
-      if (stmtEl) {
-        stmtEl.checked = !!statementStepping;
-        stmtEl.onchange = () => { statementStepping = stmtEl.checked; };
-      }
+      STMT_STEP_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.checked = !!statementStepping;
+        el.onchange = () => { statementStepping = el.checked; syncStatementStepBoxes(); };
+      });
 
       const maxInstrEl = document.getElementById('simMaxInstrPerRun');
       if (maxInstrEl) {
@@ -10898,11 +11008,27 @@ STACK_INIT:
     }
 
     // --- Unified Settings Modal Controller (Compiler, Linker, Simulator) ---
+    // Which half of the Simulation tab is live depends on the active engine.
+    // Both halves stay readable - a dimmed setting you can still find beats a
+    // hidden one, and beats one that quietly does nothing.
+    function refreshSimSettingsScope() {
+      const hdl = (typeof simEngineMode !== 'undefined' && simEngineMode === 'hdl');
+      const set = (id, off, note) => {
+        const g = document.getElementById(id);
+        if (g) g.classList.toggle('sim-group-off', off);
+        const nEl = document.getElementById(id + 'Note');
+        if (nEl) nEl.textContent = note;
+      };
+      set('simGroupJs', hdl, hdl ? 'not in use - the HDL engine is running your Verilog' : 'active');
+      set('simGroupHdl', !hdl, hdl ? 'active' : 'not in use - switch the toolbar to HDL');
+    }
+
     function openSettingsModal(initialTab = 'compiler') {
       const ov = document.getElementById('settingsOverlay');
       if (!ov) return;
       buildMemSegmentsPanel();
       buildCyclesPanel();
+      refreshSimSettingsScope();
       switchSettingsTab(initialTab);
       ov.classList.add('open');
       ov.style.display = '';
@@ -10979,6 +11105,15 @@ STACK_INIT:
         const el = document.getElementById(id);
         return el ? el.value : '';
       };
+      // Only a changed memory layout needs the program reassembled. Reloading
+      // unconditionally would throw away an HDL recording (and the JS run's
+      // position) just for ticking a checkbox on this dialog.
+      // Compared unsigned: parseHexAddr's word-align mask turns an address at
+      // or above 0x80000000 (the MMIO base) into a negative number, which
+      // would otherwise read as a change on every single Apply.
+      const layoutKey = () => [baseAddress, codeSize, dataBase, dataSize, stackBase, mmioBase]
+        .map(v => v >>> 0).join(',');
+      const layoutBefore = layoutKey();
       baseAddress = parseHexAddr(g('ms-code'), baseAddress);
       codeSize = parseHexAddr(g('ms-codesize'), codeSize);
       dataBase = parseHexAddr(g('ms-data'), dataBase);
@@ -10997,8 +11132,11 @@ STACK_INIT:
 
       // 2. Apply Simulator CPI, Statement Stepping & Max Instructions
       getCyclesFromPanel();
-      const stmtEl = document.getElementById('simStatementStep');
+      // Either copy is authoritative; they are mirrored on change.
+      const stmtEl = document.getElementById('simStatementStep') ||
+                     document.getElementById('hdlStatementStep');
       if (stmtEl) statementStepping = stmtEl.checked;
+      syncStatementStepBoxes();
 
       const maxInstrEl = document.getElementById('simMaxInstrPerRun');
       if (maxInstrEl) {
@@ -11008,7 +11146,7 @@ STACK_INIT:
       }
 
       closeSettingsModal();
-      reloadAfterLayoutChange();
+      if (layoutKey() !== layoutBefore) reloadAfterLayoutChange();
       setStatus('Settings updated successfully', 'success');
     }
 
@@ -11035,6 +11173,26 @@ STACK_INIT:
         setStatus('Linker segment defaults restored', 'info');
       } else if (currentSettingsTab === 'simulator') {
         resetCyclesConfig();
+      } else if (currentSettingsTab === 'hdl') {
+        // Settings only - the loaded sources are the user's work, and Clear
+        // files is right there for them.
+        const set = (id, v, prop) => {
+          const el = document.getElementById(id);
+          if (el) el[prop] = v;
+        };
+        set('hdlCycles', '2000', 'value');
+        set('hdlGeneration', '2005', 'value');
+        set('hdlVcd', false, 'checked');
+        set('hdlCompare', false, 'checked');
+        set('hdlTrace', true, 'checked');
+        set('hdlRegPath', '', 'value');
+        setHdlCycles(2000);
+        setHdlDumpVcd(false);
+        setHdlCompare(false);
+        setHdlTrace(true);
+        setHdlRegPath();
+        hdlRefreshRegPathHint();
+        setStatus('HDL settings reset to defaults (sources kept)', 'info');
       }
     }
 
@@ -12210,6 +12368,16 @@ STACK_INIT:
       if (!file) return;
 
       const ext = file.name.split('.').pop().toLowerCase();
+      // Verilog is a processor description, not a program: it belongs to the
+      // HDL engine's source list, not in the editor.
+      if (/^(v|sv|vh|svh)$/.test(ext)) {
+        hdlAddFiles(event.target.files).then(() => {
+          openSettingsModal('hdl');
+          setStatus('Loaded ' + event.target.files.length + ' Verilog file(s)', 'success');
+        });
+        event.target.value = '';
+        return;
+      }
       if (ext === 'c' || ext === 'h') {
         if (typeof setLanguageMode === 'function') setLanguageMode('c');
       } else if (ext === 'asm' || ext === 's') {
@@ -13013,24 +13181,24 @@ result: .word 0
     let hdlDmemBytes = 1 << 14;   // DMEM window size, read back from the Wrapper
     let simEngineMode = 'js';     // 'js' (functional) | 'hdl' (Verilog)
 
+    // The engine's output goes to the console under the editor, next to the
+    // assembler's - one place to look when something fails, and room to grow
+    // for a multi-line Verilog compile error. Lines are tagged so they can be
+    // told apart at a glance.
+    const HDL_LOG_CLASS = { err: 'error', warn: 'warn', sys: 'info', ok: 'success' };
     function hdlLog(msg, cls) {
-      const el = document.getElementById('hdlConsole');
-      if (!el) return;
-      const span = document.createElement('span');
-      span.className = 'hdl-l-' + (cls || 'out');
-      span.textContent = String(msg).replace(/\s+$/, '') + '\n';
-      el.appendChild(span);
-      el.scrollTop = el.scrollHeight;
+      const type = HDL_LOG_CLASS[cls] || '';
+      String(msg).replace(/\s+$/, '').split('\n')
+        .forEach(line => log('[HDL] ' + line, type));
     }
+    // There is no separate HDL console to wipe; mark the start of a run so a
+    // fresh compile is easy to find in the scrollback.
     function hdlClearConsole() {
-      const el = document.getElementById('hdlConsole');
-      if (el) el.textContent = '';
+      log('[HDL] ------------------------------------------------', 'info');
     }
     function hdlStatus(text, cls) {
-      const el = document.getElementById('hdlStatus');
-      if (!el) return;
-      el.textContent = text;
-      el.className = 'hdl-status' + (cls ? ' hdl-status-' + cls : '');
+      setStatus('HDL: ' + text,
+        cls === 'err' ? 'error' : cls === 'ok' ? 'success' : '');
     }
 
     // Load the three Emscripten module factories, trying each base URL in
@@ -13164,8 +13332,7 @@ result: .word 0
       const el = document.getElementById('hdlFileList');
       if (!el) return;
       if (!hdlFiles.length) {
-        el.innerHTML = '<div class="hdl-empty">No Verilog sources loaded. Add your processor files — ' +
-          '<b>Wrapper.v</b>, <b>RV.v</b> and every submodule it needs.</div>';
+        el.innerHTML = '<div class="hdl-empty">No files loaded yet.</div>';
       } else {
         const wrapper = hdlFindWrapper();
         el.innerHTML = hdlFiles.map(f => {
@@ -13188,17 +13355,40 @@ result: .word 0
     }
 
     function updateHdlReadiness() {
-      const btn = document.getElementById('hdlRunBtn');
       const wrapper = hdlFindWrapper();
-      const ready = !!wrapper && !hdlRunning;
-      if (btn) {
-        btn.disabled = !ready;
-        btn.title = wrapper
-          ? 'Compile the loaded Verilog and simulate it against the assembled program'
-          : 'Load your Verilog sources first (one of them must contain `module Wrapper`)';
-      }
       const warn = document.getElementById('hdlWrapperWarn');
       if (warn) warn.style.display = (hdlFiles.length && !wrapper) ? 'block' : 'none';
+
+      // A compact standing answer to "is my Verilog loaded?", now that there
+      // is no panel showing the file list all the time. Clicking it opens the
+      // tab that does.
+      const chip = document.getElementById('hdlFilesChip');
+      if (chip) {
+        chip.style.display = (simEngineMode === 'hdl') ? '' : 'none';
+        if (!hdlFiles.length) {
+          chip.textContent = '⚠ no Verilog';
+          chip.className = 'hdl-chip hdl-chip-warn';
+          chip.title = 'HDL mode needs your processor sources - click to load them';
+        } else if (!wrapper) {
+          chip.textContent = '⚠ no Wrapper';
+          chip.className = 'hdl-chip hdl-chip-warn';
+          chip.title = 'None of the ' + hdlFiles.length +
+            ' loaded files declares `module Wrapper` - click to fix';
+        } else {
+          chip.textContent = hdlFiles.length + ' files';
+          chip.className = 'hdl-chip';
+          chip.title = 'Loaded: ' + hdlFiles.map(f => f.name).join(', ') +
+            ' - click to manage them';
+        }
+      }
+      const note = document.getElementById('hdlSourcesNote');
+      if (note) note.textContent = hdlFiles.length
+        ? hdlFiles.length + ' loaded' + (wrapper ? ', Wrapper found' : ', no Wrapper')
+        : 'none loaded';
+      // The toolbar's Run/Step buttons gate on the same conditions, so they
+      // have to be refreshed here too - loading the sources is exactly the
+      // moment they become usable.
+      if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
     }
 
     // ================================================================
@@ -13362,7 +13552,7 @@ result: .word 0
   end`
         : `  // No 32 x 32-bit register array could be located in the uploaded
   // sources, so the architectural register view is unavailable. Name the
-  // path explicitly in the HDL panel to enable it.`;
+  // path explicitly under Settings > HDL to enable it.`;
 
       return `\`timescale 1ns / 1ps
 //====================================================================
@@ -13378,6 +13568,11 @@ result: .word 0
 //   stim.mem     timed input changes : <cycle> <code> <value> triples,
 //                codes 1=DIP 2=PB 3=ACCEL_Data 4=ACCEL_DReady
 //   uart_rx.mem  timed UART input    : <cycle> <byte> pairs
+//
+// A timestamp means "in force DURING that cycle", so an input stamped at
+// cycle C is already settled when the instruction of cycle C reads it. The
+// value is therefore driven one clock edge earlier, at the edge that starts
+// cycle C.
 //
 // Every setting has a working default, so this runs as it stands with
 // no arguments at all:
@@ -13453,11 +13648,17 @@ module cg3207_hdl_tb;
   // reproducible: re-simulating the same timeline always replays the
   // same execution, which is what lets the UI step backwards and lets an
   // input be changed part-way through without losing your place.
+  //
+  // The comparison is against cyc+1 because these are nonblocking
+  // assignments: driven at the edge that ENDS cycle C-1, the new value is
+  // settled throughout cycle C and the instruction executing in cycle C
+  // reads it. Driving at the edge that ends cycle C would be one
+  // instruction too late.
   //------------------------------------------------------------------
   integer stim_i = 0;
   always @(posedge CLK) begin
     if (!RESET) begin
-      while (stim_i < nstim && stim_mem[3*stim_i] <= cyc) begin
+      while (stim_i < nstim && stim_mem[3*stim_i] <= cyc + 1) begin
         case (stim_mem[3*stim_i+1])
           32'd1: DIP          <= stim_mem[3*stim_i+2][15:0];
           32'd2: PB           <= stim_mem[3*stim_i+2][2:0];
@@ -13483,7 +13684,7 @@ module cg3207_hdl_tb;
     end else if (UART_RX_ack) begin
       UART_RX_valid <= 1'b0;
       rx_i          <= rx_i + 1;
-    end else if (!UART_RX_valid && rx_i < nrx && rx_mem[2*rx_i] <= cyc) begin
+    end else if (!UART_RX_valid && rx_i < nrx && rx_mem[2*rx_i] <= cyc + 1) begin
       UART_RX       <= rx_mem[2*rx_i+1][7:0];
       UART_RX_valid <= 1'b1;
     end
@@ -13512,28 +13713,41 @@ module cg3207_hdl_tb;
 ${arch}
 
   //------------------------------------------------------------------
-  // Peripheral monitors. Sampling on posedge sees exactly what another
-  // synchronous module in this clock domain would see, so the OLED
-  // auto-advance address pairs correctly with its write strobe.
+  // Peripheral monitors, sampled on the FALLING edge.
+  //
+  // Every one of these is declared "output reg" in the Wrapper, so the
+  // write performed by the instruction of cycle C lands at the edge that
+  // ends cycle C and is only readable during cycle C+1. Sampling at the
+  // falling edge of cycle C+1 reads that value while the trace still sits
+  // inside step C, which is what attributes the effect to the instruction
+  // that actually caused it instead of to the one after it - the same
+  // reasoning as the register-file shadow above.
+  //
+  // MemWrite_out is different - it is combinational and is therefore still
+  // sampled on the rising edge, above, alongside the instruction record.
   //------------------------------------------------------------------
   reg [7:0]  led_prev = 8'hxx;
   reg [31:0] ss_prev  = 32'hxxxxxxxx;
 
-  always @(posedge CLK) begin
+  always @(negedge CLK) begin
     if (!RESET && trace_lvl >= 1) begin
       if (LED_OUT !== led_prev) begin
-        $display("@@L %0d %0h", cyc, LED_OUT);
+        $display("@@L %0d %0h", cyc - 1, LED_OUT);
         led_prev <= LED_OUT;
       end
       if (SEVENSEGHEX !== ss_prev) begin
-        $display("@@S %0d %0h", cyc, SEVENSEGHEX);
+        $display("@@S %0d %0h", cyc - 1, SEVENSEGHEX);
         ss_prev <= SEVENSEGHEX;
       end
-      if (UART_TX_valid) $display("@@T %0d %0h", cyc, UART_TX);
-      if (OLED_Write)    $display("@@O %0d %0d %0d %0h", cyc, OLED_Col, OLED_Row, OLED_Data);
+      if (UART_TX_valid) $display("@@T %0d %0h", cyc - 1, UART_TX);
+      if (OLED_Write)    $display("@@O %0d %0d %0d %0h", cyc - 1, OLED_Col, OLED_Row, OLED_Data);
+      // The processor has taken the pending RX byte, so the byte leaves the
+      // console's queue. Without this the UI could never clear RX_VALID.
+      if (UART_RX_ack)   $display("@@A %0d", cyc - 1);
     end
-    cyc <= cyc + 1;
   end
+
+  always @(posedge CLK) cyc <= cyc + 1;
 
   //------------------------------------------------------------------
   // Stimulus
@@ -13543,6 +13757,9 @@ ${arch}
     #12;
     RESET = 1'b0;
     wait (cyc >= max_cycles);
+    // One more falling edge, so the effects of the final instruction are
+    // reported instead of being lost to $finish.
+    @(negedge CLK);
     // @@N is the instruction the core would fetch next. It is what lets the
     // UI show a sensible PC once the whole recording has been stepped through.
     $display("@@N %0d %0h %0h", cyc, dut.PC, dut.Instr);
@@ -13581,16 +13798,13 @@ endmodule
              (hdlRx.length ? '\n' : '');
     }
 
-    // Reconcile the UART RX FIFO the user types into with the timed list the
-    // testbench reads. Bytes added since the last look are stamped with the
-    // cycle we are currently sitting at.
+    // Anything already sitting in the console's RX FIFO when a run starts is
+    // offered to the hardware from the first cycle. Bytes typed later are
+    // appended by the send hook with the cycle they were typed at, and
+    // hdlSeek rebuilds the visible FIFO from this list - which is why this
+    // one, not uartRxQueue, is the master record.
     function hdlSyncRx() {
-      const at = hdlCurrentCycle();
-      if (hdlRx.length > uartRxQueue.length) hdlRx.length = uartRxQueue.length;
-      for (let i = 0; i < uartRxQueue.length; i++) {
-        if (i < hdlRx.length) hdlRx[i].byte = uartRxQueue[i] & 0xFF;
-        else hdlRx.push({ cycle: at, byte: uartRxQueue[i] & 0xFF });
-      }
+      hdlRx = uartRxQueue.map(b => ({ cycle: 0, byte: b & 0xFF }));
     }
 
     function hdlHash(s) {
@@ -13637,7 +13851,7 @@ endmodule
         if (attempt === 0 && rb) {
           hdlLog('Could not resolve the register-file path `' + rb + '`. ' +
             'Retrying without the architectural register view - set the path ' +
-            'explicitly in the HDL panel to restore it.', 'warn');
+            'explicitly under Settings > HDL to restore it.', 'warn');
           rb = null;
           tb = hdlBuildTestbench({ regBankPath: null });
           continue;
@@ -13656,15 +13870,15 @@ endmodule
       const steps = [];
       const pre = [];
       const userLines = [];
-      let cur = null, final = null, next = null;
+      let cur = null, final = null, next = null, preAcks = 0;
       for (const line of String(stdout || '').split('\n')) {
-        const m = /^@@([ILSTOMWFN])\s+(.*)$/.exec(line);
+        const m = /^@@([ILSTOMWFNA])\s+(.*)$/.exec(line);
         if (!m) { if (line.trim()) userLines.push(line); continue; }
         const k = m[1];
         const f = m[2].trim().split(/\s+/);
         if (k === 'I') {
           cur = { cyc: parseInt(f[0], 10), pc: parseInt(f[1], 16) >>> 0,
-                  instr: parseInt(f[2], 16) >>> 0, regw: [], memw: [], per: [] };
+                  instr: parseInt(f[2], 16) >>> 0, regw: [], memw: [], per: [], acks: 0 };
           steps.push(cur);
           continue;
         }
@@ -13673,6 +13887,10 @@ endmodule
           continue;
         }
         if (k === 'N') { next = parseInt(f[1], 16) >>> 0; continue; }
+        // The hardware has taken a byte off the UART RX line. Counting these
+        // is what lets the console's FIFO - and with it RX_VALID - drain as
+        // the recording is stepped through.
+        if (k === 'A') { if (cur) cur.acks++; else preAcks++; continue; }
         if (k === 'W') { if (cur) cur.regw.push([parseInt(f[1], 10), parseInt(f[2], 16) >>> 0]); continue; }
         if (k === 'M') {
           if (cur) cur.memw.push([parseInt(f[1], 16) >>> 0, parseInt(f[2], 16) & 0xF, parseInt(f[3], 16) >>> 0]);
@@ -13682,7 +13900,8 @@ endmodule
         // architectural trace is switched off.
         (cur ? cur.per : pre).push([k, f]);
       }
-      return { steps: steps, pre: pre, final: final, next: next, userOutput: userLines.join('\n') };
+      return { steps: steps, pre: pre, preAcks: preAcks, final: final, next: next,
+               userOutput: userLines.join('\n') };
     }
 
     // Run the cached binary with the current environment. Only vvp runs -
@@ -13831,12 +14050,14 @@ endmodule
       for (const e of hdlTrace.pre) hdlApplyPer(e[0], e[1]);
 
       let changed = -1;
+      let acks = hdlTrace.preAcks || 0;
       for (let k = 0; k < idx; k++) {
         const s = steps[k];
         for (const w of s.regw) { regs[w[0]] = w[1] | 0; hdlRegKnown[w[0]] = 1; }
         if (k === idx - 1 && s.regw.length) changed = s.regw[s.regw.length - 1][0];
         for (const w of s.memw) hdlApplyMemWrite(w[0], w[1], w[2]);
         for (const e of s.per) hdlApplyPer(e[0], e[1]);
+        acks += s.acks || 0;
       }
 
       hdlIdx = idx;
@@ -13847,6 +14068,12 @@ endmodule
       instructionCount = idx;
       totalCycles = hdlCurrentCycle();
       currentExecLine = sourceLineForPc(pc);
+
+      // The console's RX FIFO holds what has been typed but not yet taken by
+      // the hardware. Rebuilding it here is what makes RX_VALID fall back to
+      // 0 once the program has read a byte - and what makes it come back
+      // when you step backwards over that read.
+      uartRxQueue = hdlRx.filter(e => e.cycle <= totalCycles).slice(acks).map(e => e.byte & 0xFF);
 
       highlightCurrentLine();
       updateRegisters();
@@ -13863,6 +14090,20 @@ endmodule
     // ================================================================
     // Run / step / back, in HDL mode
     // ================================================================
+    // Breakpoints are source lines, exactly as in the functional engine, so
+    // the recording is searched by mapping each recorded PC back to its line.
+    // Position k means "about to execute steps[k]", which is where execution
+    // should come to rest when steps[k] is on a breakpoint line.
+    function hdlBreakAt(from) {
+      if (!hdlTrace || !breakpoints || !breakpoints.size) return -1;
+      const steps = hdlTrace.steps;
+      for (let k = Math.max(0, from); k < steps.length; k++) {
+        const line = sourceLineForPc(steps[k].pc);
+        if (line >= 1 && breakpoints.has(line)) return k;
+      }
+      return -1;
+    }
+
     function hdlDiscardTrace() {
       hdlTrace = null;
       hdlIdx = 0;
@@ -13889,7 +14130,7 @@ endmodule
       } catch (e) {
         hdlLog(String(e && e.message ? e.message : e), 'err');
         hdlStatus('error', 'err');
-        setStatus('HDL simulation failed - see the HDL panel', 'error');
+        setStatus('HDL simulation failed - see the console below the editor', 'error');
         return null;
       } finally {
         hdlRunning = false;
@@ -13909,27 +14150,62 @@ endmodule
       return hdlBuildTrace(budget, opts);
     }
 
+    // The Run button. With a recording already in hand this resumes from the
+    // current position rather than throwing the run away - Reset is how you
+    // ask for a fresh one, exactly as in the functional engine.
     async function runHdlSimulation() {
+      if (hdlTrace && hdlTraceEnabled) {
+        return hdlWithBusy(async () => {
+          const r = await hdlResumeRun();
+          if (r.stop === 'breakpoint') {
+            hdlStatus('stopped at a breakpoint - line ' + currentExecLine, 'ok');
+            setStatus('HDL stopped at breakpoint (line ' + currentExecLine +
+              ', instruction ' + hdlIdx + ')', 'warn');
+          } else {
+            hdlStatus('at the end of ' + hdlTrace.budget + ' recorded cycles', 'ok');
+            setStatus('HDL ran ' + r.ran + ' more instructions - end of the ' +
+              hdlTrace.budget + '-cycle recording', 'success');
+          }
+          return hdlTrace;
+        });
+      }
       return hdlWithBusy(async () => {
         hdlClearConsole();
         const t = await hdlStartTrace(hdlCycleBudget);
         if (!t) return null;
-        hdlSeek(t.steps.length);
+        // Honour breakpoints on the very first run too, so a breakpoint set
+        // before pressing Run behaves the way it does in the functional model.
+        const hit = hdlBreakAt(0);
+        hdlSeek(hit >= 0 ? hit : t.steps.length);
         hdlLog('--- ' + t.steps.length + ' instructions, ' +
           uartTxBytes.length + ' UART bytes out ---', 'sys');
-        hdlStatus('done - ' + t.budget + ' cycles, LED=0x' +
-          ledState.toString(16).padStart(2, '0'), 'ok');
-        setStatus('HDL run finished - ' + t.steps.length + ' instructions in ' +
-          t.budget + ' cycles', 'success');
+        if (hit >= 0) {
+          hdlStatus('stopped at a breakpoint - line ' + currentExecLine, 'ok');
+          setStatus('HDL stopped at breakpoint (line ' + currentExecLine +
+            ', instruction ' + hit + ')', 'warn');
+        } else {
+          hdlStatus('done - ' + t.budget + ' cycles, LED=0x' +
+            ledState.toString(16).padStart(2, '0'), 'ok');
+          setStatus('HDL run finished - ' + t.steps.length + ' instructions in ' +
+            t.budget + ' cycles', 'success');
+        }
         if (hdlCompareEnabled) await hdlCompareWithJs();
         return t;
       });
     }
 
-    // Stepping off the end of the recording simply records more of the run.
-    async function hdlExtendTrace() {
-      const grown = Math.min(2000000, Math.max(hdlTrace.budget * 4, 1000));
-      if (grown <= hdlTrace.budget) return false;
+    // Running or stepping off the end of the recording simply records more of
+    // the run. Resume adds one Cycles-worth at a time, which is what makes
+    // "run for another N cycles" mean something; stepping off the end grows
+    // geometrically instead, so a long program does not re-simulate on every
+    // step. The Cycles field itself is never rewritten - it stays the
+    // increment the user chose.
+    async function hdlGrowTrace(target) {
+      const grown = Math.min(2000000, Math.max(target, hdlTrace.budget + 1));
+      if (grown <= hdlTrace.budget) {
+        hdlLog('Already recording the maximum of 2,000,000 cycles.', 'warn');
+        return false;
+      }
       const before = hdlTrace.steps.length;
       hdlStatus('extending the trace to ' + grown + ' cycles...', 'busy');
       const t = await hdlBuildTrace(grown, { quiet: true });
@@ -13939,16 +14215,61 @@ endmodule
           'halted or is spinning on the same instruction.', 'warn');
         return false;
       }
-      hdlLog('Trace extended to ' + grown + ' cycles (' + t.steps.length + ' instructions).', 'sys');
-      setHdlCycles(grown);
+      hdlLog('Recording extended to ' + grown + ' cycles (' + t.steps.length +
+        ' instructions).', 'sys');
       return true;
+    }
+
+    // Continue from where we are to the next breakpoint, or to the end of
+    // what has been recorded, recording another Cycles-worth first when there
+    // is nothing left ahead to stop at.
+    async function hdlResumeRun() {
+      const steps = () => hdlTrace.steps;
+      let hit = hdlBreakAt(hdlIdx + 1);
+      if (hit < 0 && ((breakpoints && breakpoints.size) || hdlIdx >= steps().length)) {
+        if (await hdlGrowTrace(hdlTrace.budget + hdlCycleBudget)) hit = hdlBreakAt(hdlIdx + 1);
+      }
+      const to = hit >= 0 ? hit : steps().length;
+      const from = hdlIdx;
+      hdlSeek(to);
+      return { stop: hit >= 0 ? 'breakpoint' : 'end', ran: to - from };
+    }
+
+    // Statement Stepping is engine-agnostic: one Step should cover every
+    // machine instruction the current source line expands to. In HDL mode
+    // that is a longer seek through the recording rather than more execution.
+    function hdlStatementTarget(from) {
+      const steps = hdlTrace.steps;
+      if (!statementStepping || from >= steps.length) return from + 1;
+      const startLine = sourceLineForPc(steps[from].pc);
+      if (!(startLine > 0)) return from + 1;
+      let k = from + 1;
+      while (k < steps.length && k - from < 10000) {
+        const line = sourceLineForPc(steps[k].pc);
+        if (line !== startLine || (breakpoints && breakpoints.has(line))) break;
+        k++;
+      }
+      return k;
+    }
+
+    // The mirror image, so Back undoes exactly what Step did.
+    function hdlStatementBackTarget(from) {
+      const steps = hdlTrace.steps;
+      if (from <= 0) return 0;
+      let k = from - 1;
+      if (!statementStepping) return k;
+      const line = sourceLineForPc(steps[k].pc);
+      if (!(line > 0)) return k;
+      while (k > 0 && sourceLineForPc(steps[k - 1].pc) === line) k--;
+      return k;
     }
 
     async function hdlStepOnce() {
       // Without the architectural trace there is no recording to move
       // through, so say that rather than silently doing nothing.
       if (!hdlTraceEnabled) {
-        hdlLog('Stepping needs the architectural trace. Tick "Trace" in the HDL panel.', 'warn');
+        hdlLog('Stepping needs the architectural trace. Tick "Record the architectural ' +
+          'trace" under Settings > HDL.', 'warn');
         setStatus('HDL stepping needs the Trace option', 'warn');
         return null;
       }
@@ -13961,13 +14282,18 @@ endmodule
           return t;
         }
         if (hdlIdx >= hdlTrace.steps.length) {
-          if (!(await hdlExtendTrace())) {
+          if (!(await hdlGrowTrace(Math.max(hdlTrace.budget * 4, 1000)))) {
             setStatus('End of the recorded HDL trace', 'info');
             return null;
           }
         }
-        hdlSeek(hdlIdx + 1);
-        setStatus('HDL step ' + hdlIdx + ': PC = 0x' + (pc >>> 0).toString(16), 'info');
+        const from = hdlIdx;
+        hdlSeek(hdlStatementTarget(from));
+        const covered = hdlIdx - from;
+        setStatus(covered > 1
+          ? 'HDL statement step (' + covered + ' instrs): line ' +
+            (currentExecLine > 0 ? currentExecLine : '?') + ', PC = 0x' + (pc >>> 0).toString(16)
+          : 'HDL step ' + hdlIdx + ': PC = 0x' + (pc >>> 0).toString(16), 'info');
         return hdlTrace;
       });
     }
@@ -13977,7 +14303,7 @@ endmodule
         setStatus('Already at the start of the HDL trace', 'info');
         return;
       }
-      hdlSeek(hdlIdx - 1);
+      hdlSeek(hdlStatementBackTarget(hdlIdx));
       setStatus('HDL back step ' + hdlIdx + ': PC = 0x' + (pc >>> 0).toString(16), 'info');
     }
 
@@ -13993,32 +14319,40 @@ endmodule
       hdlSeek(Math.min(keepIdx, t.steps.length));
     }
 
+    // A second input moved while the first is still re-simulating must not be
+    // dropped, or the recording would stop matching the switches on screen.
+    // The change goes onto the timeline either way; the replay is coalesced.
+    let hdlPendingResim = false;
+
+    function hdlQueueResim(what) {
+      if (hdlRunning) { hdlPendingResim = true; return; }
+      const at = hdlIdx;
+      hdlWithBusy(async () => {
+        await hdlResimulate(at);
+        while (hdlPendingResim) {
+          hdlPendingResim = false;
+          await hdlResimulate(hdlIdx);
+        }
+        hdlStatus(what, 'ok');
+        return null;
+      });
+    }
+
     function hdlOnInputChanged(code, value) {
-      if (simEngineMode !== 'hdl' || !hdlTrace || hdlRunning) return;
+      if (simEngineMode !== 'hdl' || !hdlTrace) return;
       const cyc = hdlCurrentCycle();
       // One change per input per cycle; a later edit at the same point
       // replaces the earlier one rather than stacking up.
       hdlStim = hdlStim.filter(e => !(e.cycle === cyc && e.code === code));
       hdlStim.push({ cycle: cyc, code: code, value: value >>> 0 });
-      const at = hdlIdx;
-      hdlWithBusy(async () => {
-        await hdlResimulate(at);
-        hdlStatus('re-simulated from cycle ' + cyc + ' with the new input', 'ok');
-        return null;
-      });
+      hdlQueueResim('re-simulated from cycle ' + cyc + ' with the new input');
     }
 
-    function hdlOnUartInput() {
-      if (simEngineMode !== 'hdl' || !hdlTrace || hdlRunning) return;
-      const before = hdlRx.length;
-      hdlSyncRx();
-      if (hdlRx.length === before) return;
-      const at = hdlIdx;
-      hdlWithBusy(async () => {
-        await hdlResimulate(at);
-        hdlStatus('re-simulated with ' + (hdlRx.length - before) + ' more UART byte(s)', 'ok');
-        return null;
-      });
+    // The bytes are already on the timeline by the time this runs; all that
+    // is left is to replay the run so the hardware sees them.
+    function hdlOnUartInput(count) {
+      if (simEngineMode !== 'hdl' || !hdlTrace || !count) return;
+      hdlQueueResim('re-simulated with ' + count + ' more UART byte(s)');
     }
 
     // ================================================================
@@ -14147,22 +14481,131 @@ endmodule
     // Engine mode toggle
     // ================================================================
     function setSimEngineMode(mode) {
-      simEngineMode = (mode === 'hdl') ? 'hdl' : 'js';
+      const want = (mode === 'hdl') ? 'hdl' : 'js';
+      if (want === simEngineMode) return;
+
+      // An HDL run is a single uninterruptible call into vvp - a second or
+      // two - so the switch waits rather than landing the result in the
+      // wrong engine. The toggle is disabled while this is true.
+      if (hdlRunning) {
+        setStatus('Wait for the HDL simulation to finish before switching engines', 'warn');
+        return;
+      }
+      // The functional engine runs on a timer chain, which would otherwise
+      // keep executing - and keep advancing the cycle and instruction
+      // counters - underneath the HDL view, until it hit the JS "Max
+      // Instructions Per Run" limit. Stop it here; its state is kept, so
+      // switching back and pressing Resume carries on from this point.
+      if (running) {
+        running = false;
+        if (runTimerId) { clearTimeout(runTimerId); runTimerId = null; }
+        log('Paused the functional run - switching to the ' +
+            (want === 'hdl' ? 'HDL' : 'JavaScript') + ' engine.', 'info');
+      }
+
+      simEngineMode = want;
       const jsBtn = document.getElementById('engBtnJs');
       const hdlBtn = document.getElementById('engBtnHdl');
       if (jsBtn) jsBtn.classList.toggle('active', simEngineMode === 'js');
       if (hdlBtn) hdlBtn.classList.toggle('active', simEngineMode === 'hdl');
       document.body.classList.toggle('hdl-mode', simEngineMode === 'hdl');
       if (simEngineMode === 'hdl') {
-        if (typeof setPanelVisible === 'function') setPanelVisible('hdl', true);
-        setStatus('HDL mode - Run and Step execute your Verilog through Icarus/WASM', 'info');
+        // Nothing can happen in HDL mode without the sources, so ask for them
+        // straight away rather than waiting for Run to fail.
+        if (!hdlFiles.length) {
+          openSettingsModal('hdl');
+          setStatus('HDL mode needs your Verilog sources - drop them here to begin', 'info');
+        }
+        // A recording survives a trip through the functional engine, so
+        // coming back does not mean re-running the hardware from reset. Land
+        // on whichever instruction the other engine reached, so the two hand
+        // over at the same point in the program.
+        if (hdlTrace && hdlTrace.steps.length && machineCode && machineCode.length) {
+          hdlSeek(Math.min(instructionCount, hdlTrace.steps.length));
+          setStatus('HDL mode - resumed the recording at instruction ' + hdlIdx, 'info');
+        } else {
+          setStatus('HDL mode - Run and Step execute your Verilog through Icarus/WASM', 'info');
+        }
         loadHdlEngine().catch(e => hdlLog(String(e.message || e), 'err'));
       } else {
-        hdlDiscardTrace();
+        // Leave registers, memory and peripherals exactly as the recording
+        // left them: the functional engine carries straight on from here.
         setStatus('Functional mode - Run executes the JavaScript model', 'info');
       }
       updateRegisters();
+      updateStats();
+      updateHdlReadiness();
+      if (typeof refreshSimSettingsScope === 'function') refreshSimSettingsScope();
       if (typeof updateToolbarButtonStates === 'function') updateToolbarButtonStates();
+    }
+
+    // ================================================================
+    // Console height
+    // ================================================================
+    const CONSOLE_H_KEY = 'rvsim.consoleHeight.v1';
+    const CONSOLE_H_DEFAULT = 140;
+
+    function setConsoleHeight(px, persist) {
+      const el = document.getElementById('console');
+      if (!el) return;
+      const h = Math.max(40, Math.min(px, Math.round((window.innerHeight || 800) * 0.7)));
+      el.style.height = h + 'px';
+      el.style.maxHeight = h + 'px';
+      if (persist) {
+        try { localStorage.setItem(CONSOLE_H_KEY, String(h)); } catch (e) { /* no storage */ }
+      }
+    }
+
+    function initConsoleResizer() {
+      const bar = document.getElementById('consoleResizer');
+      const el = document.getElementById('console');
+      if (!bar || !el) return;
+      let saved = null;
+      try { saved = parseInt(localStorage.getItem(CONSOLE_H_KEY) || '', 10); } catch (e) { saved = null; }
+      if (Number.isFinite(saved)) setConsoleHeight(saved, false);
+
+      let startY = 0, startH = 0;
+      const move = e => {
+        // The console grows upwards, so a drag up is a taller console.
+        setConsoleHeight(startH + (startY - e.clientY), false);
+      };
+      const up = () => {
+        bar.classList.remove('dragging');
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        setConsoleHeight(el.getBoundingClientRect().height, true);
+      };
+      bar.addEventListener('pointerdown', e => {
+        startY = e.clientY;
+        startH = el.getBoundingClientRect().height;
+        bar.classList.add('dragging');
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', up);
+        e.preventDefault();
+      });
+      bar.addEventListener('dblclick', () => setConsoleHeight(CONSOLE_H_DEFAULT, true));
+    }
+
+    // Verilog dropped anywhere on the page goes to the HDL source list. The
+    // sources are the one thing HDL mode cannot do without, so getting them in
+    // should not depend on finding the right drop target first.
+    function initGlobalVerilogDrop() {
+      document.addEventListener('dragover', e => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+          e.preventDefault();
+        }
+      });
+      document.addEventListener('drop', e => {
+        const files = Array.from((e.dataTransfer && e.dataTransfer.files) || [])
+          .filter(f => /\.(v|sv|vh|svh)$/i.test(f.name));
+        if (!files.length) return;
+        e.preventDefault();
+        e.stopPropagation();
+        hdlAddFiles(files).then(() => {
+          if (simEngineMode !== 'hdl') setSimEngineMode('hdl');
+          setStatus('Loaded ' + files.length + ' Verilog file(s)', 'success');
+        });
+      });
     }
 
     function hdlInitPanel() {
@@ -14187,6 +14630,8 @@ endmodule
       }
       renderHdlFileList();
       hdlRefreshRegPathHint();
+      initConsoleResizer();
+      initGlobalVerilogDrop();
     }
 
     // ================================================================
@@ -14218,6 +14663,26 @@ endmodule
     const hdlBaseUpdateRegisters = updateRegisters;
     updateRegisters = function () {
       hdlBaseUpdateRegisters();
+      // If the register file could not be reached inside the uploaded design,
+      // every value here would be a guess. Say so plainly instead: the PC,
+      // the instruction stream, memory and the peripherals all come from the
+      // fixed Wrapper and are unaffected.
+      const notice = document.getElementById('hdlRegNotice');
+      if (notice) {
+        const missing = (simEngineMode === 'hdl' && hdlTrace && !hdlTrace.regBank);
+        notice.style.display = missing ? '' : 'none';
+        if (missing && !notice.dataset.filled) {
+          notice.innerHTML = '<b>Register values are not available for this design.</b> ' +
+            'No 32 x 32-bit register array could be found in the uploaded sources, ' +
+            'so nothing here is read from your hardware. Everything else - the PC, ' +
+            'the instruction stream, memory and the peripherals - comes from the ' +
+            'fixed Wrapper and is unaffected. Name the array under ' +
+            '<b>\u2699 Settings \u2192 HDL</b>, in the ' +
+            '<b>Register file</b> field (for example <code>dut.RV1.RegFile1.RegBank</code>) ' +
+            'to bring this view back.';
+          notice.dataset.filled = '1';
+        }
+      }
       if (simEngineMode !== 'hdl' || !hdlTrace || !hdlRegKnown || !regBody) return;
       const rows = regBody.querySelectorAll('tr');
       for (let i = 1; i < 32 && i < rows.length; i++) {
@@ -14228,9 +14693,34 @@ endmodule
       }
     };
 
+    // "Cycles" is a CPI-table estimate in the functional engine and a count of
+    // real clock edges in HDL mode. Same number, very different provenance.
+    const hdlBaseUpdateStats = updateStats;
+    updateStats = function () {
+      hdlBaseUpdateStats();
+      const el = document.getElementById('statsBar');
+      if (!el) return;
+      const hdl = simEngineMode === 'hdl';
+      el.innerHTML = 'Cycles: ' + totalCycles +
+        ' <span class="stat-tag">' + (hdl ? 'hw' : 'est') + '</span>' +
+        '&nbsp;|&nbsp; Instr: ' + instructionCount;
+      el.title = hdl
+        ? 'Clock cycles counted by your Verilog simulation, and instructions retired'
+        : 'Cycles estimated from the per-instruction table in Settings > Simulation, ' +
+          'and instructions executed';
+    };
+
     const hdlBaseToolbarStates = updateToolbarButtonStates;
     updateToolbarButtonStates = function () {
       hdlBaseToolbarStates();
+      // Applies in both modes: switching engines mid-run is what let the
+      // two of them execute at the same time.
+      ['engBtnJs', 'engBtnHdl'].forEach(id => {
+        const b = document.getElementById(id);
+        if (!b) return;
+        b.disabled = hdlRunning;
+        b.classList.toggle('inactive', hdlRunning);
+      });
       if (simEngineMode !== 'hdl') return;
       const ready = !!(assembled && hdlFindWrapper() && !hdlRunning);
       const set = (id, on, title) => {
@@ -14240,14 +14730,21 @@ endmodule
         b.classList.toggle('inactive', !on);
         if (title) b.title = title;
       };
-      set('runPauseBtn', ready, 'Simulate your Verilog for the full cycle budget');
-      // The functional engine's label ("Resume") does not apply: an HDL run
-      // always records from reset, it never continues a paused one.
+      const resuming = !!(hdlTrace && hdlTraceEnabled);
+      set('runPauseBtn', ready, resuming
+        ? 'Continue the hardware run to the next breakpoint, recording another ' +
+          hdlCycleBudget + ' cycles if it reaches the end (Reset to start over)'
+        : 'Simulate your Verilog, stopping at the first breakpoint or after ' +
+          hdlCycleBudget + ' cycles');
       const runBtn = document.getElementById('runPauseBtn');
-      if (runBtn) runBtn.innerHTML = hdlTrace ? '\u25B6 Re-run' : '\u25B6 Run HDL';
+      if (runBtn) {
+        runBtn.innerHTML = (resuming && hdlIdx > 0) ? '\u25B6 Resume' : '\u25B6 Run HDL';
+        runBtn.style.opacity = ready ? '1' : '0.45';
+        runBtn.style.cursor = ready ? 'pointer' : 'not-allowed';
+      }
       set('btnStep', ready && hdlTraceEnabled,
         hdlTraceEnabled ? 'Advance one instruction through the recorded hardware trace'
-                        : 'Stepping needs the Trace option in the HDL panel');
+                        : 'Stepping needs the Trace option under Settings > HDL');
       set('btnBack', ready && hdlTraceEnabled && !!hdlTrace && hdlIdx > 0,
         'Step back - possible because the run is a recording, not a live simulation');
     };
@@ -14272,10 +14769,71 @@ endmodule
       hdlOnInputChanged(HDL_STIM_ACCEL, hdlAccelWord());
     };
 
+    // The preset buttons move the accelerometer just as the sliders do, so
+    // they have to raise the same stimulus.
+    const hdlBaseSetAccelPreset = setAccelPreset;
+    setAccelPreset = function (preset) {
+      hdlBaseSetAccelPreset(preset);
+      hdlOnInputChanged(HDL_STIM_ACCEL, hdlAccelWord());
+    };
+
+    // An MMIO input register (DIP, buttons, the accelerometer word) is read
+    // straight out of live peripheral state, so the memory view is stale the
+    // moment an input moves. Refresh it here rather than in each handler, so
+    // no future input path can be forgotten. Skipped while the functional
+    // engine is running, where it would cost a re-render per batch.
+    let hdlInPeriphRefresh = false;
+    const hdlBaseUpdatePeripherals = updatePeripherals;
+    updatePeripherals = function () {
+      hdlBaseUpdatePeripherals();
+      if (hdlInPeriphRefresh || running) return;
+      const addrEl = document.getElementById('memAddr');
+      if (!addrEl) return;
+      const base = parseInt(addrEl.value, 16);
+      if (!(base >= 0xFFF00000)) return;
+      hdlInPeriphRefresh = true;
+      try { updateMemoryView(); } finally { hdlInPeriphRefresh = false; }
+    };
+
+    // Bytes typed into the console are stamped with the cycle they were typed
+    // at and appended to the timeline the testbench reads. A buffered send is
+    // spread over the same instruction gap the functional engine would use -
+    // it cannot drip-feed here, because nothing steps its counter.
     const hdlBaseSendUartInput = sendUartInput;
     sendUartInput = function () {
+      if (simEngineMode !== 'hdl' || !hdlTrace) { hdlBaseSendUartInput(); return; }
+      const before = uartRxQueue.slice();
       hdlBaseSendUartInput();
-      hdlOnUartInput();
+      const appended = uartRxQueue.length >= before.length &&
+                       before.every((b, i) => uartRxQueue[i] === b);
+      let added, gap = 0;
+      if (appended) {
+        added = uartRxQueue.slice(before.length);
+      } else {
+        // Buffered mode replaced the queue with its first byte and parked the
+        // rest; take the whole sequence and retire the JS-side drip feed.
+        added = uartRxQueue.concat(autoSeqQueue);
+        gap = Math.max(1, autoSeqDelayInstr || 10);
+        autoSeqPending = false;
+        autoSeqQueue = [];
+        const btn = document.getElementById('uartSendBtn');
+        if (btn) { btn.innerText = 'Send'; btn.style.background = ''; }
+        const st = document.getElementById('uartAutoSendStatus');
+        if (st) st.innerText = added.length > 1
+          ? 'Queued ' + added.length + ' bytes, ' + gap + ' cycles apart' : '';
+      }
+      if (!added.length) { hdlOnUartInput(); return; }
+      const at = hdlCurrentCycle();
+      added.forEach((b, i) => hdlRx.push({ cycle: at + i * gap, byte: b & 0xFF }));
+      hdlOnUartInput(added.length);
+    };
+
+    // Re-assembling produces a different program, so the recording made
+    // against the old one no longer describes anything.
+    const hdlBaseAssembleOnly = assembleOnly;
+    assembleOnly = function () {
+      hdlDiscardTrace();
+      return hdlBaseAssembleOnly();
     };
 
     window.hdlRemoveFile = hdlRemoveFile;
@@ -14307,6 +14865,11 @@ endmodule
     window.getHdlTrace = () => hdlTrace;
     window.getHdlIndex = () => hdlIdx;
     window.hdlSeek = hdlSeek;
+    window.hdlBreakAt = hdlBreakAt;
+    window.hdlResumeRun = hdlResumeRun;
+    window.hdlStatementTarget = hdlStatementTarget;
+    window.hdlStatementBackTarget = hdlStatementBackTarget;
+    window.refreshSimSettingsScope = refreshSimSettingsScope;
     window.hdlStepOnce = hdlStepOnce;
     window.hdlStepBack = hdlStepBack;
     // Install a recording captured elsewhere (used by the tests, which run
@@ -14320,6 +14883,7 @@ endmodule
     };
     window.hdlSetStim = (list) => { hdlStim = list.slice(); };
     window.hdlSetRx = (list) => { hdlRx = list.slice(); };
+    window.getUartRxQueue = () => uartRxQueue.slice();
     // Load sources programmatically (the drop zone and file picker route
     // through hdlAddFiles; this is the same thing without a FileList).
     window.hdlSetSources = (list) => {
