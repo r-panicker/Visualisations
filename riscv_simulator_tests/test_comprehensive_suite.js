@@ -186,30 +186,63 @@ setTimeout(() => {
     console.log('Cycle counter readback:', cycles);
     console.log('✅ Peripherals and MMIO verification passed!');
 
-    // 9. Memory View Code Segment Read-Only & Data/Stack/MMIO Editable
-    console.log('\n[9] Testing Memory View Code Segment Read-Only & Data/Stack/MMIO Editable...');
+    // 9. Memory View protection model, in BOTH display modes.
+    //
+    // The rule is the same either way - code is read-only, data/stack/MMIO are
+    // editable - but the mechanism differs, and this check used to know only
+    // the byte-mode one. Since v23.5 the view opens in WORD mode, where a cell
+    // is edited through the word overlay (an onclick calling
+    // startMemWordCellEdit) rather than by being contenteditable, so asserting
+    // contenteditable unconditionally failed against the default mode.
+    console.log('\n[9] Testing Memory View read-only code / editable data (word + byte modes)...');
     const doc = win.document;
-    doc.getElementById('memAddr').value = '0x00400000';
-    win.memGo('code');
-    const codeSpan = doc.getElementById('memView').querySelector(`[data-addr="${0x00400000}"]`);
-    if (!codeSpan) throw new Error('Could not find code segment memory span');
+    const cellAt = addr => doc.getElementById('memView').querySelector(`[data-addr="${addr}"]`);
+    const showCode = () => { doc.getElementById('memAddr').value = '0x00400000'; win.memGo('code'); };
+    const showData = () => { doc.getElementById('memAddr').value = '0x10010000'; win.memGo('data'); };
+
+    // --- Word mode (the default since v23.5) ---
+    win.setMemViewMode('word');
+    showCode();
+    const codeWord = cellAt(0x00400000);
+    if (!codeWord) throw new Error('Word mode: could not find the code segment word cell');
+    if (!codeWord.classList.contains('readonly-code')) {
+      throw new Error('Word mode: code segment word cell MUST carry the readonly-code class');
+    }
+    if (codeWord.getAttribute('onclick')) {
+      throw new Error('Word mode: code segment word cell MUST NOT be click-editable');
+    }
+    showData();
+    const dataWord = cellAt(0x10010000);
+    if (!dataWord) throw new Error('Word mode: could not find the data segment word cell');
+    if (dataWord.classList.contains('readonly-code')) {
+      throw new Error('Word mode: data segment word cell MUST NOT be read-only');
+    }
+    if (!/startMemWordCellEdit/.test(dataWord.getAttribute('onclick') || '')) {
+      throw new Error('Word mode: data segment word cell MUST open the word editor on click');
+    }
+    console.log('Word mode: code cell read-only, data cell click-editable');
+
+    // --- Byte mode ---
+    win.setMemViewMode('bytes');
+    showCode();
+    const codeSpan = cellAt(0x00400000);
+    if (!codeSpan) throw new Error('Byte mode: could not find the code segment byte span');
     if (codeSpan.getAttribute('contenteditable') === 'true') {
-      throw new Error('Code segment memory span should NOT be contenteditable');
+      throw new Error('Byte mode: code segment byte span should NOT be contenteditable');
     }
     if (!codeSpan.classList.contains('readonly-code')) {
-      throw new Error('Code segment memory span should have readonly-code class');
+      throw new Error('Byte mode: code segment byte span should have the readonly-code class');
     }
-    console.log('Code segment read-only check passed:', codeSpan.getAttribute('contenteditable') === null || codeSpan.getAttribute('contenteditable') === 'false');
-
-    // Check Data segment is editable
-    doc.getElementById('memAddr').value = '0x10010000';
-    win.memGo('data');
-    const dataSpan = doc.getElementById('memView').querySelector(`[data-addr="${0x10010000}"]`);
-    if (!dataSpan) throw new Error('Could not find data segment memory span');
+    showData();
+    const dataSpan = cellAt(0x10010000);
+    if (!dataSpan) throw new Error('Byte mode: could not find the data segment byte span');
     if (dataSpan.getAttribute('contenteditable') !== 'true') {
-      throw new Error('Data segment memory span MUST be contenteditable="true"');
+      throw new Error('Byte mode: data segment byte span MUST be contenteditable="true"');
     }
-    console.log('Data segment editable check passed (contenteditable="true")');
+    console.log('Byte mode: code span read-only, data span contenteditable="true"');
+
+    // Leave the view in the mode the page ships with.
+    win.setMemViewMode('word');
 
     // Check code segment edit prevention functions
     win.editMemByte(0x00400000);

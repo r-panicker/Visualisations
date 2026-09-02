@@ -1,7 +1,7 @@
 /*
  * HDL simulation mode - end-to-end regression.
  *
- * Loads riscv_simulator_hdl.html in jsdom, assembles programs through the
+ * Loads riscv_simulator.html in jsdom, assembles programs through the
  * normal assembler, asks the page for the artefacts it would hand to Icarus
  * (the generic testbench, the memory images, the stimulus files), and then
  * runs the REAL Icarus/WASM pipeline over the unmodified RV/*.v sources.
@@ -26,7 +26,7 @@ const RV = path.join(ROOT, 'RV');
 const ENGINE = process.env.HDL_ENGINE_DIR ||
   '/tmp/claude-1000/-home-rajesh-GitHub-Visualisations/dd03718e-6ed5-4869-8832-495d819635e9/scratchpad/engine';
 
-const html = fs.readFileSync(path.join(ROOT, 'riscv_simulator_hdl.html'), 'utf8');
+const html = fs.readFileSync(path.join(ROOT, 'riscv_simulator.html'), 'utf8');
 const CM6 = fs.readFileSync(path.join(__dirname, 'cm6_bundle.min.js'), 'utf8');
 
 const DESIGN = ['ALU.v', 'Decoder.v', 'Extend.v', 'PC_Logic.v', 'ProgramCounter.v',
@@ -40,7 +40,7 @@ function check(label, cond) {
 
 const dom = new JSDOM(html, {
   runScripts: 'dangerously', resources: 'usable',
-  url: 'http://localhost:8080/riscv_simulator_hdl.html',
+  url: 'http://localhost:8080/riscv_simulator.html',
   beforeParse(window) {
     window.__CM6_DISABLE_CDN = true;
     window.addEventListener('DOMContentLoaded', () => {
