@@ -4781,18 +4781,19 @@
       const totalCodeBytes = Math.max(0, textAddr - base);
       if (totalCodeBytes > codeSize) {
         const overWords = Math.ceil((totalCodeBytes - codeSize) / 4);
-        log(`⚠️ WARNING: the program is ${totalCodeBytes} bytes ` +
-            `(0x${totalCodeBytes.toString(16)}) of code but the Code segment is only ` +
-            `${codeSize} (0x${codeSize.toString(16)}) — ${overWords} instruction(s) too many. ` +
-            `Raise "Code (.text) size" in Settings → Linker, and IROM_DEPTH_BITS in ` +
-            `Wrapper.v if you are running it in HDL mode. Left as is, the program runs off ` +
-            `the end of its segment and behaves unpredictably.`, 'warn');
+        log(`⚠️ Code is ${totalCodeBytes} bytes, ${totalCodeBytes - codeSize} over the ` +
+            `${codeSize}-byte Code segment — ${overWords} instruction` +
+            `${overWords === 1 ? '' : 's'} that will not be loaded. Raise ` +
+            `"Code (.text) size" in Settings → Linker, and IROM_DEPTH_BITS in Wrapper.v ` +
+            `for HDL mode.`, 'warn');
         lastCodeOverflowWords = overWords;
       }
 
       const totalDataBytes = Math.max(0, dataAddr - dataBase);
       if (totalDataBytes > dataSize && editorLanguageMode !== 'c') {
-        log(`⚠️ WARNING: Program data section (0x${totalDataBytes.toString(16)} / ${totalDataBytes} bytes) exceeds configured Linker Data Segment size (0x${dataSize.toString(16)} / ${dataSize} bytes)! This may cause mismatch with the memory size provisioned in hardware.`, 'warn');
+        log(`⚠️ Data is ${totalDataBytes} bytes, ${totalDataBytes - dataSize} over the ` +
+            `${dataSize}-byte Data segment. Raise "Data (.data) size" in Settings → Linker, ` +
+            `and DMEM_DEPTH_BITS in Wrapper.v for HDL mode.`, 'warn');
       }
 
       return output;
@@ -11856,8 +11857,12 @@ STACK_INIT:
       const dataEnd = (dataBase + estimatedDataBytes) >>> 0;
       if (dataEnd > effectiveStack || estimatedDataBytes > dataSize) {
         effectiveStack = Math.max(effectiveStack, ((dataEnd + 0x2000 + 0xFFF) & ~0xFFF) >>> 0);
-        log(`⚠️ WARNING: Large C data section (0x${estimatedDataBytes.toString(16)} / ${estimatedDataBytes} bytes) exceeds configured Linker Data Segment size (0x${dataSize.toString(16)} / ${dataSize} bytes). Dynamically adjusting startup stack pointer to 0x${effectiveStack.toString(16)}. ⚠️ CAUTION: This may cause mismatch with the memory size provisioned in hardware.`, 'warn');
-        setStatus(`⚠️ Warning: Large data section (${estimatedDataBytes} B) adjusted stack to 0x${effectiveStack.toString(16)} (Check FPGA RAM limits)`, 'warn');
+        log(`⚠️ Data is ${estimatedDataBytes} bytes, over the ${dataSize}-byte Data segment. ` +
+            `The startup stack pointer was moved to 0x${effectiveStack.toString(16)} so the stack ` +
+            `clears it. On hardware the segment size is fixed — raise "Data (.data) size" in ` +
+            `Settings → Linker, and DMEM_DEPTH_BITS in Wrapper.v, to match.`, 'warn');
+        setStatus(`Data section is ${estimatedDataBytes} bytes — stack moved to ` +
+          `0x${effectiveStack.toString(16)}. See the console.`, 'warn');
       }
 
       // Prepend CRT0 baremetal startup shim: sets sp = effectiveStack, calls main(), terminates with ecall (a7=10)
@@ -11971,8 +11976,7 @@ STACK_INIT:
       programFinished = false;
       if (lastCodeOverflowWords > 0) {
         setStatus(`Assembled ${nInstr} instructions — ${lastCodeOverflowWords} too many ` +
-          `for the Code segment. Raise "Code (.text) size" in Settings → Linker ` +
-          `(and IROM_DEPTH_BITS for HDL mode).`, 'warn');
+          `for the Code segment. See the console.`, 'warn');
       } else {
         setStatus(`Assembled ${nInstr} instructions. Ready to run.`, 'success');
       }
@@ -12038,10 +12042,11 @@ STACK_INIT:
       highlightCurrentLine();
       updateRegisters(); updateMemoryView(); updateMachineCode(); updateDisassembly(); updateStats();
       if (statementStepping && instructionsExecuted > 1) {
-        setStatus(`Statement Step (${instructionsExecuted} instrs): Line ${currentExecLine > 0 ? currentExecLine : '?'} (PC = 0x${pc.toString(16)})`);
+        setStatus(`Statement step over line ${startSourceLine} — ${instructionsExecuted} instruction` +
+          `${instructionsExecuted === 1 ? '' : 's'}, now at line ${currentExecLine > 0 ? currentExecLine : '?'}`);
         log(`Executed statement at line ${startSourceLine} (${instructionsExecuted} instructions, next PC: 0x${pc.toString(16)}, Line: ${currentExecLine})`, 'info');
       } else {
-        setStatus(`Step ${instructionCount}: PC = 0x${pc.toString(16)}`);
+        setStatus(`Stepped to line ${currentExecLine > 0 ? currentExecLine : '?'}`);
         log(`0x${prePc.toString(16)}: executed (next: 0x${pc.toString(16)})`, 'info');
       }
       updateToolbarButtonStates();
@@ -12074,7 +12079,7 @@ STACK_INIT:
       lastChangedReg = -1;
       highlightCurrentLine();
       updateRegisters(); updateMemoryView(); updateMachineCode(); updateDisassembly(); updateStats();
-      setStatus(`Back step: PC = 0x${pc.toString(16)}`);
+      setStatus(`Stepped back to line ${currentExecLine > 0 ? currentExecLine : '?'}`);
       log(`Back to 0x${st.pc.toString(16)}`, 'info');
       updateToolbarButtonStates();
     }
@@ -14837,7 +14842,7 @@ endmodule
           const t = await hdlStartTrace(hdlCycleBudget);
           if (!t) return null;
           hdlSeek(0);
-          setStatus('HDL step: PC = 0x' + (pc >>> 0).toString(16), 'info');
+          setStatus('HDL stepped to line ' + (currentExecLine > 0 ? currentExecLine : '?'), 'info');
           return t;
         }
         if (hdlIdx >= hdlTrace.steps.length) {
@@ -14849,10 +14854,10 @@ endmodule
         const from = hdlIdx;
         hdlSeek(hdlStatementTarget(from));
         const covered = hdlIdx - from;
+        const where = 'line ' + (currentExecLine > 0 ? currentExecLine : '?');
         setStatus(covered > 1
-          ? 'HDL statement step (' + covered + ' instrs): line ' +
-            (currentExecLine > 0 ? currentExecLine : '?') + ', PC = 0x' + (pc >>> 0).toString(16)
-          : 'HDL step ' + hdlIdx + ': PC = 0x' + (pc >>> 0).toString(16), 'info');
+          ? 'HDL statement step \u2014 ' + covered + ' instructions, now at ' + where
+          : 'HDL stepped to ' + where, 'info');
         return hdlTrace;
       });
     }
@@ -14863,7 +14868,7 @@ endmodule
         return;
       }
       hdlSeek(hdlStatementBackTarget(hdlIdx));
-      setStatus('HDL back step ' + hdlIdx + ': PC = 0x' + (pc >>> 0).toString(16), 'info');
+      setStatus('HDL stepped back to line ' + (currentExecLine > 0 ? currentExecLine : '?'), 'info');
     }
 
     // ================================================================

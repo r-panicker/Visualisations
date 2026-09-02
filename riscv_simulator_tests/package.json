@@ -1,21 +1,27 @@
 {
   "name": "riscv-simulator-tests",
-  "version": "2.1.0",
-  "description": "Comprehensive test suites and build utilities for RISC-V Simulator",
+  "version": "2.2.0",
+  "description": "Test suites for riscv_simulator.html",
   "scripts": {
-    "test": "node test_comprehensive_suite.js",
+    "test": "npm run test:all",
+    "test:all": "node test_tab_and_autocomplete.js && node test_breakpoint_highlight_and_snap.js && node test_jsdom.js && node test_all_instructions_v2.js && node test_execution_programs.js && node test_comprehensive_suite.js && node test_panel_grid.js && node test_mobile_keyboard_focus.js && node test_disassembly_machine_code.js && node test_disassembly_labels_and_warnings.js && node test_c_godbolt_simulation.js && node test_new_c_simulation.js && node test_baked_examples_full.js && node test_statement_stepping.js && node test_sim_max_instructions_setting.js && node test_reset_and_image_display.js && node test_hdl_mode.js",
+    "test:suite": "node test_comprehensive_suite.js",
+    "test:hdl": "node test_hdl_mode.js",
     "test:c": "node test_c_godbolt_simulation.js",
     "test:new_c": "node test_new_c_simulation.js",
     "test:baked": "node test_baked_examples_full.js",
+    "test:instructions": "node test_all_instructions_v2.js",
+    "test:execution": "node test_execution_programs.js",
     "test:stepping": "node test_statement_stepping.js",
     "test:settings": "node test_sim_max_instructions_setting.js",
     "test:disasm": "node test_disassembly_labels_and_warnings.js",
+    "test:disasm-machine-code": "node test_disassembly_machine_code.js",
     "test:reset": "node test_reset_and_image_display.js",
     "test:grid": "node test_panel_grid.js",
     "test:mobile-keyboard": "node test_mobile_keyboard_focus.js",
-    "test:disasm-machine-code": "node test_disassembly_machine_code.js",
-    "test:all": "node test_tab_and_autocomplete.js && node test_breakpoint_highlight_and_snap.js && node test_jsdom.js && node test_all_instructions_v2.js && node test_execution_programs.js && node test_comprehensive_suite.js && node test_panel_grid.js && node test_mobile_keyboard_focus.js && node test_disassembly_machine_code.js && node test_c_godbolt_simulation.js && node test_new_c_simulation.js && node test_baked_examples_full.js && node test_statement_stepping.js && node test_sim_max_instructions_setting.js && node test_disassembly_labels_and_warnings.js && node test_reset_and_image_display.js",
-    "build": "node generate_v2.js"
+    "test:breakpoints": "node test_breakpoint_highlight_and_snap.js",
+    "test:autocomplete": "node test_tab_and_autocomplete.js",
+    "test:jsdom": "node test_jsdom.js"
   },
   "dependencies": {
     "jsdom": "^24.0.0"

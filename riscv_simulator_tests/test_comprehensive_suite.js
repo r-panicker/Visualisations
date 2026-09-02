@@ -457,6 +457,52 @@ setTimeout(() => {
     console.log('ecall is flagged in the source and once per assemble');
     console.log('✅ Assembler audit findings verified!');
 
+    // 13. The status message and the metrics readout must not say the same
+    //     thing twice. PC and the instruction count live in the readout, so a
+    //     step message says what the step DID, not what the counters show.
+    console.log('\n[13] Testing status message / metrics readout de-duplication...');
+    win.loadExample('basic');
+    win.assembleOnly();
+    const statusOf = () => doc.getElementById('statusBar').textContent;
+    const statsOf  = () => doc.getElementById('statsBar').textContent;
+
+    for (let i = 0; i < 4; i++) win.stepOnce();
+    if (/PC\s*[:=]/i.test(statusOf())) {
+      throw new Error('Step status repeats the PC that the metrics readout already shows: ' + statusOf());
+    }
+    if (!/PC:/.test(statsOf())) throw new Error('The metrics readout lost the PC');
+    win.stepBack();
+    if (/PC\s*[:=]/i.test(statusOf())) {
+      throw new Error('Back-step status repeats the PC: ' + statusOf());
+    }
+    if (!/line/i.test(statusOf())) {
+      throw new Error('Back-step status says nothing useful: ' + statusOf());
+    }
+    console.log(`Step status: "${statusOf()}"  |  metrics: "${statsOf().replace(/\s+/g, ' ').trim()}"`);
+
+    // The overflow warnings state the size once, and the advice lives in the
+    // console rather than being repeated in the status bar.
+    doc.getElementById('console').innerHTML = '';
+    win.loadExample('circle_accel');
+    win.assembleOnly();
+    const overflowLine = [...doc.querySelectorAll('#console div')].map(d => d.textContent)
+      .find(t => /over the .* Code segment/.test(t)) || '';
+    if (!overflowLine) throw new Error('No code-overflow warning for circle_accel');
+    if (/\(0x[0-9a-f]+\)/i.test(overflowLine)) {
+      throw new Error('The overflow warning still prints the same size in two bases: ' + overflowLine);
+    }
+    if (!/Raise "Code \(\.text\) size"/.test(overflowLine)) {
+      throw new Error('The overflow warning lost the fix: ' + overflowLine);
+    }
+    if (/Raise "Code/.test(statusOf())) {
+      throw new Error('The status bar repeats advice the console already gives: ' + statusOf());
+    }
+    if (!/too many for the Code segment/.test(statusOf())) {
+      throw new Error('The status bar does not report the overflow: ' + statusOf());
+    }
+    console.log(`Overflow status: "${statusOf()}"`);
+    console.log('✅ Status messages carry no redundancy with the metrics readout!');
+
     console.log('\n===========================================================');
     console.log('🎉 ALL COMPREHENSIVE TESTS PASSED WITH 100% SUCCESS!');
     console.log('===========================================================');

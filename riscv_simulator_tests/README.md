@@ -1,4 +1,4 @@
-# RISC-V Simulator — Test Suites & Build Utilities Manual
+# RISC-V Simulator — Test Suites
 
 This directory contains the automated test suites, bundling tools, and generator utilities for **[riscv_simulator.html](../riscv_simulator.html)** and **[riscv_simulator.md](../riscv_simulator.md)**.
 
@@ -18,7 +18,7 @@ npm --prefix riscv_simulator_tests install
 cd riscv_simulator_tests && npm install
 ```
 
-### 2. Build Dependencies (Optional — only if recompiling CodeMirror 6 bundle from scratch)
+### 2. Build Dependencies (Optional — only if recompiling the CodeMirror 6 bundle from scratch)
 - **`esbuild`** (`^0.20.0`): Fast bundler used to compile `cm6_entry.js` into `cm6_bundle.min.js`.
 - **CodeMirror 6 Packages**:
   - `@codemirror/state`
@@ -29,7 +29,7 @@ cd riscv_simulator_tests && npm install
   - `@codemirror/autocomplete`
   - `@lezer/highlight`
 
-> **Note**: `cm6_bundle.min.js` is already pre-bundled and included in this directory, so `esbuild` and the `@codemirror/*` packages are **not** required for standard testing or running `generate_v2.js`.
+> **Note**: `cm6_bundle.min.js` is already bundled and committed here, so `esbuild` and the `@codemirror/*` packages are **not** needed to run the tests.
 
 ---
 
@@ -39,30 +39,18 @@ cd riscv_simulator_tests && npm install
 # 1. Install dependencies (first time only)
 cd riscv_simulator_tests && npm install
 
-# 2. Run the complete test suite (all 14 suites sequentially)
-npm test:all
-# or from repo root:
-npm --prefix riscv_simulator_tests run test:all
+# 2. Run everything (all 17 suites, sequentially)
+npm test
+# or from the repo root:
+npm --prefix riscv_simulator_tests test
 
-# 3. Run individual test suites
-node riscv_simulator_tests/test_comprehensive_suite.js
-node riscv_simulator_tests/test_baked_examples_full.js
-node riscv_simulator_tests/test_c_godbolt_simulation.js
-node riscv_simulator_tests/test_new_c_simulation.js
-node riscv_simulator_tests/test_statement_stepping.js
-node riscv_simulator_tests/test_sim_max_instructions_setting.js
-node riscv_simulator_tests/test_disassembly_labels_and_warnings.js
-node riscv_simulator_tests/test_reset_and_image_display.js
-node riscv_simulator_tests/test_tab_and_autocomplete.js
-node riscv_simulator_tests/test_breakpoint_highlight_and_snap.js
-node riscv_simulator_tests/test_jsdom.js
-node riscv_simulator_tests/test_all_instructions_v2.js
-node riscv_simulator_tests/test_execution_programs.js
-node riscv_simulator_tests/test_disassembly_machine_code.js
-
-# 4. Re-generate riscv_simulator.html
-npm --prefix riscv_simulator_tests run build
+# 3. Run one suite
+npm run test:hdl          # or any other script in package.json
+node riscv_simulator_tests/test_hdl_mode.js
 ```
+
+Every suite in this directory is wired into `npm test`. There is no build step:
+`riscv_simulator.html` is edited directly.
 
 ---
 
@@ -186,7 +174,15 @@ npm --prefix riscv_simulator_tests run build
 
 ---
 
-### 16. `test_panel_grid.js` sections [16]–[18] — Intra-panel Column-Resize Separators & Column Sizing
+### 16. `test_hdl_mode.js` — HDL Simulation Mode, End to End (159 assertions)
+- **Purpose**: The only suite that drives real external tooling. It loads the page, assembles through the normal assembler, asks the page for the artefacts it would hand to Icarus (the generated testbench, the memory images, the stimulus files), then runs the **real** Icarus/WASM pipeline over the unmodified `RV/*.v` sources.
+- **Covers**: settings layout, engine toggle, register-file discovery (including after the module, instance and array are all renamed), synthesis lint, post-synthesis plumbing, compiler-setting invalidation, the program-independent testbench, MMIO timing in both directions, breakpoints and Resume, `UART_RX_valid` behaviour, and Statement Stepping through the recording.
+- **Requires**: the `RV/` sources, which are gitignored — the engine-backed sections skip cleanly without them.
+- **Run Command**: `npm run test:hdl`
+
+---
+
+### 17. `test_panel_grid.js` sections [16]–[18] — Intra-panel Column-Resize Separators & Column Sizing
 - **Purpose**: Regression coverage for the per-column `.col-resizer` separators and the `PANEL_COLS`/`applyPanelColLayout()` sizing model (also part of the 2×2 grid suite):
   - **[16]** All three panels freeze their header row (`position: sticky`), Disassembly's is a real `<thead>`, Memory's columns read `Addr` / `Content (Hex)` / `Content (ASCII)`, and `.col-resizer` separators exist for **Registers** (3: `#`, `Name`, `Value (Hex)`), **Memory** (2: `Addr`, `Content (Hex)`, in the `.mem-col-header` bar), and **Disassembly** (3: `Addr`, `Machine code`, `Native instruction`) but **not** for **Peripherals** (deliberately untouched).
   - **[17]** Both tables carry a 4-`<col>` `<colgroup>` and every column gets an explicit px width; `Addr`/`Machine code` sit at their content-sized widths. With the panel body's `clientWidth` stubbed to a real value, widening the panel **does not stretch** `Addr`/`Machine code` while `Native`+`Source` absorb the surplus **equally**; a too-narrow panel holds the natural widths and scrolls via the table's `min-width` instead of crushing a column. Guards the `width: 1%` regression that collapsed the last two columns while ballooning the first two.
@@ -195,18 +191,7 @@ npm --prefix riscv_simulator_tests run build
 
 ---
 
-## 🛠️ Build & Generator Utilities
-
-### `generate_v2.js`
-- **Purpose**: The main build script that generates `riscv_simulator.html` with CodeMirror 6 integration.
-- **How It Works**:
-  1. Reads the base template and configuration.
-  2. Injects the minified standalone CodeMirror 6 bundle (`cm6_bundle.min.js`).
-  3. Injects the custom RISC-V stream tokenizer, Catppuccin Mocha theme, breakpoint gutter with highlighted line numbers alone, smart breakpoint snapping, live signature floating tooltip, hover tooltips, and `window.editor` compatibility proxy.
-  4. Outputs the self-contained `riscv_simulator.html`.
-- **Run Command**: `node riscv_simulator_tests/generate_v2.js`
-
----
+## 🛠️ The CodeMirror bundle
 
 ### `cm6_bundle.min.js` & `cm6_entry.js`
 - **`cm6_entry.js`**: Source entrypoint that imports CodeMirror 6 and Lezer modules and attaches them to `window.CM6`.
