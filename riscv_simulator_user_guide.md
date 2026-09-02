@@ -165,7 +165,7 @@ terminal would.
 | **🔌 HDL Simulation** | Statement Stepping · your Verilog sources · everything for the hardware engine |
 
 > **On a real FPGA** the RAM size is fixed in hardware. If you raise the segment sizes
-> beyond what your board provides, it will work here and fail there.
+> beyond what your board provides or provisioned in HDL (whichever is lower), it will work here and fail there.
 
 ---
 
