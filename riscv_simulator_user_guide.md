@@ -224,6 +224,29 @@ Verilog, and it disappears when you close the tab — so you load it once per se
   current cycle. Everything before that point comes out identical, so you keep your
   place — and the very next instruction already sees the new value.
 
+### Is my Verilog synthesisable?
+
+Whenever you load sources, they are linted for things that do not survive synthesis —
+delays, `$display`, `real`, unbounded loops, `casex`, a blocking assignment in a clocked
+block, an incomplete sensitivity list on combinational logic. Anything found is listed
+in the console with a file and a line. It never stops a simulation.
+
+Treat it as a first pass, not a verdict — it catches common mistakes but does not prove
+anything. To actually prove it, tick **Synthesise and simulate the netlist**
+(⚙ Settings → 🔌 HDL Simulation). Every run then happens twice: once as you wrote it, and
+once as a gate-level netlist produced by **Yosys**. If the two behave differently you are
+told the first point where they part company — which is what an inferred latch, an
+incomplete sensitivity list, or a race between blocking assignments actually looks like.
+
+Ticking that box downloads the synthesiser the first time you use it — about **13 MB**.
+Nothing is fetched until you tick it, and your browser keeps it cached for a year, so
+after the first time it starts immediately. Synthesis takes 20–35 seconds and is redone
+only when your Verilog changes.
+
+Your registers still come from the RTL run while this is on: synthesis turns the register
+file into gates, so there is no register array left in the netlist to read. The PC,
+memory and every peripheral are compared in full.
+
 ### Finding a bug in your processor
 
 Tick **Cross-check against the JS model** (⚙ Settings → 🔌 HDL Simulation). After each
