@@ -39,7 +39,7 @@ cd riscv_simulator_tests && npm install
 # 1. Install dependencies (first time only)
 cd riscv_simulator_tests && npm install
 
-# 2. Run everything (all 17 suites, sequentially)
+# 2. Run everything (all 18 suites, sequentially)
 npm test
 # or from the repo root:
 npm --prefix riscv_simulator_tests test
@@ -174,7 +174,16 @@ Every suite in this directory is wired into `npm test`. There is no build step:
 
 ---
 
-### 16. `test_hdl_mode.js` — HDL Simulation Mode, End to End (159 assertions)
+### 16. `test_instruction_semantics.js` — Instruction Execution Semantics (136 cases)
+- **Purpose**: For every instruction, run it and check the answer. `test_all_instructions_v2.js` only proves a long program assembles without errors; this one proves the result is right, which exercises **encoder → machine code → decoder → execution** end to end. The encoder and the interpreter are separate code paths, so a mistake in either shows up as a wrong number.
+- **Covers**: all of RV32I (register-register, register-immediate, the upper-immediate pair, every load and store width with its sign- or zero-extension, all six branches, `jal`/`jalr`/`call`/`ret`), the M extension including division by zero and the sign of `rem`, `x0` semantics, and the pseudo-instructions.
+- **Expected values are worked out from the RISC-V spec**, not read off the simulator — a check that agrees with the implementation by construction tests nothing.
+- **Boundary cases are deliberate.** The suite was mutation-tested: 12 seeded faults (`SRAI` made logical, `SLTI`'s `<` made `<=`, `BGE`'s `>=` made `>`, `SUB` encoded with `ADD`'s funct7, `XORI` as `ORI`, `BLTU` as `BLT`, `LHU` sign-extending, `mv`/`neg`/`snez`/`sgtz`/`seqz` expansions corrupted). Two initially slipped through — `SLTI` and `seqz`, both because no case sat on the boundary — and cases were added until all 12 were caught.
+- **Run Command**: `npm run test:semantics`
+
+---
+
+### 17. `test_hdl_mode.js` — HDL Simulation Mode, End to End (159 assertions)
 - **Purpose**: The only suite that drives real external tooling. It loads the page, assembles through the normal assembler, asks the page for the artefacts it would hand to Icarus (the generated testbench, the memory images, the stimulus files), then runs the **real** Icarus/WASM pipeline over the unmodified `RV/*.v` sources.
 - **Covers**: settings layout, engine toggle, register-file discovery (including after the module, instance and array are all renamed), synthesis lint, post-synthesis plumbing, compiler-setting invalidation, the program-independent testbench, MMIO timing in both directions, breakpoints and Resume, `UART_RX_valid` behaviour, and Statement Stepping through the recording.
 - **Requires**: the `RV/` sources, which are gitignored — the engine-backed sections skip cleanly without them.
@@ -182,7 +191,7 @@ Every suite in this directory is wired into `npm test`. There is no build step:
 
 ---
 
-### 17. `test_panel_grid.js` sections [16]–[18] — Intra-panel Column-Resize Separators & Column Sizing
+### 18. `test_panel_grid.js` sections [16]–[18] — Intra-panel Column-Resize Separators & Column Sizing
 - **Purpose**: Regression coverage for the per-column `.col-resizer` separators and the `PANEL_COLS`/`applyPanelColLayout()` sizing model (also part of the 2×2 grid suite):
   - **[16]** All three panels freeze their header row (`position: sticky`), Disassembly's is a real `<thead>`, Memory's columns read `Addr` / `Content (Hex)` / `Content (ASCII)`, and `.col-resizer` separators exist for **Registers** (3: `#`, `Name`, `Value (Hex)`), **Memory** (2: `Addr`, `Content (Hex)`, in the `.mem-col-header` bar), and **Disassembly** (3: `Addr`, `Machine code`, `Native instruction`) but **not** for **Peripherals** (deliberately untouched).
   - **[17]** Both tables carry a 4-`<col>` `<colgroup>` and every column gets an explicit px width; `Addr`/`Machine code` sit at their content-sized widths. With the panel body's `clientWidth` stubbed to a real value, widening the panel **does not stretch** `Addr`/`Machine code` while `Native`+`Source` absorb the surplus **equally**; a too-narrow panel holds the natural widths and scrolls via the table's `min-width` instead of crushing a column. Guards the `width: 1%` regression that collapsed the last two columns while ballooning the first two.

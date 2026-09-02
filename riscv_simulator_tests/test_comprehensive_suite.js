@@ -503,6 +503,45 @@ setTimeout(() => {
     console.log(`Overflow status: "${statusOf()}"`);
     console.log('✅ Status messages carry no redundancy with the metrics readout!');
 
+    // 14. The Example menu is generated from one table, so a label cannot
+    //     revert when the language is switched and switched back.
+    console.log('\n[14] Testing the Example menu survives a language round-trip...');
+    const menuText = () => Array.from(doc.getElementById('exampleSelect').options)
+      .map(o => o.textContent).join(' | ');
+    const asmMenuBefore = menuText();
+    if (!/start here/.test(asmMenuBefore)) {
+      throw new Error('The ASM Example menu does not mark a starting point: ' + asmMenuBefore);
+    }
+    win.setLanguageMode('c');
+    const cMenu = menuText();
+    if (!/start here/.test(cMenu)) {
+      throw new Error('The C Example menu does not mark a starting point: ' + cMenu);
+    }
+    win.setLanguageMode('asm');
+    if (menuText() !== asmMenuBefore) {
+      throw new Error('The ASM Example menu changed across a language round-trip:\n' +
+        '  before: ' + asmMenuBefore + '\n  after:  ' + menuText());
+    }
+    console.log('ASM menu survives asm → c → asm unchanged, and both mark a starting point');
+
+    // Statement Stepping is one setting on two tabs; the wording must match
+    // apart from the clause naming the other tab.
+    const stripShared = (t) => (t || '').replace(/Shared with (JS|HDL) Simulation\./, '')
+      .replace(/\s+/g, ' ').trim();
+    const jsBlurb  = doc.querySelector('#simStatementStep')
+      .closest('.sim-card').querySelector('span').textContent;
+    const hdlBlurb = doc.querySelector('#hdlStatementStep')
+      .closest('.sim-card').querySelector('span').textContent;
+    if (stripShared(jsBlurb) !== stripShared(hdlBlurb)) {
+      throw new Error('Statement Stepping is worded differently on the two tabs:\n' +
+        '  JS : ' + stripShared(jsBlurb) + '\n  HDL: ' + stripShared(hdlBlurb));
+    }
+    if (stripShared(jsBlurb).length > 130) {
+      throw new Error('The Statement Stepping blurb has grown back: ' + stripShared(jsBlurb));
+    }
+    console.log(`Statement Stepping reads the same on both tabs: "${stripShared(jsBlurb)}"`);
+    console.log('✅ Example menu and shared-setting wording verified!');
+
     console.log('\n===========================================================');
     console.log('🎉 ALL COMPREHENSIVE TESTS PASSED WITH 100% SUCCESS!');
     console.log('===========================================================');

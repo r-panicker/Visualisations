@@ -1096,8 +1096,8 @@ Models 32 32-bit integer registers (`x0`–`x31`), 32 floating-point registers (
 
 A Node/jsdom harness lives in [`riscv_simulator_tests/`](riscv_simulator_tests). Every
 suite loads the real `riscv_simulator.html`, so the tests exercise the shipped file
-rather than a copy of its logic. `npm test` runs all **17** of them, and every script in
-the directory is one of the 17 — there is no build step and nothing else to run.
+rather than a copy of its logic. `npm test` runs all **18** of them, and every script in
+the directory is one of the 18 — there is no build step and nothing else to run.
 
 | Test script | Target subsystem & scenarios |
 |-------------|------------------------------|
@@ -1114,12 +1114,50 @@ the directory is one of the 17 — there is no build step and nothing else to ru
 | `test_reset_and_image_display.js` | OLED auto-advance mode 5 rendering fidelity, ASM/C pixel parity, peripheral reset. |
 | `test_tab_and_autocomplete.js` | CM6 key handling, literal Tab insertion, block indent, operand autocomplete, signature help. |
 | `test_breakpoint_highlight_and_snap.js` | Breakpoint snapping from comments/blanks/directives, gutter highlight pill. |
-| `test_all_instructions_v2.js` | RV32GC translation coverage across 90+ instructions and pseudo-ops. |
+| `test_all_instructions_v2.js` | RV32GC translation coverage across 90+ instructions and pseudo-ops — that they assemble. |
+| `test_instruction_semantics.js` | **That they are right (136 cases).** Each instruction is executed and its result checked against a value worked out from the spec, exercising encoder → machine code → decoder → execution. Mutation-tested against 12 seeded faults. |
 | `test_execution_programs.js` | Multi-step execution and register assertions for Factorial ($5! = 120$) and Fibonacci ($F_9=34$, $F_{10}=55$). |
 | `test_mobile_keyboard_focus.js` | On-screen-keyboard focus preservation across panel relayout. |
 | `test_jsdom.js` | Boot smoke test under jsdom. |
 
-### 12.1 The HDL suite
+### 12.1 Instruction semantics, and why assembling is not enough
+
+`test_all_instructions_v2.js` proves a long program containing every instruction assembles
+with no errors. That catches a mnemonic falling out of the table — it does not catch a
+wrong `funct7`, a decoder that sign-extends where it should not, or a pseudo-instruction
+whose expansion has drifted. Each of those produces a program that assembles cleanly and
+computes the wrong answer.
+
+`test_instruction_semantics.js` runs each instruction and checks the result. Because the
+encoder and the interpreter are separate code paths, that one check exercises
+**encoder → machine code → decoder → execution**, and a mistake in either end shows up as
+a wrong number. Expected values come from the RISC-V spec, not from the simulator: a check
+that agrees with the implementation by construction tests nothing.
+
+The suite is **mutation-tested** — its own coverage is measured by seeding faults into the
+simulator and confirming each is caught:
+
+| Seeded fault | Caught |
+|---|---|
+| `SRAI` made a logical shift | 2 cases |
+| `SLTI` `<` made `<=` | 1 |
+| `SLTIU` `<` made `<=` | 1 |
+| `BGE` `>=` made `>` | 5 |
+| `SUB` encoded with `ADD`'s `funct7` | 6 |
+| `XORI` encoded as `ORI` | 1 |
+| `BLTU` encoded as `BLT` | 2 |
+| `LHU` sign-extending | 1 |
+| `mv`, `neg`, `snez`, `sgtz`, `seqz` expansions corrupted | 1–2 each |
+
+Two of those initially slipped through — `SLTI` and `seqz` — both because no case sat on
+the boundary that distinguishes the correct behaviour from the faulty one. Cases were
+added until all twelve were caught, which is why the suite carries a deliberate boundary
+case for every comparison: equal as well as less and greater, zero as well as positive
+and negative.
+
+---
+
+### 12.2 The HDL suite
 
 `test_hdl_mode.js` is the one that needs real tooling: it loads the page, assembles
 through the normal assembler, asks the page for the artefacts it would hand to Icarus
@@ -1168,6 +1206,7 @@ Newest first. Versions before v15.0 are grouped.
 
 | Version | Milestone description & features implemented |
 |---------|----------------------------------------------|
+| **v24.5 (Instruction Semantics Suite & Example-menu Fix)** | Added **`test_instruction_semantics.js` (136 cases)**: every instruction is executed and its result checked against a value worked out from the RISC-V spec, which exercises encoder → machine code → decoder → execution rather than only asking whether a program assembles. The suite was **mutation-tested** against 12 seeded faults; two initially slipped through (`SLTI`'s `<` made `<=`, and `seqz`'s `sltiu rd, rs, 1` made `, 2`) because no case sat on the boundary, so boundary cases were added for every comparison — equal as well as less and greater, zero as well as positive and negative. Fixed the **Example menu reverting on a language round-trip**: the list was written out twice, once in the markup and once in `updateExampleSelectorOptions()`, so a label edited in one came back the old way after switching to C and back. There is now one `EXAMPLE_MENU` table, rendered at boot and on every switch. The starting-point entry reads **Basic (start here)**, and the C list marks **Basic Sum (start here)** the same way, which it never did. The **JS Simulation tab's hint lost its double negative** ("so nothing here silently does nothing"), and the **Statement Stepping description was cut to one sentence** on both tabs. |
 | **v24.4 (Message De-duplication & Test-suite Cleanup)** | With the PC and the instruction count now permanently on the metrics readout, the step messages stopped repeating them: `Back step: PC = 0x40000c` beside `… | Instr: 12 | PC: 0x0040000c` said the same thing twice, in two different formats. A step message now says what the step did — **`Stepped to line 16`**, `Stepped back to line 15`, `Statement step over line 7 — 3 instructions, now at line 8` — and the same for HDL mode. The three **segment-overflow warnings** were rewritten to one shape (what it is, how much over, what to change): each size is printed once instead of in both decimal and hex, and the status bar states the outcome while the console carries the fix, rather than both carrying it. **15 files were deleted from `riscv_simulator_tests/`**: the pre-CodeMirror bare-eval harnesses (`test_asm.js`, `test_all_instructions.js`, `test_run.js`, `tests_body.js`, `sim_harness.js`), the one-off exploratory scripts kept from developing the image and circle examples (`debug_circle.js`, `test_prep.js`, `test_circle_compile.js`, `test_img_compile.js`, `test_mode5_render.js`, `analyze_imagedisplay.js`, `inspect_img.js`, `render_ascii.js`), and the v2-experiment relics `generate_v2.js` and `build_v2.js` — the first of which wrote a `riscv_simulatorv2.html` that is not part of the repository, and the second of which read a bundle from a hardcoded path in another tool's scratch directory. All were broken or assertion-free. What remains is 17 real suites, every one of them wired into `npm test` — `test_hdl_mode.js` had never been in it. |
 | **v24.3 (Assembler Strictness, PC Readout & Vendored Engines)** | Operand forms that used to be accepted silently are now diagnosed. **A bare number is no longer a register**: `add t0, t0, 1` assembled as `add t0, t0, x1` and the disassembly still showed `1`, so nothing gave it away; it now reports `'1' is a number, not a register` and suggests `addi`. The same applies to the FP file. **A store to a symbol must name its scratch register** — `sw t0, var1` picked `x5` (or `x6`) and clobbered it without a word; the third operand is now required, as in GNU `as`, and the message shows the exact two-instruction expansion. **A load from a symbol clobbers nothing**: `lw s3, delay_val` now builds the address in `rd` itself (`lui x19` / `lw x19, …(x19)`) instead of borrowing a temporary; float loads, whose `rd` cannot hold an address, still need the register named. Those three were reported from use, so the assembler was then put through **51 deliberately-wrong programs — 28 assembled with no message at all**. Fixed from that audit: **missing operands were filled in with `x0`** and surplus ones dropped (operand counts now come from the instruction format and, for pseudo-instructions, from the highest `%N` in their own expansion template, so new ones are checked automatically); **`slli t0, t1, 32` was masked to a shift by zero**; **`lui t0, 0x100000` was truncated to 20 bits**; **a duplicate label silently redefined** and **a label named after a register was unreachable** (`j t0` read the register); **`.byte 256` stored 0** and the other data directives truncated the same way. Misaligned word and half accesses now warn — the Wrapper's memory is word-addressed. `parseReg`, `parseFReg` and `parseImm` tolerate a missing operand, so `sub t0` reports its arity instead of `Cannot read properties of undefined`. **`ecall` is flagged**: every built-in example that uses it says in a header comment that it is a simulator service the CG3207 hardware cannot provide, and the assembler repeats it once per assemble (assembly only — the CRT0 shim's exit `ecall` is not the student's). The **Native instruction column became a real disassembly**, naming registers `x0`–`x31` while ABI names stay in the source column beside it — and that renaming alone no longer marks a row as a pseudo-instruction expansion, so the expansion colour means only what it says. The **PC moved onto the always-visible metrics readout** (`Cycles: 3 est | Instr: 3 | PC: 0x0040000c`), which moved down to the status row: it was previously only in the transient status message, which the next message overwrites. The **optimisation level carries a note** about code size varying several-fold (`-O0` and `-O3` largest, `-Os` smallest) with a folded explanation of the `.text` / `IROM_DEPTH_BITS` limit, and **libgcc helper calls are reported at compile time** rather than as an unknown symbol during assembly, naming both ways out — enable M, or raise the optimisation level, since from `-O1` a multiply by a constant often becomes shifts and adds. The Example dropdown labels **Basic — start here**. All three external engines (CodeMirror, Icarus Verilog, Yosys — 78 MB) are now **vendored under `vendor/`** as a fallback for when the CDN is unreachable; the wasm ones need the page served over `http://`. Test suite gained sections [11] and [12] of the comprehensive suite. |
 | **v24.2 (Post-Synthesis Functional Simulation)** | Added **Post-synthesis functional simulation** (⚙ Settings → 🔌 HDL Simulation): every run is simulated twice, once as written and once as a gate-level netlist produced by **Yosys compiled to WebAssembly**, with the two traces diffed and the first divergence reported — which is what an inferred latch, an incomplete sensitivity list or a race between blocking assignments looks like. Only the core is synthesised; the Wrapper stays behavioural so its `$readmemh` keeps working and one synthesis serves every run. A generated parameter shim keeps the Wrapper's `RV #(.PC_INIT(…))` valid after synthesis resolves parameters away. `iverilog -S` was evaluated first and rejected: it refuses constructs every real tool accepts and gives identical errors for good and broken RTL, so a **synthesis lint** carrying file and line was written instead, tuned to stay quiet on the reference design. Yosys is ~13 MB over the wire, fetched only when the box is first ticked and then served from the browser's cache for a year. Also: the **M extension is now off by default**, and changing anything on the Compiler tab **clears the compiled program** so what is loaded always matches the settings on screen. |

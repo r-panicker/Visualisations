@@ -11,8 +11,8 @@ changelog — see [`riscv_simulator.md`](riscv_simulator.md).
 
 ## 1. Your first five minutes
 
-1. Pick something from **Example:** — **Basic — start here** is the short, complete
-   program to work from.
+1. Pick something from **Example:** — **Basic (start here)** is the short, complete
+   program to work from. In C mode the same entry is **Basic Sum (start here)**.
 2. It assembles automatically. Press **▶ Run**.
 3. Watch the **Registers** panel fill in, and the status bar report what happened.
 
