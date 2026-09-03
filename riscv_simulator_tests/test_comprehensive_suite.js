@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { installGodboltCache } = require('./godbolt_cache');
 const path = require('path');
 let JSDOM;
 try {
@@ -47,6 +48,10 @@ const dom = new JSDOM(html, {
 });
 
 const win = dom.window;
+
+// jsdom has no fetch, so C mode reaches Godbolt's captured output through this.
+
+installGodboltCache(win);
 
 setTimeout(() => {
   try {

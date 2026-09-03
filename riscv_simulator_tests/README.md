@@ -72,12 +72,11 @@ Every suite in this directory is wired into `npm test`. There is no build step:
 
 ---
 
-### 2. `test_baked_examples_full.js` — Full Precompiled Offline Examples Verification
-- **Purpose**: Validates offline precompiled compilation and execution across all 19 built-in examples (11 Assembly + 8 C).
+### 2. `test_baked_examples_full.js` — Heaviest Built-in Examples, End to End
+- **Purpose**: Compiles, assembles and runs the four most demanding built-in examples — two in Assembly, two in C — to the point where their output is visible on the peripherals.
 - **Test Scenarios & Assertions**:
   - Tests `circle_accel` (ASM) and `circle_accel_c` (C): verifies pixel writes on 96x64 OLED display and UART terminal output (`"Tilt in various directions to see the colour change\r\n"`).
   - Tests `image_display_accel` (ASM) and `image_display_c` (C): verifies Mode 5 auto-advance rendering of 6,144 pixels and UART telemetry (`"Tilt X to observe the effect\r\n"`).
-  - Ensures 100% offline functionality without Godbolt internet connectivity.
 - **Run Command**: `node riscv_simulator_tests/test_baked_examples_full.js`
 
 ---
@@ -89,7 +88,7 @@ Every suite in this directory is wired into `npm test`. There is no build step:
 ---
 
 ### 4. `test_new_c_simulation.js` — Advanced C Simulation & Peripheral Integration Test
-- **Purpose**: Tests live and offline simulation for complex C examples (`Circle_delay_accel.c`, `ImageDisplay_autoadvance_accel.c`), verifying midpoint circle drawing, OLED Mode 5 auto-advance row-major rendering, accelerometer sensor polling, and 7-segment display output.
+- **Purpose**: Tests simulation of the complex C examples (`Circle_delay_accel.c`, `ImageDisplay_autoadvance_accel.c`), against both live Godbolt output and a response injected by the harness, verifying midpoint circle drawing, OLED Mode 5 auto-advance row-major rendering, accelerometer sensor polling, and 7-segment display output.
 - **Run Command**: `node riscv_simulator_tests/test_new_c_simulation.js`
 
 ---
@@ -205,3 +204,10 @@ Every suite in this directory is wired into `npm test`. There is no build step:
 ### `cm6_bundle.min.js` & `cm6_entry.js`
 - **`cm6_entry.js`**: Source entrypoint that imports CodeMirror 6 and Lezer modules and attaches them to `window.CM6`.
 - **`cm6_bundle.min.js`**: Minified single-file IIFE bundle created with esbuild (`esbuild cm6_entry.js --bundle --minify --outfile=cm6_bundle.min.js`). Contains zero external dependencies and runs 100% offline.
+
+
+---
+
+## 🧊 The Godbolt cache
+
+- **`godbolt_cache.json` / `godbolt_cache.js`**: Godbolt's compiler output for the eight built-in C examples, captured once. jsdom provides no `fetch`, so the simulator's live-compile path never runs under test; `installGodboltCache(win)` feeds the captured output in through the page's `window.__mockGodboltResponse` hook, matching on exact source text. This data used to be embedded in `riscv_simulator.html` as `cPrecompiled` (379 KB, a third of the file) and was moved here in v24.6. **After editing a built-in C example, refresh its entry**, or its suite will run against stale assembly: POST the source to `https://godbolt.org/api/compiler/rv32-cclang2010/compile` and store the response under that example's key.

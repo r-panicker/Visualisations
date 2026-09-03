@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { installGodboltCache } = require('./godbolt_cache');
 const path = require('path');
 const https = require('https');
 
@@ -86,6 +87,8 @@ const CM6_BUNDLE_SOURCE = fs.readFileSync(path.resolve(__dirname, 'cm6_bundle.mi
     }
   });
   const win = dom.window;
+  // jsdom has no fetch, so C mode reaches Godbolt's captured output through this.
+  installGodboltCache(win);
 
   await new Promise(r => setTimeout(r, 400));
 

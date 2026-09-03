@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { installGodboltCache } = require('./godbolt_cache');
 const path = require('path');
 let JSDOM;
 try { JSDOM = require('jsdom').JSDOM; } catch(e) { JSDOM = require('/home/rajesh/.gemini/antigravity-ide/brain/7780d698-8baa-4d51-9b54-596f69dcec55/scratch/node_modules/jsdom').JSDOM; }
@@ -43,6 +44,10 @@ const CM6_BUNDLE_SOURCE = fs.readFileSync(path.resolve(__dirname, 'cm6_bundle.mi
   });
 
   const win = dom.window;
+
+  // jsdom has no fetch, so C mode reaches Godbolt's captured output through this.
+
+  installGodboltCache(win);
   await new Promise(r => setTimeout(r, 400));
 
   // --- 1. ASM Mode: circle_accel ---
