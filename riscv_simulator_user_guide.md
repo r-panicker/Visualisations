@@ -1,8 +1,7 @@
 # RISC-V Simulator — User Guide
 
-A short, practical guide to using the CG3207 simulator. Open
-[`riscv_simulator.html`](riscv_simulator.html) in a browser, or use the live copy at
-<https://nus-cg3207.github.io/labs>. Nothing to install.
+A short, practical guide to the simulator. Open
+[`riscv_simulator.html`](riscv_simulator.html) in a browser. Nothing to install.
 
 For the full specification — every MMIO register, the complete ISA table, the
 changelog — see [`riscv_simulator.md`](riscv_simulator.md).
@@ -75,8 +74,8 @@ a store to a label without a named scratch register. Each message says what to w
 instead. The full list is in the [reference manual](riscv_simulator.md).
 
 `ecall` is worth knowing about: it works here, because the simulator implements the RARS
-syscall services. It will not work on the CG3207 board, which has no trap support and no
-OS behind it — use the MMIO peripherals for anything you intend to run on hardware. The
+syscall services. It will not work on a processor with no trap support and no OS behind
+it — use the MMIO peripherals for anything you intend to run on hardware. The
 examples that use `ecall` say so at the top, and the console repeats it after each
 assemble.
 
@@ -93,8 +92,8 @@ assemble.
 
 Switch to **C**. The code is compiled by Compiler Explorer (Godbolt) and the resulting
 assembly is what actually runs, so you can step through **C source lines** directly.
-Every built-in C example ships pre-compiled, so they work with no network. Compiler,
-optimisation level and ABI flags are under **⚙ Settings → Compiler**.
+C mode therefore needs the network, the built-in examples included; assembly mode does
+not. Compiler, optimisation level and ABI flags are under **⚙ Settings → Compiler**.
 
 MMIO is available as macros: `LEDS`, `SWITCHES`, `BUTTONS`, `SEVSEG`, `UART_TX`,
 `ACCEL_DATA`, `OLED_COL`, `OLED_ROW`, `OLED_DATA`, `OLED_CTRL`.
@@ -234,10 +233,9 @@ wrote.
 1. Click **HDL** in the toolbar. The settings dialog opens on **🔌 HDL Simulation**,
    because nothing can happen until it has your sources.
 2. **Drop your `.v` files anywhere on the page** — or use **browse…**, or **📂 Open**.
-   You need `Wrapper.v`, `RV.v` and *every* submodule (`ALU.v`, `Decoder.v`, `Extend.v`,
-   `PC_Logic.v`, `ProgramCounter.v`, `RegFile.v`, `Shifter.v`).
-   The file containing `module Wrapper` is tagged **WRAPPER** in the list.
-3. Close the dialog. The chip next to `JS | HDL` should read **9 files**.
+   You need the file that declares `module Wrapper`, your processor, and *every*
+   submodule either of them instantiates. The wrapper is tagged **WRAPPER** in the list.
+3. Close the dialog. The chip next to `JS | HDL` reports how many files it holds.
 4. Assemble a program as usual, then **▶ Run**.
 
 Your Verilog is never uploaded anywhere. It is compiled inside your browser by Icarus
@@ -308,19 +306,11 @@ both values. That is almost always where the RTL bug is.
 | **Run and Step are greyed out** | The program is not assembled. Press **⚙ Assemble**. |
 | **"Breakpoint set at line X (moved from line Y)"** | You put it on a line with no instruction; it moved to the next real one. |
 | **Program pauses on its own** | It hit the instruction limit — usually an infinite loop. Raise it in ⚙ Settings → JS Simulation, or find the loop. |
-| **A program only half runs — the circle does not close, the image is cut off** | It does not fit. The status bar after assembling says how many instructions too many. Raise **Code (.text) size** in ⚙ Settings → Linker, and `IROM_DEPTH_BITS` in your `Wrapper.v` for HDL mode. `Circle & Accel` needs both, especially at `-O0`. |
-| **`'__mulsi3' is a libgcc helper…`**, or a warning about one right after compiling | Your C multiplies or divides but the M extension is off, so the compiler called a library routine that is not part of your program. Two ways out: tick **Include M extension** in ⚙ Settings → Compiler, or raise the optimisation level — from `-O1` up the compiler often turns a multiply by a constant into shifts and adds and the call disappears. That is why a program can work at `-Os` and fail at `-O0`. |
-| **`'1' is a number, not a register`** | `add t0, t0, 1` needs three registers. For a constant use the immediate form: `addi t0, t0, 1`. |
-| **`sw t0, var1 would need a scratch register…`** | Storing to a label takes two instructions, and the address has to be built somewhere. Say where: `sw t0, var1, t1` — and pick a register you are not using. Loads do not need this; `lw s3, var1` uses `s3` itself. |
-| **`add takes 3 operands, but 2 were given`** | A missing operand used to be filled in with `x0`, so the program ran and was wrong. The message names the shape to write. |
-| **`slli shift amount 32 is out of range`** | RV32 shifts by 0–31. A shift by 32 used to be masked down to a shift by **zero**. |
-| **`256 does not fit in .byte`** | The value would be truncated to 0. Use `.half` or `.word`, or check the number. |
-| **`Label 'x' is defined more than once`** | Every reference would resolve to the last definition. Rename one. |
-| **`'t0' is a register name, so it cannot be used as a label`** | `j t0` would read `t0` as the register, not as your label. Rename it. |
-| **`… offset that is not a multiple of the access size`** | A warning, not an error. `lw t0, 1(sp)` only works if the base register makes up the difference — and the Wrapper's data memory is word-addressed, so on the board it touches a different word. |
-| **`This program uses ecall (N sites)`** | Information, not a problem. `ecall` works here because the simulator implements the RARS syscalls; the CG3207 hardware has no trap support and no OS behind it, so board programs should use the MMIO peripherals. |
+| **A program stops part-way through** | It did not fit in the Code segment. The status bar after assembling says how many instructions too many. Raise **Code (.text) size** in ⚙ Settings → Linker, and the instruction-memory depth in your wrapper for HDL mode. Low optimisation levels make this more likely. |
+| **A warning about `__mulsi3` or another libgcc helper** | Your C multiplies or divides but the M extension is off, so the compiler called a library routine that is not part of your program. Tick **Include M extension** in ⚙ Settings → Compiler, or raise the optimisation level — from `-O1` up a multiply by a constant often becomes shifts and adds and the call disappears. That is why a program can work at `-Os` and fail at `-O0`. |
+| **`This program uses ecall (N sites)`** | Information, not a problem. `ecall` works here because the simulator implements the RARS syscalls. A processor with no trap support and no OS behind it will not run those programs, so use the MMIO peripherals for anything headed to hardware. |
 | **A store to memory seems ignored** | Check the address is in Data, not Code. The code segment is read-only. |
-| **C code will not compile** | Godbolt needs the network. The built-in C examples work offline; your own C does not. |
+| **C code will not compile** | C mode compiles on Godbolt's servers, so it needs the network — the built-in C examples included. Assembly mode needs nothing but the browser. |
 | **Nothing happens in HDL mode** | Check the chip beside `JS \| HDL`. Amber means no sources, or none of them declares `module Wrapper`. |
 | **HDL: compile error** | The Verilog compiler's message is in the console under the editor, with file and line. Drag the console taller if it is long. |
 | **Registers all show `xxxxxxxx` in HDL mode** | Either the hardware genuinely has not written them yet, or the register file could not be found — the Registers panel says which. |
@@ -333,8 +323,7 @@ both values. That is almost always where the RTL bug is.
 
 | | |
 |---|---|
-| [`riscv_simulator.html`](riscv_simulator.html) | The simulator (both engines) |
-| [`riscv_simulator_nohdl.html`](riscv_simulator_nohdl.html) | The same thing without the HDL engine |
+| [`riscv_simulator.html`](riscv_simulator.html) | The simulator |
 | [`riscv_simulator.md`](riscv_simulator.md) | Full reference: MMIO map, ISA, syscalls, architecture, changelog |
 | `riscv_simulator_tests/` | The automated test suite |
 | [`vendor/`](vendor/README.md) | Local copies of CodeMirror, Icarus Verilog and Yosys, used when the CDN cannot be reached (needs the page served over `http://`) |
