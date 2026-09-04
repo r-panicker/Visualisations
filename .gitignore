@@ -14,3 +14,4 @@ RV/Decoder.v
 RV/ALU.v
 RV/AA_IROM_DIP_to_LED.mem
 RV/AA_DMEM_DIP_to_LED.mem
+Prompts/*

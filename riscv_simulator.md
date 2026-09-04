@@ -154,7 +154,7 @@ register is highlighted. Click a value to edit it.
 
 ### Memory
 
-Sub-tabs `[ Code | Data | Stack | MMIO ]`, an address box and a row count.
+Sub-tabs `[ Text | Data | Stack | MMIO ]`, an address box and a row count.
 
 - **Word / Byte** — one 32-bit little-endian word per cell, or separate editable bytes.
   Word is the default. **Each row is one word**, never two — so on a narrow panel, a
@@ -162,7 +162,7 @@ Sub-tabs `[ Code | Data | Stack | MMIO ]`, an address box and a row count.
   be mistaken for another word's. The third column follows the mode: **Content
   (ASCII)** in Byte mode, **Content (DEC)** in Word mode — with the same ±/U switch as
   Registers, in the column header, signed by default.
-- **Code is read-only** — edit your source and re-assemble instead. Data and Stack are
+- **Text is read-only** — edit your source and re-assemble instead. Data and Stack are
   fully editable: click a cell and type, and it takes effect immediately.
 - **MMIO is editable per-register, matching real hardware**: a write-only or
   read-write register (LED, 7SEG, UART TX, OLED, ...) sticks the moment you commit
@@ -177,7 +177,7 @@ Sub-tabs `[ Code | Data | Stack | MMIO ]`, an address box and a row count.
 - Orange **labels** sit above the word they name, with a trailing `:` — `main:` —
   matching how the label reads in the program itself. Yellow bytes were written at
   runtime.
-- **💾 Dump txt / 💾 Dump data** export `AA_IROM.mem` / `AA_DMEM.mem` for Vivado.
+- **💾 Dump Text / 💾 Dump Data** export `AA_IROM.mem` / `AA_DMEM.mem` for Vivado.
 
 ### Disassembly
 
@@ -374,7 +374,7 @@ both values. That is almost always where the RTL bug is.
 | **A program stops part-way through** | It did not fit in the Code segment. The status bar after assembling says how many instructions too many. Raise **Code (.text) size** in ⚙ Settings → Linker, and the instruction-memory depth in your wrapper for HDL mode. Low optimisation levels make this more likely. |
 | **A warning about `__mulsi3` or another libgcc helper** | Your C multiplies or divides but the M extension is off, so the compiler called a library routine that is not part of your program. Tick **Include M extension** in ⚙ Settings → Compiler, or raise the optimisation level — from `-O1` up a multiply by a constant often becomes shifts and adds and the call disappears. That is why a program can work at `-Os` and fail at `-O0`. |
 | **`This program uses ecall (N sites)`** | Information, not a problem. `ecall` works here because the simulator implements the RARS syscalls. A processor with no trap support and no OS behind it will not run those programs, so use the MMIO peripherals for anything headed to hardware. |
-| **A store to memory seems ignored** | Check the address is in Data, not Code. The code segment is read-only. |
+| **A store to memory seems ignored** | Check the address is in Data, not Text. The text segment is read-only. |
 | **An example will not load — the editor keeps its old content, and the console says `Failed to fetch`** | Every example but DIP to LED is a file the page fetches when you pick it, which needs `http://` — a local server, or wherever the page is hosted. Opened straight from a downloaded copy (`file://`), only DIP to LED loads. See the note at the top of this guide for how to serve it locally. |
 | **C code will not compile** | C mode compiles on Godbolt's servers, so it needs the network — every C example included. |
 | **Nothing happens in HDL mode** | Check the chip beside `JS \| HDL`. Amber means no sources, or none of them declares `module Wrapper`. |

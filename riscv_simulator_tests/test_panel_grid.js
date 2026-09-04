@@ -576,7 +576,7 @@ setTimeout(() => {
       check('Machine code keeps its content-sized width (never stretched)', px(disCols[1]) === 116);
       check('Native + Source are the wider text columns', px(disCols[2]) === 200 && px(disCols[3]) === 200);
       check('Registers # / Name stay narrow, Value columns are wider',
-        px(regCols[0]) === 44 && px(regCols[1]) === 72 && px(regCols[2]) === 104 && px(regCols[3]) === 96);
+        px(regCols[0]) === 44 && px(regCols[1]) === 92 && px(regCols[2]) === 124 && px(regCols[3]) === 96);
       check('Table min-width is the column total (narrow panel scrolls, never crushes)',
         parseFloat(disTbl.style.minWidth) === 94 + 116 + 200 + 200);
     } else {
@@ -630,11 +630,11 @@ setTimeout(() => {
       // Spreadsheet behaviour: the columns to the right are unchanged, so
       // they shift along with the boundary instead of being re-flowed.
       check('Columns to the right keep their widths (they shift, not re-flow)',
-        parseFloat(regCols2[1].style.width) === 72 &&
-        parseFloat(regCols2[2].style.width) === 104 &&
+        parseFloat(regCols2[1].style.width) === 92 &&
+        parseFloat(regCols2[2].style.width) === 124 &&
         parseFloat(regCols2[3].style.width) === 96);
       check('Table min-width grew by the same delta (panel scrolls if needed)',
-        parseFloat(regTbl.style.minWidth) === 84 + 72 + 104 + 96);
+        parseFloat(regTbl.style.minWidth) === 84 + 92 + 124 + 96);
       const saved = JSON.parse(win.localStorage.getItem('rvsim.panelColW.registers') || 'null');
       check('Dragged width persisted to localStorage', !!saved && saved.id === 84);
       check('The whole row was pinned on the first move', !!saved && saved.dec === 96);
@@ -676,7 +676,7 @@ setTimeout(() => {
         memColHeader.style.getPropertyValue('--mem-addr-w') === '136px');
       check('Header and rows share one min-width so they scroll together',
         memView.style.minWidth === memColHeader.style.minWidth &&
-        parseFloat(memView.style.minWidth) === 136 + 160 + 122);
+        parseFloat(memView.style.minWidth) === 136 + 140 + 122);
       const savedMem = JSON.parse(win.localStorage.getItem('rvsim.panelColW.memory') || 'null');
       check('Memory Addr width persisted to localStorage', !!savedMem && savedMem.addr === 136);
 
@@ -686,7 +686,7 @@ setTimeout(() => {
       memHexHandle.dispatchEvent(new win.PointerEvent('pointermove', { pointerId: 12, clientX: 100, bubbles: true })); // dx = -400
       memHexHandle.dispatchEvent(new win.PointerEvent('pointerup', { pointerId: 12, clientX: 100, bubbles: true }));
       check('Hex column cannot be dragged below its floor (clamped, not collapsed)',
-        parseFloat(memView.style.getPropertyValue('--mem-hex-w')) === 130);
+        parseFloat(memView.style.getPropertyValue('--mem-hex-w')) === 108);
     } else {
       check('Memory Addr column-header resizer exists for drag test', false);
     }

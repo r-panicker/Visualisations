@@ -863,6 +863,17 @@
       z-index: 2;
     }
 
+    /* A <th>'s own sticky position stops holding once its panel is short
+       enough to actually need scrolling (only exposed once a panel gets
+       genuinely short, e.g. the mobile view's bounded panel body) - the
+       <thead> row group needs position: sticky too, or the whole header
+       row scrolls away with the data under it. */
+    .reg-table thead,
+    .code-list thead {
+      position: sticky;
+      top: 0;
+    }
+
     /* The boundary separator between two columns. Drawn as an always-visible
        hairline so the column edges are discoverable at a glance instead of
        having to be hunted for, and it thickens to mauve under the pointer.
@@ -2712,6 +2723,8 @@
       }
 
       .toolbar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         padding: 6px 8px;
         gap: 6px;
         font-size: 12px;
@@ -2724,17 +2737,20 @@
         display: none;
       }
 
-      /* Mobile 4-row layout */
+      /* Mobile 3-row toolbar. `.toolbar` itself is the grid (see `.toolbar`
+         above); the two row wrappers contribute nothing of their own on
+         mobile (`display: contents`) so their groups place directly into
+         it - which is what lets Editor and Dump/Settings share row 2 as
+         two half-width columns instead of each claiming a full row. */
       .toolbar-row-source,
       .toolbar-row-simulation {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        width: 100%;
+        display: contents;
       }
 
-      /* Row 1: File & Mode (Toggle, Example, Open, Save, Dumps) */
+      /* Row 1: File & Mode (Toggle, Example, Open, Save) */
       .toolbar-group-file-mode {
+        grid-column: 1 / -1;
+        grid-row: 1;
         display: flex;
         width: 100%;
         gap: 4px;
@@ -2769,26 +2785,44 @@
         gap: 2px;
       }
 
-      /* Row 2: Editor Operations (Undo, Redo, Find) */
+      /* Row 2: Undo/Redo/Find and Dump Text/Dump Data/Settings, sharing the
+         row as two halves - freeing a whole row versus each on its own. */
       .toolbar-group-editor {
-        display: flex;
-        width: 100%;
-        gap: 4px;
+        grid-column: 1;
+        grid-row: 2;
       }
 
-      .toolbar-group-editor button {
+      .toolbar-group-config-stats {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      .toolbar-group-editor,
+      .toolbar-group-config-stats {
+        display: flex;
+        width: 100%;
+        gap: 3px;
+      }
+
+      .toolbar-group-editor button,
+      .toolbar-group-config-stats button {
         flex: 1 1 0;
         min-width: 0;
         padding: 0 2px;
-        height: 32px;
-        font-size: 11.5px;
+        height: 34px;
+        font-size: 9.5px;
+        line-height: 1.15;
         font-weight: 550;
         justify-content: center;
-        gap: 2px;
+        white-space: normal;
+        gap: 0 2px;
       }
 
-      /* Row 3: Assemble, Run, Step, Back, Reset */
+      /* Row 3: Assemble, Run, Step, Back, Reset - last action row, right
+         above the status line. */
       .toolbar-group-simulation {
+        grid-column: 1 / -1;
+        grid-row: 3;
         display: flex;
         width: 100%;
         gap: 4px;
@@ -2805,28 +2839,8 @@
         gap: 2px;
       }
 
-      /* Row 4: Memory Dumps, Settings & Metrics */
-      .toolbar-group-config-stats {
-        display: flex;
-        width: 100%;
-        gap: 4px;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-
-      .toolbar-group-config-stats button {
-        flex: 1 1 auto;
-        min-width: 0;
-        padding: 0 5px;
-        height: 32px;
-        font-size: 11.5px;
-        font-weight: 550;
-        justify-content: center;
-        gap: 2px;
-      }
-
-      .toolbar-group-config-stats button.gear {
-        flex: 1.1 1 auto;
+      .toolbar-row-status {
+        grid-column: 1 / -1;
       }
 
       .toolbar .stats {
@@ -2842,8 +2856,8 @@
       }
 
       .editor-wrapper {
-        height: 360px;
-        min-height: 220px;
+        height: 324px;
+        min-height: 198px;
         flex: none;
         width: 100%;
         max-width: 100vw;
@@ -2868,9 +2882,9 @@
          persisted from a previous desktop session) that would otherwise
          win over this rule at any viewport width. */
       .console {
-        height: 80px !important;
-        max-height: 80px !important;
-        min-height: 80px !important;
+        height: 55px !important;
+        max-height: 55px !important;
+        min-height: 55px !important;
       }
 
       /* The drag handle resizes the desktop console; on mobile the height
@@ -2913,9 +2927,9 @@
 
       /* Mobile tabbed view: exactly ONE panel is visible at a time — the chip
          bar becomes a classic mutually-exclusive tab strip. All docked and
-         floating panels are hidden; the active one is shown. The active panel
-         grows to its natural content height (no inner 500px scroll trap) so
-         the whole page scrolls down to reveal the full panel body. */
+         floating panels are hidden; the active one is shown, its header
+         fixed and its body (below) independently scrollable rather than
+         growing the whole page. */
       .tab-content,
       .tab-content.panel-docked,
       .tab-content.panel-floating {
@@ -2956,12 +2970,12 @@
         display: none;
       }
 
-      /* No inner scroll trap on mobile — the panel body expands to its full
-         content height and the page itself scrolls, so long tables/boards are
-         read by scrolling down rather than inside a small scrollbox. */
+      /* A bounded, independently-scrollable body — about half the editor's
+         height — instead of growing to full content height and pushing the
+         page itself down; a long table/board scrolls in place. */
       .panel-body {
-        overflow: visible;
-        max-height: none;
+        overflow: auto;
+        max-height: 162px;
         flex: 0 0 auto;
       }
 
@@ -3459,8 +3473,8 @@
             <div class="toolbar-divider"></div>
             <!-- Group 4: Memory Dump, Settings & Metrics -->
             <div class="toolbar-btn-group toolbar-group-config-stats">
-              <button id="btnDumpTxt" onclick="dumpTextSegment()" title="Dump code (text) memory to AA_IROM.mem">💾 Dump txt</button>
-              <button id="btnDumpData" onclick="dumpDataSegment()" title="Dump data memory to AA_DMEM.mem">💾 Dump data</button>
+              <button id="btnDumpTxt" onclick="dumpTextSegment()" title="Dump code (text) memory to AA_IROM.mem">💾 Dump Text</button>
+              <button id="btnDumpData" onclick="dumpDataSegment()" title="Dump data memory to AA_DMEM.mem">💾 Dump Data</button>
               <button id="hdlVcdBtn" style="display:none;" onclick="hdlDownloadVcd()"
                 title="Download the waveform recorded by the last HDL run">⭳ VCD</button>
               <button id="btnSettings" onclick="openSettingsModal()" title="Configure Compiler, Linker segments, and Simulator settings" class="gear">⚙ Settings…</button>
@@ -3541,7 +3555,7 @@
               <input type="text" id="memAddr" value="0x400000" onchange="updateMemoryView()"
                 onkeydown="if(event.key==='Enter')updateMemoryView()">
               <div class="mem-subtabs" role="group" aria-label="Memory region">
-                <button class="mem-subtab-btn active" id="memTabBtn-code" onclick="memGo('code')" title="Program / code segment">Code</button>
+                <button class="mem-subtab-btn active" id="memTabBtn-code" onclick="memGo('code')" title="Program / text segment">Text</button>
                 <button class="mem-subtab-btn" id="memTabBtn-data" onclick="memGo('data')" title="Data / static segment (writes land here)">Data</button>
                 <button class="mem-subtab-btn" id="memTabBtn-stack" onclick="memGo('stack')" title="Stack region near the stack pointer">Stack</button>
                 <button class="mem-subtab-btn" id="memTabBtn-mmio" onclick="memGo('mmio')" title="Memory-mapped I/O region">MMIO</button>
@@ -3560,9 +3574,9 @@
             </div>
           </div>
           <div class="mem-legend">
-            <span id="memLegendText" class="mem-legend-mode">each row = two <span class="mem-legend-endian">32-bit words</span> &nbsp;·&nbsp; <span class="mem-legend-endian">Full word (LSB to the right)</span></span>
+            <span id="memLegendText" class="mem-legend-mode">each row = one <span class="mem-legend-endian">32-bit word</span> &nbsp;·&nbsp; <span class="mem-legend-endian">Full word (LSB to the right)</span></span>
             <span class="mem-legend-sep">&nbsp;·&nbsp;</span>
-            <span><span class="mem-legend-editable">Data/Stack/MMIO: editable</span> (Code: read-only)</span>
+            <span><span class="mem-legend-editable">Data/Stack/MMIO: editable</span> (Text: read-only)</span>
           </div>
           <div class="mem-col-header" id="memColHeader">
             <span class="mem-col-h" data-mem-col="addr">Addr<span class="col-resizer" data-panel="memory" data-col="addr" title="Drag to resize this column · double-click to reset the panel's columns"></span></span>
@@ -9883,13 +9897,13 @@ function updateRegisters() {
           const rowAddr = offsets[0];
           const wordHex = (wordVal >>> 0).toString(16).padStart(8, '0');
           const cell = allReadonly
-            ? `<span class="val word-cell${cls} readonly-code" data-addr="${rowAddr}" data-size="4" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${wordHex}</span>`
+            ? `<span class="val word-cell${cls} readonly-code" data-addr="${rowAddr}" data-size="4" title="Text segment is read-only in Memory View (edit in Code Editor and Assemble)">${wordHex}</span>`
             : `<span class="val word-cell${cls}" data-addr="${rowAddr}" data-size="4" onclick="startMemWordCellEdit(event,${rowAddr})" title="Click to edit 32-bit word (little-endian)">${wordHex}</span>`;
           const hexVals = labelAnnotationHtml(rowAddr, cell);
 
           const decText = (memDecSigned ? (wordVal | 0) : (wordVal >>> 0)).toString();
           const contentVals = allReadonly
-            ? `<span class="val-dec${cls} readonly-code" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${decText}</span>`
+            ? `<span class="val-dec${cls} readonly-code" title="Text segment is read-only in Memory View (edit in Code Editor and Assemble)">${decText}</span>`
             : `<span class="val-dec${cls}" onclick="startMemWordCellEdit(event,${rowAddr})" title="Click to edit 32-bit word">${decText}</span>`;
           html += `<div><span class="addr" data-col="addr">0x${wordStart.toString(16).padStart(8, '0')}</span><span class="mem-hex-block">${hexVals}</span><span class="mem-ascii-block">${contentVals}</span></div>`;
         } else {
@@ -9904,9 +9918,9 @@ function updateRegisters() {
             const isCodeSegment = isCodeSegmentAddress(offset);
 
             if (isCodeSegment) {
-              groupBytes += `<span class="val${cls} readonly-code" data-addr="${offset}" data-size="1" style="cursor:default;opacity:0.88;" title="Code segment is read-only in Memory View (edit in Code Editor and Assemble)">${val.toString(16).padStart(2, '0')}</span>`;
+              groupBytes += `<span class="val${cls} readonly-code" data-addr="${offset}" data-size="1" style="cursor:default;opacity:0.88;" title="Text segment is read-only in Memory View (edit in Code Editor and Assemble)">${val.toString(16).padStart(2, '0')}</span>`;
               const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
-              groupAscii += `<span class="ascii${cls}" title="Code segment byte (read-only)">${escapeHtml(ch)}</span>`;
+              groupAscii += `<span class="ascii${cls}" title="Text segment byte (read-only)">${escapeHtml(ch)}</span>`;
             } else {
               groupBytes += `<span class="val${cls}" contenteditable="true" spellcheck="false" data-addr="${offset}" data-size="1" data-old="${val.toString(16).padStart(2, '0')}" onfocus="startMemByteEdit(this)" ondblclick="startMemWordEdit(event,${offset})" onkeydown="handleMemByteEditKey(event,this)" onblur="commitMemByteEdit(this)" title="Single-click: edit byte (00-ff) | Double-click: edit word (Enter commits, Esc cancels)">${val.toString(16).padStart(2, '0')}</span>`;
               const ch = val >= 32 && val <= 126 ? String.fromCharCode(val) : '.';
@@ -9944,7 +9958,7 @@ function updateRegisters() {
 
     function editMemByte(addr) {
       if (isCodeSegmentAddress(addr)) {
-        setStatus('Code segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
+        setStatus('Text segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
         return;
       }
       if (isMMIOReadOnlyAddr(addr)) {
@@ -9958,7 +9972,7 @@ function updateRegisters() {
       const addr = parseInt(el.dataset.addr, 10);
       if (isCodeSegmentAddress(addr)) {
         el.blur();
-        setStatus('Code segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
+        setStatus('Text segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
         return;
       }
       if (isMMIOReadOnlyAddr(addr)) {
@@ -9998,7 +10012,7 @@ function updateRegisters() {
       if (isCodeSegmentAddress(addr)) {
         el.textContent = el.dataset.old || '00';
         el.classList.remove('editing');
-        setStatus('Code segment is read-only in Memory View', 'warning');
+        setStatus('Text segment is read-only in Memory View', 'warning');
         return;
       }
       if (isMMIOReadOnlyAddr(addr)) {
@@ -10042,7 +10056,7 @@ function updateRegisters() {
       event.preventDefault();
       event.stopPropagation();
       if (isCodeSegmentAddress(wordStartAddr)) {
-        setStatus('Code segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
+        setStatus('Text segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
         return;
       }
       if (isMMIOReadOnlyAddr(wordStartAddr)) {
@@ -10066,7 +10080,7 @@ function updateRegisters() {
       event.preventDefault();
       event.stopPropagation();
       if (isCodeSegmentAddress(wordStartAddr)) {
-        setStatus('Code segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
+        setStatus('Text segment is read-only in Memory View (edit in Code Editor and Assemble)', 'warning');
         return;
       }
       if (isMMIOReadOnlyAddr(wordStartAddr)) {
@@ -10150,7 +10164,7 @@ function updateRegisters() {
       const addr = overlay._wordAddr;
       if (isCodeSegmentAddress(addr)) {
         cancelMemWordEdit(overlay);
-        setStatus('Code segment is read-only in Memory View', 'warning');
+        setStatus('Text segment is read-only in Memory View', 'warning');
         return;
       }
       if (isMMIOReadOnlyAddr(addr)) {
