@@ -2856,8 +2856,8 @@
       }
 
       .editor-wrapper {
-        height: 324px;
-        min-height: 198px;
+        height: 300px;
+        min-height: 180px;
         flex: none;
         width: 100%;
         max-width: 100vw;
@@ -2970,12 +2970,13 @@
         display: none;
       }
 
-      /* A bounded, independently-scrollable body — about half the editor's
-         height — instead of growing to full content height and pushing the
-         page itself down; a long table/board scrolls in place. */
+      /* A bounded, independently-scrollable body — instead of growing to
+         full content height and pushing the page itself down; a long
+         table/board scrolls in place. Sized a little over half the
+         editor's height: the editor gave up the rest of the difference. */
       .panel-body {
         overflow: auto;
-        max-height: 162px;
+        max-height: 186px;
         flex: 0 0 auto;
       }
 
