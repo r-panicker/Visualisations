@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const { installGodboltCache } = require('./godbolt_cache');
+const { installExamplesFetch } = require('./examples_fetch');
 const path = require('path');
 let JSDOM;
 try {
@@ -51,6 +52,7 @@ const dom = new JSDOM(htmlContent, {
         clearRect: () => {}
       });
     }
+    installExamplesFetch(window); // before the page's own fetch() for the Example menu
   }
 });
 
@@ -61,7 +63,7 @@ const win = dom.window;
 installGodboltCache(win);
 const doc = win.document;
 
-setTimeout(() => {
+setTimeout(async () => {
   try {
     // 1. Verify Settings Modal has Statement Stepping checkbox
     const stmtCheckbox = doc.getElementById('simStatementStep');
@@ -70,8 +72,8 @@ setTimeout(() => {
 
     // 2. Test in C Mode (e.g. Factorial or Circle)
     win.setLanguageMode('c');
-    win.loadExample('c_fact');
-    win.assembleOnly();
+    await win.loadExample('factorial_c');
+    await win.assembleOnly();
     
     console.log(`\n[C Mode] Assembled Fact example: ${win.machineCode.length} instructions`);
     
@@ -110,7 +112,7 @@ setTimeout(() => {
 
     // 3. Test in ASM Mode
     win.setLanguageMode('asm');
-    win.loadExample('fact');
+    await win.loadExample('fact');
     win.assembleOnly();
     console.log(`\n[ASM Mode] Assembled Fact example: ${win.machineCode.length} instructions`);
 

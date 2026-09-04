@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { installGodboltCache } = require('./godbolt_cache');
+const { installExamplesFetch } = require('./examples_fetch');
 const path = require('path');
 let JSDOM;
 try { JSDOM = require('jsdom').JSDOM; } catch(e) { JSDOM = require('/home/rajesh/.gemini/antigravity-ide/brain/7780d698-8baa-4d51-9b54-596f69dcec55/scratch/node_modules/jsdom').JSDOM; }
@@ -40,6 +41,7 @@ const CM6_BUNDLE_SOURCE = fs.readFileSync(path.resolve(__dirname, 'cm6_bundle.mi
         putImageData: () => {},
         clearRect: () => {}
       });
+      installExamplesFetch(window); // before the page's own fetch() for the Example menu
     }
   });
 
@@ -53,7 +55,7 @@ const CM6_BUNDLE_SOURCE = fs.readFileSync(path.resolve(__dirname, 'cm6_bundle.mi
   // --- 1. ASM Mode: circle_accel ---
   console.log('\n[1] Testing circle_accel in Assembly Mode...');
   win.setLanguageMode('asm');
-  win.loadExample('circle_accel');
+  await win.loadExample('circle_accel');
   const mc1 = win.assembleOnly();
   console.log(`  - Assembled instructions: ${mc1.length}`);
   if (mc1.length !== 138) throw new Error(`Expected 138 instructions, got ${mc1.length}`);
@@ -82,7 +84,7 @@ const CM6_BUNDLE_SOURCE = fs.readFileSync(path.resolve(__dirname, 'cm6_bundle.mi
 
   // --- 2. ASM Mode: image_display_accel ---
   console.log('\n[2] Testing image_display_accel in Assembly Mode...');
-  win.loadExample('image_display_accel');
+  await win.loadExample('image_display_accel');
   const mc2 = win.assembleOnly();
   console.log(`  - Assembled instructions: ${mc2.length}`);
   if (mc2.length !== 183) throw new Error(`Expected 183 instructions, got ${mc2.length}`);
@@ -100,7 +102,7 @@ const CM6_BUNDLE_SOURCE = fs.readFileSync(path.resolve(__dirname, 'cm6_bundle.mi
   // --- 3. C Mode: circle_accel_c ---
   console.log('\n[3] Testing circle_accel_c in C Mode...');
   win.setLanguageMode('c');
-  win.loadExample('circle_accel_c');
+  await win.loadExample('circle_accel_c');
   const mc3 = await win.assembleOnly();
   console.log(`  - Assembled instructions: ${mc3.length}`);
   if (mc3.length !== 289) throw new Error(`Expected 289 instructions, got ${mc3.length}`);
@@ -117,7 +119,7 @@ const CM6_BUNDLE_SOURCE = fs.readFileSync(path.resolve(__dirname, 'cm6_bundle.mi
 
   // --- 4. C Mode: image_display_c ---
   console.log('\n[4] Testing image_display_c in C Mode...');
-  win.loadExample('image_display_c');
+  await win.loadExample('image_display_c');
   const mc4 = await win.assembleOnly();
   console.log(`  - Assembled instructions: ${mc4.length}`);
   if (mc4.length !== 661) throw new Error(`Expected 661 instructions, got ${mc4.length}`);

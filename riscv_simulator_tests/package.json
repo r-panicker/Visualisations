@@ -4,7 +4,7 @@
   "description": "Test suites for riscv_simulator.html",
   "scripts": {
     "test": "npm run test:all",
-    "test:all": "node test_tab_and_autocomplete.js && node test_breakpoint_highlight_and_snap.js && node test_jsdom.js && node test_all_instructions_v2.js && node test_instruction_semantics.js && node test_execution_programs.js && node test_comprehensive_suite.js && node test_panel_grid.js && node test_mobile_keyboard_focus.js && node test_disassembly_machine_code.js && node test_disassembly_labels_and_warnings.js && node test_c_godbolt_simulation.js && node test_new_c_simulation.js && node test_baked_examples_full.js && node test_statement_stepping.js && node test_sim_max_instructions_setting.js && node test_reset_and_image_display.js && node test_hdl_mode.js",
+    "test:all": "node test_tab_and_autocomplete.js && node test_breakpoint_highlight_and_snap.js && node test_jsdom.js && node test_all_instructions_v2.js && node test_instruction_semantics.js && node test_execution_programs.js && node test_comprehensive_suite.js && node test_panel_grid.js && node test_mmio_editability_and_content_column.js && node test_memory_row_granularity_and_shortcuts.js && node test_mobile_keyboard_focus.js && node test_disassembly_machine_code.js && node test_disassembly_labels_and_warnings.js && node test_c_godbolt_simulation.js && node test_new_c_simulation.js && node test_baked_examples_full.js && node test_statement_stepping.js && node test_sim_max_instructions_setting.js && node test_reset_and_image_display.js && node test_hdl_mode.js",
     "test:suite": "node test_comprehensive_suite.js",
     "test:hdl": "node test_hdl_mode.js",
     "test:c": "node test_c_godbolt_simulation.js",
@@ -19,6 +19,8 @@
     "test:disasm-machine-code": "node test_disassembly_machine_code.js",
     "test:reset": "node test_reset_and_image_display.js",
     "test:grid": "node test_panel_grid.js",
+    "test:mmio": "node test_mmio_editability_and_content_column.js",
+    "test:memory-rows": "node test_memory_row_granularity_and_shortcuts.js",
     "test:mobile-keyboard": "node test_mobile_keyboard_focus.js",
     "test:breakpoints": "node test_breakpoint_highlight_and_snap.js",
     "test:autocomplete": "node test_tab_and_autocomplete.js",

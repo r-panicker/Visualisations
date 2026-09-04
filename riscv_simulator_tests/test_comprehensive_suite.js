@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { installGodboltCache } = require('./godbolt_cache');
+const { installExamplesFetch } = require('./examples_fetch');
 const path = require('path');
 let JSDOM;
 try {
@@ -44,6 +45,7 @@ const dom = new JSDOM(html, {
         clearRect: () => {}
       });
     }
+    installExamplesFetch(window); // before the page's own fetch() for the Example menu
   }
 });
 
@@ -53,7 +55,7 @@ const win = dom.window;
 
 installGodboltCache(win);
 
-setTimeout(() => {
+setTimeout(async () => {
   try {
     console.log('===========================================================');
     console.log('🚀 RUNNING COMPREHENSIVE FUNCTIONAL & UI TEST SUITE');
@@ -99,7 +101,7 @@ setTimeout(() => {
 
     // 3. Breakpoint Snapping & Line Number Highlighting Alone
     console.log('\n[3] Testing Breakpoint Gutter, Line Number Highlight, and Snapping...');
-    win.loadExample('basic');
+    await win.loadExample('basic');
     // Basic has comment lines 1-2, .text on line 3, main: on line 4, li x1, 10 on line 5
     win.toggleBreakpoint(1); // Click line 1 (comment) -> snaps to line 5
     if (!win.breakpoints.has(5) || win.breakpoints.has(1)) {
@@ -134,7 +136,7 @@ setTimeout(() => {
     console.log('\n[6] Testing All Pre-Loaded Examples Execution...');
     const exampleKeys = ['basic', 'fib', 'fact', 'loop', 'circle_accel'];
     for (const key of exampleKeys) {
-      win.loadExample(key);
+      await win.loadExample(key);
       const mc = win.assembleOnly();
       if (!mc || mc.length === 0) throw new Error(`Example ${key} failed to assemble`);
       const hasErrors = mc.some(item => item.error);
@@ -145,7 +147,7 @@ setTimeout(() => {
 
     // 7. Find & Replace System
     console.log('\n[7] Testing In-Editor Find & Replace...');
-    win.loadExample('basic');
+    await win.loadExample('basic');
     win.openFindReplace(false);
     const findInput = win.document.getElementById('findInput');
     const replaceInput = win.document.getElementById('replaceInput');
@@ -193,12 +195,15 @@ setTimeout(() => {
 
     // 9. Memory View protection model, in BOTH display modes.
     //
-    // The rule is the same either way - code is read-only, data/stack/MMIO are
-    // editable - but the mechanism differs, and this check used to know only
-    // the byte-mode one. Since v23.5 the view opens in WORD mode, where a cell
-    // is edited through the word overlay (an onclick calling
-    // startMemWordCellEdit) rather than by being contenteditable, so asserting
-    // contenteditable unconditionally failed against the default mode.
+    // Code is read-only; Data and Stack are fully editable. (MMIO is a mix -
+    // read-only registers like DIP/PB are also non-editable here, covered by
+    // test_mmio_editability_and_content_column.js instead of this generic
+    // Code/Data check.)
+    // The mechanism differs between the two display modes this checks: since
+    // v23.5 the view opens in WORD mode, where a cell is edited through the
+    // word overlay (an onclick calling startMemWordCellEdit) rather than by
+    // being contenteditable, so asserting contenteditable unconditionally
+    // failed against the default mode.
     console.log('\n[9] Testing Memory View read-only code / editable data (word + byte modes)...');
     const doc = win.document;
     const cellAt = addr => doc.getElementById('memView').querySelector(`[data-addr="${addr}"]`);
@@ -340,7 +345,7 @@ setTimeout(() => {
 
     // The PC is on the always-visible metrics readout, not only in the
     // status message that the next message overwrites.
-    win.loadExample('basic');
+    await win.loadExample('basic');
     win.assembleOnly();
     win.stepOnce();
     const statsEl = doc.getElementById('statsBar');
@@ -439,7 +444,7 @@ setTimeout(() => {
 
     // ecall works here but not on the board; say so once per assemble, and
     // only for assembly (every compiled C program ends with the CRT0 shim's).
-    win.loadExample('basic');
+    await win.loadExample('basic');
     doc.getElementById('console').innerHTML = '';
     win.assembleOnly();
     if (!/uses ecall \(2 sites\)/.test(consoleText())) {
@@ -448,14 +453,14 @@ setTimeout(() => {
     if (!/hardware does not/.test(consoleText())) {
       throw new Error('The ecall notice does not say the hardware lacks support');
     }
-    win.loadExample('dip_led');
+    await win.loadExample('dip_led');
     doc.getElementById('console').innerHTML = '';
     win.assembleOnly();
     if (/uses ecall/.test(consoleText())) {
       throw new Error('ecall notice fired for a program that does not use ecall');
     }
     // And the source itself carries the warning.
-    win.loadExample('basic');
+    await win.loadExample('basic');
     if (!/ecall is a simulator convenience/.test(win.editor.value)) {
       throw new Error('The basic example lost its ecall note');
     }
@@ -466,7 +471,7 @@ setTimeout(() => {
     //     thing twice. PC and the instruction count live in the readout, so a
     //     step message says what the step DID, not what the counters show.
     console.log('\n[13] Testing status message / metrics readout de-duplication...');
-    win.loadExample('basic');
+    await win.loadExample('basic');
     win.assembleOnly();
     const statusOf = () => doc.getElementById('statusBar').textContent;
     const statsOf  = () => doc.getElementById('statsBar').textContent;
@@ -488,7 +493,7 @@ setTimeout(() => {
     // The overflow warnings state the size once, and the advice lives in the
     // console rather than being repeated in the status bar.
     doc.getElementById('console').innerHTML = '';
-    win.loadExample('circle_accel');
+    await win.loadExample('circle_accel');
     win.assembleOnly();
     const overflowLine = [...doc.querySelectorAll('#console div')].map(d => d.textContent)
       .find(t => /over the .* Code segment/.test(t)) || '';
