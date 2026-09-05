@@ -618,11 +618,6 @@
       flex-shrink: 0;
     }
 
-    .panel-stack-empty-panels {
-      color: #a6adc8;
-      font-weight: 600;
-    }
-
     .panel-stack-empty b {
       color: #9399b2;
     }
@@ -3827,7 +3822,7 @@
         </div>
           <div class="panel-stack-empty">
             <span class="panel-stack-empty-icon">▤</span>
-            <span>All panels are hidden — use the buttons above to show <span class="panel-stack-empty-panels">Registers, Memory, Peripherals, or Disassembly</span>.</span>
+            <span>All panels are hidden — use the buttons above to show the various panels.</span>
           </div>
         </div>
       </div>
@@ -7147,13 +7142,16 @@
             const offsetTxt = `s0 ${varInfo.offset >= 0 ? '+' : '-'} ${Math.abs(varInfo.offset)}`;
             let addrLine = offsetTxt;
             let valueHtml = '';
-            if (typeof assembled !== 'undefined' && assembled && typeof regs !== 'undefined') {
+            const pcReady = typeof pc !== 'undefined' && (pc >>> 0) > varInfo.framePtrAddr;
+            if (typeof assembled !== 'undefined' && assembled && typeof regs !== 'undefined' && pcReady) {
               const s0 = regs[8] >>> 0;
               const addr = (s0 + varInfo.offset) >>> 0;
               const uval = readMem(addr, 4, true) >>> 0;
               const sval = readMemSigned(addr, 4, true);
               addrLine += ` = 0x${addr.toString(16).padStart(8, '0')}`;
               valueHtml = `<div style="font-size:11px;color:#a6adc8;border-top:1px solid #313244;padding-top:3px;margin-top:3px;">Hex 0x${uval.toString(16).padStart(8, '0')} &nbsp;·&nbsp; Dec (signed) ${sval} &nbsp;·&nbsp; Dec (unsigned) ${uval}</div>`;
+            } else if (typeof assembled !== 'undefined' && assembled && !pcReady) {
+              valueHtml = `<div style="font-size:11px;color:#a6adc8;border-top:1px solid #313244;padding-top:3px;margin-top:3px;">s0 not set up yet at the current PC</div>`;
             }
             dom.innerHTML = `
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
@@ -9268,6 +9266,14 @@ function updateRegisters() {
           notice.innerHTML = fn
             ? `<b>${escapeHtml(fn.name)}</b> has no locals this view could resolve.`
             : 'PC is not currently inside a function this view has a variable table for (e.g. it is in the CRT0 startup shim or the <code>__halt</code> trap).';
+        }
+        return;
+      }
+      if (curPc <= fn.framePtrAddr) {
+        body.innerHTML = '';
+        if (notice) {
+          notice.style.display = '';
+          notice.innerHTML = `Entering <b>${escapeHtml(fn.name)}</b>() — its locals will show correct addresses once execution reaches 0x${fn.framePtrAddr.toString(16).padStart(8, '0')}, where the frame pointer (<code>s0</code>) is set up.`;
         }
         return;
       }
@@ -11931,10 +11937,17 @@ int main()
         const endAddr = (idx + 1 < withAddr.length) ? withAddr[idx + 1].addr : (haltAddr !== null ? haltAddr : 0xFFFFFFFF);
 
         // Parameters: scan the first ~20 instructions of the function for the
-        // a0.. spill sequence (`sw aN, OFF(s0)`), in register order.
+        // a0.. spill sequence (`sw aN, OFF(s0)`), in register order. Also find
+        // where s0 itself gets set up - reading s0-relative addresses before
+        // that point (regs[8] is still whatever the previous frame left it at)
+        // produces addresses that look like garbage.
         const paramOffsets = [];
+        let framePtrAddr = null;
         const inRange = mc.filter(it => it.address >= addr && it.address < endAddr).slice(0, 20);
         inRange.forEach(it => {
+          if (framePtrAddr === null && /^\s*addi\s+s0\s*,\s*sp\s*,/.test(it.text || '')) {
+            framePtrAddr = it.address;
+          }
           const pm = /^\s*sw\s+a(\d+)\s*,\s*(-?\d+)\(s0\)/.exec(it.text || '');
           if (pm) {
             const argIdx = parseInt(pm[1], 10);
@@ -11974,7 +11987,10 @@ int main()
         });
 
         if (vars.length) {
-          cFunctionLocals.set(fn.name, { startAddr: addr, endAddr, startLine: fn.startLine - 1, endLine: fn.endLine, vars });
+          cFunctionLocals.set(fn.name, {
+            startAddr: addr, endAddr, startLine: fn.startLine - 1, endLine: fn.endLine,
+            framePtrAddr: framePtrAddr !== null ? framePtrAddr : addr, vars
+          });
         }
       });
     }
@@ -11990,7 +12006,7 @@ int main()
       for (const [, info] of cFunctionLocals) {
         if (cLine < info.startLine || cLine > info.endLine) continue;
         const v = info.vars.find(x => x.name === varName);
-        if (v) return v;
+        if (v) return { ...v, framePtrAddr: info.framePtrAddr };
       }
       return null;
     }

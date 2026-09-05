@@ -45,10 +45,6 @@ void print_string(const char *s)
 
 int main()
 {
-    // Note: no inline asm to set sp here - the simulator's own startup code
-    // already sets sp = STACK_INIT before main() runs. Doing it again here
-    // would stomp the -32 stack-frame the compiler's own prologue for main()
-    // just allocated, making print_string()'s frame alias main()'s locals.
     const char *greeting = "\r\nWelcome to CG3207..\r\n";
     unsigned int c;
     int gotA = 0;   // 0 = waiting for 'A' (WAIT_A); 1 = 'A' seen, waiting for Enter (WAIT_CRorLF)
