@@ -11845,20 +11845,28 @@ int main()
           `0x${effectiveStack.toString(16)}. See the console.`, 'warn');
       }
 
-      // Prepend CRT0 baremetal startup shim: sets sp = effectiveStack, calls main(), terminates with ecall (a7=10)
+      // Prepend CRT0 baremetal startup shim: sets sp = effectiveStack, jumps to main().
+      // main() is never expected to return (every example is `while (1) { ... }`), so
+      // this jumps rather than calls - no return address is set up. A __halt trap is
+      // appended after ALL of the compiled program (not before it, as a plain `call`
+      // fallback would sit) so PC running off the end of the real program - for any
+      // reason, not just a hypothetical return from main - lands on a defined infinite
+      // loop instead of running into unmapped memory beyond the assembled code.
       const startup = [
         { text: '.text', source: null },
         { text: '.globl _start', source: null },
         { text: '_start:', source: null },
         { text: `    li sp, 0x${(effectiveStack >>> 0).toString(16)}`, source: null },
-        { text: '    call main', source: null },
-        { text: '    li a7, 10', source: null },
-        { text: '    ecall', source: null },
+        { text: '    j main', source: null }
+      ];
+
+      const haltTrap = [
+        { text: '.text', source: null },
         { text: '__halt:', source: null },
         { text: '    j __halt', source: null }
       ];
 
-      const combinedItems = [...startup, ...godboltData.asm];
+      const combinedItems = [...startup, ...godboltData.asm, ...haltTrap];
       const asmText = combinedItems.map(item => item.text).join('\n');
       lastGeneratedAsm = asmText;
 
