@@ -82,15 +82,13 @@ back the moment you edit. Examples and opened files assemble themselves, so **Ru
 **Step** are live immediately.
 
 **Errors** appear in the console with a line number, and the offending line is marked in
-the editor. Fix and re-assemble.
+the editor. Fix and re-assemble; the message says what to write instead, and the full
+list of what gets checked is in the [reference manual](riscv_simulator_specs.md).
 
-### What the assembler will not let you do
-
-It refuses several things that a looser assembler accepts and quietly gets wrong — a
-missing operand (`add t0, t1` is not `add t0, t1, x0`), a surplus one, a shift by 32, a
-value too wide for its directive, a duplicated label, a label named after a register, and
-a store to a label without a named scratch register. Each message says what to write
-instead. The full list is in the [reference manual](riscv_simulator_specs.md).
+One is worth knowing before you hit it: `sw t0, label` — a store to a symbol with no
+third operand — is rejected. A store has no spare register to build the address in
+(unlike a load, where the destination itself can be reused), so guessing one for you
+could silently clobber a register you're using. Name it yourself: `sw t0, label, t1`.
 
 `ecall` is worth knowing about: it works here, because the simulator implements the RARS
 syscall services. It will not work on a processor with no trap support and no OS behind
