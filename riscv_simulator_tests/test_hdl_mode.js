@@ -772,7 +772,7 @@ setTimeout(async () => {
         // One Step should cover every machine instruction a source line
         // expands to, in the recording exactly as in the functional model.
         console.log('\n[14] Statement Stepping moves the same distance in HDL');
-        await win.loadExample('basic');
+        await win.loadExample('rars_syscalls');
         const memB = win.hdlMemFiles(wrapperSrc);
         const outB = await icarus4.run(['+CYCLES=60', '+TRACE=2'], {
           'AA_IROM.mem': memB.files['AA_IROM.mem'],

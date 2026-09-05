@@ -392,7 +392,7 @@ both values. That is almost always where the RTL bug is.
 | [`riscv_simulator.html`](riscv_simulator.html) | The simulator |
 | [`riscv_simulator.md`](riscv_simulator.md) | This guide |
 | [`riscv_simulator_specs.md`](riscv_simulator_specs.md) | Full reference: MMIO map, ISA, syscalls, architecture, changelog |
-| `examples/` | Every example but DIP to LED, one file each, listed in `asm/index.md` / `c/index.md` — add one by adding a row and a file, no HTML edit (needs the page served over `http://`) |
+| `examples/` | Every example but DIP to LED, one file each, listed in `asm/index.txt` / `c/index.txt` — add one by adding a row and a file, no HTML edit (needs the page served over `http://`) |
 | `riscv_simulator_tests/` | The automated test suite |
 | [`vendor/`](vendor/README.md) | Local copies of CodeMirror, Icarus Verilog and Yosys, used when the CDN cannot be reached (needs the page served over `http://`) |
 

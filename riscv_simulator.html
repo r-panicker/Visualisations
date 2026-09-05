@@ -10818,15 +10818,18 @@ function updateRegisters() {
     // still needs the network for Godbolt regardless, same as every other
     // C example, baked or not.
 
-    // The Example menu is read from examples/asm/index.md and
-    // examples/c/index.md, not written out here - adding a program is a row
-    // in one of those files plus the file itself, no HTML edit. Each row is
-    // `| key | label | file | description |`; loadExampleIndex() parses it
-    // into EXAMPLE_MENU (for the dropdown) and EXAMPLE_FILENAMES (for the
-    // fetch path and the Save filename). Until that fetch resolves - and
-    // permanently, over file://, where it never will - both fall back to
-    // just the one baked example in each language, so the dropdown is never
-    // genuinely empty.
+    // The Example menu is read from examples/asm/index.txt and
+    // examples/c/index.txt, not written out here - adding a program is a row
+    // in one of those files plus the file itself, no HTML edit. Plain .txt,
+    // not .md: static site generators that serve the repo tend to render
+    // .md through a Markdown->HTML pipeline instead of serving it verbatim,
+    // which broke this fetch when hosted that way - .txt is never touched.
+    // Each row is `| key | label | file | description |`; loadExampleIndex()
+    // parses it into EXAMPLE_MENU (for the dropdown) and EXAMPLE_FILENAMES
+    // (for the fetch path and the Save filename). Until that fetch resolves
+    // - and permanently, over file://, where it never will - both fall back
+    // to just the one baked example in each language, so the dropdown is
+    // never genuinely empty.
     let EXAMPLE_MENU = {
       asm: [['dip_led', 'DIP to LED (start here)', 'DIP to LED — the one example baked into the page, works with no server']],
       c: [['dip_led_c', 'DIP to LED (start here)', 'DIP switches mirrored to LEDs — the one C example baked into the page, works with no server']],
@@ -10859,13 +10862,13 @@ function updateRegisters() {
     async function loadExampleIndex() {
       for (const lang of ['asm', 'c']) {
         try {
-          const resp = await fetch(`examples/${lang}/index.md`);
+          const resp = await fetch(`examples/${lang}/index.txt`);
           if (!resp.ok) continue;
           const rows = parseExampleIndexMarkdown(await resp.text());
           if (!rows.length) continue;
           EXAMPLE_MENU[lang] = rows.map(([key, label, , desc]) => [key, label, desc]);
           for (const [key, , file] of rows) EXAMPLE_FILENAMES[key] = file;
-        } catch (err) { /* index.md unreachable (e.g. file://) - stay on the fallback */ }
+        } catch (err) { /* index.txt unreachable (e.g. file://) - stay on the fallback */ }
       }
       updateExampleSelectorOptions();
     }
@@ -11087,7 +11090,6 @@ STACK_INIT:	# Stack pointer can be initialised to this location - DMEM+0x200 (i.
 
 int main()
 {
-    asm volatile("li sp, %0" : : "i" (STACK_INIT)); //inline assembly to init sp. Registers cant be accessed explicitly in pure C
     volatile unsigned int* DIP_ADDR = (unsigned int*) (MMIO_BASE+DIP_OFF);
     volatile unsigned int* LED_ADDR = (unsigned int*) (MMIO_BASE+LED_OFF);
 
@@ -12208,16 +12210,19 @@ int main()
 
       // Prepend CRT0 baremetal startup shim: sets sp = effectiveStack, jumps to main().
       // main() is never expected to return (every example is `while (1) { ... }`), so
-      // this jumps rather than calls - no return address is set up. A __halt trap is
-      // appended after ALL of the compiled program (not before it, as a plain `call`
-      // fallback would sit) so PC running off the end of the real program - for any
-      // reason, not just a hypothetical return from main - lands on a defined infinite
-      // loop instead of running into unmapped memory beyond the assembled code.
+      // this jumps rather than calls - no return address is set up in the usual sense.
+      // ra is still seeded with __halt's address first, so an accidental `ret` out of
+      // main lands on the trap below instead of whatever ra's reset value points at.
+      // The trap itself is appended after ALL of the compiled program (not before it,
+      // as a plain `call` fallback would sit) so PC running off the end of the real
+      // program - for any reason - lands on a defined infinite loop instead of running
+      // into unmapped memory beyond the assembled code.
       const startup = [
         { text: '.text', source: null },
         { text: '.globl _start', source: null },
         { text: '_start:', source: null },
         { text: `    li sp, 0x${(effectiveStack >>> 0).toString(16)}`, source: null },
+        { text: '    la ra, __halt', source: null },
         { text: '    j main', source: null }
       ];
 
