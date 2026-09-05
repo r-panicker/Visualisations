@@ -129,10 +129,10 @@ setTimeout(async () => {
     console.log('\n[1] HDL setup lives in Settings, not in a panel of its own');
     check('There is no HDL panel', !doc.getElementById('tab-hdl'));
     check('There is no HDL panel chip', !doc.getElementById('panelChip-hdl'));
-    check('The panel dock is back to four panels',
-      ['registers', 'memory', 'peripherals', 'disassembly']
+    check('The panel dock is back to its five panels',
+      ['registers', 'memory', 'peripherals', 'disassembly', 'locals']
         .every(p => !!doc.getElementById('tab-' + p)) &&
-      doc.querySelectorAll('#panelStack > .tab-content').length === 4);
+      doc.querySelectorAll('#panelStack > .tab-content').length === 5);
     check('Settings has a dedicated HDL tab',
       !!doc.getElementById('settingsTabBtn-hdl') && !!doc.getElementById('settingsContent-hdl'));
     check('Engine toggle has JS and HDL buttons',
